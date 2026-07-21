@@ -1,0 +1,414 @@
+{
+  "borders": [
+    {
+      "from": "afghanistan",
+      "to": "india",
+      "type": "land"
+    },
+    {
+      "from": "afghanistan",
+      "to": "siberia",
+      "type": "land"
+    },
+    {
+      "from": "afghanistan",
+      "to": "ukraine",
+      "type": "land"
+    },
+    {
+      "from": "afghanistan",
+      "to": "ural",
+      "type": "land"
+    },
+    {
+      "from": "alberta",
+      "to": "alaska",
+      "type": "land"
+    },
+    {
+      "from": "alberta",
+      "to": "ontario",
+      "type": "land"
+    },
+    {
+      "from": "alberta",
+      "to": "western-united-states",
+      "type": "land"
+    },
+    {
+      "from": "brazil",
+      "to": "argentina",
+      "type": "land"
+    },
+    {
+      "from": "china",
+      "to": "afghanistan",
+      "type": "land"
+    },
+    {
+      "from": "china",
+      "to": "india",
+      "type": "land"
+    },
+    {
+      "from": "congo",
+      "to": "east-africa",
+      "type": "land"
+    },
+    {
+      "from": "congo",
+      "to": "egypt",
+      "type": "land"
+    },
+    {
+      "from": "congo",
+      "to": "south-africa",
+      "type": "land"
+    },
+    {
+      "from": "east-africa",
+      "to": "madagascar",
+      "type": "sea"
+    },
+    {
+      "from": "eastern-united-states",
+      "to": "ontario",
+      "type": "land"
+    },
+    {
+      "from": "egypt",
+      "to": "east-africa",
+      "type": "land"
+    },
+    {
+      "from": "egypt",
+      "to": "middle-east",
+      "type": "land"
+    },
+    {
+      "from": "egypt",
+      "to": "north-africa",
+      "type": "land"
+    },
+    {
+      "from": "egypt",
+      "to": "southern-europe",
+      "type": "sea"
+    },
+    {
+      "from": "great-britain",
+      "to": "scandinavia",
+      "type": "sea"
+    },
+    {
+      "from": "great-britain",
+      "to": "western-europe",
+      "type": "sea"
+    },
+    {
+      "from": "iceland",
+      "to": "great-britain",
+      "type": "sea"
+    },
+    {
+      "from": "iceland",
+      "to": "greenland",
+      "type": "sea"
+    },
+    {
+      "from": "iceland",
+      "to": "scandinavia",
+      "type": "sea"
+    },
+    {
+      "from": "indonesia",
+      "to": "new-guinea",
+      "type": "sea"
+    },
+    {
+      "from": "irkutsk",
+      "to": "china",
+      "type": "land"
+    },
+    {
+      "from": "irkutsk",
+      "to": "kamchatka",
+      "type": "land"
+    },
+    {
+      "from": "irkutsk",
+      "to": "yakutsk",
+      "type": "land"
+    },
+    {
+      "from": "japan",
+      "to": "kamchatka",
+      "type": "sea"
+    },
+    {
+      "from": "kamchatka",
+      "to": "alaska",
+      "type": "sea"
+    },
+    {
+      "from": "kamchatka",
+      "to": "yakutsk",
+      "type": "land"
+    },
+    {
+      "from": "middle-east",
+      "to": "afghanistan",
+      "type": "land"
+    },
+    {
+      "from": "middle-east",
+      "to": "east-africa",
+      "type": "sea"
+    },
+    {
+      "from": "middle-east",
+      "to": "india",
+      "type": "land"
+    },
+    {
+      "from": "middle-east",
+      "to": "southern-europe",
+      "type": "land"
+    },
+    {
+      "from": "middle-east",
+      "to": "ukraine",
+      "type": "land"
+    },
+    {
+      "from": "mongolia",
+      "to": "china",
+      "type": "land"
+    },
+    {
+      "from": "mongolia",
+      "to": "irkutsk",
+      "type": "land"
+    },
+    {
+      "from": "mongolia",
+      "to": "japan",
+      "type": "sea"
+    },
+    {
+      "from": "new-guinea",
+      "to": "eastern-australia",
+      "type": "sea"
+    },
+    {
+      "from": "north-africa",
+      "to": "brazil",
+      "type": "sea"
+    },
+    {
+      "from": "north-africa",
+      "to": "congo",
+      "type": "land"
+    },
+    {
+      "from": "north-africa",
+      "to": "southern-europe",
+      "type": "sea"
+    },
+    {
+      "from": "north-africa",
+      "to": "western-europe",
+      "type": "sea"
+    },
+    {
+      "from": "northern-europe",
+      "to": "great-britain",
+      "type": "sea"
+    },
+    {
+      "from": "northern-europe",
+      "to": "scandinavia",
+      "type": "land"
+    },
+    {
+      "from": "northern-europe",
+      "to": "southern-europe",
+      "type": "land"
+    },
+    {
+      "from": "northern-europe",
+      "to": "ukraine",
+      "type": "land"
+    },
+    {
+      "from": "northern-europe",
+      "to": "western-europe",
+      "type": "land"
+    },
+    {
+      "from": "northwest-territory",
+      "to": "alaska",
+      "type": "land"
+    },
+    {
+      "from": "northwest-territory",
+      "to": "alberta",
+      "type": "land"
+    },
+    {
+      "from": "northwest-territory",
+      "to": "greenland",
+      "type": "sea"
+    },
+    {
+      "from": "northwest-territory",
+      "to": "ontario",
+      "type": "land"
+    },
+    {
+      "from": "peru",
+      "to": "argentina",
+      "type": "land"
+    },
+    {
+      "from": "peru",
+      "to": "brazil",
+      "type": "land"
+    },
+    {
+      "from": "quebec",
+      "to": "eastern-united-states",
+      "type": "land"
+    },
+    {
+      "from": "quebec",
+      "to": "greenland",
+      "type": "sea"
+    },
+    {
+      "from": "quebec",
+      "to": "northwest-territory",
+      "type": "land"
+    },
+    {
+      "from": "quebec",
+      "to": "ontario",
+      "type": "land"
+    },
+    {
+      "from": "siam",
+      "to": "china",
+      "type": "land"
+    },
+    {
+      "from": "siam",
+      "to": "india",
+      "type": "land"
+    },
+    {
+      "from": "siam",
+      "to": "indonesia",
+      "type": "land"
+    },
+    {
+      "from": "siberia",
+      "to": "china",
+      "type": "land"
+    },
+    {
+      "from": "siberia",
+      "to": "irkutsk",
+      "type": "land"
+    },
+    {
+      "from": "siberia",
+      "to": "mongolia",
+      "type": "land"
+    },
+    {
+      "from": "siberia",
+      "to": "ural",
+      "type": "land"
+    },
+    {
+      "from": "siberia",
+      "to": "yakutsk",
+      "type": "land"
+    },
+    {
+      "from": "south-africa",
+      "to": "east-africa",
+      "type": "land"
+    },
+    {
+      "from": "south-africa",
+      "to": "madagascar",
+      "type": "sea"
+    },
+    {
+      "from": "southern-europe",
+      "to": "ukraine",
+      "type": "land"
+    },
+    {
+      "from": "ukraine",
+      "to": "scandinavia",
+      "type": "land"
+    },
+    {
+      "from": "ural",
+      "to": "ukraine",
+      "type": "land"
+    },
+    {
+      "from": "venezuela",
+      "to": "brazil",
+      "type": "land"
+    },
+    {
+      "from": "venezuela",
+      "to": "central-america",
+      "type": "land"
+    },
+    {
+      "from": "venezuela",
+      "to": "peru",
+      "type": "land"
+    },
+    {
+      "from": "western-australia",
+      "to": "eastern-australia",
+      "type": "land"
+    },
+    {
+      "from": "western-australia",
+      "to": "indonesia",
+      "type": "sea"
+    },
+    {
+      "from": "western-australia",
+      "to": "new-guinea",
+      "type": "sea"
+    },
+    {
+      "from": "western-europe",
+      "to": "southern-europe",
+      "type": "land"
+    },
+    {
+      "from": "western-united-states",
+      "to": "central-america",
+      "type": "land"
+    },
+    {
+      "from": "western-united-states",
+      "to": "eastern-united-states",
+      "type": "land"
+    },
+    {
+      "from": "western-united-states",
+      "to": "ontario",
+      "type": "land"
+    }
+  ]
+}

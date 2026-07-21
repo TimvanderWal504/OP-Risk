@@ -1,0 +1,209 @@
+/* ============================================================================
+   Trivium World Cup 2026 — Colors & Type foundations
+   ----------------------------------------------------------------------------
+   Framework-agnostic CSS custom properties. Pairs with twc-theme.css (the
+   Tailwind v4 token file). Use these when writing plain HTML/CSS artifacts,
+   mocks or slides outside the app build.
+
+   FONTS: loaded from Google Fonts CDN below. The source repo ships NO custom
+   fonts (Tailwind defaults only), so these are an intentional brand choice —
+   see README "Typography". Swap the @import for self-hosted woff2 in prod.
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---- Type families ---- */
+  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif; /* headlines, scores, ranks */
+  --font-body:    "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose */
+  --font-mono:    "Geist Mono", ui-monospace, monospace; /* FIFA codes, kickoff, tabular data */
+
+  /* ---- Type scale (mobile-first; px in comments) ---- */
+  --text-display: 2.5rem;   /* 40 — hero numerals, big scores  */
+  --text-h1:      1.75rem;  /* 28 — page titles                */
+  --text-h2:      1.375rem; /* 22 — section headers            */
+  --text-h3:      1.0625rem;/* 17 — card titles                */
+  --text-body:    0.9375rem;/* 15 — default body               */
+  --text-sm:      0.8125rem;/* 13 — secondary / labels         */
+  --text-xs:      0.6875rem;/* 11 — meta, badge text           */
+
+  --leading-tight: 1.05;
+  --leading-snug:  1.25;
+  --leading-body:  1.55;
+
+  --tracking-tight: -0.02em; /* display headlines               */
+  --tracking-flat:  0;
+  --tracking-wide:  0.08em;  /* uppercase eyebrows / badges     */
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semi:    600;
+  --weight-bold:    700;
+  --weight-black:   800;
+
+  /* ===========================================================================
+     COLOR — base palette ramps (mode-independent)
+     =========================================================================== */
+  /* Pitch green (primary) */
+  --pitch-50:#f4f8e6; --pitch-100:#e6f0c6; --pitch-200:#d2e394; --pitch-300:#bbd45f;
+  --pitch-400:#a1c23a; --pitch-500:#84ad28; --pitch-600:#6b8f1f; --pitch-700:#536f1b;
+  --pitch-800:#41571a; --pitch-900:#36481a; --pitch-950:#1b2709;
+
+  /* Broadcast blue (secondary) */
+  --blue-50:#eaf2fa; --blue-100:#cfe0f1; --blue-200:#a1c2e3; --blue-300:#6ba2d8;
+  --blue-400:#3d79b5; --blue-500:#215990; --blue-600:#1c4a78; --blue-700:#193d62;
+  --blue-800:#173351; --blue-900:#142b44; --blue-950:#0b1a2b;
+
+  /* Trophy gold (accent) */
+  --gold-50:#fdf6e6; --gold-100:#fbe9be; --gold-200:#f7d683; --gold-300:#f2c14e;
+  --gold-400:#f2a922; --gold-500:#d99008; --gold-600:#b5790a; --gold-700:#8f5e0f;
+  --gold-800:#744c13; --gold-900:#623f14; --gold-950:#382107;
+
+  /* Ink (cool neutral) */
+  --ink-50:#f5f7fa; --ink-100:#e8ecf2; --ink-200:#d3dae5; --ink-300:#b0bbcc;
+  --ink-400:#8492a8; --ink-500:#5f6e86; --ink-600:#475468; --ink-700:#354054;
+  --ink-800:#222c3c; --ink-850:#1a2230; --ink-900:#121925; --ink-950:#0a0e17;
+
+  /* ===========================================================================
+     SEMANTIC — light mode (default)
+     =========================================================================== */
+  color-scheme: light;
+
+  --bg:           #eef1f6;
+  --bg-elevated:  #ffffff;
+  --surface:      #ffffff;
+  --surface-2:    #f4f6fa;
+  --surface-3:    #e8edf4;
+
+  --border:        #e1e7f0;
+  --border-strong: #cdd6e3;
+  --ring:          #215990;
+
+  --fg1: #111826;   /* primary text   */
+  --fg2: #475064;   /* secondary text */
+  --fg3: #7a869c;   /* muted / meta   */
+
+  --primary:   #6b8f1f;  --primary-fill:   #84ad28;
+  --secondary: #215990;  --secondary-fill: #215990;
+  --accent:    #b5790a;  --accent-fill:    #f2a922;
+  --link:      #1c4a78;
+
+  --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
+  --podium-gold:#d4a017; --podium-silver:#9aa7b8; --podium-bronze:#b06b2c;
+}
+
+/* ===========================================================================
+   SEMANTIC — dark mode (premium broadcast ink)
+   =========================================================================== */
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:           #080c14;
+  --bg-elevated:  #111927;
+  --surface:      #141d2c;
+  --surface-2:    #1b2738;
+  --surface-3:    #243246;
+
+  --border:        #243044;
+  --border-strong: #33425a;
+  --ring:          #4f8fd4;
+
+  --fg1: #eef2f8;
+  --fg2: #a9b6cb;
+  --fg3: #6f7e97;
+
+  --primary:   #a1c23a;  --primary-fill:   #84ad28;
+  --secondary: #6ba2d8;  --secondary-fill: #2e6aa8;
+  --accent:    #f2c14e;  --accent-fill:    #f2a922;
+  --link:      #7fb1e3;
+
+  --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
+  --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:#080c14; --bg-elevated:#111927; --surface:#141d2c; --surface-2:#1b2738; --surface-3:#243246;
+    --border:#243044; --border-strong:#33425a; --ring:#4f8fd4;
+    --fg1:#eef2f8; --fg2:#a9b6cb; --fg3:#6f7e97;
+    --primary:#a1c23a; --primary-fill:#84ad28; --secondary:#6ba2d8; --secondary-fill:#2e6aa8;
+    --accent:#f2c14e; --accent-fill:#f2a922; --link:#7fb1e3;
+    --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
+    --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
+  }
+}
+
+/* ===========================================================================
+   SEMANTIC TYPE CLASSES — ready-to-use element styles
+   =========================================================================== */
+.twc-display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: var(--text-display);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+h1, .twc-h1 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h1);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+h2, .twc-h2 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h2);
+  line-height: var(--leading-snug);
+  color: var(--fg1);
+}
+h3, .twc-h3 {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-h3);
+  line-height: var(--leading-snug);
+  color: var(--fg1);
+}
+p, .twc-body {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--fg2);
+}
+.twc-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--fg2);
+}
+.twc-eyebrow {
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+.twc-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--fg3);
+}
+.twc-score {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+}
+code, .twc-code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--fg2);
+}

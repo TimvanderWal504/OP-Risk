@@ -1,0 +1,247 @@
+{
+  "_comment": "Territoriumkaarten-deck: 42 gebiedskaarten (14 per symbool) + 2 jokers. Symbolen zijn thema-neutrale ID's; de weergavenamen komen uit 'themes'. Geldige sets: 3x hetzelfde symbool, of 1 van elk symbool; een joker vervangt elk symbool.",
+  "themes": {
+    "classic": {
+      "symbol-1": "Infanterie",
+      "symbol-2": "Cavalerie",
+      "symbol-3": "Artillerie",
+      "joker": "Joker"
+    },
+    "modern": {
+      "symbol-1": "Infanterie",
+      "symbol-2": "Pantser",
+      "symbol-3": "Drone",
+      "joker": "Joker"
+    }
+  },
+  "setRules": {
+    "validSets": [
+      "three-of-a-kind",
+      "one-of-each"
+    ],
+    "jokerIsWild": true,
+    "ownedTerritoryBonus": 2
+  },
+  "cards": [
+    {
+      "id": "card-afghanistan",
+      "territoryId": "afghanistan",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-alaska",
+      "territoryId": "alaska",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-alberta",
+      "territoryId": "alberta",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-argentina",
+      "territoryId": "argentina",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-brazil",
+      "territoryId": "brazil",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-central-america",
+      "territoryId": "central-america",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-china",
+      "territoryId": "china",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-congo",
+      "territoryId": "congo",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-east-africa",
+      "territoryId": "east-africa",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-eastern-australia",
+      "territoryId": "eastern-australia",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-eastern-united-states",
+      "territoryId": "eastern-united-states",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-egypt",
+      "territoryId": "egypt",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-great-britain",
+      "territoryId": "great-britain",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-greenland",
+      "territoryId": "greenland",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-iceland",
+      "territoryId": "iceland",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-india",
+      "territoryId": "india",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-indonesia",
+      "territoryId": "indonesia",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-irkutsk",
+      "territoryId": "irkutsk",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-japan",
+      "territoryId": "japan",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-kamchatka",
+      "territoryId": "kamchatka",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-madagascar",
+      "territoryId": "madagascar",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-middle-east",
+      "territoryId": "middle-east",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-mongolia",
+      "territoryId": "mongolia",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-new-guinea",
+      "territoryId": "new-guinea",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-north-africa",
+      "territoryId": "north-africa",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-northern-europe",
+      "territoryId": "northern-europe",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-northwest-territory",
+      "territoryId": "northwest-territory",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-ontario",
+      "territoryId": "ontario",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-peru",
+      "territoryId": "peru",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-quebec",
+      "territoryId": "quebec",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-scandinavia",
+      "territoryId": "scandinavia",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-siam",
+      "territoryId": "siam",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-siberia",
+      "territoryId": "siberia",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-south-africa",
+      "territoryId": "south-africa",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-southern-europe",
+      "territoryId": "southern-europe",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-ukraine",
+      "territoryId": "ukraine",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-ural",
+      "territoryId": "ural",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-venezuela",
+      "territoryId": "venezuela",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-western-australia",
+      "territoryId": "western-australia",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-western-europe",
+      "territoryId": "western-europe",
+      "symbol": "symbol-1"
+    },
+    {
+      "id": "card-western-united-states",
+      "territoryId": "western-united-states",
+      "symbol": "symbol-2"
+    },
+    {
+      "id": "card-yakutsk",
+      "territoryId": "yakutsk",
+      "symbol": "symbol-3"
+    },
+    {
+      "id": "card-joker-1",
+      "territoryId": null,
+      "symbol": "joker"
+    },
+    {
+      "id": "card-joker-2",
+      "territoryId": null,
+      "symbol": "joker"
+    }
+  ]
+}

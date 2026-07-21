@@ -1,0 +1,11 @@
+{
+  "_comment": "Continentbonussen. Klassieke waarden voor de 42-gebieden kaart. Bij uitbreiding van de kaart: herbereken per continent op basis van het aantal gebieden en het aantal toegangspunten (vuistregel: bonus ~ aantal gebieden / 2, afgerond, +1 als het continent moeilijk te verdedigen is door veel grensovergangen).",
+  "continents": [
+    { "id": "north-america", "name": "Noord-Amerika", "bonus": 5 },
+    { "id": "south-america", "name": "Zuid-Amerika", "bonus": 2 },
+    { "id": "europe", "name": "Europa", "bonus": 5 },
+    { "id": "africa", "name": "Afrika", "bonus": 3 },
+    { "id": "asia", "name": "Azië", "bonus": 7 },
+    { "id": "australia", "name": "Australië", "bonus": 2 }
+  ]
+}

@@ -1,0 +1,56 @@
+/* ============================================================================
+   Operatie Atlas — host screen stage + animations
+   Ported verbatim from the Claude Design <helmet> block.
+   ============================================================================ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #04060b; overflow: hidden; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--secondary); }
+
+#app {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  background: radial-gradient(120% 90% at 50% -10%, #0d1626 0%, #05070d 60%, #04060b 100%);
+  font-family: var(--font-body);
+}
+#viewport { flex: 1; position: relative; overflow: hidden; }
+
+/* The stage is authored at a fixed 1920x1080 and scaled to fit the TV. */
+#stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 1920px; height: 1080px;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  color: var(--fg1);
+  background:
+    radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.14), rgba(4,6,11,0) 62%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.016) 0 2px, transparent 2px 30px),
+    linear-gradient(#070b13, #05080f);
+  overflow: hidden;
+}
+
+@keyframes atlasRollL{0%{transform:translate(-1500px,-260px) rotate(-1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(90px,30px) rotate(180deg) scale(1.08);}76%{transform:translate(-46px,-16px) rotate(72deg) scale(1);}88%{transform:translate(22px,8px) rotate(-20deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes atlasRollR{0%{transform:translate(1500px,-300px) rotate(1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(-90px,34px) rotate(-180deg) scale(1.08);}76%{transform:translate(50px,-18px) rotate(-72deg) scale(1);}88%{transform:translate(-24px,9px) rotate(24deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes atlasTumble{0%{transform:translate(-680px,-880px) rotate(-900deg) scale(.55);opacity:0;}10%{opacity:1;}58%{transform:translate(60px,40px) rotate(150deg) scale(1.1);}74%{transform:translate(-30px,-18px) rotate(60deg) scale(1);}88%{transform:translate(14px,7px) rotate(-16deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
+@keyframes atlasSettle{0%,72%{box-shadow:0 16px 34px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.28);}80%{box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 3px 0 rgba(255,255,255,.28);}100%{box-shadow:0 16px 34px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.28);}}
+@keyframes atlasLow{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes atlasBurst{0%{transform:scale(0.2);opacity:0;}35%{opacity:.9;}100%{transform:scale(2.6);opacity:0;}}
+@keyframes atlasCard{0%{transform:translateY(60px) scale(.9);opacity:0;}100%{transform:none;opacity:1;}}
+@keyframes atlasPop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.08);}100%{transform:scale(1);opacity:1;}}
+@keyframes atlasFlip{0%{filter:brightness(2.6) saturate(1.4);}100%{filter:none;}}
+@keyframes atlasSlam{0%{transform:scale(2.4);opacity:0;letter-spacing:.4em;}60%{opacity:1;}100%{transform:scale(1);opacity:1;letter-spacing:.02em;}}
+@keyframes atlasDot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.7);}}
+@keyframes atlasSheen{0%{transform:translateX(-120%);}100%{transform:translateX(220%);}}
+
+/* Demo control bar (hidden with ?bar=0 for real play) */
+#bar {
+  flex: none; height: 76px;
+  background: rgba(8,11,18,.94);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  font-family: var(--font-body);
+}
+#bar.hidden { display: none; }
+#bar button { cursor: pointer; }

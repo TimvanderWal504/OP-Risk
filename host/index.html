@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- The host screen is always dark: the theme is pinned here, not sniffed from
+     the OS, so a laptop in light mode still drives a broadcast-dark TV. -->
+<html lang="nl" class="dark" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operatie Atlas — Host-scherm</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/stage.css">
+</head>
+<body>
+  <div id="app">
+    <div id="viewport">
+      <!-- 1920x1080 stage, scaled to fit whatever screen the host laptop drives -->
+      <div id="stage" class="dark" data-theme="dark"></div>
+    </div>
+    <div id="bar"></div>
+  </div>
+  <script src="js/data.js"></script>
+  <script src="js/host.js"></script>
+</body>
+</html>

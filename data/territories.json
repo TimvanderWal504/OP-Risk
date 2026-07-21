@@ -1,0 +1,922 @@
+[
+  {
+    "id": "alaska",
+    "name": "Alaska",
+    "continent": "north-america",
+    "atomicRegions": [
+      "US-AK"
+    ],
+    "centroid": [
+      -152.59,
+      64.29
+    ]
+  },
+  {
+    "id": "northwest-territory",
+    "name": "Northwest Territory",
+    "continent": "north-america",
+    "atomicRegions": [
+      "CA-NT",
+      "CA-NU",
+      "CA-YT"
+    ],
+    "centroid": [
+      -102.93,
+      68.83
+    ]
+  },
+  {
+    "id": "greenland",
+    "name": "Greenland",
+    "continent": "north-america",
+    "atomicRegions": [
+      "GRL"
+    ],
+    "centroid": [
+      -41.39,
+      74.7
+    ]
+  },
+  {
+    "id": "alberta",
+    "name": "Alberta",
+    "continent": "north-america",
+    "atomicRegions": [
+      "CA-BC",
+      "CA-AB",
+      "CA-SK"
+    ],
+    "centroid": [
+      -116.32,
+      54.79
+    ]
+  },
+  {
+    "id": "ontario",
+    "name": "Ontario",
+    "continent": "north-america",
+    "atomicRegions": [
+      "CA-ON",
+      "CA-MB"
+    ],
+    "centroid": [
+      -90.51,
+      52.02
+    ]
+  },
+  {
+    "id": "quebec",
+    "name": "Quebec",
+    "continent": "north-america",
+    "atomicRegions": [
+      "CA-QC",
+      "CA-NB",
+      "CA-NS",
+      "CA-PE",
+      "CA-NL"
+    ],
+    "centroid": [
+      -69.18,
+      52.87
+    ]
+  },
+  {
+    "id": "western-united-states",
+    "name": "Western United States",
+    "continent": "north-america",
+    "atomicRegions": [
+      "US-AZ",
+      "US-CA",
+      "US-CO",
+      "US-HI",
+      "US-ID",
+      "US-KS",
+      "US-MT",
+      "US-ND",
+      "US-NE",
+      "US-NM",
+      "US-NV",
+      "US-OK",
+      "US-OR",
+      "US-SD",
+      "US-TX",
+      "US-UT",
+      "US-WA",
+      "US-WY"
+    ],
+    "centroid": [
+      -108.46,
+      39.72
+    ]
+  },
+  {
+    "id": "eastern-united-states",
+    "name": "Eastern United States",
+    "continent": "north-america",
+    "atomicRegions": [
+      "US-AL",
+      "US-AR",
+      "US-CT",
+      "US-DC",
+      "US-DE",
+      "US-FL",
+      "US-GA",
+      "US-IA",
+      "US-IL",
+      "US-IN",
+      "US-KY",
+      "US-LA",
+      "US-MA",
+      "US-MD",
+      "US-ME",
+      "US-MI",
+      "US-MN",
+      "US-MO",
+      "US-MS",
+      "US-NC",
+      "US-NH",
+      "US-NJ",
+      "US-NY",
+      "US-OH",
+      "US-PA",
+      "US-RI",
+      "US-SC",
+      "US-TN",
+      "US-VA",
+      "US-VT",
+      "US-WI",
+      "US-WV"
+    ],
+    "centroid": [
+      -85.44,
+      39.16
+    ]
+  },
+  {
+    "id": "central-america",
+    "name": "Central America",
+    "continent": "north-america",
+    "atomicRegions": [
+      "MEX",
+      "GTM",
+      "BLZ",
+      "HND",
+      "SLV",
+      "NIC",
+      "CRI",
+      "PAN",
+      "CUB",
+      "HTI",
+      "DOM",
+      "JAM",
+      "BHS",
+      "PRI",
+      "TTO"
+    ],
+    "centroid": [
+      -97.3,
+      21.69
+    ]
+  },
+  {
+    "id": "venezuela",
+    "name": "Venezuela",
+    "continent": "south-america",
+    "atomicRegions": [
+      "VEN",
+      "GUY",
+      "SUR",
+      "COL"
+    ],
+    "centroid": [
+      -68.19,
+      5.23
+    ]
+  },
+  {
+    "id": "peru",
+    "name": "Peru",
+    "continent": "south-america",
+    "atomicRegions": [
+      "PER",
+      "ECU",
+      "BOL",
+      "CHL"
+    ],
+    "centroid": [
+      -70.91,
+      -17.67
+    ]
+  },
+  {
+    "id": "brazil",
+    "name": "Brazil",
+    "continent": "south-america",
+    "atomicRegions": [
+      "BR-AC",
+      "BR-RO",
+      "BR-RR",
+      "BR-AM",
+      "BR-PA",
+      "BR-MS",
+      "BR-AP",
+      "BR-MT",
+      "BR-PR",
+      "BR-DF",
+      "BR-GO",
+      "BR-TO",
+      "BR-SP",
+      "BR-MA",
+      "BR-RJ",
+      "BR-PI",
+      "BR-MG",
+      "BR-ES",
+      "BR-BA",
+      "BR-CE",
+      "BR-SE",
+      "BR-AL",
+      "BR-RN",
+      "BR-PE",
+      "BR-PB",
+      "BR-SC",
+      "BR-RS"
+    ],
+    "centroid": [
+      -53.1,
+      -10.79
+    ]
+  },
+  {
+    "id": "argentina",
+    "name": "Argentina",
+    "continent": "south-america",
+    "atomicRegions": [
+      "ARG",
+      "URY",
+      "PRY",
+      "FLK"
+    ],
+    "centroid": [
+      -63.93,
+      -33.85
+    ]
+  },
+  {
+    "id": "iceland",
+    "name": "Iceland",
+    "continent": "europe",
+    "atomicRegions": [
+      "ISL"
+    ],
+    "centroid": [
+      -18.57,
+      65.0
+    ]
+  },
+  {
+    "id": "great-britain",
+    "name": "Great Britain",
+    "continent": "europe",
+    "atomicRegions": [
+      "GBR",
+      "IRL"
+    ],
+    "centroid": [
+      -4.02,
+      53.92
+    ]
+  },
+  {
+    "id": "scandinavia",
+    "name": "Scandinavia",
+    "continent": "europe",
+    "atomicRegions": [
+      "SWE",
+      "NOR",
+      "FIN",
+      "DNK"
+    ],
+    "centroid": [
+      18.59,
+      65.25
+    ]
+  },
+  {
+    "id": "western-europe",
+    "name": "Western Europe",
+    "continent": "europe",
+    "atomicRegions": [
+      "FRA",
+      "ESP",
+      "PRT"
+    ],
+    "centroid": [
+      -0.84,
+      43.39
+    ]
+  },
+  {
+    "id": "northern-europe",
+    "name": "Northern Europe",
+    "continent": "europe",
+    "atomicRegions": [
+      "DEU",
+      "POL",
+      "CZE",
+      "SVK",
+      "AUT",
+      "CHE",
+      "BEL",
+      "NLD",
+      "LUX",
+      "HUN"
+    ],
+    "centroid": [
+      14.39,
+      50.51
+    ]
+  },
+  {
+    "id": "southern-europe",
+    "name": "Southern Europe",
+    "continent": "europe",
+    "atomicRegions": [
+      "ITA",
+      "GRC",
+      "ALB",
+      "SRB",
+      "HRV",
+      "BIH",
+      "MNE",
+      "MKD",
+      "BGR",
+      "ROU",
+      "TUR",
+      "SVN",
+      "KOS",
+      "CYP",
+      "CYN",
+      "MLT"
+    ],
+    "centroid": [
+      25.92,
+      41.58
+    ]
+  },
+  {
+    "id": "ukraine",
+    "name": "Ukraine",
+    "continent": "europe",
+    "atomicRegions": [
+      "UKR",
+      "BLR",
+      "MDA",
+      "LTU",
+      "LVA",
+      "EST",
+      "GEO",
+      "ARM",
+      "AZE",
+      "RU-AD",
+      "RU-KC",
+      "RU-IN",
+      "RU-KB",
+      "RU-SE",
+      "RU-STA",
+      "RU-KGD",
+      "RU-MUR",
+      "RU-NGR",
+      "RU-PSK",
+      "RU-LEN",
+      "RU-SPE",
+      "RU-BRY",
+      "RU-SMO",
+      "RU-KR",
+      "RU-ARK",
+      "RU-IVA",
+      "RU-VLG",
+      "RU-KOS",
+      "RU-NIZ",
+      "RU-TVE",
+      "RU-YAR",
+      "RU-KLU",
+      "RU-KRS",
+      "RU-LIP",
+      "RU-MOW",
+      "RU-MOS",
+      "RU-ORL",
+      "RU-ROS",
+      "RU-TUL",
+      "RU-VGG",
+      "RU-BEL",
+      "RU-KDA",
+      "RU-MO",
+      "RU-PNZ",
+      "RU-RYA",
+      "RU-TAM",
+      "RU-VLA",
+      "RU-VOR",
+      "RU-BA",
+      "RU-NEN",
+      "RU-KO",
+      "RU-KIR",
+      "RU-ME",
+      "RU-UD",
+      "RU-AST",
+      "RU-CU",
+      "RU-KL",
+      "RU-SAM",
+      "RU-ORE",
+      "RU-SAR",
+      "RU-TA",
+      "RU-ULY",
+      "RU-CE",
+      "RU-DA",
+      "UA-43",
+      "RU-PER",
+      "UA-40"
+    ],
+    "centroid": [
+      42.86,
+      57.47
+    ]
+  },
+  {
+    "id": "north-africa",
+    "name": "North Africa",
+    "continent": "africa",
+    "atomicRegions": [
+      "MAR",
+      "DZA",
+      "TUN",
+      "LBY",
+      "MRT",
+      "SAH"
+    ],
+    "centroid": [
+      3.56,
+      26.79
+    ]
+  },
+  {
+    "id": "egypt",
+    "name": "Egypt",
+    "continent": "africa",
+    "atomicRegions": [
+      "EGY",
+      "SDN"
+    ],
+    "centroid": [
+      29.91,
+      19.84
+    ]
+  },
+  {
+    "id": "east-africa",
+    "name": "East Africa",
+    "continent": "africa",
+    "atomicRegions": [
+      "ETH",
+      "ERI",
+      "DJI",
+      "SOM",
+      "SOL",
+      "KEN",
+      "UGA",
+      "TZA",
+      "RWA",
+      "BDI",
+      "SDS"
+    ],
+    "centroid": [
+      37.39,
+      3.44
+    ]
+  },
+  {
+    "id": "congo",
+    "name": "Congo",
+    "continent": "africa",
+    "atomicRegions": [
+      "COD",
+      "COG",
+      "CAF",
+      "CMR",
+      "GAB",
+      "GNQ",
+      "AGO",
+      "ZMB",
+      "MWI",
+      "TCD",
+      "NER",
+      "NGA",
+      "BEN",
+      "TGO",
+      "GHA",
+      "CIV",
+      "LBR",
+      "SLE",
+      "GIN",
+      "GNB",
+      "SEN",
+      "GMB",
+      "MLI",
+      "BFA"
+    ],
+    "centroid": [
+      12.54,
+      4.88
+    ]
+  },
+  {
+    "id": "south-africa",
+    "name": "South Africa",
+    "continent": "africa",
+    "atomicRegions": [
+      "NAM",
+      "BWA",
+      "ZWE",
+      "LSO",
+      "SWZ",
+      "MOZ",
+      "ZA-NC",
+      "ZA-WC",
+      "ZA-NW",
+      "ZA-FS",
+      "ZA-GT",
+      "ZA-MP",
+      "ZA-LP",
+      "ZA-NL",
+      "ZA-EC"
+    ],
+    "centroid": [
+      25.81,
+      -23.24
+    ]
+  },
+  {
+    "id": "madagascar",
+    "name": "Madagascar",
+    "continent": "africa",
+    "atomicRegions": [
+      "MDG"
+    ],
+    "centroid": [
+      46.7,
+      -19.37
+    ]
+  },
+  {
+    "id": "ural",
+    "name": "Ural",
+    "continent": "asia",
+    "atomicRegions": [
+      "RU-TOM",
+      "RU-CHE",
+      "RU-KGN",
+      "RU-YAN",
+      "RU-SVE",
+      "RU-KHM",
+      "RU-OMS",
+      "RU-TYU",
+      "RU-ALT",
+      "RU-NVS"
+    ],
+    "centroid": [
+      73.31,
+      61.25
+    ]
+  },
+  {
+    "id": "siberia",
+    "name": "Siberia",
+    "continent": "asia",
+    "atomicRegions": [
+      "RU-AL",
+      "RU-KEM",
+      "RU-KK",
+      "RU-IRK",
+      "RU-KYA",
+      "RU-TY",
+      "RU-BU"
+    ],
+    "centroid": [
+      98.17,
+      63.68
+    ]
+  },
+  {
+    "id": "yakutsk",
+    "name": "Yakutsk",
+    "continent": "asia",
+    "atomicRegions": [
+      "RU-SA"
+    ],
+    "centroid": [
+      130.09,
+      66.17
+    ]
+  },
+  {
+    "id": "irkutsk",
+    "name": "Irkutsk",
+    "continent": "asia",
+    "atomicRegions": [
+      "RU-AMU",
+      "RU-ZAB",
+      "RU-PRI",
+      "RU-YEV",
+      "RU-KHA"
+    ],
+    "centroid": [
+      130.0,
+      53.18
+    ]
+  },
+  {
+    "id": "kamchatka",
+    "name": "Kamchatka",
+    "continent": "asia",
+    "atomicRegions": [
+      "RU-CHU",
+      "RU-MAG",
+      "RU-SAK",
+      "RU-KAM"
+    ],
+    "centroid": [
+      137.19,
+      63.16
+    ]
+  },
+  {
+    "id": "mongolia",
+    "name": "Mongolia",
+    "continent": "asia",
+    "atomicRegions": [
+      "MNG"
+    ],
+    "centroid": [
+      103.05,
+      46.83
+    ]
+  },
+  {
+    "id": "china",
+    "name": "China",
+    "continent": "asia",
+    "atomicRegions": [
+      "PRK",
+      "KOR",
+      "TWN",
+      "CN-GS",
+      "CN-QH",
+      "CN-GX",
+      "CN-GZ",
+      "CN-CQ",
+      "CN-BJ",
+      "CN-FJ",
+      "CN-AH",
+      "CN-GD",
+      "CN-XZ",
+      "CN-XJ",
+      "CN-HI",
+      "CN-NX",
+      "CN-SN",
+      "CN-SX",
+      "CN-HB",
+      "CN-HN",
+      "CN-SC",
+      "CN-YN",
+      "CN-HE",
+      "CN-HA",
+      "CN-LN",
+      "CN-SD",
+      "CN-TJ",
+      "CN-JX",
+      "CN-JS",
+      "CN-SH",
+      "CN-ZJ",
+      "CN-JL",
+      "CN-NM",
+      "CN-HL"
+    ],
+    "centroid": [
+      104.43,
+      36.57
+    ]
+  },
+  {
+    "id": "japan",
+    "name": "Japan",
+    "continent": "asia",
+    "atomicRegions": [
+      "JPN"
+    ],
+    "centroid": [
+      138.05,
+      37.61
+    ]
+  },
+  {
+    "id": "middle-east",
+    "name": "Middle East",
+    "continent": "asia",
+    "atomicRegions": [
+      "SAU",
+      "IRQ",
+      "IRN",
+      "YEM",
+      "OMN",
+      "ARE",
+      "QAT",
+      "KWT",
+      "BHR",
+      "JOR",
+      "SYR",
+      "LBN",
+      "ISR",
+      "PSX"
+    ],
+    "centroid": [
+      48.29,
+      27.47
+    ]
+  },
+  {
+    "id": "india",
+    "name": "India",
+    "continent": "asia",
+    "atomicRegions": [
+      "BGD",
+      "BTN",
+      "NPL",
+      "LKA",
+      "PAK",
+      "IN-SK",
+      "IN-TG",
+      "IN-LA",
+      "IN-CH",
+      "IN-DL",
+      "IN-HP",
+      "IN-HR",
+      "IN-JK",
+      "IN-AP",
+      "IN-KL",
+      "IN-LD",
+      "IN-OR",
+      "IN-DH",
+      "IN-KA",
+      "IN-GA",
+      "IN-AN",
+      "IN-AS",
+      "IN-MN",
+      "IN-NL",
+      "IN-ML",
+      "IN-PB",
+      "IN-RJ",
+      "IN-UP",
+      "IN-UT",
+      "IN-JH",
+      "IN-WB",
+      "IN-BR",
+      "IN-CT",
+      "IN-MP",
+      "IN-PY",
+      "IN-TN",
+      "IN-GJ",
+      "IN-AR",
+      "IN-MZ",
+      "IN-TR",
+      "IN-MH"
+    ],
+    "centroid": [
+      78.07,
+      24.4
+    ]
+  },
+  {
+    "id": "siam",
+    "name": "Siam",
+    "continent": "asia",
+    "atomicRegions": [
+      "THA",
+      "MMR",
+      "LAO",
+      "KHM",
+      "VNM",
+      "MYS",
+      "SGP"
+    ],
+    "centroid": [
+      102.22,
+      15.75
+    ]
+  },
+  {
+    "id": "afghanistan",
+    "name": "Afghanistan",
+    "continent": "asia",
+    "atomicRegions": [
+      "AFG",
+      "TKM",
+      "UZB",
+      "TJK",
+      "KGZ",
+      "KAZ"
+    ],
+    "centroid": [
+      66.42,
+      44.48
+    ]
+  },
+  {
+    "id": "indonesia",
+    "name": "Indonesia",
+    "continent": "australia",
+    "atomicRegions": [
+      "ID-AC",
+      "ID-KI",
+      "ID-JB",
+      "ID-JT",
+      "ID-BE",
+      "ID-BT",
+      "ID-JK",
+      "ID-KB",
+      "ID-LA",
+      "ID-SS",
+      "ID-BB",
+      "ID-BA",
+      "ID-JI",
+      "ID-KS",
+      "ID-NT",
+      "ID-SN",
+      "ID-SR",
+      "ID-KR",
+      "ID-GO",
+      "ID-JA",
+      "ID-KT",
+      "ID-SU",
+      "ID-RI",
+      "ID-SA",
+      "ID-MU",
+      "ID-SB",
+      "ID-YO",
+      "ID-MA",
+      "ID-NB",
+      "ID-SG",
+      "ID-ST",
+      "TLS",
+      "PHL",
+      "BRN"
+    ],
+    "centroid": [
+      113.64,
+      0.5
+    ]
+  },
+  {
+    "id": "new-guinea",
+    "name": "New Guinea",
+    "continent": "australia",
+    "atomicRegions": [
+      "ID-PB",
+      "ID-PA",
+      "PNG"
+    ],
+    "centroid": [
+      141.54,
+      -5.32
+    ]
+  },
+  {
+    "id": "western-australia",
+    "name": "Western Australia",
+    "continent": "australia",
+    "atomicRegions": [
+      "AU-WA"
+    ],
+    "centroid": [
+      122.18,
+      -25.47
+    ]
+  },
+  {
+    "id": "eastern-australia",
+    "name": "Eastern Australia",
+    "continent": "australia",
+    "atomicRegions": [
+      "AU-NT",
+      "AU-SA",
+      "AU-QLD",
+      "AU-TAS",
+      "AU-VIC",
+      "AU-ACT",
+      "AU-X02~",
+      "AU-NSW"
+    ],
+    "centroid": [
+      140.48,
+      -25.86
+    ]
+  }
+]
