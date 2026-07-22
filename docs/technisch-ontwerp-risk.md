@@ -72,12 +72,12 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 
 | Bestand | Rol in de engine |
 |---|---|
-| `territories.json` | 42 gebieden: id, naam, continent, centroid |
+| `territories.json` | 43 gebieden: id, naam, continent, centroid |
 | `territories.geo.json` | Polygon-geometrie per gebied (frontend-render + klik-detectie) |
-| `adjacency_validated.json` | 82 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
+| `adjacency_validated.json` | 84 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
 | `continents.json` | Continentbonussen |
 | `colors.json` | 7 spelerskleuren + kleurenblind-symbolen |
-| `cards.json` | Deck (44 kaarten), set-regels, inleg-thema's, `ownedTerritoryBonus` |
+| `cards.json` | Deck (45 kaarten), set-regels, inleg-thema's, `ownedTerritoryBonus` |
 | rollen / missies / events | JSON, nog te vullen (FO §13) — datamodel staat, content later |
 
 De engine bevat **geen** kaart-, kleur- of kaartkennis in code; alles komt uit deze bestanden. Dat is de kern van "data-driven" uit het FO: een nieuwe kaart of extra gebied = andere data, geen codewijziging.
@@ -151,7 +151,7 @@ Risk is intrinsiek een reeks discrete, geordende gebeurtenissen. Dat sluit één
 
 ### 5.2 Streams & events
 
-E�n event-stream per `GameId`. Events zijn onveranderlijke feiten in verleden tijd:
+E�n event-stream per `GameId`. Events zijn onveranderlijke feiten in verleden tijd:
 
 ```
 GameCreated, PlayerJoined, ColorChosen, OrderRolled, TurnOrderDetermined,
@@ -246,10 +246,10 @@ Conform FO §2.3: de telefoon toont **nooit** een kaart om op te tikken, altijd 
 Deze staan bewust nog open en horen bij de uitwerking, niet bij dit ontwerp:
 
 1. **Marten-projectie: inline vs. async.** Inline is eenvoudiger en voor één-huiskamer-schaal ruim voldoende; async schaalt beter maar is hier waarschijnlijk overkill. Voorstel: begin inline.
-2. **Delta- vs. full-state-push.** Full-state is simpeler en voor 42 gebieden + ≤7 spelers klein genoeg om elke keer volledig te pushen. Voorstel: begin met full-state, optimaliseer naar delta's alleen als het nodig blijkt.
+2. **Delta- vs. full-state-push.** Full-state is simpeler en voor 43 gebieden + ≤7 spelers klein genoeg om elke keer volledig te pushen. Voorstel: begin met full-state, optimaliseer naar delta's alleen als het nodig blijkt.
 3. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat "server handhaaft, client toont benadering".
 4. **Rollen/missies/events-content** — datamodel staat (FO §8/§9/§6.1), inhoud nog te vullen; dat is contentwerk, geen architectuur.
-5. **44- vs. 42-gebieden** (Nieuw-Zeeland/Chili) — als je NZ speelbaar maakt, verandert dat de adjacency, de continentbonus van Australië/Zuid-Amerika en de kaartendeck-grootte. De data-driven opzet vangt dit op, maar het is een bewuste spelbeslissing die eerst in de data moet landen.
+5. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
 
 ---
 

@@ -111,12 +111,13 @@ Dit lost twee dingen in één keer op:
 
 Deze laag staat volledig los van de geometrie in §4.1: welke twee gebieden aan elkaar grenzen (en of dat land of zee is) blijft een bewuste spelontwerpkeuze, niet iets dat automatisch uit "raken de polygonen elkaar" wordt afgeleid — dat zou bijvoorbeeld de klassieke Alaska-Kamchatka zeeroute missen, want die landmassa's raken elkaar geometrisch niet.
 
-**Validatie tegen `territories.geo.json` (afgerond, incl. review-beslissingen):** de definitieve lijst (82 verbindingen: 60 land + 22 zee, `adjacency_validated.json`) is volledig consistent met de polygon-geometrie: **elke land-verbinding raakt ook daadwerkelijk geometrisch, en er bestaan geen rakende gebiedsparen die buiten de lijst vallen** (geautomatiseerd geverifieerd). De belangrijkste beslissingen die hierin verwerkt zijn:
+**Validatie tegen `territories.geo.json` (afgerond, incl. review-beslissingen):** de definitieve lijst (84 verbindingen: 60 land + 24 zee, `adjacency_validated.json`) is volledig consistent met de polygon-geometrie: **elke land-verbinding raakt ook daadwerkelijk geometrisch, en er bestaan geen rakende gebiedsparen die buiten de lijst vallen** (geautomatiseerd geverifieerd). De belangrijkste beslissingen die hierin verwerkt zijn:
 - **Kaukasus-gat gedicht:** Georgië, Armenië en Azerbeidzjan zijn aan `ukraine` toegewezen, waardoor de klassieke `middle-east–ukraine`-verbinding ook geometrisch klopt.
 - **Yukon hergegroepeerd** naar `northwest-territory`, waardoor de klassieke `alaska–northwest-territory`-verbinding hersteld is.
 - **Rusland-banden herzien** naar de klassieke lay-out (Siberië als verticale band die Mongolië en China raakt; Irkutsk/Yakutsk oostelijker).
 - **Bewust geaccepteerde afwijkingen van klassiek Risk** (precieze geografie wint): `eastern-united-states–central-america`, `north-africa–east-africa`, `ural–china` en `mongolia–kamchatka` bestaan niet meer; nieuw zijn o.a. `quebec–northwest-territory`, `irkutsk–china`, `congo–egypt` en `afghanistan–siberia`.
-- Alle 42 gebieden blijven onderling verbonden (volledige graaf).
+- **Nieuw-Zeeland toegevoegd als 43e gebied** (continent Australië, atomaire regio `NZL`) met twee zeeverbindingen: `new-zealand–eastern-australia` en `new-zealand–argentina`. Die laatste is een bewuste spelontwerpkeuze zonder klassiek precedent: ze geeft Australië een tweede toegangspunt van buitenaf (naast `siam–indonesia`) en verbindt het continent rechtstreeks met Zuid-Amerika. De continentbonus van Australië is daarop aangepast (§4.4).
+- Alle 43 gebieden blijven onderling verbonden (volledige graaf).
 
 ### 4.3 Genereren op het beeld (TV)
 
@@ -130,9 +131,9 @@ Met echte polygonen (§4.1) in plaats van simpele punten wordt de TV-weergave no
 
 Drie aanvullende databestanden completeren de spel-dataset:
 
-- **`continents.json`** — de continentbonussen (klassiek: NA 5, ZA 2, EU 5, AF 3, AZ 7, AU 2). Bij uitbreiding van de kaart worden de bonussen per continent herzien op basis van het nieuwe aantal gebieden en toegangspunten (vuistregel: bonus ≈ aantal gebieden / 2, +1 voor moeilijk verdedigbare continenten).
+- **`continents.json`** — de continentbonussen: NA 5, ZA 2, EU 5, AF 3, AZ 7, **AU 3**. De eerste vijf zijn de klassieke waarden; Australië is verhoogd van 2 naar 3 omdat het continent met Nieuw-Zeeland op 5 gebieden en 2 toegangspunten komt (§4.2). Bij verdere uitbreiding van de kaart worden de bonussen per continent herzien op basis van het nieuwe aantal gebieden en toegangspunten (vuistregel: bonus ≈ aantal gebieden / 2, +1 voor moeilijk verdedigbare continenten).
 - **`colors.json`** — de 7 spelerskleuren uit het Claude Design-ontwerp: Rood `#C0392B`, Blauw `#215C9C`, Groen `#4F7A2E`, Geel `#E0A81C`, Paars `#8E4585`, Oranje `#D97A1A`, Cyaan `#158F8A`, elk met een kleurenblind-vriendelijk symbool. Missies verwijzen naar deze kleur-ID's.
-- **`cards.json`** — het territoriumkaarten-deck: 42 gebiedskaarten (14 per symbool) + 2 jokers. Symbolen zijn thema-neutrale ID's met twee weergavethema's: **klassiek** (Infanterie / Cavalerie / Artillerie) en **modern** (Infanterie / Pantser / Drone). Geldige sets: 3× hetzelfde symbool of 1 van elk; een joker vervangt elk symbool. Het deck bevat ook de regel **`ownedTerritoryBonus: 2`**: leg je een kaart in van een gebied dat je op dat moment bezit, dan plaats je direct 2 extra legers op dat gebied (klassieke regel; per spel aanpasbaar in de data).
+- **`cards.json`** — het territoriumkaarten-deck: 43 gebiedskaarten + 2 jokers (45 in totaal). Elk gebied heeft precies één kaart; omdat 43 niet deelbaar is door 3 is de symboolverdeling 15× `symbol-1` en 14× elk van de andere twee (de kaart van Nieuw-Zeeland kreeg `symbol-1`). Symbolen zijn thema-neutrale ID's met twee weergavethema's: **klassiek** (Infanterie / Cavalerie / Artillerie) en **modern** (Infanterie / Pantser / Drone). Geldige sets: 3× hetzelfde symbool of 1 van elk; een joker vervangt elk symbool. Het deck bevat ook de regel **`ownedTerritoryBonus: 2`**: leg je een kaart in van een gebied dat je op dat moment bezit, dan plaats je direct 2 extra legers op dat gebied (klassieke regel; per spel aanpasbaar in de data).
 
 ---
 

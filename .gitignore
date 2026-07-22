@@ -9,5 +9,8 @@ node_modules/
 dist/
 .vite/
 
+# Secrets (zie .env.example)
+.env
+
 # Overig
 *.zip

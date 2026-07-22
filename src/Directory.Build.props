@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    Gedeelde build-instellingen voor alle projecten onder src/.
+    Staat hier, niet per .csproj, zodat de vier projecten niet uit elkaar kunnen lopen.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

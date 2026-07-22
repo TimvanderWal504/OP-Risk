@@ -201,6 +201,16 @@
       "type": "sea"
     },
     {
+      "from": "new-zealand",
+      "to": "argentina",
+      "type": "sea"
+    },
+    {
+      "from": "new-zealand",
+      "to": "eastern-australia",
+      "type": "sea"
+    },
+    {
       "from": "north-africa",
       "to": "brazil",
       "type": "sea"

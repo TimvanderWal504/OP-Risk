@@ -918,5 +918,17 @@
       140.48,
       -25.86
     ]
+  },
+  {
+    "id": "new-zealand",
+    "name": "New Zealand",
+    "continent": "australia",
+    "atomicRegions": [
+      "NZL"
+    ],
+    "centroid": [
+      172.63,
+      -41.8
+    ]
   }
 ]

@@ -1,0 +1,34 @@
+# Plan B-opstelling (docs/plan-b-reisopstelling.md §2, §5, §7).
+#
+# Postgres is hier bewust NIET via `ports:` bereikbaar: hij hangt alleen aan het
+# interne compose-netwerk, zodat Tailscale Funnel uitsluitend de API-poort
+# publiceert en nooit de database (§2 en §4 van het hosting-plan).
+# Voor lokale ontwikkeling zie docker-compose.dev.yml.
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: riskgame-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - riskgame-db-data:/var/lib/postgresql/data
+    healthcheck:
+      # Zorgt dat de API-service straks met `depends_on: condition:
+      # service_healthy` kan wachten tot Marten daadwerkelijk kan verbinden.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - riskgame
+
+volumes:
+  riskgame-db-data:
+
+networks:
+  riskgame:
