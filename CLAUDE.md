@@ -69,3 +69,35 @@ feed toevoegen aan RiskGame-projecten.
 dotnet build RiskGame.sln
 dotnet test RiskGame.sln
 ```
+
+## Wijzigingen bijhouden
+
+Nooit een los CHANGELOG.md, SUMMARY.md of vergelijkbaar bestand aanmaken of
+bijwerken om wijzigingen te loggen. Git-commits zijn de enige changelog:
+gebruik Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`)
+met een korte titel + waarom in de body. Als een taak groot genoeg is om een
+samenvatting te verdienen, hoort die in de commit message, niet in een bestand.
+
+## Technische kaders per stack
+Zie src/CLAUDE.md (SOLID/DRY/Clean Code) en frontend/CLAUDE.md
+(component-driven development) — automatisch actief als je in die map werkt.
+
+## Werkwijze (agent-regie)
+
+- **Eén taak per sessie, klein houden.** Een taak = één afgebakend stuk
+  (bv. "DataLoader + connectiviteitstest"), niet "bouw de rules engine".
+  Bij een taak die meer dan ~5 bestanden raakt: eerst een plan voorleggen
+  (plan mode), dan pas implementeren.
+- **Definition of done, altijd:** `dotnet build` groen, `dotnet test` groen,
+  en (bij frontend-werk) `pnpm run build` groen. Een taak zonder geslaagde
+  tests is niet af — ook niet "bijna af".
+- **Geen nieuwe dependencies zonder overleg.** NuGet- of (p)npm-packages
+  toevoegen alleen na expliciete goedkeuring, met motivatie waarom het niet
+  zonder kan.
+- **`data/*.json` is bevroren.** Nooit wijzigen zonder expliciete opdracht —
+  deze bestanden zijn gevalideerde ontwerp-output, geen werkbestanden.
+- **Geen TODO's of dode code achterlaten.** Iets dat niet af kan in deze
+  taak wordt gemeld in de afronding, niet als `// TODO` in de code geparkeerd.
+- **Bij twijfel over een spelregel: stoppen en vragen.** Nooit een regel
+  "aannemelijk invullen" — het FO is compleet; als iets er niet in staat,
+  is dat een bevinding, geen invulruimte.

@@ -1,0 +1,14 @@
+# Alleen voor lokale ontwikkeling — expliciet meegeven, nooit op Proxmox:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Publiceert Postgres op 127.0.0.1 zodat `dotnet test` op de dev-machine erbij
+# kan. Bewust géén 0.0.0.0-binding: dat is precies wat de beveiligingschecklist
+# in het hosting-plan (§4) verbiedt. Deze file heet niet `override` omdat compose
+# een override-bestand automatisch meeneemt — dat zou de binding ook op de
+# server activeren.
+
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"

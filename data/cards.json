@@ -1,5 +1,5 @@
 {
-  "_comment": "Territoriumkaarten-deck: 42 gebiedskaarten (14 per symbool) + 2 jokers. Symbolen zijn thema-neutrale ID's; de weergavenamen komen uit 'themes'. Geldige sets: 3x hetzelfde symbool, of 1 van elk symbool; een joker vervangt elk symbool.",
+  "_comment": "Territoriumkaarten-deck: 43 gebiedskaarten (symbol-1 15x, symbol-2 14x, symbol-3 14x) + 2 jokers. Symbolen zijn thema-neutrale ID's; de weergavenamen komen uit 'themes'. Geldige sets: 3x hetzelfde symbool, of 1 van elk symbool; een joker vervangt elk symbool.",
   "themes": {
     "classic": {
       "symbol-1": "Infanterie",
@@ -142,6 +142,11 @@
       "id": "card-new-guinea",
       "territoryId": "new-guinea",
       "symbol": "symbol-3"
+    },
+    {
+      "id": "card-new-zealand",
+      "territoryId": "new-zealand",
+      "symbol": "symbol-1"
     },
     {
       "id": "card-north-africa",

@@ -21,7 +21,7 @@ Drie kant-en-klare prompts (TV-bord, host-opzet/herstart, spelerstelefoon) met a
 
 Gekozen aanpak: backend blijft thuis op Proxmox draaien, bereikbaar via **Tailscale Funnel** (publieke HTTPS-URL, geen installatie nodig bij medespelers); een meegenomen laptop is het TV-scherm. Geen nieuw kiosk-apparaat nodig (Raspberry Pi-aanpak "Plan A" staat als alternatief genoteerd, mocht er ooit een geschikt tweedehands apparaat binnen budget komen). Beveiligingschecklist (rate limiting, Funnel alleen tijdens speelmomenten) en betrouwbaarheids-mitigaties (auto-restart, UPS-advies, noodtoegang via Tailscale) staan uitgewerkt.
 
-### 1.4 Kaart-geodata (de 42 gebieden)
+### 1.4 Kaart-geodata (de 43 gebieden)
 **Bestanden:** `territories.json`, `territories.geo.json`, `build_map.py`, `territories_extended.json` + `.geo.json`
 
 De volledige, geografisch correcte kaart is opgebouwd uit publiek-domein Natural Earth-data: elk gebied is een groep van "atomaire regio's" (meestal hele landen; voor Rusland/VS/Canada/Australië — en alvast China/Brazilië/India/Indonesië/Zuid-Afrika — op provincie-/deelstaatniveau). Dit is bewezen uitbreidbaar door Nieuw-Zeeland en een losgekoppeld Chili toe te voegen zonder nieuwe data te hoeven ophalen (`territories_extended.*`, 44 gebieden). Dit is de **brondata die je in de applicatie gebruikt** — onafhankelijk van hoe de kaart er straks uitziet.
@@ -42,6 +42,8 @@ Route 2 gekozen en uitgevoerd: `map-background-final.png` (definitieve, opgescho
 
 ### 2.2 ~~Grenzen/zeeverbindingen (§4.2 FO) opnieuw doorlopen~~ ✅ Afgerond
 Gevalideerd tegen `territories.geo.json`: 7 verbindingen verwijderd (niet meer kloppend), 2 gepromoveerd van zee naar land (Turkije–Midden-Oosten, Indonesië–Siam via Maleisië/Borneo), 6 nieuwe landverbindingen toegevoegd. Onderweg ook een echte databug gefixt (overzeese Franse gebiedsdelen die per ongeluk Zuid-Amerika raakten). Resultaat: `adjacency_validated.json`, 82 verbindingen, alle 42 gebieden verbonden. Direct bruikbaar voor de rules engine.
+
+**Nadien uitgebreid naar 43 gebieden:** Nieuw-Zeeland toegevoegd aan Australië met de zeeroutes `new-zealand–eastern-australia` en `new-zealand–argentina` (84 verbindingen, nog steeds volledig verbonden). Zie FO §4.2/§4.4 voor de gevolgen: continentbonus Australië 2 → 3 en een 43e territoriumkaart.
 
 ### 2.2b Review-verwerking ✅ Afgerond (21 juli)
 Alle bevindingen uit `review-rapport-risk.md` zijn verwerkt: continentbonussen (`continents.json`), kaartendeck met twee thema's (`cards.json`), kleurenset (`colors.json`), Kaukasus/Yukon/Rusland-banden hergegroepeerd, 89 ontbrekende landen toegewezen (Korea's/Taiwan → china, Caribisch gebied → central-america, etc.), adjacency opnieuw gevalideerd (82 verbindingen, volledig consistent met de geometrie), regels D1–D6 in het FO opgenomen, silhouet hergenereerd en verouderde bestanden opgeruimd.
@@ -80,13 +82,13 @@ Alle drie de prompts (TV, host-opzet, telefoon) zijn gedraaid in Claude Design. 
 | `technisch-ontwerp-risk.md` | Technisch ontwerp: architectuur, stack, event sourcing, teststrategie |
 | `claude-design-prompts-risk.md` | 3 design-prompts (TV, host-opzet, telefoon) |
 | `plan-b-reisopstelling.md` | Hosting-plan: Tailscale Funnel + laptop-als-TV |
-| `territories.json` | Groeperingsconfiguratie: 42 gebieden → atomaire regio's |
-| `territories.geo.json` | Diezelfde 42 gebieden met echte polygon-geometrie |
+| `territories.json` | Groeperingsconfiguratie: 43 gebieden → atomaire regio's |
+| `territories.geo.json` | Diezelfde 43 gebieden met echte polygon-geometrie |
 | `territories_extended.json` / `.geo.json` | Bewijs van uitbreidbaarheid: +Chili, +Nieuw-Zeeland (44) |
-| `adjacency_validated.json` | Gevalideerde land/zee-grenzen (82), volledig consistent met de geometrie |
-| `continents.json` | Continentbonussen (klassiek) + herberekeningsrichtlijn |
+| `adjacency_validated.json` | Gevalideerde land/zee-grenzen (84), volledig consistent met de geometrie |
+| `continents.json` | Continentbonussen (klassiek, AU 3) + herberekeningsrichtlijn |
 | `colors.json` | De 7 spelerskleuren (Claude Design) incl. kleurenblind-symbolen |
-| `cards.json` | Territoriumkaarten-deck: 42+2, set-regels, twee thema's |
+| `cards.json` | Territoriumkaarten-deck: 43+2, set-regels, twee thema's |
 | `build_map.py` | Script dat de kaart uit Natural Earth-data (her)genereert (incl. alle review-fixes) |
 | `review-rapport-risk.md` | Reviewbevindingen + genomen beslissingen (historie) |
 | `territories_silhouette_nolabels.png` | Basisafbeelding voor Route 2 (Gemini image-to-image) |
