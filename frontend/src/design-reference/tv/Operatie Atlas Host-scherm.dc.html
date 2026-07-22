@@ -619,6 +619,7 @@ class Component extends DCLogic {
   get STR(){ return {
     nl:{ lobbyKicker:'Wachtkamer', join:'Scan om mee te doen', waitSlot:'Wacht op speler', waiting:'Wachten tot de host het spel start…',
       playersJoined:'Spelers aangesloten', settings:'Instellingen',
+      setMap:'Kaart', mapVal:'Standaard · 43 gebieden',
       setWin:'Winconditie', valMissions:'Geheime missies', setLayout:'Startopstelling', valRandom:'Random', setRoles:'Rollen', on:'Aan', off:'Uit',
       setEvents:'Gebeurtenisronde', setTimer:'Beurttimer', setArmies:'Startlegers', armiesVal:'18 (7 spelers)',
       orderKicker:'Startvolgorde', orderTitle:'Wie mag beginnen?', orderSub:'Elke speler gooit één dobbelsteen. Hoogste worp begint.', tie:'Blauw en Geel gooiden 6 — opnieuw gegooid, Blauw wint', turnOrder:'Speelvolgorde',
@@ -633,6 +634,7 @@ class Component extends DCLogic {
       states:['Lobby','Volgorde bepalen','Gebieden claimen','Hoofdscherm','Gebiedsselectie','Gevecht','Gebeurteniskaart','Speler uitgeschakeld','Winnaar'] },
     en:{ lobbyKicker:'Lobby', join:'Scan to join', waitSlot:'Open slot', waiting:'Waiting for the host to start the game…',
       playersJoined:'Players joined', settings:'Settings',
+      setMap:'Map', mapVal:'Standard · 43 territories',
       setWin:'Win condition', valMissions:'Secret missions', setLayout:'Setup', valRandom:'Random', setRoles:'Roles', on:'On', off:'Off',
       setEvents:'Event round', setTimer:'Turn timer', setArmies:'Starting armies', armiesVal:'18 (7 players)',
       orderKicker:'Turn order', orderTitle:'Who goes first?', orderSub:'Everyone rolls one die. Highest roll starts.', tie:'Blue and Yellow rolled 6 — re-rolled, Blue wins', turnOrder:'Play order',
@@ -733,6 +735,7 @@ class Component extends DCLogic {
     // lobby
     const lobbyPlayers = P.map((p, idx) => ({ hex:p.hex, on:p.on, sym:p.sym, name:p.name, cw:p.cw[L], role:p.role[L], glow:p.hex+'66' }));
     const settingsRows = [
+      { label:t.setMap,    value:t.mapVal,      color:'var(--fg1)' },
       { label:t.setWin,    value:t.valMissions, color:'var(--gold-400)' },
       { label:t.setRoles,  value:t.on,          color:'var(--pitch-400)' },
       { label:t.setEvents, value:t.on,          color:'var(--pitch-400)' },
