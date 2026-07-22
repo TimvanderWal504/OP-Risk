@@ -19,4 +19,15 @@
     <ProjectReference Include="..\RiskGame.Rules\RiskGame.Rules.csproj" />
   </ItemGroup>
 
+  <!--
+    De tests draaien tegen de echte speeldata, niet tegen kopieën: zo is een test die
+    slaagt ook een uitspraak over wat het spel straks laadt. Kopiëren naar de output
+    voorkomt dat tests het pad naar de repo-root moeten raden.
+  -->
+  <ItemGroup>
+    <Content Include="..\..\data\maps\standaard-43\*.json"
+             Link="data\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -68,19 +68,22 @@ Let op: dit is de **geprojecteerde** state (het "nu"). De bron van waarheid is d
 
 ### 3.2 Statische speldata (read-only, geladen bij opstart)
 
-Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij het aanmaken van een spel ingelezen, niet in code gehardcodeerd:
+Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij het aanmaken van een spel ingelezen, niet in code gehardcodeerd. Ze staan **per kaartvariant** onder `data/maps/{mapId}/`, zodat de host straks in de lobby tussen varianten kan kiezen zonder dat er code verandert. De eerste variant is **`standaard-43`**:
 
 | Bestand | Rol in de engine |
 |---|---|
 | `territories.json` | 43 gebieden: id, naam, continent, centroid |
-| `territories.geo.json` | Polygon-geometrie per gebied (frontend-render + klik-detectie) |
+| `territories.geo.json` | Polygon-geometrie per gebied (frontend-render + klik-detectie) — niet door de engine geladen |
 | `adjacency_validated.json` | 84 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
 | `continents.json` | Continentbonussen |
 | `colors.json` | 7 spelerskleuren + kleurenblind-symbolen |
-| `cards.json` | Deck (45 kaarten), set-regels, inleg-thema's, `ownedTerritoryBonus` |
+| `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
+| `map-background-final.png` | Statische achtergrond voor de TV-kaart (hoort bij de projectie van deze variant) |
 | rollen / missies / events | JSON, nog te vullen (FO §13) — datamodel staat, content later |
 
 De engine bevat **geen** kaart-, kleur- of kaartkennis in code; alles komt uit deze bestanden. Dat is de kern van "data-driven" uit het FO: een nieuwe kaart of extra gebied = andere data, geen codewijziging.
+
+`MapDefinitionParser.Parse(mapId, sources)` levert per aanroep een nieuwe, onafhankelijke `MapDefinition`; er is geen static of gedeelde cache, zodat twee gelijktijdige spellen met verschillende varianten elkaar niet kunnen beïnvloeden. De parser neemt **JSON-tekst** aan, geen paden: het lezen van bestanden gebeurt buiten `RiskGame.Rules`, dat daarmee vrij van I/O blijft.
 
 ### 3.3 Aangrenzing & het `SeaRoutesBlocked`-effect
 
