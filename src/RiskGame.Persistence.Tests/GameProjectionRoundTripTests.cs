@@ -195,6 +195,59 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// <see cref="TurnState.ArmiesRemaining"/> wordt bij het ingaan van Versterken gezet op
+    /// <see cref="Rules.Reinforcement.ReinforcementCalculator.CalculateArmies"/> (hier: 1
+    /// gebied, dus het minimum van 3), daarna afgeteld door <see cref="ArmiesReinforced"/> en
+    /// opgehoogd door de setwaarde van <see cref="CardsTraded"/> (FO §5.2).
+    /// </summary>
+    [Fact]
+    public void ArmiesRemaining_WordtGezetBijPhaseChangedEnBijgewerktDoorReinforceEnCardsTraded()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var ownedCard = new Rules.Map.Card("card-alaska", "alaska", "symbol-1");
+        var otherCard1 = new Rules.Map.Card("card-siberia", "siberia", "symbol-2");
+        var otherCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
+            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+
+        var afterPhaseChanged = projection.Apply(initialState, new PhaseChanged(gameId, "p1", TurnPhase.Reinforce));
+        Assert.Equal(3, afterPhaseChanged.TurnState!.ArmiesRemaining);
+
+        var afterReinforce = projection.Apply(afterPhaseChanged, new ArmiesReinforced(gameId, "p1", "alaska", 2));
+        Assert.Equal(1, afterReinforce.TurnState!.ArmiesRemaining);
+
+        var afterTrade = projection.Apply(
+            afterReinforce, new CardsTraded(gameId, "p1", ["card-alaska", "card-siberia", "card-brazil"]));
+        Assert.Equal(1 + 4, afterTrade.TurnState!.ArmiesRemaining);
+    }
+
+    /// <summary>
     /// <see cref="CardDrawn"/> vereist een gevulde <see cref="DeckState.DrawPile"/> — die
     /// wordt in <see cref="GameProjection.Create"/> nog leeg geïnitialiseerd (het deck zelf
     /// bouwen uit de kaartdata is nog niet aangesloten, geen scope van deze plak), dus deze

@@ -28,9 +28,22 @@ public static class GameStateDtoMapper
             .Select(territory => new TerritoryDto(territory.TerritoryId, territory.OwnerPlayerId, territory.ArmyCount))
             .ToArray();
 
+        var turnState = state.TurnState is null
+            ? null
+            : new TurnStateDto(
+                state.TurnState.ActivePlayerId, ToDto(state.TurnState.TurnPhase), state.TurnState.ArmiesRemaining);
+
         return new GameStateDto(
-            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories);
+            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState);
     }
+
+    private static TurnPhaseDto ToDto(TurnPhase turnPhase) => turnPhase switch
+    {
+        TurnPhase.Reinforce => TurnPhaseDto.Reinforce,
+        TurnPhase.Attack => TurnPhaseDto.Attack,
+        TurnPhase.Fortify => TurnPhaseDto.Fortify,
+        _ => throw new ArgumentOutOfRangeException(nameof(turnPhase), turnPhase, "Onbekende beurtfase."),
+    };
 
     private static GamePhaseDto ToDto(GamePhase phase) => phase switch
     {

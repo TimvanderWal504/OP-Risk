@@ -151,20 +151,31 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
                 nameof(@event), @event.TurnPhase, "Onbekende beurtfase."),
         };
 
+        var armiesRemaining = @event.TurnPhase == TurnPhase.Reinforce
+            ? ReinforcementCalculator.CalculateArmies(state, @event.PlayerId)
+            : 0;
+
         return state
             .WithPhase(GamePhase.InProgress)
-            .WithTurnState(new TurnState(@event.PlayerId, @event.TurnPhase, timer, PendingCombat: null));
+            .WithTurnState(new TurnState(@event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, armiesRemaining));
     }
 
     /// <summary>
     /// Zelfde vouwregel als <see cref="Apply(GameState, InitialArmyPlaced)"/>, maar dan met
-    /// het aantal dat het <c>PlaceArmies</c>-commando (TO §4.1) in één keer toestaat.
+    /// het aantal dat het <c>PlaceArmies</c>-commando (TO §4.1) in één keer toestaat. Trekt
+    /// dat aantal ook af van <see cref="TurnState.ArmiesRemaining"/> — de vrije pool die bij
+    /// het ingaan van Versterken is vastgesteld (zie <see cref="Apply(GameState, PhaseChanged)"/>).
     /// </summary>
     public GameState Apply(GameState state, ArmiesReinforced @event)
     {
         var territory = state.Territory(@event.TerritoryId);
 
-        return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + @event.Amount });
+        state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + @event.Amount });
+
+        return state.WithTurnState(state.TurnState! with
+        {
+            ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.Amount,
+        });
     }
 
     /// <summary>
@@ -201,7 +212,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + bonus.Amount });
         }
 
-        return state;
+        return state.WithTurnState(state.TurnState! with
+        {
+            ArmiesRemaining = state.TurnState!.ArmiesRemaining + outcome.SetValue,
+        });
     }
 
     /// <summary>

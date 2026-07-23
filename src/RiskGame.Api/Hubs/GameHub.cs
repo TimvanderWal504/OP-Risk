@@ -23,7 +23,8 @@ public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
 public sealed class GameHub(
     LobbyCommandHandler lobbyCommands,
     OrderRollCommandHandler orderRollCommands,
-    SetupCommandHandler setupCommands) : Hub
+    SetupCommandHandler setupCommands,
+    ReinforceCommandHandler reinforceCommands) : Hub
 {
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -70,6 +71,21 @@ public sealed class GameHub(
     public async Task<GameStateDto> PlaceInitialArmy(string gameId, string playerId, string territoryId)
     {
         var result = await setupCommands.PlaceInitialArmyAsync(gameId, playerId, territoryId);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> PlaceReinforcements(
+        string gameId, string playerId, string territoryId, int amount)
+    {
+        var result = await reinforceCommands.PlaceReinforcementsAsync(gameId, playerId, territoryId, amount);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> TradeInCards(string gameId, string playerId, string[] cardIds)
+    {
+        var result = await reinforceCommands.TradeInCardsAsync(gameId, playerId, cardIds);
 
         return Unwrap(result, state => state);
     }

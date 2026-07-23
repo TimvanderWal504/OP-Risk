@@ -27,6 +27,7 @@ builder.Services.AddSingleton<IRandomSource, SystemRandomSource>();
 builder.Services.AddScoped<LobbyCommandHandler>();
 builder.Services.AddScoped<OrderRollCommandHandler>();
 builder.Services.AddScoped<SetupCommandHandler>();
+builder.Services.AddScoped<ReinforceCommandHandler>();
 builder.Services.AddSignalR(options => options.AddFilter<HubExceptionLoggingFilter>());
 
 var app = builder.Build();
