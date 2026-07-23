@@ -134,4 +134,30 @@ public class AdjacencyGraphTests
         Assert.False(map.Adjacency.HasPath(
             "alaska", "kamchatka", owned.Contains, isBorderBlocked: _ => true));
     }
+
+    [Fact]
+    public void Equals_ZelfdeGrenzenAndereVolgorde_IsGelijk()
+    {
+        var borders = new[]
+        {
+            new Border("alaska", "kamchatka", BorderType.Sea),
+            new Border("alaska", "alberta", BorderType.Land),
+            new Border("alberta", "ontario", BorderType.Land),
+        };
+
+        var first = new AdjacencyGraph(borders);
+        var second = new AdjacencyGraph(borders.Reverse());
+
+        Assert.Equal(first, second);
+        Assert.Equal(first.GetHashCode(), second.GetHashCode());
+    }
+
+    [Fact]
+    public void Equals_AndereGrens_IsOngelijk()
+    {
+        var first = new AdjacencyGraph([new Border("alaska", "alberta", BorderType.Land)]);
+        var second = new AdjacencyGraph([new Border("alaska", "kamchatka", BorderType.Sea)]);
+
+        Assert.NotEqual(first, second);
+    }
 }

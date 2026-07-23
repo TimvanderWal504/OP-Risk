@@ -6,7 +6,12 @@ namespace RiskGame.Rules.Map;
 /// De aangrenzingsgraaf. Grenzen worden in beide richtingen geregistreerd (TO §3.3),
 /// zodat een gebied altijd terugvindbaar is ongeacht hoe de grens in de data staat.
 /// </summary>
-public sealed class AdjacencyGraph
+/// <remarks>
+/// Waardegelijkheid vergelijkt de grenzen per gebied als verzameling (orde-onafhankelijk),
+/// nodig om twee onafhankelijk geladen <see cref="MapDefinition"/>-instanties inhoudelijk
+/// te kunnen vergelijken (bv. in een event-sourcing-round-trip-test).
+/// </remarks>
+public sealed class AdjacencyGraph : IEquatable<AdjacencyGraph>
 {
     private static readonly IReadOnlyList<Border> None = [];
 
@@ -93,6 +98,60 @@ public sealed class AdjacencyGraph
         }
 
         return false;
+    }
+
+    public bool Equals(AdjacencyGraph? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (_byTerritory.Count != other._byTerritory.Count)
+        {
+            return false;
+        }
+
+        foreach (var (territoryId, borders) in _byTerritory)
+        {
+            if (!other._byTerritory.TryGetValue(territoryId, out var otherBorders))
+            {
+                return false;
+            }
+
+            if (!new HashSet<Border>(borders).SetEquals(otherBorders))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as AdjacencyGraph);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+
+        foreach (var territoryId in _byTerritory.Keys.OrderBy(id => id, StringComparer.Ordinal))
+        {
+            hash.Add(territoryId, StringComparer.Ordinal);
+
+            foreach (var border in _byTerritory[territoryId]
+                .OrderBy(border => border.From, StringComparer.Ordinal)
+                .ThenBy(border => border.To, StringComparer.Ordinal))
+            {
+                hash.Add(border);
+            }
+        }
+
+        return hash.ToHashCode();
     }
 
     /// <summary>Het gebied aan de andere kant van een grens.</summary>

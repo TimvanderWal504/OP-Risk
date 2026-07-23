@@ -40,6 +40,18 @@ public class GameStateTests
     }
 
     [Fact]
+    public void WithPlayer_MetOnbekendId_VoegtDeSpelerToe()
+    {
+        var state = TestGame.InProgress();
+
+        var updated = state.WithPlayer(TestGame.Player("p3", "green"));
+
+        Assert.False(state.HasPlayer("p3"));
+        Assert.True(updated.HasPlayer("p3"));
+        Assert.Equal(state.Players.Count + 1, updated.Players.Count);
+    }
+
+    [Fact]
     public void WithPhase_LaatDeOorspronkelijkeStateOngemoeid()
     {
         var state = TestGame.InProgress();

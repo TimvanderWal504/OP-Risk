@@ -1,0 +1,26 @@
+using Testcontainers.PostgreSql;
+
+namespace RiskGame.Persistence.Tests;
+
+/// <summary>
+/// Start één echte Postgres-container voor de duur van de testklasse (Docker is
+/// beschikbaar op deze machine) — dichter bij productiegedrag dan Marten's
+/// in-memory testdoubles, en geen permanent lokaal draaiende Postgres nodig.
+/// </summary>
+public sealed class PostgresFixture : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _container =
+        new PostgreSqlBuilder("postgres:16-alpine").Build();
+
+    public string ConnectionString => _container.GetConnectionString();
+
+    public Task InitializeAsync() => _container.StartAsync();
+
+    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+}
+
+[CollectionDefinition(Name)]
+public sealed class PostgresCollection : ICollectionFixture<PostgresFixture>
+{
+    public const string Name = "Postgres";
+}

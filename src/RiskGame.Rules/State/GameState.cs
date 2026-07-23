@@ -148,12 +148,19 @@ public sealed class GameState
     public GameState WithActiveEffects(IReadOnlyList<ActiveEffect> activeEffects) =>
         With(activeEffects: activeEffects);
 
-    /// <summary>Vervangt één speler; de overige spelers blijven ongewijzigd.</summary>
+    /// <summary>
+    /// Voegt een nieuwe speler toe, of vervangt een bestaande speler met hetzelfde
+    /// <see cref="Player.Id"/>; de overige spelers blijven ongewijzigd.
+    /// </summary>
     public GameState WithPlayer(Player player)
     {
         ArgumentNullException.ThrowIfNull(player);
 
-        return With(players: Replace(Players, player, existing => existing.Id == player.Id));
+        var players = _playersById.ContainsKey(player.Id)
+            ? Replace(Players, player, existing => existing.Id == player.Id)
+            : [.. Players, player];
+
+        return With(players: players);
     }
 
     /// <summary>Vervangt het bezit van één gebied; de overige gebieden blijven ongewijzigd.</summary>

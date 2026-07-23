@@ -8,7 +8,8 @@ namespace RiskGame.Rules.State;
 /// transportlaag, niet bij de regels (FO §11.1).
 /// </summary>
 /// <param name="ColorId">Verwijst naar <see cref="PlayerColor.Id"/>; missies verwijzen
-/// via die kleur-id naar spelers (FO §6.1).</param>
+/// via die kleur-id naar spelers (FO §6.1). Null tussen joinen en kleurkeuze (FO §2.2) —
+/// een speler zonder kleur bestaat kort tijdens de lobby-fase.</param>
 /// <param name="Hand">Territoriumkaarten in bezit. Alleen zichtbaar voor de speler zelf.</param>
 /// <param name="RoleId">Null als rollen uitstaan (FO §8).</param>
 /// <param name="Mission">Null bij winconditie Werelddominantie (FO §6).</param>
@@ -16,7 +17,7 @@ namespace RiskGame.Rules.State;
 public sealed record Player(
     string Id,
     string Name,
-    string ColorId,
+    string? ColorId,
     IReadOnlyList<Card> Hand,
     string? RoleId,
     IMission? Mission,

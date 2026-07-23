@@ -19,6 +19,9 @@ namespace RiskGame.Rules.State;
 /// <paramref name="TurnTimer"/>. Standaard 1 minuut; loopt hij af, dan eindigt de beurt
 /// (FO §5.4).
 /// </param>
+/// <param name="RoleAssignment">
+/// Random of Kiezen (FO §10); betekenisloos zolang <paramref name="RolesEnabled"/> uit staat.
+/// </param>
 public sealed record GameSettings(
     WinCondition WinCondition,
     SetupMode SetupMode,
@@ -26,4 +29,5 @@ public sealed record GameSettings(
     TimeSpan TurnTimer,
     TimeSpan FortifyTimer,
     bool RolesEnabled,
+    RoleAssignmentMode RoleAssignment,
     bool EventsEnabled);

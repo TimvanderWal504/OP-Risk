@@ -22,6 +22,7 @@ internal static class TestGame
         TurnTimer: TimeSpan.FromMinutes(3),
         FortifyTimer: TimeSpan.FromMinutes(1),
         RolesEnabled: false,
+        RoleAssignment: RoleAssignmentMode.Random,
         EventsEnabled: false);
 
     public static Player Player(
