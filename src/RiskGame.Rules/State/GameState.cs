@@ -72,7 +72,15 @@ public sealed class GameState
     /// <summary>De spelersvolgorde zoals bepaald door de order-roll (FO §5.1).</summary>
     public IReadOnlyList<string> TurnOrder { get; }
 
-    /// <summary>Null zolang er nog geen beurt loopt: in de lobby en tijdens de order-roll.</summary>
+    /// <summary>
+    /// Null zolang er nog geen beurt in de klassieke zin loopt: in de lobby, tijdens de
+    /// order-roll, en tijdens <see cref="GamePhase.Claiming"/>/<see cref="GamePhase.InitialPlacement"/>
+    /// (<see cref="TurnPhase"/> kent bewust alleen Reinforce/Attack/Fortify, TO §4.1). Wie
+    /// er in die setup-fases aan zet is, wordt afgeleid uit <see cref="TurnOrder"/> plus
+    /// voortgang (aantal geclaimde gebieden / geplaatste startlegers) in plaats van apart
+    /// opgeslagen — dezelfde reden als bij <see cref="PlayerStatus"/>: geen tweede bron van
+    /// waarheid die ermee uit de pas kan lopen.
+    /// </summary>
     public TurnState? TurnState { get; }
 
     public DeckState Deck { get; }

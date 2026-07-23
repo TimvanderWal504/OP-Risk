@@ -20,7 +20,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
     private static readonly GameSettings Settings = new(
         WinCondition.SecretMissions,
-        SetupMode.Random,
+        SetupMode.Claiming,
         StartingArmies: 25,
         TurnTimer: TimeSpan.FromMinutes(3),
         FortifyTimer: TimeSpan.FromMinutes(1),
@@ -46,7 +46,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new ColorChosen(gameId, "p2", "blue"),
             new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
             new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),
-            new TurnOrderDetermined(gameId, ["p1", "p2"]));
+            new TurnOrderDetermined(gameId, ["p1", "p2"]),
+            new TerritoryClaimed(gameId, "p1", "alaska"),
+            new TerritoryClaimed(gameId, "p2", "northwest-territory"),
+            new InitialArmyPlaced(gameId, "p1", "alaska"));
 
         await session.SaveChangesAsync();
 
@@ -81,6 +84,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 ColorChosen chosen => projection.Apply(state!, chosen),
                 OrderRolled => state!,
                 TurnOrderDetermined determined => projection.Apply(state!, determined),
+                TerritoryClaimed claimed => projection.Apply(state!, claimed),
+                InitialArmyPlaced placed => projection.Apply(state!, placed),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };

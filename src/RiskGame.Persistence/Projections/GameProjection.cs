@@ -11,11 +11,18 @@ namespace RiskGame.Persistence.Projections;
 /// een al gebeurd feit, geen beslissing (src/CLAUDE.md, "event sourcing-kaders").
 /// </summary>
 /// <remarks>
-/// Dekt tot nu toe de lobby-fase en de order-roll (spel aanmaken, spelers joinen, kleur
-/// kiezen, spelersvolgorde bepalen) — een tweede plak; latere plakken breiden dit uit met
-/// de rest van het event-arsenaal uit TO §5.2. <see cref="OrderRolled"/> hoort daar
-/// bewust niet bij: het is een audit/weergave-feit zonder eigen vouwregel, zie de
-/// doc-comment op dat event.
+/// Dekt tot nu toe de lobby-fase, de order-roll en de startopstelling (spel aanmaken,
+/// spelers joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen)
+/// — een derde plak; latere plakken breiden dit uit met de rest van het event-arsenaal
+/// uit TO §5.2. <see cref="OrderRolled"/> hoort daar bewust niet bij: het is een
+/// audit/weergave-feit zonder eigen vouwregel, zie de doc-comment op dat event.
+/// </remarks>
+/// <remarks>
+/// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
+/// het bezit/legeraantal van het genoemde gebied — of de Claiming/InitialPlacement-fase
+/// daarmee klaar is (en welke fase/beurt daarna volgt) is een beslissing, geen vouwregel,
+/// en komt bij een latere plak binnen via een apart <c>PhaseChanged</c>-event (TO §5.2)
+/// zodra de rules-engine-orchestratie die beslissing kan nemen.
 /// </remarks>
 public sealed partial class GameProjection(IMapDefinitionSource mapSource) : SingleStreamProjection<GameState, string>
 {
@@ -74,5 +81,19 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             : GamePhase.InitialPlacement;
 
         return state.WithTurnOrder(@event.PlayerIds).WithPhase(nextPhase);
+    }
+
+    /// <summary>
+    /// Het geclaimde gebied verschijnt bij de speler met 1 leger — claimen verbruikt meteen
+    /// een startleger (zie doc-comment op <see cref="TerritoryClaimed"/>).
+    /// </summary>
+    public GameState Apply(GameState state, TerritoryClaimed @event) =>
+        state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
+
+    public GameState Apply(GameState state, InitialArmyPlaced @event)
+    {
+        var territory = state.Territory(@event.TerritoryId);
+
+        return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + 1 });
     }
 }
