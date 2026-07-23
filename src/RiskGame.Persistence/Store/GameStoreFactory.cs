@@ -29,6 +29,10 @@ public static class GameStoreFactory
             options.Schema.For<GameState>().Identity(state => state.GameId);
             options.Projections.Add(new GameProjection(mapSource), ProjectionLifecycle.Inline);
             options.UseSystemTextJsonForSerialization(
-                configure: json => json.Converters.Add(new MapDefinitionJsonConverter(mapSource)));
+                configure: json =>
+                {
+                    json.Converters.Add(new MapDefinitionJsonConverter(mapSource));
+                    json.Converters.Add(new GameStateJsonConverter());
+                });
         });
 }

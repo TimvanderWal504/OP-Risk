@@ -2,6 +2,7 @@ using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Store;
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Persistence.Tests;
@@ -49,7 +50,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new TurnOrderDetermined(gameId, ["p1", "p2"]),
             new TerritoryClaimed(gameId, "p1", "alaska"),
             new TerritoryClaimed(gameId, "p2", "northwest-territory"),
-            new InitialArmyPlaced(gameId, "p1", "alaska"));
+            new InitialArmyPlaced(gameId, "p1", "alaska"),
+            new RoleAssigned(gameId, "p1", "diplomaat"),
+            new MissionAssigned(gameId, "p1", "eliminate-blue"),
+            new MissionAssigned(gameId, "p2", "territory-24"));
 
         await session.SaveChangesAsync();
 
@@ -60,6 +64,47 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.NotNull(replayed);
 
         AssertIdenticalGameState(live!, replayed!);
+    }
+
+    /// <summary>
+    /// Nog geen event vult <see cref="GameState.ActiveEffects"/> (dat komt bij een latere
+    /// plak), dus deze test bewijst de serialisatie van <see cref="ActiveEffect.Effect"/>
+    /// (<see cref="RiskGame.Rules.Effects.IEffect"/>, hetzelfde polymorfe-type-probleem als
+    /// <see cref="Rules.State.Player.Mission"/>) los van de event-stream, door een
+    /// <see cref="GameState"/> rechtstreeks te bouwen en te bewaren.
+    /// </summary>
+    [Fact]
+    public async Task ActiveEffectMetEenEchtGebeurtenisEffect_OverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+        var effect = map.Events.First().Effect;
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using var session = store.LightweightSession();
+
+        var state = new GameState(
+            gameId,
+            map,
+            GamePhase.Lobby,
+            Settings,
+            players: [],
+            territories: [],
+            turnOrder: [],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: [new ActiveEffect(effect, RoundsRemaining: 1)]);
+
+        session.Store(state);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        var activeEffect = Assert.Single(reloaded!.ActiveEffects);
+        Assert.Equal(effect.Id, activeEffect.Effect.Id);
+        Assert.Equal(1, activeEffect.RoundsRemaining);
     }
 
     /// <summary>
@@ -86,6 +131,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 TurnOrderDetermined determined => projection.Apply(state!, determined),
                 TerritoryClaimed claimed => projection.Apply(state!, claimed),
                 InitialArmyPlaced placed => projection.Apply(state!, placed),
+                RoleAssigned roleAssigned => projection.Apply(state!, roleAssigned),
+                MissionAssigned missionAssigned => projection.Apply(state!, missionAssigned),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };

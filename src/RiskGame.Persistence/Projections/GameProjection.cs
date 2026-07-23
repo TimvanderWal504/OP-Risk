@@ -1,6 +1,8 @@
 using Marten.Events.Aggregation;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
+using RiskGame.Rules.Map;
+using RiskGame.Rules.Missions;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Persistence.Projections;
@@ -11,11 +13,12 @@ namespace RiskGame.Persistence.Projections;
 /// een al gebeurd feit, geen beslissing (src/CLAUDE.md, "event sourcing-kaders").
 /// </summary>
 /// <remarks>
-/// Dekt tot nu toe de lobby-fase, de order-roll en de startopstelling (spel aanmaken,
-/// spelers joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen)
-/// — een derde plak; latere plakken breiden dit uit met de rest van het event-arsenaal
-/// uit TO §5.2. <see cref="OrderRolled"/> hoort daar bewust niet bij: het is een
-/// audit/weergave-feit zonder eigen vouwregel, zie de doc-comment op dat event.
+/// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling en de rol-/missie-
+/// toewijzing (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
+/// gebieden claimen/bijplaatsen, rol en missie toewijzen) — een vierde plak; latere
+/// plakken breiden dit uit met de rest van het event-arsenaal uit TO §5.2.
+/// <see cref="OrderRolled"/> hoort daar bewust niet bij: het is een audit/weergave-feit
+/// zonder eigen vouwregel, zie de doc-comment op dat event.
 /// </remarks>
 /// <remarks>
 /// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
@@ -95,5 +98,20 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var territory = state.Territory(@event.TerritoryId);
 
         return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + 1 });
+    }
+
+    public GameState Apply(GameState state, RoleAssigned @event) =>
+        state.WithPlayer(state.Player(@event.PlayerId) with { RoleId = @event.RoleId });
+
+    /// <summary>
+    /// De speler kent zelf alleen de missie-id (FO §6.1); de bijbehorende
+    /// <see cref="MissionDefinition"/> staat al gevalideerd in <see cref="MapDefinition.Missions"/>
+    /// zodra de kaart geladen is, dus hier alleen opzoeken, niet opnieuw valideren.
+    /// </summary>
+    public GameState Apply(GameState state, MissionAssigned @event)
+    {
+        var mission = state.Map.Missions.First(mission => mission.Id == @event.MissionId);
+
+        return state.WithPlayer(state.Player(@event.PlayerId) with { Mission = mission });
     }
 }
