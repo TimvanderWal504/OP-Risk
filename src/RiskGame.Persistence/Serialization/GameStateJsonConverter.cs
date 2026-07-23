@@ -38,7 +38,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
             root.GetProperty("turnOrder").Deserialize<IReadOnlyList<string>>(scoped)!,
             root.GetProperty("turnState").Deserialize<TurnState?>(scoped),
             root.GetProperty("deck").Deserialize<DeckState>(scoped)!,
-            root.GetProperty("activeEffects").Deserialize<IReadOnlyList<ActiveEffect>>(scoped)!);
+            root.GetProperty("activeEffects").Deserialize<IReadOnlyList<ActiveEffect>>(scoped)!,
+            root.GetProperty("winners").Deserialize<IReadOnlyList<string>>(scoped)!);
     }
 
     public override void Write(Utf8JsonWriter writer, GameState value, JsonSerializerOptions options)
@@ -66,6 +67,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
         JsonSerializer.Serialize(writer, value.Deck, scoped);
         writer.WritePropertyName("activeEffects");
         JsonSerializer.Serialize(writer, value.ActiveEffects, scoped);
+        writer.WritePropertyName("winners");
+        JsonSerializer.Serialize(writer, value.Winners, scoped);
 
         writer.WriteEndObject();
     }

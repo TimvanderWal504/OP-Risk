@@ -104,14 +104,37 @@ public class MissionDefinitionTests
     }
 
     [Fact]
-    public void EliminatePlayer_MetUitgeschakeldDoelwit_IsBehaald()
+    public void EliminatePlayer_MetDoorMissiehouderUitgeschakeldDoelwit_IsBehaald()
     {
         var mission = new EliminatePlayerMission(
             "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
         var state = TestGame.InProgress(
-            [TestGame.Player("p1", "red"), TestGame.Player("p2", "blue", isEliminated: true)]);
+            [
+                TestGame.Player("p1", "red"),
+                TestGame.Player("p2", "blue", isEliminated: true, eliminatedByPlayerId: "p1"),
+            ]);
 
         Assert.True(mission.IsAchieved(state, "p1"));
+    }
+
+    /// <summary>
+    /// FO §6.1: schakelt een ándere speler het doelwit uit, dan telt de missie niet — de
+    /// missiehouder krijgt in plaats daarvan (in een latere bouwstap) automatisch zijn
+    /// fallback-missie toegewezen.
+    /// </summary>
+    [Fact]
+    public void EliminatePlayer_MetDoorEenAndereSpelerUitgeschakeldDoelwit_IsNietBehaald()
+    {
+        var mission = new EliminatePlayerMission(
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+        var state = TestGame.InProgress(
+            [
+                TestGame.Player("p1", "red"),
+                TestGame.Player("p2", "blue", isEliminated: true, eliminatedByPlayerId: "p3"),
+                TestGame.Player("p3", "yellow"),
+            ]);
+
+        Assert.False(mission.IsAchieved(state, "p1"));
     }
 
     [Fact]

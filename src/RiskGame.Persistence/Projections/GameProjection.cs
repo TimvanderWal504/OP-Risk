@@ -2,6 +2,7 @@ using Marten.Events.Aggregation;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Combat;
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Reinforcement;
@@ -17,14 +18,16 @@ namespace RiskGame.Persistence.Projections;
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
 /// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het volledige
-/// gevechtsarsenaal en kaarttrekken (spel aanmaken, spelers joinen, kleur kiezen,
-/// spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en missie toewijzen,
-/// fase-overgangen binnen een beurt, legers versterken, kaarten inleveren, aanvallen,
-/// veroveren, verplaatsen, kaart trekken) — een zevende plak; <c>PlayerEliminated</c>,
-/// events-content en wincondities (TO §5.2) staan nog open voor een latere plak.
-/// <see cref="OrderRolled"/>, <see cref="TurnEnded"/> en <see cref="DiceRolled"/> horen
-/// daar bewust niet bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de
-/// doc-comments op die events.
+/// gevechtsarsenaal, kaarttrekken, uitschakeling, de gebeurtenisronde-effecten en het
+/// spel-einde (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
+/// gebieden claimen/bijplaatsen, rol en missie toewijzen, fase-overgangen binnen een
+/// beurt, legers versterken, kaarten inleveren, aanvallen, veroveren, verplaatsen, kaart
+/// trekken, een speler uitschakelen, een gebeurteniseffect toepassen/laten verlopen, het
+/// spel winnen) — een achtste plak.
+/// <see cref="OrderRolled"/>, <see cref="TurnEnded"/>, <see cref="DiceRolled"/>,
+/// <see cref="EventCardDrawn"/> en <see cref="MissionCompleted"/> horen daar bewust niet
+/// bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die
+/// events.
 /// </remarks>
 /// <remarks>
 /// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
@@ -273,6 +276,64 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             .WithPlayer(player with { Hand = [.. player.Hand, card] })
             .WithDeck(state.Deck with { DrawPile = [.. state.Deck.DrawPile.Where(c => c != card)] });
     }
+
+    /// <summary>
+    /// De hand van de uitgeschakelde speler gaat naar wie hem uitschakelde (FO §7); de
+    /// "≥ 6 kaarten → direct verplicht inleggen"-vervolgregel is command-orchestratie
+    /// (een latere bouwstap), geen onderdeel van deze vouwregel. Onthoudt ook wíe de
+    /// speler uitschakelde (<see cref="Player.EliminatedByPlayerId"/>), nodig om
+    /// <see cref="EliminatePlayerMission"/> (FO §6.1) te kunnen toetsen.
+    /// </summary>
+    public GameState Apply(GameState state, PlayerEliminated @event)
+    {
+        var eliminated = state.Player(@event.EliminatedPlayerId);
+        var eliminator = state.Player(@event.EliminatedByPlayerId);
+        var transferredHand = eliminated.Hand;
+
+        state = state.WithPlayer(eliminated with
+        {
+            Hand = [],
+            IsEliminated = true,
+            EliminatedByPlayerId = @event.EliminatedByPlayerId,
+        });
+
+        return state.WithPlayer(eliminator with { Hand = [.. eliminator.Hand, .. transferredHand] });
+    }
+
+    /// <summary>
+    /// Past de al door de rules engine berekende leger-mutaties toe (zie doc-comment op
+    /// <see cref="EffectApplied"/>) en voegt, bij een <see cref="EffectDuration.OneRound"/>-
+    /// effect, een nieuwe <see cref="ActiveEffect"/> toe zodat de TV het permanent kan
+    /// tonen zolang het geldt (FO §9.2). Instant-effecten komen niet in
+    /// <see cref="GameState.ActiveEffects"/> terecht — ze zijn na deze vouwregel al voltrokken.
+    /// </summary>
+    public GameState Apply(GameState state, EffectApplied @event)
+    {
+        var eventDefinition = state.Map.Events.First(definition => definition.Id == @event.EventId);
+
+        foreach (var (territoryId, delta) in @event.ArmyDeltasByTerritory)
+        {
+            var territory = state.Territory(territoryId);
+            state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + delta });
+        }
+
+        if (eventDefinition.Effect.Duration == EffectDuration.OneRound)
+        {
+            state = state.WithActiveEffects(
+                [.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect, RoundsRemaining: 1)]);
+        }
+
+        return state;
+    }
+
+    /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>
+    public GameState Apply(GameState state, EffectExpired @event) =>
+        state.WithActiveEffects(
+            [.. state.ActiveEffects.Where(activeEffect => activeEffect.Effect.Id != @event.EventId)]);
+
+    /// <summary>Legt de winnaar(s) vast en sluit het spel af (FO §7).</summary>
+    public GameState Apply(GameState state, GameWon @event) =>
+        state.WithPhase(GamePhase.Finished).WithWinners(@event.WinnerPlayerIds);
 
     /// <summary>
     /// Gedeelde leger-verplaatsing tussen twee gebieden (bron −<paramref name="amount"/>,

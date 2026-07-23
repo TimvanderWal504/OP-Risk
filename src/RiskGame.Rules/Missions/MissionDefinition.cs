@@ -86,6 +86,12 @@ public sealed record TerritoryCountMinArmiesMission(
 /// die vervanging is missie-toewijzing (een latere bouwstap), niet iets wat hier getoetst
 /// wordt: op het moment dat deze missie aan een speler hangt, bestaat het doelwit al.
 /// </summary>
+/// <remarks>
+/// Telt alleen als de missiehouder zélf het doelwit uitschakelde (FO §6.1): schakelt een
+/// andere speler het doelwit uit, dan is deze missie niet vervuld en krijgt de missiehouder
+/// in plaats daarvan automatisch <see cref="FallbackMissionId"/> — die toewijzing hoort,
+/// net als hierboven, bij een latere bouwstap.
+/// </remarks>
 public sealed record EliminatePlayerMission(
     string Id,
     string Name,
@@ -101,6 +107,8 @@ public sealed record EliminatePlayerMission(
 
         var target = state.Players.FirstOrDefault(player => player.ColorId == TargetColor);
 
-        return target is not null && target.IsEliminated;
+        return target is not null
+            && target.IsEliminated
+            && target.EliminatedByPlayerId == playerId;
     }
 }

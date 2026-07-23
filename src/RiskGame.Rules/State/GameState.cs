@@ -29,7 +29,8 @@ public sealed class GameState
         IReadOnlyList<string> turnOrder,
         TurnState? turnState,
         DeckState deck,
-        IReadOnlyList<ActiveEffect> activeEffects)
+        IReadOnlyList<ActiveEffect> activeEffects,
+        IReadOnlyList<string>? winners = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
         ArgumentNullException.ThrowIfNull(map);
@@ -50,6 +51,7 @@ public sealed class GameState
         TurnState = turnState;
         Deck = deck;
         ActiveEffects = activeEffects;
+        Winners = winners ?? [];
 
         _playersById = players.ToFrozenDictionary(player => player.Id, StringComparer.Ordinal);
         _territoriesById = territories.ToFrozenDictionary(
@@ -86,6 +88,13 @@ public sealed class GameState
     public DeckState Deck { get; }
 
     public IReadOnlyList<ActiveEffect> ActiveEffects { get; }
+
+    /// <summary>
+    /// De spelers die aan een winconditie voldoen (FO §6/§7); leeg zolang niemand gewonnen
+    /// heeft. Werelddominantie levert er altijd 1 op, Geheime missies kan er in theorie
+    /// meerdere tegelijk opleveren (<see cref="Missions.WinConditionEvaluator.Winners"/>).
+    /// </summary>
+    public IReadOnlyList<string> Winners { get; }
 
     public bool HasPlayer(string playerId) => _playersById.ContainsKey(playerId);
 
@@ -147,7 +156,8 @@ public sealed class GameState
             TurnOrder,
             turnState,
             Deck,
-            ActiveEffects);
+            ActiveEffects,
+            Winners);
 
     public GameState WithDeck(DeckState deck) => With(deck: deck);
 
@@ -155,6 +165,8 @@ public sealed class GameState
 
     public GameState WithActiveEffects(IReadOnlyList<ActiveEffect> activeEffects) =>
         With(activeEffects: activeEffects);
+
+    public GameState WithWinners(IReadOnlyList<string> winners) => With(winners: winners);
 
     /// <summary>
     /// Voegt een nieuwe speler toe, of vervangt een bestaande speler met hetzelfde
@@ -186,7 +198,8 @@ public sealed class GameState
         IReadOnlyList<TerritoryOwnership>? territories = null,
         IReadOnlyList<string>? turnOrder = null,
         DeckState? deck = null,
-        IReadOnlyList<ActiveEffect>? activeEffects = null) =>
+        IReadOnlyList<ActiveEffect>? activeEffects = null,
+        IReadOnlyList<string>? winners = null) =>
         new(GameId,
             Map,
             phase ?? Phase,
@@ -196,7 +209,8 @@ public sealed class GameState
             turnOrder ?? TurnOrder,
             TurnState,
             deck ?? Deck,
-            activeEffects ?? ActiveEffects);
+            activeEffects ?? ActiveEffects,
+            winners ?? Winners);
 
     /// <summary>
     /// Vervangt het enige element dat aan <paramref name="matches"/> voldoet, op zijn

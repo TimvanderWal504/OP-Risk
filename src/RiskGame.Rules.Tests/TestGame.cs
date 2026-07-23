@@ -32,8 +32,9 @@ internal static class TestGame
         bool isAutoPass = false,
         IMission? mission = null,
         string? roleId = null,
-        IReadOnlyList<Card>? hand = null) =>
-        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, isAutoPass);
+        IReadOnlyList<Card>? hand = null,
+        string? eliminatedByPlayerId = null) =>
+        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, isAutoPass, eliminatedByPlayerId);
 
     /// <summary>
     /// Een spel in volle gang. Alle gebieden zijn onverdeeld tenzij een test ze via
@@ -46,7 +47,8 @@ internal static class TestGame
         PendingCombat? pendingCombat = null,
         IReadOnlyList<ActiveEffect>? activeEffects = null,
         GameSettings? settings = null,
-        int nextTradeValue = 4)
+        int nextTradeValue = 4,
+        IReadOnlyList<string>? winners = null)
     {
         var map = Standaard43Data.Load();
 
@@ -68,6 +70,7 @@ internal static class TestGame
             turnOrder,
             new TurnState(turnOrder[0], turnPhase, timer, pendingCombat),
             new DeckState(map.Deck, DiscardPile: [], nextTradeValue),
-            activeEffects ?? []);
+            activeEffects ?? [],
+            winners ?? []);
     }
 }

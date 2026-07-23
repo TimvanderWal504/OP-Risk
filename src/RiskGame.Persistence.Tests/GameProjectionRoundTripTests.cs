@@ -252,6 +252,239 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// <see cref="PlayerEliminated"/> vouwt zowel de handoverdracht als wíe uitschakelde
+    /// (FO §7, §6.1) — de veroveraar krijgt de handkaarten van de uitgeschakelde speler.
+    /// </summary>
+    [Fact]
+    public async Task PlayerEliminated_VouwtHandoverdrachtEnUitschakelingEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var eliminatedCard = new Rules.Map.Card("card-japan", "japan", "symbol-2");
+        var conquerorCard = new Rules.Map.Card("card-china", "china", "symbol-3");
+
+        var eliminated = new Player(
+            "p2", "Bob", "blue", Hand: [eliminatedCard],
+            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+        var conqueror = new Player(
+            "p1", "Alice", "red", Hand: [conquerorCard],
+            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [conqueror, eliminated],
+            territories,
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new PlayerEliminated(gameId, "p2", "p1"));
+
+        Assert.True(result.Player("p2").IsEliminated);
+        Assert.Equal("p1", result.Player("p2").EliminatedByPlayerId);
+        Assert.Empty(result.Player("p2").Hand);
+        Assert.Equal([conquerorCard, eliminatedCard], result.Player("p1").Hand);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.True(reloaded!.Player("p2").IsEliminated);
+        Assert.Equal("p1", reloaded.Player("p2").EliminatedByPlayerId);
+        Assert.Equal([conquerorCard, eliminatedCard], reloaded.Player("p1").Hand);
+    }
+
+    /// <summary>
+    /// <see cref="EffectApplied"/> met een instant effect (<c>goede-oogst</c>,
+    /// <c>ContinentOwnerBonus</c>) past de al berekende legerdeltas toe en komt niet in
+    /// <see cref="GameState.ActiveEffects"/> terecht (FO §9.2).
+    /// </summary>
+    [Fact]
+    public async Task EffectApplied_MetInstantEffect_PastLegerDeltasToeZonderActiveEffectEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id, OwnerPlayerId: null, ArmyCount: territory.Id == "alaska" ? 3 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories,
+            turnOrder: [],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(
+            initialState,
+            new EffectApplied(gameId, "goede-oogst", new Dictionary<string, int> { ["alaska"] = 2 }));
+
+        Assert.Equal(5, result.Territory("alaska").ArmyCount);
+        Assert.Empty(result.ActiveEffects);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(5, reloaded!.Territory("alaska").ArmyCount);
+        Assert.Empty(reloaded.ActiveEffects);
+    }
+
+    /// <summary>
+    /// <see cref="EffectApplied"/> met een <c>oneRound</c>-effect (<c>stormachtige-zeeen</c>,
+    /// <c>SeaRoutesBlocked</c>) draagt geen legerdeltas maar voegt wél een
+    /// <see cref="ActiveEffect"/> toe, zodat de TV het permanent kan tonen (FO §9.2).
+    /// </summary>
+    [Fact]
+    public void EffectApplied_MetOneRoundEffect_VoegtActiveEffectToe()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories,
+            turnOrder: [],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(
+            initialState,
+            new EffectApplied(gameId, "stormachtige-zeeen", new Dictionary<string, int>()));
+
+        var activeEffect = Assert.Single(result.ActiveEffects);
+        Assert.Equal("stormachtige-zeeen", activeEffect.Effect.Id);
+        Assert.Equal(1, activeEffect.RoundsRemaining);
+    }
+
+    /// <summary>
+    /// <see cref="EffectExpired"/> verwijdert de bijbehorende <see cref="ActiveEffect"/> aan
+    /// het einde van de ronde (FO §9.2).
+    /// </summary>
+    [Fact]
+    public void EffectExpired_VerwijdertActiveEffect()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+        var effect = map.Events.First(e => e.Id == "stormachtige-zeeen").Effect;
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories,
+            turnOrder: [],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: [new ActiveEffect(effect, RoundsRemaining: 1)]);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new EffectExpired(gameId, "stormachtige-zeeen"));
+
+        Assert.Empty(result.ActiveEffects);
+    }
+
+    /// <summary>
+    /// <see cref="GameWon"/> sluit het spel af: fase naar <see cref="GamePhase.Finished"/>
+    /// en de winnaars vastgelegd op <see cref="GameState.Winners"/> (FO §7).
+    /// </summary>
+    [Fact]
+    public async Task GameWon_VouwtFaseEnWinnaarsEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: "p1", ArmyCount: 1))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new GameWon(gameId, ["p1"]));
+
+        Assert.Equal(GamePhase.Finished, result.Phase);
+        Assert.Equal(["p1"], result.Winners);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(GamePhase.Finished, reloaded!.Phase);
+        Assert.Equal(["p1"], reloaded.Winners);
+    }
+
+    /// <summary>
     /// Bouwt de projectie onafhankelijk van Martens opgeslagen snapshot opnieuw op, puur
     /// vanuit de rauwe events — dit is de herstel-garantie zelf (TO §9), niet een kopie van
     /// wat er al in de database staat.
@@ -287,6 +520,12 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 ArmiesMovedAfterConquest armiesMovedAfterConquest =>
                     projection.Apply(state!, armiesMovedAfterConquest),
                 Fortified fortified => projection.Apply(state!, fortified),
+                PlayerEliminated playerEliminated => projection.Apply(state!, playerEliminated),
+                EventCardDrawn => state!,
+                EffectApplied effectApplied => projection.Apply(state!, effectApplied),
+                EffectExpired effectExpired => projection.Apply(state!, effectExpired),
+                MissionCompleted => state!,
+                GameWon gameWon => projection.Apply(state!, gameWon),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
@@ -314,6 +553,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.TurnOrder, actual.TurnOrder);
         Assert.Equal(expected.TurnState, actual.TurnState);
         Assert.Equal(expected.ActiveEffects, actual.ActiveEffects);
+        Assert.Equal(expected.Winners, actual.Winners);
 
         Assert.Equal(expected.Deck.NextTradeValue, actual.Deck.NextTradeValue);
         Assert.Equal(expected.Deck.DrawPile, actual.Deck.DrawPile);
@@ -330,6 +570,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             Assert.Equal(expectedPlayer.Mission, actualPlayer.Mission);
             Assert.Equal(expectedPlayer.IsEliminated, actualPlayer.IsEliminated);
             Assert.Equal(expectedPlayer.IsAutoPass, actualPlayer.IsAutoPass);
+            Assert.Equal(expectedPlayer.EliminatedByPlayerId, actualPlayer.EliminatedByPlayerId);
         }
 
         Assert.Equal(expected.Map.MapId, actual.Map.MapId);
