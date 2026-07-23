@@ -108,6 +108,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     public GameState Apply(GameState state, TerritoryClaimed @event) =>
         state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
 
+    /// <summary>Maakt plaats voor het bijplaatsen van resterende startlegers (FO §5.1).</summary>
+    public GameState Apply(GameState state, ClaimingCompleted @event) =>
+        state.WithPhase(GamePhase.InitialPlacement);
+
     public GameState Apply(GameState state, InitialArmyPlaced @event)
     {
         var territory = state.Territory(@event.TerritoryId);

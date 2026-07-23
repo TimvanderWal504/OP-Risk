@@ -20,7 +20,10 @@ public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
 /// retourneert de bijgewerkte state alleen als RPC-resultaat aan de aanroeper. Dat volgt
 /// in een latere plak.
 /// </remarks>
-public sealed class GameHub(LobbyCommandHandler lobbyCommands, OrderRollCommandHandler orderRollCommands) : Hub
+public sealed class GameHub(
+    LobbyCommandHandler lobbyCommands,
+    OrderRollCommandHandler orderRollCommands,
+    SetupCommandHandler setupCommands) : Hub
 {
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -48,6 +51,20 @@ public sealed class GameHub(LobbyCommandHandler lobbyCommands, OrderRollCommandH
         var result = await orderRollCommands.RollForOrderAsync(gameId, playerId);
 
         return Unwrap(result, rollResult => new OrderRollResponse(rollResult.Die1, rollResult.Die2, rollResult.State));
+    }
+
+    public async Task<GameStateDto> ClaimTerritory(string gameId, string playerId, string territoryId)
+    {
+        var result = await setupCommands.ClaimTerritoryAsync(gameId, playerId, territoryId);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> PlaceInitialArmy(string gameId, string playerId, string territoryId)
+    {
+        var result = await setupCommands.PlaceInitialArmyAsync(gameId, playerId, territoryId);
+
+        return Unwrap(result, state => state);
     }
 
     private static TResponse Unwrap<T, TResponse>(Result<T> result, Func<T, TResponse> onSuccess) =>

@@ -9,7 +9,10 @@ public sealed record GameStateDto(
     GamePhaseDto Phase,
     IReadOnlyList<PlayerDto> Players,
     IReadOnlyList<string> AvailableColorIds,
-    IReadOnlyList<string> TurnOrder);
+    IReadOnlyList<string> TurnOrder,
+    IReadOnlyList<TerritoryDto> Territories);
+
+public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int ArmyCount);
 
 public enum GamePhaseDto
 {

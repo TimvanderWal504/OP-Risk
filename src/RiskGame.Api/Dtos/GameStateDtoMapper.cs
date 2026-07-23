@@ -24,7 +24,12 @@ public static class GameStateDtoMapper
             .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId, player.IsHost))
             .ToArray();
 
-        return new GameStateDto(state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder);
+        var territories = state.Territories
+            .Select(territory => new TerritoryDto(territory.TerritoryId, territory.OwnerPlayerId, territory.ArmyCount))
+            .ToArray();
+
+        return new GameStateDto(
+            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories);
     }
 
     private static GamePhaseDto ToDto(GamePhase phase) => phase switch
