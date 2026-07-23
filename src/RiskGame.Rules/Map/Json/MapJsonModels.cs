@@ -85,3 +85,117 @@ internal sealed class DeckJson
 
     public int? JokerCount { get; init; }
 }
+
+internal sealed class MissionsFileJson
+{
+    public List<MissionJson>? Missions { get; init; }
+}
+
+internal sealed class MissionJson
+{
+    public string? Id { get; init; }
+
+    public string? Type { get; init; }
+
+    public string? Name { get; init; }
+
+    public string? Description { get; init; }
+
+    public bool? RequiresOwnTurn { get; init; }
+
+    public string? FallbackMissionId { get; init; }
+
+    public MissionParamsJson? Params { get; init; }
+}
+
+// Eén platte params-vorm voor alle missietypes: bespaart polymorfe deserialisatie; de
+// parser kiest per type welke velden hij nodig heeft en klaagt over wat ontbreekt.
+internal sealed class MissionParamsJson
+{
+    public List<string>? Continents { get; init; }
+
+    public bool? ExtraAnyContinent { get; init; }
+
+    public int? Count { get; init; }
+
+    public int? MinArmies { get; init; }
+
+    public string? TargetColor { get; init; }
+}
+
+internal sealed class EventsFileJson
+{
+    public List<EventJson>? Events { get; init; }
+}
+
+internal sealed class EventJson
+{
+    public string? Id { get; init; }
+
+    public string? Name { get; init; }
+
+    public string? Description { get; init; }
+
+    public string? Duration { get; init; }
+
+    public EventEffectJson? Effect { get; init; }
+}
+
+internal sealed class EventEffectJson
+{
+    public string? Type { get; init; }
+
+    public EventEffectParamsJson? Params { get; init; }
+}
+
+internal sealed class EventEffectParamsJson
+{
+    public int? Amount { get; init; }
+
+    public List<string>? TerritoryIds { get; init; }
+
+    public List<RouteJson>? Routes { get; init; }
+}
+
+internal sealed class RouteJson
+{
+    public string? From { get; init; }
+
+    public string? To { get; init; }
+}
+
+internal sealed class RolesFileJson
+{
+    public List<RoleJson>? Roles { get; init; }
+}
+
+internal sealed class RoleJson
+{
+    public string? Id { get; init; }
+
+    public string? Name { get; init; }
+
+    public string? OriginTerritory { get; init; }
+
+    public string? Description { get; init; }
+
+    public RoleEffectJson? Effect { get; init; }
+}
+
+internal sealed class RoleEffectJson
+{
+    public string? Type { get; init; }
+
+    public RoleEffectParamsJson? Params { get; init; }
+}
+
+internal sealed class RoleEffectParamsJson
+{
+    public int? Amount { get; init; }
+
+    public int? PerTurn { get; init; }
+
+    public bool? ThroughEnemy { get; init; }
+
+    public int? Moves { get; init; }
+}

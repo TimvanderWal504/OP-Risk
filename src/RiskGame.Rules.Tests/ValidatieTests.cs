@@ -36,19 +36,84 @@ public class ValidatieTests
         }
         """;
 
+    // De minimale kaart heeft alleen kleur 'red'; de missieset dekt die met één eliminate-red
+    // plus de bijbehorende fallback-missie (FO §6.1).
+    private const string GeldigeMissions = """
+        {
+          "missions": [
+            {
+              "id": "territory-2",
+              "type": "TerritoryCount",
+              "params": { "count": 2 },
+              "name": "Bezit 2 gebieden",
+              "description": "Bezit 2 gebieden."
+            },
+            {
+              "id": "eliminate-red",
+              "type": "EliminatePlayer",
+              "params": { "targetColor": "red" },
+              "fallbackMissionId": "territory-2",
+              "name": "Schakel rood uit",
+              "description": "Vernietig rood."
+            }
+          ]
+        }
+        """;
+
+    private const string GeldigeEvents = """
+        {
+          "events": [
+            {
+              "id": "babyboom",
+              "name": "Babyboom",
+              "description": "+2 legers.",
+              "effect": { "type": "FreeReinforcement", "params": { "amount": 2 } },
+              "duration": "instant"
+            },
+            {
+              "id": "poolstorm",
+              "name": "Poolstorm",
+              "description": "A afgesloten.",
+              "effect": { "type": "TerritoryLocked", "params": { "territoryIds": ["a"] } },
+              "duration": "oneRound"
+            }
+          ]
+        }
+        """;
+
+    private const string GeldigeRoles = """
+        {
+          "roles": [
+            {
+              "id": "president",
+              "name": "President",
+              "originTerritory": "a",
+              "effect": { "type": "ExtraReinforcement", "params": { "amount": 1 } },
+              "description": "+1 leger."
+            }
+          ]
+        }
+        """;
+
     private static Result Parse(
         string? territories = null,
         string? adjacency = null,
         string? continents = null,
         string? colors = null,
-        string? cards = null)
+        string? cards = null,
+        string? missions = null,
+        string? events = null,
+        string? roles = null)
     {
         var result = MapDefinitionParser.Parse("test", new MapDataSources(
             territories ?? GeldigeTerritories,
             adjacency ?? GeldigeAdjacency,
             continents ?? GeldigeContinents,
             colors ?? GeldigeColors,
-            cards ?? GeldigeCards));
+            cards ?? GeldigeCards,
+            missions ?? GeldigeMissions,
+            events ?? GeldigeEvents,
+            roles ?? GeldigeRoles));
 
         return new Result(result.IsSuccess, result.Errors);
     }
@@ -231,5 +296,209 @@ public class ValidatieTests
 
         Assert.False(result.IsSuccess);
         Assert.True(result.Errors.Count > 1, "Verwachtte meerdere fouten, kreeg: " + string.Join(" | ", result.Errors));
+    }
+
+    [Fact]
+    public void MissieMetOnbekendContinent_IsOngeldig()
+    {
+        const string missions = """
+            {
+              "missions": [
+                {
+                  "id": "m1",
+                  "type": "ConquerContinents",
+                  "params": { "continents": ["bestaat-niet"], "extraAnyContinent": false },
+                  "name": "M1",
+                  "description": "D"
+                },
+                {
+                  "id": "eliminate-red",
+                  "type": "EliminatePlayer",
+                  "params": { "targetColor": "red" },
+                  "fallbackMissionId": "m1",
+                  "name": "Eliminate red",
+                  "description": "D"
+                }
+              ]
+            }
+            """;
+
+        Parse(missions: missions).AssertFailure("onbekend continent");
+    }
+
+    [Fact]
+    public void EliminatePlayerMissieMetOnbekendeKleur_IsOngeldig()
+    {
+        const string missions = """
+            {
+              "missions": [
+                {
+                  "id": "territory-2",
+                  "type": "TerritoryCount",
+                  "params": { "count": 2 },
+                  "name": "T",
+                  "description": "D"
+                },
+                {
+                  "id": "eliminate-groen",
+                  "type": "EliminatePlayer",
+                  "params": { "targetColor": "green" },
+                  "fallbackMissionId": "territory-2",
+                  "name": "Eliminate groen",
+                  "description": "D"
+                }
+              ]
+            }
+            """;
+
+        Parse(missions: missions).AssertFailure("onbekende kleur");
+    }
+
+    [Fact]
+    public void EliminatePlayerMissieMetOnbekendeFallback_IsOngeldig()
+    {
+        const string missions = """
+            {
+              "missions": [
+                {
+                  "id": "eliminate-red",
+                  "type": "EliminatePlayer",
+                  "params": { "targetColor": "red" },
+                  "fallbackMissionId": "bestaat-niet",
+                  "name": "Eliminate red",
+                  "description": "D"
+                }
+              ]
+            }
+            """;
+
+        Parse(missions: missions).AssertFailure("onbekende fallbackMissionId");
+    }
+
+    [Fact]
+    public void MissiesetZonderEliminateVoorAlleKleuren_IsOngeldig()
+    {
+        const string colors = """
+            {
+              "colors": [
+                { "id": "red", "name": "Rood", "hex": "#C0392B", "symbol": "circle" },
+                { "id": "blue", "name": "Blauw", "hex": "#215C9C", "symbol": "square" }
+              ]
+            }
+            """;
+
+        // GeldigeMissions dekt alleen 'red', niet 'blue'.
+        Parse(colors: colors).AssertFailure("niet dekkend");
+    }
+
+    [Fact]
+    public void GebeurtenisMetOnbekendGebied_IsOngeldig()
+    {
+        const string events = """
+            { "events": [
+                {
+                  "id": "e1",
+                  "name": "E1",
+                  "description": "D",
+                  "effect": { "type": "TerritoryLocked", "params": { "territoryIds": ["atlantis"] } },
+                  "duration": "oneRound"
+                }
+              ]
+            }
+            """;
+
+        Parse(events: events).AssertFailure("onbekend gebied");
+    }
+
+    [Fact]
+    public void GebeurtenisMetZeerouteDieGeenZeeverbindingIs_IsOngeldig()
+    {
+        const string events = """
+            { "events": [
+                {
+                  "id": "e1",
+                  "name": "E1",
+                  "description": "D",
+                  "effect": { "type": "SeaRoutesBlocked", "params": { "routes": [ { "from": "a", "to": "b" } ] } },
+                  "duration": "oneRound"
+                }
+              ]
+            }
+            """;
+
+        // GeldigeAdjacency verbindt a-b als 'land', niet als 'sea'.
+        Parse(events: events).AssertFailure("geen zeeverbinding");
+    }
+
+    [Fact]
+    public void GebeurtenisMetArmyAttritionEnOneRoundDuration_IsOngeldig()
+    {
+        const string events = """
+            { "events": [
+                {
+                  "id": "e1",
+                  "name": "E1",
+                  "description": "D",
+                  "effect": { "type": "ArmyAttrition", "params": { "amount": 2 } },
+                  "duration": "oneRound"
+                }
+              ]
+            }
+            """;
+
+        Parse(events: events).AssertFailure("instant");
+    }
+
+    [Fact]
+    public void RolMetHerkomstlandBuitenDeKaart_WordtStilGefilterd()
+    {
+        const string roles = """
+            {
+              "roles": [
+                {
+                  "id": "president",
+                  "name": "President",
+                  "originTerritory": "bestaat-niet",
+                  "effect": { "type": "ExtraReinforcement", "params": { "amount": 1 } },
+                  "description": "D"
+                }
+              ]
+            }
+            """;
+
+        // Geen datafout (FO: rollen zonder herkomstland op de kaart horen niet in de pool).
+        var result = MapDefinitionParser.Parse("test", new MapDataSources(
+            GeldigeTerritories, GeldigeAdjacency, GeldigeContinents, GeldigeColors, GeldigeCards,
+            GeldigeMissions, GeldigeEvents, roles));
+
+        Assert.True(result.IsSuccess, string.Join(" | ", result.Errors));
+        Assert.Empty(result.Value.Roles);
+    }
+
+    [Fact]
+    public void TweeRollenMetHetzelfdeHerkomstland_IsOngeldig()
+    {
+        const string roles = """
+            {
+              "roles": [
+                {
+                  "id": "president",
+                  "name": "President",
+                  "originTerritory": "a",
+                  "effect": { "type": "ExtraReinforcement", "params": { "amount": 1 } },
+                  "description": "D"
+                },
+                {
+                  "id": "generaal",
+                  "name": "Generaal",
+                  "originTerritory": "a",
+                  "effect": { "type": "Reroll", "params": { "perTurn": 1 } },
+                  "description": "D"
+                }
+              ]
+            }
+            """;
+
+        Parse(roles: roles).AssertFailure("herkomstland 'a' komt meer dan één keer voor");
     }
 }

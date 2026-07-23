@@ -1,0 +1,392 @@
+{
+  "_comment": "Gebeurtenisronde (FO §9.2). Effect-types t.o.v. eerdere versie: RevoltOnSingleArmy is VERWIJDERD (niet gewenst). Twee nieuwe effect-types toegevoegd, zelfde stijl als de bestaande (type + params, duration instant|oneRound): TerritoryLocked (weer/geologie sluit gebieden tijdelijk af -- geen aanval erop, geen aanval eruit, geen verplaatsing in of uit, altijd oneRound) en ArmyAttrition (epidemie/vergrijzing: iedereen verliest amount legers, verdeeld over eigen gebieden met >1 leger, nooit onder de 1 per gebied -- altijd instant, de legers zijn al weg zodra de kaart getrokken is). SeaRoutesBlocked-varianten gebruiken uitsluitend routeparen die daadwerkelijk in adjacency_validated.json als 'sea' voorkomen. 'goede-oogst' blijft ongewijzigd t.o.v. de Claude Design-mockup.",
+  "effectTypesAddendum": {
+    "TerritoryLocked": {
+      "params": {
+        "territoryIds": "string[]"
+      },
+      "werking": "De genoemde gebieden zijn deze ronde volledig afgesloten: niet aan te vallen, niet vanuit aan te vallen, geen Verplaatsen erin of eruit. Eigenaarschap en legeraantal blijven ongewijzigd.",
+      "duration": "altijd oneRound"
+    },
+    "ArmyAttrition": {
+      "params": {
+        "amount": "int"
+      },
+      "werking": "Elke speler met meer dan 1 leger op minstens 1 gebied moet in totaal 'amount' eigen legers verwijderen, en kiest zelf van welke gebieden. Een gebied mag nooit onder de 1 leger komen. Heeft een speler minder 'wegneembare' legers dan 'amount' (d.w.z. de som van (legers - 1) over al zijn gebieden is kleiner dan amount), dan wordt automatisch het maximum weggehaald: elk gebied van die speler komt op 1 leger te staan, nooit lager, en de rest van 'amount' vervalt zonder verder effect.",
+      "interactie": "Geen timer (zelfde precedent als de verdediger-keuze en de Reroll-prompt, FO §5.3/§8). Dit is de eerste effect-soort waarbij MEERDERE spelers tegelijk, buiten de normale beurtvolgorde om, een keuze moeten maken voor het spel verdergaat: elke getroffen speler krijgt op zijn telefoon een 'legers verwijderen'-scherm; het spel wacht tot iedereen met keuzevrijheid (dus niet de spelers die toch al op het automatische maximum uitkomen) heeft gekozen.",
+      "duration": "altijd instant"
+    }
+  },
+  "events": [
+    {
+      "id": "goede-oogst",
+      "name": "Goede oogst",
+      "description": "Iedereen die een volledig continent bezit krijgt +2 legers.",
+      "effect": {
+        "type": "ContinentOwnerBonus",
+        "params": {
+          "amount": 2
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "bondgenootschap",
+      "name": "Bondgenootschap",
+      "description": "Iedereen die een volledig continent bezit krijgt +1 leger.",
+      "effect": {
+        "type": "ContinentOwnerBonus",
+        "params": {
+          "amount": 1
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "stormachtige-zeeen",
+      "name": "Stormachtige zeeën",
+      "description": "Alle zeeverbindingen zijn deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {}
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "beringstraat-dichtgevroren",
+      "name": "De Beringstraat is dichtgevroren",
+      "description": "De zeeroute tussen Alaska en Kamtsjatka is deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {
+          "routes": [
+            {
+              "from": "kamchatka",
+              "to": "alaska"
+            }
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "noordzee-geblokkeerd",
+      "name": "De Noordzee is geblokkeerd",
+      "description": "De zeeverbindingen tussen Groot-Brittannië en het vasteland zijn deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {
+          "routes": [
+            {
+              "from": "great-britain",
+              "to": "scandinavia"
+            },
+            {
+              "from": "great-britain",
+              "to": "western-europe"
+            },
+            {
+              "from": "northern-europe",
+              "to": "great-britain"
+            }
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "moesson-in-de-javazee",
+      "name": "Moesson in de Javazee",
+      "description": "De zeeverbindingen rond Indonesië en Nieuw-Guinea zijn deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {
+          "routes": [
+            {
+              "from": "indonesia",
+              "to": "new-guinea"
+            },
+            {
+              "from": "western-australia",
+              "to": "indonesia"
+            },
+            {
+              "from": "western-australia",
+              "to": "new-guinea"
+            },
+            {
+              "from": "new-guinea",
+              "to": "eastern-australia"
+            }
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "piraten-in-de-middellandse-zee",
+      "name": "Piraten in de Middellandse Zee",
+      "description": "De zeeverbindingen tussen Zuid-Europa, Noord-Afrika en Egypte zijn deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {
+          "routes": [
+            {
+              "from": "egypt",
+              "to": "southern-europe"
+            },
+            {
+              "from": "north-africa",
+              "to": "southern-europe"
+            },
+            {
+              "from": "north-africa",
+              "to": "western-europe"
+            }
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "cycloon-bij-madagaskar",
+      "name": "Cycloon bij Madagaskar",
+      "description": "De zeeverbindingen naar Madagaskar zijn deze ronde geblokkeerd.",
+      "effect": {
+        "type": "SeaRoutesBlocked",
+        "params": {
+          "routes": [
+            {
+              "from": "east-africa",
+              "to": "madagascar"
+            },
+            {
+              "from": "south-africa",
+              "to": "madagascar"
+            }
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "poolstorm-in-het-noorden",
+      "name": "Poolstorm in het noorden",
+      "description": "Een zware poolstorm sluit Groenland en IJsland deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "greenland",
+            "iceland"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "zandstorm-in-de-sahara",
+      "name": "Zandstorm in de Sahara",
+      "description": "Een zandstorm sluit Noord-Afrika deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "north-africa"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "overstromingen-in-siam",
+      "name": "Overstromingen in Siam",
+      "description": "Zware regenval sluit Siam deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "siam"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "aardbeving-in-china",
+      "name": "Aardbeving in China",
+      "description": "Een zware aardbeving sluit China deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "china"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "vulkaanuitbarsting-op-kamtsjatka",
+      "name": "Vulkaanuitbarsting op Kamtsjatka",
+      "description": "Een vulkaanuitbarsting sluit Kamtsjatka deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "kamchatka"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "lawines-in-de-oeral",
+      "name": "Lawines in de Oeral",
+      "description": "Zware lawines sluiten de Oeral deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "ural"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "aardverschuiving-in-centraal-amerika",
+      "name": "Aardverschuiving in Centraal-Amerika",
+      "description": "Een zware aardverschuiving sluit Centraal-Amerika deze ronde volledig af.",
+      "effect": {
+        "type": "TerritoryLocked",
+        "params": {
+          "territoryIds": [
+            "central-america"
+          ]
+        }
+      },
+      "duration": "oneRound"
+    },
+    {
+      "id": "epidemie-in-de-steden",
+      "name": "Epidemie in de steden",
+      "description": "Een besmettelijke ziekte kost iedereen 3 legers.",
+      "effect": {
+        "type": "ArmyAttrition",
+        "params": {
+          "amount": 3
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "griepgolf",
+      "name": "Griepgolf",
+      "description": "Een zware griepgolf kost iedereen 2 legers.",
+      "effect": {
+        "type": "ArmyAttrition",
+        "params": {
+          "amount": 2
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "vergrijzing-in-de-troepenmacht",
+      "name": "Vergrijzing in de troepenmacht",
+      "description": "Een verouderend leger kost iedereen 2 legers.",
+      "effect": {
+        "type": "ArmyAttrition",
+        "params": {
+          "amount": 2
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "pensioengolf",
+      "name": "Pensioengolf",
+      "description": "Een golf aan pensioneringen kost iedereen 1 leger.",
+      "effect": {
+        "type": "ArmyAttrition",
+        "params": {
+          "amount": 1
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "technologische-doorbraak",
+      "name": "Technologische doorbraak",
+      "description": "Een technologische doorbraak levert iedereen +2 legers op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 2
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "industriele-revolutie",
+      "name": "Industriële revolutie",
+      "description": "Nieuwe industrie levert iedereen +3 legers op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 3
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "wapenindustrie-groeit",
+      "name": "De wapenindustrie groeit",
+      "description": "Een groeiende wapenindustrie levert iedereen +1 leger op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "babyboom",
+      "name": "Babyboom",
+      "description": "Een golf aan geboortes levert iedereen +2 legers op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 2
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "bevolkingsgroei",
+      "name": "Bevolkingsgroei",
+      "description": "Snelle bevolkingsgroei levert iedereen +1 leger op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "duration": "instant"
+    },
+    {
+      "id": "geboortegolf-in-de-kolonien",
+      "name": "Geboortegolf in de koloniën",
+      "description": "Een geboortegolf levert iedereen +3 legers op.",
+      "effect": {
+        "type": "FreeReinforcement",
+        "params": {
+          "amount": 3
+        }
+      },
+      "duration": "instant"
+    }
+  ]
+}

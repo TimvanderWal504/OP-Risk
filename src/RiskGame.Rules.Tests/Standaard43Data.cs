@@ -18,7 +18,10 @@ internal static class Standaard43Data
         Json("adjacency_validated.json"),
         Json("continents.json"),
         Json("colors.json"),
-        Json("cards.json"));
+        Json("cards.json"),
+        Json("missions.json"),
+        Json("events.json"),
+        Json("roles.json"));
 
     public static MapDefinition Load()
     {

@@ -1,0 +1,117 @@
+{
+  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. De twee TerritoryCount(MinArmies)-missies dienen zowel als zelfstandige missie als als fallbackMissionId voor de eliminate-missies (FO: 'is het doelwit de speler zelf, of doet die kleur niet mee -> direct de fallback-missie').",
+  "missions": [
+    {
+      "id": "conquer-asia-south-america",
+      "type": "ConquerContinents",
+      "params": { "continents": ["asia", "south-america"], "extraAnyContinent": false },
+      "name": "Verover Azië en Zuid-Amerika",
+      "description": "Verover alle gebieden van Azië en Zuid-Amerika."
+    },
+    {
+      "id": "conquer-europe-australia-plus",
+      "type": "ConquerContinents",
+      "params": { "continents": ["europe", "australia"], "extraAnyContinent": true },
+      "name": "Verover Europa, Australië en 1 continent naar keuze",
+      "description": "Verover alle gebieden van Europa en Australië, plus een derde continent naar keuze."
+    },
+    {
+      "id": "conquer-north-america-africa",
+      "type": "ConquerContinents",
+      "params": { "continents": ["north-america", "africa"], "extraAnyContinent": false },
+      "name": "Verover Noord-Amerika en Afrika",
+      "description": "Verover alle gebieden van Noord-Amerika en Afrika."
+    },
+    {
+      "id": "conquer-europe-south-america-plus",
+      "type": "ConquerContinents",
+      "params": { "continents": ["europe", "south-america"], "extraAnyContinent": true },
+      "name": "Verover Europa, Zuid-Amerika en 1 continent naar keuze",
+      "description": "Verover alle gebieden van Europa en Zuid-Amerika, plus een derde continent naar keuze."
+    },
+    {
+      "id": "conquer-asia-africa",
+      "type": "ConquerContinents",
+      "params": { "continents": ["asia", "africa"], "extraAnyContinent": false },
+      "name": "Verover Azië en Afrika",
+      "description": "Verover alle gebieden van Azië en Afrika."
+    },
+    {
+      "id": "conquer-north-america-australia",
+      "type": "ConquerContinents",
+      "params": { "continents": ["north-america", "australia"], "extraAnyContinent": false },
+      "name": "Verover Noord-Amerika en Australië",
+      "description": "Verover alle gebieden van Noord-Amerika en Australië."
+    },
+    {
+      "id": "territory-24",
+      "type": "TerritoryCount",
+      "params": { "count": 24 },
+      "name": "Bezit 24 gebieden",
+      "description": "Bezit op enig moment 24 gebieden, ongeacht welke."
+    },
+    {
+      "id": "territory-18-min2",
+      "type": "TerritoryCountMinArmies",
+      "params": { "count": 18, "minArmies": 2 },
+      "name": "Bezit 18 gebieden met elk minstens 2 legers",
+      "description": "Bezit op enig moment 18 gebieden, elk bezet met minstens 2 legers."
+    },
+    {
+      "id": "eliminate-red",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "red" },
+      "fallbackMissionId": "territory-24",
+      "name": "Schakel de rode speler uit",
+      "description": "Vernietig alle legers van de rode speler."
+    },
+    {
+      "id": "eliminate-blue",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "blue" },
+      "fallbackMissionId": "territory-24",
+      "name": "Schakel de blauwe speler uit",
+      "description": "Vernietig alle legers van de blauwe speler."
+    },
+    {
+      "id": "eliminate-green",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "green" },
+      "fallbackMissionId": "territory-18-min2",
+      "name": "Schakel de groene speler uit",
+      "description": "Vernietig alle legers van de groene speler."
+    },
+    {
+      "id": "eliminate-yellow",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "yellow" },
+      "fallbackMissionId": "territory-24",
+      "name": "Schakel de gele speler uit",
+      "description": "Vernietig alle legers van de gele speler."
+    },
+    {
+      "id": "eliminate-purple",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "purple" },
+      "fallbackMissionId": "territory-18-min2",
+      "name": "Schakel de paarse speler uit",
+      "description": "Vernietig alle legers van de paarse speler."
+    },
+    {
+      "id": "eliminate-orange",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "orange" },
+      "fallbackMissionId": "territory-24",
+      "name": "Schakel de oranje speler uit",
+      "description": "Vernietig alle legers van de oranje speler."
+    },
+    {
+      "id": "eliminate-cyan",
+      "type": "EliminatePlayer",
+      "params": { "targetColor": "cyan" },
+      "fallbackMissionId": "territory-18-min2",
+      "name": "Schakel de cyaan speler uit",
+      "description": "Vernietig alle legers van de cyaan speler."
+    }
+  ]
+}

@@ -1,4 +1,6 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Missions;
 
 namespace RiskGame.Rules.Tests;
 
@@ -88,5 +90,44 @@ public class Standaard43Tests
         // Geen static of gedeelde cache: twee gelijktijdige spellen mogen elkaar niet raken.
         Assert.NotSame(eerste, tweede);
         Assert.NotSame(eerste.Adjacency, tweede.Adjacency);
+    }
+
+    [Fact]
+    public void Missieset_IsDekkendVoorAlleZevenKleuren()
+    {
+        var map = Standaard43Data.Load();
+
+        var doelwitten = map.Missions
+            .OfType<EliminatePlayerMission>()
+            .Select(mission => mission.TargetColor)
+            .ToList();
+
+        Assert.Equal(map.Colors.Count, doelwitten.Distinct(StringComparer.Ordinal).Count());
+        foreach (var kleur in map.Colors)
+        {
+            Assert.Contains(kleur.Id, doelwitten);
+        }
+    }
+
+    [Fact]
+    public void Gebeurtenissen_BevattenZowelInstantAlsOneRoundEffecten()
+    {
+        var events = Standaard43Data.Load().Events;
+
+        Assert.Contains(events, e => e.Effect.Duration == EffectDuration.Instant);
+        Assert.Contains(events, e => e.Effect.Duration == EffectDuration.OneRound);
+        Assert.Contains(events, e => e.Effect is ArmyAttritionEffect);
+        Assert.Contains(events, e => e.Effect is TerritoryLockedEffect);
+    }
+
+    [Fact]
+    public void Rollen_HebbenElkEenUniekHerkomstland()
+    {
+        var roles = Standaard43Data.Load().Roles;
+
+        Assert.Equal(15, roles.Count);
+        Assert.Equal(
+            roles.Count,
+            roles.Select(role => role.OriginTerritory).Distinct(StringComparer.Ordinal).Count());
     }
 }

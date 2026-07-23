@@ -10,4 +10,7 @@ public sealed record MapDataSources(
     string AdjacencyJson,
     string ContinentsJson,
     string ColorsJson,
-    string CardsJson);
+    string CardsJson,
+    string MissionsJson,
+    string EventsJson,
+    string RolesJson);

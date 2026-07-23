@@ -1,0 +1,185 @@
+{
+  "_comment": "Rollensysteem (FO §8). 15 rollen totaal, ruim boven het max. van 7 spelers. Elke rol heeft een uniek herkomstland (validatie-eis FO §8: 'geen dubbele herkomstlanden'). LET OP: 'maori' heeft 'new-zealand' als herkomstland -- dat gebied bestaat alleen op kaartvarianten die Nieuw-Zeeland bevatten (de 43-gebieden-set, niet de klassieke 42). Op een kaartvariant zonder new-zealand moet 'maori' uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie ('herkomstlanden bestaan op de geladen kaart'). 'generaal' is verplaatst van scandinavia naar china omdat 'viking' scandinavia nu logischer claimt.",
+  "roles": [
+    {
+      "id": "president",
+      "name": "President",
+      "originTerritory": "eastern-united-states",
+      "effect": {
+        "type": "ExtraReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "description": "USA! USA! USA!: +1 leger per beurt zolang je Oost-VS bezit."
+    },
+    {
+      "id": "generaal",
+      "name": "Generaal",
+      "originTerritory": "china",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Laat het Ming-Dynasty herrijzen: herwerp 1 verloren dobbelsteen per beurt zolang je China bezit."
+    },
+    {
+      "id": "safariranger",
+      "name": "Safariranger",
+      "originTerritory": "congo",
+      "effect": {
+        "type": "FortifyUpgrade",
+        "params": {
+          "throughEnemy": true
+        }
+      },
+      "description": "Via de nek van een giraffe kan je een pad door 1 vijandelijk gebied heen aanleggen, zolang je Congo bezit."
+    },
+    {
+      "id": "diplomaat",
+      "name": "Diplomaat",
+      "originTerritory": "great-britain",
+      "effect": {
+        "type": "CardTradeBonus",
+        "params": {
+          "amount": 2
+        }
+      },
+      "description": "Diplomacy under a cup of tea!: +2 extra legers bij het inleveren van een kaartenset, zolang je Groot Brittanië bezit."
+    },
+    {
+      "id": "smokkelaar",
+      "name": "Smokkelaar",
+      "originTerritory": "north-africa",
+      "effect": {
+        "type": "FortifyUpgrade",
+        "params": {
+          "moves": 2
+        }
+      },
+      "description": "Invoegen zit in ons bloed, of het nu goedschiks of kwaadschiks gaat: Mag bij Verplaatsen 2 keer verplaatsen in plaats van 1, zolang je Noord-Afrika bezit."
+    },
+    {
+      "id": "admiraal",
+      "name": "Admiraal",
+      "originTerritory": "ural",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Legers verdwijnen naar de Gulag? Niet onder jouw bewind: Herwerp 1 verloren dobbelsteen per beurt zolang je de Oeral bezit."
+    },
+    {
+      "id": "kolonist",
+      "name": "Kolonist",
+      "originTerritory": "western-australia",
+      "effect": {
+        "type": "ExtraReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "description": "Dit lijkt ons een goede plek om ons te vestigen: +1 leger per beurt zolang je Western Australia bezit."
+    },
+    {
+      "id": "aboriginal",
+      "name": "Aboriginal",
+      "originTerritory": "eastern-australia",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 verloren dobbelsteen per beurt zolang je Eastern Australia bezit."
+    },
+    {
+      "id": "samurai",
+      "name": "Samurai",
+      "originTerritory": "japan",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Krijgersdiscipline: herwerp 1 verloren dobbelsteen per beurt zolang je Japan bezit."
+    },
+    {
+      "id": "inca",
+      "name": "Inca",
+      "originTerritory": "peru",
+      "effect": {
+        "type": "FortifyUpgrade",
+        "params": {
+          "moves": 2
+        }
+      },
+      "description": "Het uitgebreide Inca-wegennet maakt 2 verplaatsingen in plaats van 1 mogelijk, zolang je Peru bezit."
+    },
+    {
+      "id": "cowboy",
+      "name": "Cowboy",
+      "originTerritory": "western-united-states",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Snelle trekker: herwerp 1 verloren dobbelsteen per beurt zolang je Western United States bezit."
+    },
+    {
+      "id": "viking",
+      "name": "Viking",
+      "originTerritory": "scandinavia",
+      "effect": {
+        "type": "ExtraReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "description": "Plundertochten leveren +1 leger per beurt op, zolang je Scandinavië bezit."
+    },
+    {
+      "id": "pharaoh",
+      "name": "Pharaoh",
+      "originTerritory": "egypt",
+      "effect": {
+        "type": "CardTradeBonus",
+        "params": {
+          "amount": 2
+        }
+      },
+      "description": "De rijkdom van Egypte levert +2 extra legers op bij het inleveren van een kaartenset, zolang je Egypte bezit."
+    },
+    {
+      "id": "tsaar",
+      "name": "Tsaar",
+      "originTerritory": "ukraine",
+      "effect": {
+        "type": "ExtraReinforcement",
+        "params": {
+          "amount": 1
+        }
+      },
+      "description": "Heerschappij over een immens rijk levert +1 leger per beurt op, zolang je Ukraine bezit."
+    },
+    {
+      "id": "maori",
+      "name": "Maori",
+      "originTerritory": "new-zealand",
+      "effect": {
+        "type": "Reroll",
+        "params": {
+          "perTurn": 1
+        }
+      },
+      "description": "Ervaren navigators en krijgers herwerpen 1 verloren dobbelsteen per beurt, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland."
+    }
+  ]
+}
