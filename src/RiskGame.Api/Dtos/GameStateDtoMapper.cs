@@ -21,7 +21,7 @@ public static class GameStateDtoMapper
             .ToArray();
 
         var players = state.Players
-            .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId, player.IsHost))
+            .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId, player.RoleId, player.IsHost))
             .ToArray();
 
         var territories = state.Territories

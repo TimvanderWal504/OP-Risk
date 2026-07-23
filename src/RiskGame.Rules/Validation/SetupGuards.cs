@@ -44,6 +44,36 @@ public static class SetupGuards
     }
 
     /// <summary>
+    /// FO §8.1: bij claim-modus mag een speler zijn eigen rol-herkomstland niet claimen
+    /// tijdens de setup (veroveren mag later uiteraard wel). Geen enkele beperking als de
+    /// speler geen rol heeft.
+    /// </summary>
+    public static ValidationResult TerritoryIsNotOwnRoleOrigin(
+        GameState state, string playerId, string territoryId)
+    {
+        var exists = Guards.PlayerExists(state, playerId);
+
+        if (!exists.IsSuccess)
+        {
+            return exists;
+        }
+
+        var roleId = state.Player(playerId).RoleId;
+
+        if (roleId is null)
+        {
+            return ValidationResult.Success();
+        }
+
+        var role = state.Map.Roles.First(role => role.Id == roleId);
+
+        return role.OriginTerritory == territoryId
+            ? ValidationResult.Failure(
+                $"Speler '{playerId}' mag zijn eigen rol-herkomstland '{territoryId}' niet claimen.")
+            : ValidationResult.Success();
+    }
+
+    /// <summary>
     /// Faalt ook als het bijplaatsen al klaar is (<see cref="SetupTurnCalculator.ActivePlacerId"/>
     /// is dan <c>null</c>, dus geen enkele speler is nog "aan de beurt").
     /// </summary>

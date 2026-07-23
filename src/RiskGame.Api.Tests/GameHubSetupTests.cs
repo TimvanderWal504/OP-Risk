@@ -41,9 +41,11 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
                     ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
                 }));
 
-            // Alice wint de order-roll altijd meteen (10 tegen 5), zodat TurnOrder vaststaat.
+            // De eerste 2 waarden gaan naar StartGame's missietoewijzing (WinCondition.
+            // SecretMissions, 2 spelers = 2 trekkingen); daarna wint Alice de order-roll
+            // altijd meteen (10 tegen 5), zodat TurnOrder vaststaat.
             builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(new SequenceRandomSource(6, 4, 3, 2)));
+                services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
         });
 
     private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)

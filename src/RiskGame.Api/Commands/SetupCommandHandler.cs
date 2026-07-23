@@ -28,7 +28,8 @@ public sealed class SetupCommandHandler(IDocumentStore store)
             SetupGuards.GameIsInClaiming(state),
             Guards.PlayerExists(state, playerId),
             SetupGuards.IsPlayersTurnToClaim(state, playerId),
-            SetupGuards.TerritoryIsFree(state, territoryId));
+            SetupGuards.TerritoryIsFree(state, territoryId),
+            SetupGuards.TerritoryIsNotOwnRoleOrigin(state, playerId, territoryId));
 
         if (!validation.IsSuccess)
         {

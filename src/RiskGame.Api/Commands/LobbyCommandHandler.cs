@@ -1,7 +1,10 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Rules.Abstractions;
+using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -14,7 +17,7 @@ public sealed record JoinGameResult(string PlayerId, GameStateDto State);
 /// de rules engine, dan pas events persisteren en de nieuwe projectie teruggeven. Faalt de
 /// validatie, dan wordt er niets opgeslagen (geen state-wijziging, TO §4-diagram).
 /// </summary>
-public sealed class LobbyCommandHandler(IDocumentStore store)
+public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource random)
 {
     public async Task<Result<CreateGameResponse>> CreateGameAsync(CreateGameRequest request)
     {
@@ -97,19 +100,89 @@ public sealed class LobbyCommandHandler(IDocumentStore store)
             return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
         }
 
-        var validation = ValidationResult.Combine(
+        var validations = new List<ValidationResult>
+        {
             LobbyGuards.GameIsInLobby(state),
             Guards.PlayerExists(state, playerId),
             LobbyGuards.CallerIsHost(state, playerId),
             LobbyGuards.HasMinimumPlayers(state),
-            LobbyGuards.AllPlayersHaveChosenColor(state));
+            LobbyGuards.AllPlayersHaveChosenColor(state),
+        };
+
+        if (state.Settings.RolesEnabled)
+        {
+            validations.Add(LobbyGuards.RolePoolIsLargeEnough(state));
+
+            if (state.Settings.RoleAssignment == RoleAssignmentMode.Choose)
+            {
+                validations.Add(LobbyGuards.AllPlayersHaveChosenRole(state));
+            }
+        }
+
+        if (state.Settings.WinCondition == WinCondition.SecretMissions)
+        {
+            validations.Add(LobbyGuards.MissionPoolIsLargeEnough(state));
+        }
+
+        var validation = ValidationResult.Combine(validations.ToArray());
 
         if (!validation.IsSuccess)
         {
             return Result<GameStateDto>.Failure(validation.Errors);
         }
 
+        if (state.Settings.RolesEnabled && state.Settings.RoleAssignment == RoleAssignmentMode.Random)
+        {
+            var roleAssignments = RoleAssignmentCalculator.Assign(
+                state.Players.Select(player => player.Id).ToArray(), state.Map.Roles, random);
+
+            foreach (var (assignedPlayerId, roleId) in roleAssignments)
+            {
+                session.Events.Append(gameId, new RoleAssigned(gameId, assignedPlayerId, roleId));
+            }
+        }
+
+        if (state.Settings.WinCondition == WinCondition.SecretMissions)
+        {
+            var missionAssignments = MissionAssignmentCalculator.Assign(state.Players, state.Map.Missions, random);
+
+            foreach (var (assignedPlayerId, missionId) in missionAssignments)
+            {
+                session.Events.Append(gameId, new MissionAssigned(gameId, assignedPlayerId, missionId));
+            }
+        }
+
         session.Events.Append(gameId, new GameStarted(gameId));
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+    }
+
+    public async Task<Result<GameStateDto>> SelectRoleAsync(string gameId, string playerId, string roleId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+        }
+
+        var validation = ValidationResult.Combine(
+            LobbyGuards.GameIsInLobby(state),
+            Guards.PlayerExists(state, playerId),
+            LobbyGuards.RoleSelectionIsOpen(state),
+            LobbyGuards.RoleIsKnown(state, roleId),
+            LobbyGuards.RoleIsAvailable(state, roleId));
+
+        if (!validation.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(validation.Errors);
+        }
+
+        session.Events.Append(gameId, new RoleAssigned(gameId, playerId, roleId));
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);

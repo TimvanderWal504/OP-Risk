@@ -130,8 +130,10 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
     [Fact]
     public async Task RollForOrder_MetUniekeWinnaarInDeEersteRonde_BepaaltVolgordeEnGaatNaarClaiming()
     {
-        // Alice: 6+4=10, Bob: 3+2=5 — geen gelijkspel, meteen een winnaar.
-        var random = new SequenceRandomSource(6, 4, 3, 2);
+        // Alice: 6+4=10, Bob: 3+2=5 — geen gelijkspel, meteen een winnaar. De eerste 2
+        // waarden gaan naar StartGame's missietoewijzing (WinCondition.SecretMissions, 2
+        // spelers = 2 trekkingen), pas daarna de dobbelworpen.
+        var random = new SequenceRandomSource(0, 1, 6, 4, 3, 2);
         await using var factory = CreateFactory(random);
         using var client = factory.CreateClient();
         var gameId = await CreateGameAsync(client);
@@ -158,8 +160,9 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
     public async Task RollForOrder_BijGelijkspel_LatenAlleenDeGelijkenOpnieuwGooien()
     {
         // Ronde 1: Alice 6+4=10, Bob 5+5=10 (gelijk), Carol 3+2=5 (niet gelijk).
-        // Ronde 2 (alleen Alice/Bob): Alice 6+6=12, Bob 1+1=2 — Alice wint.
-        var random = new SequenceRandomSource(6, 4, 5, 5, 3, 2, 6, 6, 1, 1);
+        // Ronde 2 (alleen Alice/Bob): Alice 6+6=12, Bob 1+1=2 — Alice wint. De eerste 3
+        // waarden gaan naar StartGame's missietoewijzing (3 spelers = 3 trekkingen).
+        var random = new SequenceRandomSource(0, 1, 2, 6, 4, 5, 5, 3, 2, 6, 6, 1, 1);
         await using var factory = CreateFactory(random);
         using var client = factory.CreateClient();
         var gameId = await CreateGameAsync(client);

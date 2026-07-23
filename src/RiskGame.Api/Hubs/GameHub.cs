@@ -46,6 +46,13 @@ public sealed class GameHub(
         return Unwrap(result, state => state);
     }
 
+    public async Task<GameStateDto> SelectRole(string gameId, string playerId, string roleId)
+    {
+        var result = await lobbyCommands.SelectRoleAsync(gameId, playerId, roleId);
+
+        return Unwrap(result, state => state);
+    }
+
     public async Task<OrderRollResponse> RollForOrder(string gameId, string playerId)
     {
         var result = await orderRollCommands.RollForOrderAsync(gameId, playerId);
