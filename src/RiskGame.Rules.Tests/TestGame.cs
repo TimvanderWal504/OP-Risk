@@ -1,4 +1,5 @@
 using RiskGame.Rules.Effects;
+using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.State;
 
@@ -28,8 +29,10 @@ internal static class TestGame
         string colorId,
         bool isEliminated = false,
         bool isAutoPass = false,
-        IMission? mission = null) =>
-        new(id, $"Speler {id}", colorId, [], RoleId: null, mission, isEliminated, isAutoPass);
+        IMission? mission = null,
+        string? roleId = null,
+        IReadOnlyList<Card>? hand = null) =>
+        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, isAutoPass);
 
     /// <summary>
     /// Een spel in volle gang. Alle gebieden zijn onverdeeld tenzij een test ze via
@@ -40,7 +43,9 @@ internal static class TestGame
         TurnPhase turnPhase = TurnPhase.Reinforce,
         PhaseTimer? timer = null,
         PendingCombat? pendingCombat = null,
-        IReadOnlyList<ActiveEffect>? activeEffects = null)
+        IReadOnlyList<ActiveEffect>? activeEffects = null,
+        GameSettings? settings = null,
+        int nextTradeValue = 4)
     {
         var map = Standaard43Data.Load();
 
@@ -56,12 +61,12 @@ internal static class TestGame
             gameId: "test-game",
             map,
             GamePhase.InProgress,
-            Settings(),
+            settings ?? Settings(),
             players,
             territories,
             turnOrder,
             new TurnState(turnOrder[0], turnPhase, timer, pendingCombat),
-            new DeckState(map.Deck, DiscardPile: [], NextTradeValue: 4),
+            new DeckState(map.Deck, DiscardPile: [], nextTradeValue),
             activeEffects ?? []);
     }
 }
