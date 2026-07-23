@@ -92,4 +92,46 @@ public class AdjacencyGraphTests
         Assert.Empty(map.Adjacency.Borders("atlantis"));
         Assert.False(map.Adjacency.IsAdjacent("atlantis", "alaska"));
     }
+
+    [Fact]
+    public void HasPath_VanGebiedNaarZichzelf_IsAltijdWaar()
+    {
+        var map = Standaard43Data.Load();
+
+        Assert.True(map.Adjacency.HasPath("alaska", "alaska", _ => false));
+    }
+
+    [Fact]
+    public void HasPath_OverMeerdereTraversableTussenstops_IsWaar()
+    {
+        var map = Standaard43Data.Load();
+        var owned = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "alaska", "alberta", "ontario", "quebec",
+        };
+
+        Assert.True(map.Adjacency.HasPath("alaska", "quebec", owned.Contains));
+    }
+
+    [Fact]
+    public void HasPath_ZonderTraversableTussenstop_IsOnwaar()
+    {
+        var map = Standaard43Data.Load();
+        var owned = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "alaska", "ontario", "quebec",
+        };
+
+        Assert.False(map.Adjacency.HasPath("alaska", "quebec", owned.Contains));
+    }
+
+    [Fact]
+    public void HasPath_MetGeblokkeerdeGrens_NegeertDieRoute()
+    {
+        var map = Standaard43Data.Load();
+        var owned = new HashSet<string>(StringComparer.Ordinal) { "alaska", "kamchatka" };
+
+        Assert.False(map.Adjacency.HasPath(
+            "alaska", "kamchatka", owned.Contains, isBorderBlocked: _ => true));
+    }
 }

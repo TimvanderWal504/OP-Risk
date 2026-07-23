@@ -41,6 +41,60 @@ public sealed class AdjacencyGraph
     public bool IsAdjacent(string from, string to) =>
         Borders(from).Any(border => Other(border, from) == to);
 
+    /// <summary>
+    /// Bestaat er een aaneengesloten pad van <paramref name="from"/> naar <paramref name="to"/>
+    /// via uitsluitend gebieden waarvoor <paramref name="isTraversable"/> waar oplevert
+    /// (TO §3.3, "moderne" Fortify — niet beperkt tot directe buren)? <paramref name="to"/>
+    /// zelf moet ook traversable zijn. <paramref name="isBorderBlocked"/> filtert grenzen weg,
+    /// bijvoorbeeld zeeroutes onder een actief <see cref="Effects.ISeaRouteBlockingEffect"/>.
+    /// </summary>
+    public bool HasPath(
+        string from,
+        string to,
+        Func<string, bool> isTraversable,
+        Func<Border, bool>? isBorderBlocked = null)
+    {
+        ArgumentNullException.ThrowIfNull(isTraversable);
+
+        if (from == to)
+        {
+            return true;
+        }
+
+        var visited = new HashSet<string>(StringComparer.Ordinal) { from };
+        var queue = new Queue<string>();
+        queue.Enqueue(from);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            foreach (var border in Borders(current))
+            {
+                if (isBorderBlocked?.Invoke(border) == true)
+                {
+                    continue;
+                }
+
+                var neighbour = Other(border, current);
+
+                if (!visited.Add(neighbour) || !isTraversable(neighbour))
+                {
+                    continue;
+                }
+
+                if (neighbour == to)
+                {
+                    return true;
+                }
+
+                queue.Enqueue(neighbour);
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>Het gebied aan de andere kant van een grens.</summary>
     private static string Other(Border border, string territoryId) =>
         border.From == territoryId ? border.To : border.From;
