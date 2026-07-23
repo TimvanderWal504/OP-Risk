@@ -3,6 +3,7 @@ using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Persistence.Projections;
@@ -14,12 +15,13 @@ namespace RiskGame.Persistence.Projections;
 /// </summary>
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
-/// toewijzing, de beurtstart en de versterkingsfase (spel aanmaken, spelers joinen,
-/// kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en missie
-/// toewijzen, fase-overgangen binnen een beurt, legers versterken) — een vijfde plak;
-/// <c>CardsTraded</c> en <c>TurnEnded</c> (TO §5.2) staan nog open voor een latere plak.
-/// <see cref="OrderRolled"/> hoort daar bewust niet bij: het is een audit/weergave-feit
-/// zonder eigen vouwregel, zie de doc-comment op dat event.
+/// toewijzing, de beurtstart, de versterkingsfase en kaarteninleg (spel aanmaken, spelers
+/// joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en
+/// missie toewijzen, fase-overgangen binnen een beurt, legers versterken, kaarten
+/// inleveren) — een zesde plak; <c>AttackDeclared</c> en de rest van het gevechts-
+/// arsenaal (TO §5.2) staan nog open voor een latere plak.
+/// <see cref="OrderRolled"/> en <see cref="TurnEnded"/> horen daar bewust niet bij: het
+/// zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die events.
 /// </remarks>
 /// <remarks>
 /// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
@@ -147,5 +149,42 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var territory = state.Territory(@event.TerritoryId);
 
         return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + @event.Amount });
+    }
+
+    /// <summary>
+    /// De ingeleverde set verlaat de hand van de speler en gaat naar de aflegstapel; de
+    /// eerstvolgende inlegwaarde escaleert (<see cref="CardTradeCalculator.NextTradeValueAfter"/>,
+    /// FO §4.4). Eventuele bezitsbonussen (<see cref="CardTradeCalculator.Evaluate"/>) worden
+    /// meteen op de genoemde gebieden geplaatst — die zijn niet vrij verdeelbaar, in
+    /// tegenstelling tot de setwaarde zelf, die pas via een los <see cref="ArmiesReinforced"/>
+    /// verschijnt zodra de speler kiest waar hij die plaatst.
+    /// </summary>
+    public GameState Apply(GameState state, CardsTraded @event)
+    {
+        var player = state.Player(@event.PlayerId);
+        var tradedCards = @event.CardIds
+            .Select(cardId => player.Hand.First(card => card.Id == cardId))
+            .ToArray();
+
+        var outcome = CardTradeCalculator.Evaluate(state, @event.PlayerId, tradedCards);
+
+        state = state.WithPlayer(player with
+        {
+            Hand = [.. player.Hand.Where(card => !tradedCards.Contains(card))],
+        });
+
+        state = state.WithDeck(state.Deck with
+        {
+            DiscardPile = [.. state.Deck.DiscardPile, .. tradedCards],
+            NextTradeValue = CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue),
+        });
+
+        foreach (var bonus in outcome.OwnedTerritoryBonuses)
+        {
+            var territory = state.Territory(bonus.TerritoryId);
+            state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + bonus.Amount });
+        }
+
+        return state;
     }
 }

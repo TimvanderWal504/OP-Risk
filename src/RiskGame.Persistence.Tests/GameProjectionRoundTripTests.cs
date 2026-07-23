@@ -57,7 +57,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new PhaseChanged(gameId, "p1", TurnPhase.Reinforce),
             new ArmiesReinforced(gameId, "p1", "alaska", 3),
             new PhaseChanged(gameId, "p1", TurnPhase.Attack),
-            new PhaseChanged(gameId, "p1", TurnPhase.Fortify));
+            new PhaseChanged(gameId, "p1", TurnPhase.Fortify),
+            new TurnEnded(gameId, "p1"),
+            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce));
 
         await session.SaveChangesAsync();
 
@@ -112,6 +114,78 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// <see cref="CardsTraded"/> vereist een speler met kaarten in de hand — die komen er
+    /// pas via <c>CardDrawn</c> (TO §5.2, nog niet gebouwd, een latere plak), dus deze test
+    /// bouwt de startsituatie rechtstreeks in plaats van via de event-stream, net als de
+    /// vorige test. Bewijst zowel de vouwregel (hand/aflegstapel/inlegwaarde/bezitsbonus)
+    /// als dat het resultaat een Marten-round-trip overleeft.
+    /// </summary>
+    [Fact]
+    public async Task CardsTraded_VouwtHandAflegstapelEnBezitsbonusEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var ownedCard = new Rules.Map.Card("card-alaska", "alaska", "symbol-1");
+        var otherCard1 = new Rules.Map.Card("card-siberia", "siberia", "symbol-2");
+        var otherCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
+            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(
+            initialState,
+            new CardsTraded(gameId, "p1", ["card-alaska", "card-siberia", "card-brazil"]));
+
+        Assert.Empty(result.Player("p1").Hand);
+        Assert.Equal([ownedCard, otherCard1, otherCard2], result.Deck.DiscardPile);
+        Assert.Equal(6, result.Deck.NextTradeValue);
+        Assert.Equal(1 + map.SetRules.OwnedTerritoryBonus, result.Territory("alaska").ArmyCount);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+
+        // Deze test slaat rechtstreeks een document op zonder eerst events te appenden
+        // (zie doc-comment hierboven); zonder eerdere event-stream-actie in dit
+        // testproces bestaat het Marten-schema soms nog niet, vandaar expliciet.
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Empty(reloaded!.Player("p1").Hand);
+        Assert.Equal([ownedCard, otherCard1, otherCard2], reloaded.Deck.DiscardPile);
+        Assert.Equal(6, reloaded.Deck.NextTradeValue);
+        Assert.Equal(1 + map.SetRules.OwnedTerritoryBonus, reloaded.Territory("alaska").ArmyCount);
+    }
+
+    /// <summary>
     /// Bouwt de projectie onafhankelijk van Martens opgeslagen snapshot opnieuw op, puur
     /// vanuit de rauwe events — dit is de herstel-garantie zelf (TO §9), niet een kopie van
     /// wat er al in de database staat.
@@ -139,6 +213,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 MissionAssigned missionAssigned => projection.Apply(state!, missionAssigned),
                 PhaseChanged phaseChanged => projection.Apply(state!, phaseChanged),
                 ArmiesReinforced armiesReinforced => projection.Apply(state!, armiesReinforced),
+                TurnEnded => state!,
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
