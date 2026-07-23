@@ -57,7 +57,16 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new PhaseChanged(gameId, "p1", TurnPhase.Reinforce),
             new ArmiesReinforced(gameId, "p1", "alaska", 3),
             new PhaseChanged(gameId, "p1", TurnPhase.Attack),
+            new AttackDeclared(gameId, "p1", "alaska", "northwest-territory", AttackDice: 2),
+            new DiceRolled(gameId, "p1", [6, 4]),
+            new DiceRolled(gameId, "p2", [3]),
+            new CombatResolved(
+                gameId, "p1", "alaska", "northwest-territory",
+                AttackerRolls: [6, 4], DefenderRolls: [3], AttackerLosses: 0, DefenderLosses: 1),
+            new TerritoryConquered(gameId, "p1", "northwest-territory"),
+            new ArmiesMovedAfterConquest(gameId, "p1", "alaska", "northwest-territory", 2),
             new PhaseChanged(gameId, "p1", TurnPhase.Fortify),
+            new Fortified(gameId, "p1", "northwest-territory", "alaska", 1),
             new TurnEnded(gameId, "p1"),
             new PhaseChanged(gameId, "p2", TurnPhase.Reinforce));
 
@@ -186,6 +195,63 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// <see cref="CardDrawn"/> vereist een gevulde <see cref="DeckState.DrawPile"/> — die
+    /// wordt in <see cref="GameProjection.Create"/> nog leeg geïnitialiseerd (het deck zelf
+    /// bouwen uit de kaartdata is nog niet aangesloten, geen scope van deze plak), dus deze
+    /// test bouwt de startsituatie rechtstreeks, net als <see cref="CardsTraded_VouwtHandAflegstapelEnBezitsbonusEnOverleeftEenMartenRoundTrip"/>.
+    /// </summary>
+    [Fact]
+    public async Task CardDrawn_VouwtTrekstapelEnHandEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var drawnCard = new Rules.Map.Card("card-japan", "japan", "symbol-2");
+        var remainingCard = new Rules.Map.Card("card-china", "china", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [],
+            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            deck: new DeckState(DrawPile: [drawnCard, remainingCard], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new CardDrawn(gameId, "p1", "card-japan"));
+
+        Assert.Equal([drawnCard], result.Player("p1").Hand);
+        Assert.Equal([remainingCard], result.Deck.DrawPile);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal([drawnCard], reloaded!.Player("p1").Hand);
+        Assert.Equal([remainingCard], reloaded.Deck.DrawPile);
+    }
+
+    /// <summary>
     /// Bouwt de projectie onafhankelijk van Martens opgeslagen snapshot opnieuw op, puur
     /// vanuit de rauwe events — dit is de herstel-garantie zelf (TO §9), niet een kopie van
     /// wat er al in de database staat.
@@ -214,6 +280,13 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 PhaseChanged phaseChanged => projection.Apply(state!, phaseChanged),
                 ArmiesReinforced armiesReinforced => projection.Apply(state!, armiesReinforced),
                 TurnEnded => state!,
+                AttackDeclared attackDeclared => projection.Apply(state!, attackDeclared),
+                DiceRolled => state!,
+                CombatResolved combatResolved => projection.Apply(state!, combatResolved),
+                TerritoryConquered territoryConquered => projection.Apply(state!, territoryConquered),
+                ArmiesMovedAfterConquest armiesMovedAfterConquest =>
+                    projection.Apply(state!, armiesMovedAfterConquest),
+                Fortified fortified => projection.Apply(state!, fortified),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };

@@ -1,6 +1,7 @@
 using Marten.Events.Aggregation;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
+using RiskGame.Rules.Combat;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Reinforcement;
@@ -15,13 +16,15 @@ namespace RiskGame.Persistence.Projections;
 /// </summary>
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
-/// toewijzing, de beurtstart, de versterkingsfase en kaarteninleg (spel aanmaken, spelers
-/// joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en
-/// missie toewijzen, fase-overgangen binnen een beurt, legers versterken, kaarten
-/// inleveren) — een zesde plak; <c>AttackDeclared</c> en de rest van het gevechts-
-/// arsenaal (TO §5.2) staan nog open voor een latere plak.
-/// <see cref="OrderRolled"/> en <see cref="TurnEnded"/> horen daar bewust niet bij: het
-/// zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die events.
+/// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het volledige
+/// gevechtsarsenaal en kaarttrekken (spel aanmaken, spelers joinen, kleur kiezen,
+/// spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en missie toewijzen,
+/// fase-overgangen binnen een beurt, legers versterken, kaarten inleveren, aanvallen,
+/// veroveren, verplaatsen, kaart trekken) — een zevende plak; <c>PlayerEliminated</c>,
+/// events-content en wincondities (TO §5.2) staan nog open voor een latere plak.
+/// <see cref="OrderRolled"/>, <see cref="TurnEnded"/> en <see cref="DiceRolled"/> horen
+/// daar bewust niet bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de
+/// doc-comments op die events.
 /// </remarks>
 /// <remarks>
 /// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
@@ -186,5 +189,104 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         }
 
         return state;
+    }
+
+    /// <summary>
+    /// Het moment van "Gooi" drukken (FO §5.3 stap 2): zet <see cref="PendingCombat"/> en
+    /// pauzeert de lopende beurttimer (FO §5.4) — uitgevoerde aanvallen kosten de aanvaller
+    /// zo geen beurttijd.
+    /// </summary>
+    public GameState Apply(GameState state, AttackDeclared @event) =>
+        state.WithTurnState(state.TurnState! with
+        {
+            PendingCombat = new PendingCombat(@event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice),
+            Timer = state.TurnState!.Timer!.Pause(),
+        });
+
+    /// <summary>
+    /// Trekt de verliezen af van beide legeraantallen en gebruikt
+    /// <see cref="ConquestResolution.Apply"/> — puur deterministisch, geen herimplementatie
+    /// — om af te leiden of het doelgebied hierdoor valt. Zo niet, dan is het gevecht al
+    /// volledig afgehandeld: <see cref="PendingCombat"/> naar <c>null</c>, timer hervat (FO
+    /// §5.4). Zo wel, dan blijft <see cref="PendingCombat"/> staan tot
+    /// <see cref="ArmiesMovedAfterConquest"/> volgt.
+    /// </summary>
+    public GameState Apply(GameState state, CombatResolved @event)
+    {
+        var fromTerritory = state.Territory(@event.FromTerritoryId);
+        var toTerritory = state.Territory(@event.ToTerritoryId);
+
+        var outcome = new CombatOutcome(
+            @event.AttackerRolls, @event.DefenderRolls, @event.AttackerLosses, @event.DefenderLosses);
+        var conquest = ConquestResolution.Apply(fromTerritory.ArmyCount, toTerritory.ArmyCount, outcome);
+
+        state = state
+            .WithTerritory(fromTerritory with { ArmyCount = conquest.AttackerArmyCount })
+            .WithTerritory(toTerritory with { ArmyCount = conquest.DefenderArmyCount });
+
+        if (!conquest.Conquered)
+        {
+            state = state.WithTurnState(state.TurnState! with
+            {
+                PendingCombat = null,
+                Timer = state.TurnState!.Timer!.Resume(),
+            });
+        }
+
+        return state;
+    }
+
+    /// <summary>
+    /// Alleen het eigendom gaat over — het legeraantal staat door het voorafgaande
+    /// <see cref="CombatResolved"/> al op 0 (zie doc-comment op dit event).
+    /// </summary>
+    public GameState Apply(GameState state, TerritoryConquered @event) =>
+        state.WithTerritory(state.Territory(@event.TerritoryId) with { OwnerPlayerId = @event.PlayerId });
+
+    /// <summary>
+    /// Sluit het gevecht af (FO §5.4: inclusief eventuele meeverplaatsing na verovering) —
+    /// <see cref="PendingCombat"/> naar <c>null</c>, timer hervat — bovenop dezelfde
+    /// leger-verplaatsing als <see cref="Apply(GameState, Fortified)"/>.
+    /// </summary>
+    public GameState Apply(GameState state, ArmiesMovedAfterConquest @event)
+    {
+        state = MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
+
+        return state.WithTurnState(state.TurnState! with
+        {
+            PendingCombat = null,
+            Timer = state.TurnState!.Timer!.Resume(),
+        });
+    }
+
+    /// <summary>Eén vrije verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant).</summary>
+    public GameState Apply(GameState state, Fortified @event) =>
+        MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
+
+    /// <summary>Haalt de genoemde kaart uit de trekstapel naar de hand van de speler (FO §5.2).</summary>
+    public GameState Apply(GameState state, CardDrawn @event)
+    {
+        var card = state.Deck.DrawPile.First(card => card.Id == @event.CardId);
+        var player = state.Player(@event.PlayerId);
+
+        return state
+            .WithPlayer(player with { Hand = [.. player.Hand, card] })
+            .WithDeck(state.Deck with { DrawPile = [.. state.Deck.DrawPile.Where(c => c != card)] });
+    }
+
+    /// <summary>
+    /// Gedeelde leger-verplaatsing tussen twee gebieden (bron −<paramref name="amount"/>,
+    /// doel +<paramref name="amount"/>) — hergebruikt door zowel
+    /// <see cref="Apply(GameState, ArmiesMovedAfterConquest)"/> als
+    /// <see cref="Apply(GameState, Fortified)"/> (DRY, src/CLAUDE.md).
+    /// </summary>
+    private static GameState MoveArmies(GameState state, string fromTerritoryId, string toTerritoryId, int amount)
+    {
+        var fromTerritory = state.Territory(fromTerritoryId);
+        var toTerritory = state.Territory(toTerritoryId);
+
+        return state
+            .WithTerritory(fromTerritory with { ArmyCount = fromTerritory.ArmyCount - amount })
+            .WithTerritory(toTerritory with { ArmyCount = toTerritory.ArmyCount + amount });
     }
 }
