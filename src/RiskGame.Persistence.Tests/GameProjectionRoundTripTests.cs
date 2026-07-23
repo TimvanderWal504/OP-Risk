@@ -43,7 +43,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new PlayerJoined(gameId, "p1", "Alice"),
             new ColorChosen(gameId, "p1", "red"),
             new PlayerJoined(gameId, "p2", "Bob"),
-            new ColorChosen(gameId, "p2", "blue"));
+            new ColorChosen(gameId, "p2", "blue"),
+            new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
+            new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),
+            new TurnOrderDetermined(gameId, ["p1", "p2"]));
 
         await session.SaveChangesAsync();
 
@@ -76,6 +79,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 GameCreated created => projection.Create(created),
                 PlayerJoined joined => projection.Apply(state!, joined),
                 ColorChosen chosen => projection.Apply(state!, chosen),
+                OrderRolled => state!,
+                TurnOrderDetermined determined => projection.Apply(state!, determined),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
