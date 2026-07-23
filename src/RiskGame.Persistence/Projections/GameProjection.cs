@@ -13,19 +13,20 @@ namespace RiskGame.Persistence.Projections;
 /// een al gebeurd feit, geen beslissing (src/CLAUDE.md, "event sourcing-kaders").
 /// </summary>
 /// <remarks>
-/// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling en de rol-/missie-
-/// toewijzing (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
-/// gebieden claimen/bijplaatsen, rol en missie toewijzen) — een vierde plak; latere
-/// plakken breiden dit uit met de rest van het event-arsenaal uit TO §5.2.
+/// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
+/// toewijzing, de beurtstart en de versterkingsfase (spel aanmaken, spelers joinen,
+/// kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol en missie
+/// toewijzen, fase-overgangen binnen een beurt, legers versterken) — een vijfde plak;
+/// <c>CardsTraded</c> en <c>TurnEnded</c> (TO §5.2) staan nog open voor een latere plak.
 /// <see cref="OrderRolled"/> hoort daar bewust niet bij: het is een audit/weergave-feit
 /// zonder eigen vouwregel, zie de doc-comment op dat event.
 /// </remarks>
 /// <remarks>
 /// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
 /// het bezit/legeraantal van het genoemde gebied — of de Claiming/InitialPlacement-fase
-/// daarmee klaar is (en welke fase/beurt daarna volgt) is een beslissing, geen vouwregel,
-/// en komt bij een latere plak binnen via een apart <c>PhaseChanged</c>-event (TO §5.2)
-/// zodra de rules-engine-orchestratie die beslissing kan nemen.
+/// daarmee klaar is, is een beslissing die bij de command-orchestratie van bouwstap 3
+/// hoort. Zodra die beslissing valt, komt hij binnen als het hier al gevouwen
+/// <see cref="PhaseChanged"/>-event.
 /// </remarks>
 public sealed partial class GameProjection(IMapDefinitionSource mapSource) : SingleStreamProjection<GameState, string>
 {
@@ -113,5 +114,38 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var mission = state.Map.Missions.First(mission => mission.Id == @event.MissionId);
 
         return state.WithPlayer(state.Player(@event.PlayerId) with { Mission = mission });
+    }
+
+    /// <summary>
+    /// Bepaalt de nieuwe <see cref="PhaseTimer"/> volgens FO §5.4: Versterken start altijd
+    /// een verse beurttimer (nieuwe beurt of eerste beurt na setup), Aanvallen deelt diezelfde
+    /// doorlopende timer met Versterken (geen aparte timer per fase), en Verplaatsen krijgt
+    /// een eigen, verse <see cref="GameSettings.FortifyTimer"/>.
+    /// </summary>
+    public GameState Apply(GameState state, PhaseChanged @event)
+    {
+        var timer = @event.TurnPhase switch
+        {
+            TurnPhase.Reinforce => new PhaseTimer(state.Settings.TurnTimer),
+            TurnPhase.Attack => state.TurnState?.Timer ?? new PhaseTimer(state.Settings.TurnTimer),
+            TurnPhase.Fortify => new PhaseTimer(state.Settings.FortifyTimer),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(@event), @event.TurnPhase, "Onbekende beurtfase."),
+        };
+
+        return state
+            .WithPhase(GamePhase.InProgress)
+            .WithTurnState(new TurnState(@event.PlayerId, @event.TurnPhase, timer, PendingCombat: null));
+    }
+
+    /// <summary>
+    /// Zelfde vouwregel als <see cref="Apply(GameState, InitialArmyPlaced)"/>, maar dan met
+    /// het aantal dat het <c>PlaceArmies</c>-commando (TO §4.1) in één keer toestaat.
+    /// </summary>
+    public GameState Apply(GameState state, ArmiesReinforced @event)
+    {
+        var territory = state.Territory(@event.TerritoryId);
+
+        return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + @event.Amount });
     }
 }

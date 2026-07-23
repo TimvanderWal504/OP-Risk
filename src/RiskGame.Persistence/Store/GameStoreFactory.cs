@@ -32,6 +32,7 @@ public static class GameStoreFactory
                 configure: json =>
                 {
                     json.Converters.Add(new MapDefinitionJsonConverter(mapSource));
+                    json.Converters.Add(new PhaseTimerJsonConverter());
                     json.Converters.Add(new GameStateJsonConverter());
                 });
         });

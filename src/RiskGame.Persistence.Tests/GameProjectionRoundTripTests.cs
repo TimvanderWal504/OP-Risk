@@ -53,7 +53,11 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new InitialArmyPlaced(gameId, "p1", "alaska"),
             new RoleAssigned(gameId, "p1", "diplomaat"),
             new MissionAssigned(gameId, "p1", "eliminate-blue"),
-            new MissionAssigned(gameId, "p2", "territory-24"));
+            new MissionAssigned(gameId, "p2", "territory-24"),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce),
+            new ArmiesReinforced(gameId, "p1", "alaska", 3),
+            new PhaseChanged(gameId, "p1", TurnPhase.Attack),
+            new PhaseChanged(gameId, "p1", TurnPhase.Fortify));
 
         await session.SaveChangesAsync();
 
@@ -133,6 +137,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 InitialArmyPlaced placed => projection.Apply(state!, placed),
                 RoleAssigned roleAssigned => projection.Apply(state!, roleAssigned),
                 MissionAssigned missionAssigned => projection.Apply(state!, missionAssigned),
+                PhaseChanged phaseChanged => projection.Apply(state!, phaseChanged),
+                ArmiesReinforced armiesReinforced => projection.Apply(state!, armiesReinforced),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
