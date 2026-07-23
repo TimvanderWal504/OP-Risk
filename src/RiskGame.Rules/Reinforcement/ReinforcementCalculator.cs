@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 
@@ -22,7 +23,8 @@ public static class ReinforcementCalculator
 
         return Math.Max(MinimumArmies, territoryCount / TerritoriesPerArmy)
             + ContinentBonus(state, playerId)
-            + RoleBonus(state, playerId);
+            + RoleBonus(state, playerId)
+            + EventBonus(state, playerId);
     }
 
     private static int ContinentBonus(GameState state, string playerId) =>
@@ -32,4 +34,21 @@ public static class ReinforcementCalculator
 
     private static int RoleBonus(GameState state, string playerId) =>
         RoleEffects.Active<ExtraReinforcementEffect>(state, playerId)?.Amount ?? 0;
+
+    /// <summary>
+    /// Actieve gebeurtenis-effecten (FO §9.2) gelden voor het hele spel, niet per rol:
+    /// <c>ContinentOwnerBonus</c> alleen bij compleet continentbezit, <c>FreeReinforcement</c>
+    /// onvoorwaardelijk voor iedereen.
+    /// </summary>
+    private static int EventBonus(GameState state, string playerId) =>
+        state.ActiveEffects
+            .Select(active => active.Effect)
+            .Sum(effect => effect switch
+            {
+                ContinentOwnerBonusEffect bonus when state.Map.Continents
+                    .Any(continent => state.OwnsEntireContinent(playerId, continent.Id))
+                    => bonus.Amount,
+                FreeReinforcementEffect free => free.Amount,
+                _ => 0,
+            });
 }

@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -57,6 +58,20 @@ public static class AttackGuards
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
                     $"Gebied '{toTerritoryId}' grenst niet aan '{fromTerritoryId}'."),
+
+            IsRouteBlocked(state, fromTerritoryId, toTerritoryId)
+                ? ValidationResult.Failure(
+                    $"De route tussen '{fromTerritoryId}' en '{toTerritoryId}' is deze " +
+                    "ronde geblokkeerd.")
+                : ValidationResult.Success(),
+
+            IsTerritoryLocked(state, fromTerritoryId)
+                ? ValidationResult.Failure($"Gebied '{fromTerritoryId}' is deze ronde afgesloten.")
+                : ValidationResult.Success(),
+
+            IsTerritoryLocked(state, toTerritoryId)
+                ? ValidationResult.Failure($"Gebied '{toTerritoryId}' is deze ronde afgesloten.")
+                : ValidationResult.Success(),
 
             IsEnemyOwned(state, playerId, toTerritoryId),
 
@@ -122,5 +137,38 @@ public static class AttackGuards
             ? ValidationResult.Success()
             : ValidationResult.Failure(
                 $"Gebied '{territoryId}' is geen vijandelijk gebied.");
+    }
+
+    /// <summary>
+    /// Of een actief effect (FO §9.2: <c>TerritoryLocked</c>) <paramref name="territoryId"/>
+    /// deze ronde afsluit.
+    /// </summary>
+    private static bool IsTerritoryLocked(GameState state, string territoryId) =>
+        state.ActiveEffects
+            .Select(active => active.Effect)
+            .OfType<TerritoryLockedEffect>()
+            .Any(locked => locked.TerritoryIds.Contains(territoryId));
+
+    /// <summary>
+    /// Of de grens tussen <paramref name="fromTerritoryId"/> en <paramref name="toTerritoryId"/>
+    /// door een actief <see cref="ISeaRouteBlockingEffect"/> geblokkeerd is (FO §9.2:
+    /// <c>SeaRoutesBlocked</c>), zelfde patroon als <see cref="Fortify.FortifyGuards"/>.
+    /// </summary>
+    private static bool IsRouteBlocked(GameState state, string fromTerritoryId, string toTerritoryId)
+    {
+        var border = state.Map.Adjacency.Borders(fromTerritoryId)
+            .FirstOrDefault(border =>
+                (border.From == fromTerritoryId && border.To == toTerritoryId) ||
+                (border.From == toTerritoryId && border.To == fromTerritoryId));
+
+        if (border is null)
+        {
+            return false;
+        }
+
+        return state.ActiveEffects
+            .Select(active => active.Effect)
+            .OfType<ISeaRouteBlockingEffect>()
+            .Any(blocker => blocker.IsRouteBlocked(border));
     }
 }

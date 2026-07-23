@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
@@ -114,5 +115,52 @@ public class ReinforcementCalculatorTests
         var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
 
         Assert.Equal(3, armies);
+    }
+
+    [Fact]
+    public void ContinentOwnerBonusEffect_MetVolledigContinentbezit_TeltMee()
+    {
+        var effect = new ActiveEffect(
+            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2), RoundsRemaining: 0);
+
+        var state = TestGame.InProgress(activeEffects: [effect]);
+
+        foreach (var territoryId in AustraliaTerritories)
+        {
+            state = state.WithTerritory(new TerritoryOwnership(territoryId, "p1", 1));
+        }
+
+        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
+
+        // Basis 3 + continentbonus 3 + ContinentOwnerBonus-event 2.
+        Assert.Equal(8, armies);
+    }
+
+    [Fact]
+    public void ContinentOwnerBonusEffect_ZonderVolledigContinentbezit_TeltNietMee()
+    {
+        var effect = new ActiveEffect(
+            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2), RoundsRemaining: 0);
+
+        var state = TestGame.InProgress(activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
+
+        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
+
+        Assert.Equal(3, armies);
+    }
+
+    [Fact]
+    public void FreeReinforcementEffect_TeltAltijdMee()
+    {
+        var effect = new ActiveEffect(
+            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4), RoundsRemaining: 0);
+
+        var state = TestGame.InProgress(activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
+
+        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
+
+        Assert.Equal(7, armies);
     }
 }

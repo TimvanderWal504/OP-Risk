@@ -1,4 +1,5 @@
 using RiskGame.Rules.Combat;
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Rules.Tests;
@@ -140,5 +141,52 @@ public class AttackGuardsTests
             state, "p1", "alaska", attackDiceUsed: 2, armiesToMove: 2);
 
         Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Aanval_OverGeblokkeerdeZeeroute_IsOngeldig()
+    {
+        var state = TestGame.InProgress(
+                turnPhase: TurnPhase.Attack,
+                activeEffects: [new ActiveEffect(new FullSeaBlockadeEffect(), RoundsRemaining: 1)])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("kamchatka", "p2", 1));
+
+        var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "kamchatka", attackDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("geblokkeerd", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Aanval_VanuitAfgeslotenGebied_IsOngeldig()
+    {
+        var effect = new ActiveEffect(
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alaska"]), RoundsRemaining: 1);
+
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
+
+        var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("afgesloten", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Aanval_OpAfgeslotenGebied_IsOngeldig()
+    {
+        var effect = new ActiveEffect(
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alberta"]), RoundsRemaining: 1);
+
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
+
+        var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("afgesloten", result.Errors.Single());
     }
 }

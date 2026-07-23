@@ -127,6 +127,38 @@ public class FortifyGuardsTests
     }
 
     [Fact]
+    public void Verplaatsing_VanuitAfgeslotenGebied_IsOngeldig()
+    {
+        var effect = new ActiveEffect(
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alaska"]), RoundsRemaining: 1);
+
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Fortify, activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
+
+        var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("afgesloten", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Verplaatsing_NaarAfgeslotenGebied_IsOngeldig()
+    {
+        var effect = new ActiveEffect(
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alberta"]), RoundsRemaining: 1);
+
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Fortify, activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
+
+        var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("afgesloten", result.Errors.Single());
+    }
+
+    [Fact]
     public void FortifyUpgrade_ThroughEnemy_MetRolEnHerkomstlandInBezit_StaatPadDoorEenVijandelijkGebiedToe()
     {
         var settings = TestGame.Settings() with { RolesEnabled = true };

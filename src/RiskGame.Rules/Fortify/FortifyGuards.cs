@@ -51,6 +51,14 @@ public static class FortifyGuards
                     $"Er moet minimaal 1 leger achterblijven in '{fromTerritoryId}' " +
                     $"({fromArmyCount} beschikbaar, {armiesToMove} opgegeven)."),
 
+            IsTerritoryLocked(state, fromTerritoryId)
+                ? ValidationResult.Failure($"Gebied '{fromTerritoryId}' is deze ronde afgesloten.")
+                : ValidationResult.Success(),
+
+            IsTerritoryLocked(state, toTerritoryId)
+                ? ValidationResult.Failure($"Gebied '{toTerritoryId}' is deze ronde afgesloten.")
+                : ValidationResult.Success(),
+
             HasFortifyPath(state, playerId, fromTerritoryId, toTerritoryId)
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
@@ -130,6 +138,16 @@ public static class FortifyGuards
 
         return false;
     }
+
+    /// <summary>
+    /// Of een actief effect (FO §9.2: <c>TerritoryLocked</c>) <paramref name="territoryId"/>
+    /// deze ronde afsluit — dus ook geen Verplaatsen erin of eruit.
+    /// </summary>
+    private static bool IsTerritoryLocked(GameState state, string territoryId) =>
+        state.ActiveEffects
+            .Select(active => active.Effect)
+            .OfType<TerritoryLockedEffect>()
+            .Any(locked => locked.TerritoryIds.Contains(territoryId));
 
     private static Func<Border, bool>? BuildBlockedBorderPredicate(GameState state)
     {
