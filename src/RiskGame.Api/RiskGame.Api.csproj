@@ -2,6 +2,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RiskGame.Rules\RiskGame.Rules.csproj" />
+    <ProjectReference Include="..\RiskGame.Persistence\RiskGame.Persistence.csproj" />
+  </ItemGroup>
+
+  <!--
+    Zelfde aanpak als RiskGame.Persistence.Tests: draait tegen de echte speeldata,
+    niet tegen een kopie.
+  -->
+  <ItemGroup>
+    <Content Include="..\..\data\maps\standaard-43\*.json" Link="data\maps\standaard-43\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
