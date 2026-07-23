@@ -73,7 +73,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             RoleId: null,
             Mission: null,
             IsEliminated: false,
-            IsAutoPass: false));
+            IsAutoPass: false,
+            IsHost: @event.IsHost));
+
+    /// <summary>Zet de fase om naar de order-roll (FO §2.1); wie mag starten is al door
+    /// <c>StartGame</c>-validatie afgedwongen vóór dit event ontstaat.</summary>
+    public GameState Apply(GameState state, GameStarted @event) =>
+        state.WithPhase(GamePhase.OrderRoll);
 
     public GameState Apply(GameState state, ColorChosen @event) =>
         state.WithPlayer(state.Player(@event.PlayerId) with { ColorId = @event.ColorId });

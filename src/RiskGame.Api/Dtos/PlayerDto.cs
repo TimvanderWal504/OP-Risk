@@ -5,4 +5,4 @@ namespace RiskGame.Api.Dtos;
 /// hand of missie (die zijn in de lobby-fase toch nog leeg, en horen sowieso alleen naar
 /// de eigen speler-groep, TO §6.1, een latere plak).
 /// </summary>
-public sealed record PlayerDto(string Id, string Name, string? ColorId);
+public sealed record PlayerDto(string Id, string Name, string? ColorId, bool IsHost);

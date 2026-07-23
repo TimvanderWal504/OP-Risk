@@ -20,6 +20,10 @@ namespace RiskGame.Rules.State;
 /// telt alleen als de missiehouder zelf het doelwit uitschakelde, niet als een derde dat
 /// deed.
 /// </param>
+/// <param name="IsHost">
+/// De eerste speler die join'de (FO §2.1: "spel opzetten, spel starten"). Bepaalt wie
+/// <c>StartGame</c> en de host-only commando's (auto-pass, herstart) mag uitvoeren.
+/// </param>
 public sealed record Player(
     string Id,
     string Name,
@@ -29,4 +33,5 @@ public sealed record Player(
     IMission? Mission,
     bool IsEliminated,
     bool IsAutoPass,
-    string? EliminatedByPlayerId = null);
+    string? EliminatedByPlayerId = null,
+    bool IsHost = false);

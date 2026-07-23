@@ -21,10 +21,10 @@ public static class GameStateDtoMapper
             .ToArray();
 
         var players = state.Players
-            .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId))
+            .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId, player.IsHost))
             .ToArray();
 
-        return new GameStateDto(state.GameId, ToDto(state.Phase), players, availableColorIds);
+        return new GameStateDto(state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder);
     }
 
     private static GamePhaseDto ToDto(GamePhase phase) => phase switch

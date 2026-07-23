@@ -48,7 +48,8 @@ public sealed class LobbyCommandHandler(IDocumentStore store)
         }
 
         var playerId = Guid.NewGuid().ToString();
-        session.Events.Append(gameId, new PlayerJoined(gameId, playerId, playerName));
+        var isHost = state.Players.Count == 0;
+        session.Events.Append(gameId, new PlayerJoined(gameId, playerId, playerName, isHost));
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
@@ -79,6 +80,36 @@ public sealed class LobbyCommandHandler(IDocumentStore store)
         }
 
         session.Events.Append(gameId, new ColorChosen(gameId, playerId, colorId));
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+    }
+
+    public async Task<Result<GameStateDto>> StartGameAsync(string gameId, string playerId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+        }
+
+        var validation = ValidationResult.Combine(
+            LobbyGuards.GameIsInLobby(state),
+            Guards.PlayerExists(state, playerId),
+            LobbyGuards.CallerIsHost(state, playerId),
+            LobbyGuards.HasMinimumPlayers(state),
+            LobbyGuards.AllPlayersHaveChosenColor(state));
+
+        if (!validation.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(validation.Errors);
+        }
+
+        session.Events.Append(gameId, new GameStarted(gameId));
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);

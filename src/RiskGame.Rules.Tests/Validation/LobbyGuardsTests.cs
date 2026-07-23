@@ -69,4 +69,57 @@ public sealed class LobbyGuardsTests
 
         Assert.False(LobbyGuards.SlotIsAvailable(state).IsSuccess);
     }
+
+    [Fact]
+    public void CallerIsHost_VoorDeHost_IsGeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red", isHost: true), TestGame.Player("p2", "blue")]);
+
+        Assert.True(LobbyGuards.CallerIsHost(state, "p1").IsSuccess);
+    }
+
+    [Fact]
+    public void CallerIsHost_VoorNietHost_IsOngeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red", isHost: true), TestGame.Player("p2", "blue")]);
+
+        Assert.False(LobbyGuards.CallerIsHost(state, "p2").IsSuccess);
+    }
+
+    [Fact]
+    public void HasMinimumPlayers_MetTweeSpelers_IsGeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red"), TestGame.Player("p2", "blue")]);
+
+        Assert.True(LobbyGuards.HasMinimumPlayers(state).IsSuccess);
+    }
+
+    [Fact]
+    public void HasMinimumPlayers_MetEenEnkeleSpeler_IsOngeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red")]);
+
+        Assert.False(LobbyGuards.HasMinimumPlayers(state).IsSuccess);
+    }
+
+    [Fact]
+    public void AllPlayersHaveChosenColor_AlsIedereenEenKleurHeeft_IsGeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red"), TestGame.Player("p2", "blue")]);
+
+        Assert.True(LobbyGuards.AllPlayersHaveChosenColor(state).IsSuccess);
+    }
+
+    [Fact]
+    public void AllPlayersHaveChosenColor_AlsEenSpelerNogGeenKleurHeeft_IsOngeldig()
+    {
+        var players = new[]
+        {
+            TestGame.Player("p1", "red"),
+            new Player("p2", "Speler p2", ColorId: null, [], null, null, false, false),
+        };
+        var state = LobbyState(players);
+
+        Assert.False(LobbyGuards.AllPlayersHaveChosenColor(state).IsSuccess);
+    }
 }

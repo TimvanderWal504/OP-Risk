@@ -1,10 +1,12 @@
 using Marten;
 using Microsoft.AspNetCore.SignalR;
+using RiskGame.Api;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Endpoints;
 using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Store;
+using RiskGame.Rules.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,9 @@ builder.Services.AddSingleton<IDocumentStore>(sp =>
 
     return GameStoreFactory.Create(connectionString, sp.GetRequiredService<IMapDefinitionSource>());
 });
+builder.Services.AddSingleton<IRandomSource, SystemRandomSource>();
 builder.Services.AddScoped<LobbyCommandHandler>();
+builder.Services.AddScoped<OrderRollCommandHandler>();
 builder.Services.AddSignalR(options => options.AddFilter<HubExceptionLoggingFilter>());
 
 var app = builder.Build();

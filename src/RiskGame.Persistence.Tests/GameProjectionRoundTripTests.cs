@@ -41,9 +41,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         session.Events.StartStream<GameState>(
             gameId,
             new GameCreated(gameId, "standaard-43", Settings),
-            new PlayerJoined(gameId, "p1", "Alice"),
+            new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
             new ColorChosen(gameId, "p1", "red"),
-            new PlayerJoined(gameId, "p2", "Bob"),
+            new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
             new ColorChosen(gameId, "p2", "blue"),
             new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
             new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),

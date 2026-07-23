@@ -8,7 +8,8 @@ public sealed record GameStateDto(
     string GameId,
     GamePhaseDto Phase,
     IReadOnlyList<PlayerDto> Players,
-    IReadOnlyList<string> AvailableColorIds);
+    IReadOnlyList<string> AvailableColorIds,
+    IReadOnlyList<string> TurnOrder);
 
 public enum GamePhaseDto
 {

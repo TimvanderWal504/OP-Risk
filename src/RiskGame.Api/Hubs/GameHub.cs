@@ -7,6 +7,8 @@ namespace RiskGame.Api.Hubs;
 
 public sealed record JoinGameResponse(string PlayerId, GameStateDto State);
 
+public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
+
 /// <summary>
 /// SignalR-hub voor de lobby-commando's (TO §4.1). Dun: elke methode delegeert de
 /// TO §4-pijplijn naar <see cref="LobbyCommandHandler"/> en zet een mislukt
@@ -18,7 +20,7 @@ public sealed record JoinGameResponse(string PlayerId, GameStateDto State);
 /// retourneert de bijgewerkte state alleen als RPC-resultaat aan de aanroeper. Dat volgt
 /// in een latere plak.
 /// </remarks>
-public sealed class GameHub(LobbyCommandHandler lobbyCommands) : Hub
+public sealed class GameHub(LobbyCommandHandler lobbyCommands, OrderRollCommandHandler orderRollCommands) : Hub
 {
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -32,6 +34,20 @@ public sealed class GameHub(LobbyCommandHandler lobbyCommands) : Hub
         var result = await lobbyCommands.ChooseColorAsync(gameId, playerId, colorId);
 
         return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> StartGame(string gameId, string playerId)
+    {
+        var result = await lobbyCommands.StartGameAsync(gameId, playerId);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<OrderRollResponse> RollForOrder(string gameId, string playerId)
+    {
+        var result = await orderRollCommands.RollForOrderAsync(gameId, playerId);
+
+        return Unwrap(result, rollResult => new OrderRollResponse(rollResult.Die1, rollResult.Die2, rollResult.State));
     }
 
     private static TResponse Unwrap<T, TResponse>(Result<T> result, Func<T, TResponse> onSuccess) =>
