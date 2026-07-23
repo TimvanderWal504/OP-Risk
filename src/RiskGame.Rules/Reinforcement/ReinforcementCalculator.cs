@@ -26,18 +26,10 @@ public static class ReinforcementCalculator
             + RoleBonus(state, playerId);
     }
 
-    private static int ContinentBonus(GameState state, string playerId)
-    {
-        var ownedTerritoryIds = state.TerritoriesOf(playerId)
-            .Select(territory => territory.TerritoryId)
-            .ToHashSet(StringComparer.Ordinal);
-
-        return state.Map.Continents
-            .Where(continent => state.Map.Territories
-                .Where(territory => territory.Continent == continent.Id)
-                .All(territory => ownedTerritoryIds.Contains(territory.Id)))
+    private static int ContinentBonus(GameState state, string playerId) =>
+        state.Map.Continents
+            .Where(continent => state.OwnsEntireContinent(playerId, continent.Id))
             .Sum(continent => continent.Bonus);
-    }
 
     private static int RoleBonus(GameState state, string playerId)
     {

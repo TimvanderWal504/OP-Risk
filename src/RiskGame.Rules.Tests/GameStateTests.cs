@@ -119,4 +119,28 @@ public class GameStateTests
 
         Assert.Equal(state.Map.Territories.Count, state.Territories.Count);
     }
+
+    [Fact]
+    public void OwnsEntireContinent_MetAlleGebiedenVanDatContinent_IsWaar()
+    {
+        var state = TestGame.InProgress()
+            .WithTerritory(new TerritoryOwnership("venezuela", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("peru", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("brazil", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("argentina", "p1", 1));
+
+        Assert.True(state.OwnsEntireContinent("p1", "south-america"));
+    }
+
+    [Fact]
+    public void OwnsEntireContinent_MetEenGebiedVanEenAnderInBezit_IsOnwaar()
+    {
+        var state = TestGame.InProgress()
+            .WithTerritory(new TerritoryOwnership("venezuela", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("peru", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("brazil", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("argentina", "p2", 1));
+
+        Assert.False(state.OwnsEntireContinent("p1", "south-america"));
+    }
 }

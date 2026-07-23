@@ -90,6 +90,12 @@ public sealed class GameState
     public IEnumerable<TerritoryOwnership> TerritoriesOf(string playerId) =>
         Territories.Where(territory => territory.OwnerPlayerId == playerId);
 
+    /// <summary>Of <paramref name="playerId"/> alle gebieden van <paramref name="continentId"/> bezit.</summary>
+    public bool OwnsEntireContinent(string playerId, string continentId) =>
+        Map.Territories
+            .Where(territory => territory.Continent == continentId)
+            .All(territory => Territory(territory.Id).OwnerPlayerId == playerId);
+
     /// <summary>
     /// De toestand van een speler, afgeleid uit de opgeslagen feiten in plaats van
     /// apart bijgehouden. Volgorde van precedentie: uitgeschakeld gaat vóór afwezig, en
