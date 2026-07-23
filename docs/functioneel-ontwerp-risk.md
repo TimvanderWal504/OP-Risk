@@ -53,9 +53,8 @@ Bij elke actie die een gebied vereist:
 
 ## 3. Toegang & identiteit
 
-- **Joinen:** QR-code scannen op het host-scherm → naam invoeren → kleur kiezen.
+- **Joinen**: QR-code scannen op het host-scherm → naam invoeren → kleur kiezen (bezette kleuren geblokkeerd, live bijgewerkt zodra iemand anders kiest) → (indien Roltoewijzing = Kiezen, §8/§10) rol kiezen (bezette rollen geblokkeerd, live bijgewerkt zodra iemand anders kiest) → wachten in de lobby.
 - **Sessieherstel:** token in localStorage. Bij terugkeer op hetzelfde apparaat wordt de speler automatisch herkoppeld. Bij een **ander apparaat** voert de speler zijn naam in; de server koppelt hem aan de bestaande spelerspositie (en invalideert het oude token).
-- **Kleurkeuze:** spelers kiezen zelf hun kleur in de lobby (first come, first served).
 - **Speelvolgorde:** bepaald door dobbelen bij de spelstart met **2 dobbelstenen** (kleinere kans op gelijkspel), zichtbaar op de TV. Hoogste totaal begint; bij gelijke hoogste worp gooien **alleen de gelijken** opnieuw.
 
 ---
@@ -169,10 +168,11 @@ Klassiek: **Versterken → Aanvallen → Verplaatsen (Fortify)**.
 
 ### 5.4 Beurttimer
 
-- **Harde timer van 3 minuten** voor de fases Versterken + Aanvallen, zichtbaar op de TV.
+- **Harde timer van standaard 3 minuten** voor de fases Versterken + Aanvallen, zichtbaar op de TV. Eén doorlopende timer over beide fases, niet per fase.
 - De timer **pauzeert** zodra de aanvaller "Gooi" drukt en loopt pas weer zodra de volledige gevechtsuitkomst (incl. keuze van de verdediger en eventuele meeverplaatsing na verovering) is afgehandeld. Uitgevoerde acties kosten de aanvaller dus geen beurttijd.
 - **Bij aflopen van de timer** springt de beurt naar de Verplaatsen-fase.
-- **Bij het ingaan van de Verplaatsen-fase** (via timeout óf regulier) wordt de timer altijd op **1 minuut** gezet. Loopt die af, dan eindigt de beurt (zonder verplaatsing indien niet bevestigd).
+- **Bij het ingaan van de Verplaatsen-fase** (via timeout óf regulier) wordt de timer altijd op de Verplaatsen-timer gezet, standaard **1 minuut**. Loopt die af, dan eindigt de beurt (zonder verplaatsing indien niet bevestigd).
+- Beide timers zijn **lobby-instelbaar** (§10).
 
 ### 5.5 Bevestigen
 
@@ -231,7 +231,13 @@ Regels rond `EliminatePlayer`:
 
 ## 8. Rollensysteem (data-driven)
 
-Elke speler krijgt bij de spelstart **random** een rol toegewezen. Rollen zijn **openbaar** en staan permanent op de TV bij de spelersnaam.
+Toewijzing is een lobby-instelling (§10): Random of Kiezen. Rollen zijn openbaar en staan permanent op de TV bij de spelersnaam, ongeacht de toewijzingswijze.
+
+**Random:** Elke speler krijgt bij de spelstart **random** een rol toegewezen. Rollen zijn **openbaar** en staan permanent op de TV bij de spelersnaam.
+
+**Kiezen:** Onderdeel van het Joinen-proces (§2.2), direct na kleurkeuze — dus nog steeds vóór Volgorde Dobbelen en vóór Claimen/Startopstelling. Zelfde mechanisme als kleurkeuze: eerst geselecteerd en gekozen, is geselecteerd en gekozen. Een geselecteerde of gekozen rol is voor spelers die daarna joinen niet meer beschikbaar. Het overzicht toont per rol de naam en omschrijving (incl. effect en herkomstland), zodat de keuze weloverwogen kan zijn. De rolkeuze staat dus nog steeds vast vóórdat er geclaimd wordt, zodat een rol de gebiedskeuze tijdens Claimen kan sturen.
+
+### 8.1 Rollen informatie
 
 - **Herkomstland:** elke rol is gekoppeld aan één gebied. De boost is **alleen actief zolang de speler het herkomstland bezit**. De TV toont per rol of de boost actief is (bijv. gekleurd/uitgegrijsd icoon op het herkomstland).
 - **Startrestrictie:** bij de startverdeling krijgt een speler zijn eigen herkomstland nooit toegewezen (bij random verdeling wordt hierop gecorrigeerd; bij claim-modus mag de speler het niet claimen tijdens de setup — daarna uiteraard wel veroveren).
@@ -288,6 +294,31 @@ Effect-types in v1 (uitbreidbaar): `ContinentOwnerBonus`, `SeaRoutesBlocked` (du
 1. **De rules engine handelt lege fases netjes af:** heeft een speler die ronde nul geldige aanvallen of verplaatsingen (omdat al zijn gebieden geïsoleerd zijn), dan wordt de betreffende fase automatisch overgeslagen met een duidelijke melding op TV en telefoon — dit is bedoeld gedrag, geen bug.
 2. **Gedeeltelijke blokkade als variant:** het effect ondersteunt een optionele parameter `routes` (lijst van specifieke `from`/`to`-paren); alleen die zeeroutes worden dan geblokkeerd in plaats van allemaal. Zonder `routes`-parameter geldt de volledige blokkade.
 
+**Nieuwe effect-types (t.o.v. de oorspronkelijke v1-lijst):** `RevoltOnSingleArmy`
+is geschrapt (niet gewenst). Daarvoor in de plaats:
+
+| Type | Parameters | Werking |
+|---|---|---|
+| `TerritoryLocked` | `territoryIds[]` | De genoemde gebieden zijn deze ronde volledig afgesloten: niet aan te vallen, niet vanuit aan te vallen, geen Verplaatsen erin of eruit. Eigenaarschap en legeraantal blijven ongewijzigd. Altijd `oneRound`. |
+| `ArmyAttrition` | `amount` | Elke speler met meer dan 1 leger op minstens 1 gebied verwijdert in totaal `amount` eigen legers, en **kiest zelf** van welke gebieden — nooit onder de 1 leger per gebied. Heeft een speler minder wegneembare legers dan `amount` (som van (legers − 1) over al zijn gebieden < amount), dan wordt automatisch het maximum weggehaald: elk gebied van die speler komt op 1 leger, de rest van `amount` vervalt. Altijd `instant`. |
+
+**Nieuw interactiepatroon: gelijktijdige keuze door meerdere spelers.**
+`ArmyAttrition` is het eerste effect waarbij niet één speler op zijn beurt, maar
+**alle getroffen spelers tegelijk**, buiten de normale beurtvolgorde om, een keuze
+moeten maken voordat het spel verdergaat:
+
+- Elke speler met daadwerkelijke keuzevrijheid (dus niet degenen die toch al op
+  het automatische maximum uitkomen) krijgt op zijn telefoon een
+  **"Legers verwijderen"**-scherm: eigen gebieden met legeraantal, tik om een
+  leger van een gebied te verwijderen, nooit onder de 1.
+- **Geen timer** — zelfde precedent als de verdediger-keuze en de Reroll-prompt
+  (§5.3/§8): de beurttimer speelt hier sowieso geen rol, dit gebeurt tussen
+  beurten in.
+- De TV toont een wachtstaat ("nog 2 van de 4 spelers kiezen") totdat iedereen
+  met keuzevrijheid heeft gekozen.
+- Een speler die niet reageert en op auto-pass staat (§11.2): de server kiest
+  voor hem automatisch de grootste stapels leeg, zelfde logica als de
+  verdediger-op-auto-pass ("verdedigt automatisch met maximum").
 ---
 
 ## 10. Lobby-instellingen (host)
@@ -297,8 +328,10 @@ Effect-types in v1 (uitbreidbaar): `ContinentOwnerBonus`, `SeaRoutesBlocked` (du
 | Winconditie | Werelddominantie / Geheime missies | Missies |
 | Startopstelling | Random / Claimen | Random |
 | Startlegers | Per spelersaantal, aanpasbaar | Klassiek; 18 bij 7 spelers |
-| Beurttimer | 3 min (aanpasbaar) | 3 min |
+| Beurttimer (Versterken + Aanvallen) | Aanpasbaar | 3 min |
+| Verplaatsen-timer | Aanpasbaar | 1 min |
 | Rollen | Aan / uit | Uit |
+| Roltoewijzing (alleen als Rollen = Aan) | Random / Kiezen | Random | 
 | Gebeurtenisronde | Aan / uit + eventset | Uit |
 | Kaartenset-waardering | Klassiek escalerend | Klassiek |
 

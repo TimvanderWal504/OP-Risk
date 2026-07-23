@@ -12,7 +12,7 @@
 - **Interface Segregation**: kleine, gerichte interfaces (`IRandomSource` heeft
   precies één methode nodig, geen bredere "IGameUtils"-verzamelinterface).
 - **Dependency Inversion**: `RiskGame.Rules` hangt af van abstracties
-  (`IRandomSource`, `IClock` indien nodig), nooit van concrete implementaties
+  (`IRandomSource`), nooit van concrete implementaties
   of framework-types (zie ook CLAUDE.md-regel: geen ASP.NET/SignalR/Marten hier).
 
 ## DRY
@@ -32,8 +32,9 @@
 
   ## Determinisme (aanvulling op IRandomSource)
 
-- Geen `DateTime.Now`/`DateTime.UtcNow` in RiskGame.Rules — tijd komt via een
-  geïnjecteerde `IClock`-abstractie (nodig voor de timer-deadline, TO §5.3).
+- Geen `DateTime.Now`/`DateTime.UtcNow` in RiskGame.Rules, en ook geen klok-abstractie:
+  de engine kent alleen resterende tijd (`PhaseTimer`) en krijgt verstreken tijd via een
+  `Tick` binnen. Het aftellen zelf hoort in RiskGame.Api (TO §5.3).
 - Geen floats voor spellogica; legeraantallen, bonussen en tellers zijn `int`.
 - `GameState` en alle domeintypes zijn immutable (`record`-types); een
   state-overgang levert een nieuwe state op, muteert nooit de oude.

@@ -58,7 +58,7 @@ GameState
 ├─ Settings         (winconditie, startopstelling, startlegers, timer, feature-toggles)
 ├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isAutoPass)
 ├─ Territories[]    (territoryId → ownerPlayerId, armyCount)
-├─ TurnState        (activePlayerId, currentPhase, timerDeadline, pendingCombat?)
+├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat?)
 ├─ Deck             (trekstapel, aflegstapel, volgende inleg-waarde)
 ├─ ActiveEffects[]  (lopende event-effecten met resterende duur)
 └─ TurnOrder[]      (spelersvolgorde, bepaald door de order-roll)
@@ -169,7 +169,14 @@ De **geprojecteerde `GameState`** (§3.1) is een Marten-projectie (inline of asy
 
 ### 5.3 Timer-afhandeling
 
-De beurttimer (FO §5.4) is **server-side gezaghebbend**: de server houdt de `timerDeadline` bij en handhaaft de timeout, zodat een client die zijn tabblad sluit de beurt niet kan ophangen. De timer pauzeert server-side bij `DeclareAttack` en hervat na volledige gevechtsafhandeling. Clients tonen een afteller die met de server gesynchroniseerd wordt, maar de client-klok is puur cosmetisch.
+De beurttimer (FO §5.4) is **server-side gezaghebbend**: de server handhaaft de timeout, zodat een client die zijn tabblad sluit de beurt niet kan ophangen. Clients tonen een afteller die met de server gesynchroniseerd wordt, maar de client-klok is puur cosmetisch.
+
+De verantwoordelijkheid ligt bewust op twee plekken:
+
+- **De rules engine** houdt alleen de **resterende tijd** bij (`PhaseTimer`: resterend + gepauzeerd), nooit een absolute deadline. Verstreken tijd komt binnen via een `Tick`. Daardoor heeft `RiskGame.Rules` geen klok-abstractie nodig, is hij ongevoelig voor een verspringende serverklok, en zijn timerregels zonder test-double reproduceerbaar.
+- **De API-laag** telt af: die houdt bij wanneer de fase begon en brengt het verstrijken van tijd als commando de engine in.
+
+Pauzeren is daarmee één regel: een `Tick` op een gepauzeerde timer verandert niets. De timer pauzeert bij `DeclareAttack` en hervat na volledige gevechtsafhandeling.
 
 ---
 

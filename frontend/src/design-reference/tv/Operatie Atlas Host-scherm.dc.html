@@ -399,6 +399,24 @@
           </div>
         </sc-if>
 
+        <!-- attrition (event resolved) overlay -->
+        <sc-if value="{{ showAttrition }}">
+          <div style="position:absolute;inset:0;background:rgba(4,6,11,.72);display:flex;align-items:center;justify-content:center;">
+            <div style="width:760px;background:linear-gradient(#1c2536,#121a28);border:1px solid var(--gold-600);border-radius:24px;padding:44px 48px;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(242,169,34,.2);animation:atlasCard .55s cubic-bezier(.2,.7,.3,1) both;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;left:0;height:100%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.08),transparent);animation:atlasSheen 2.4s ease-in-out infinite;"></div>
+              <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.24em;font-size:16px;color:var(--gold-400);">{{ t.eventKicker }}</div>
+              <div style="font-size:64px;margin:14px 0 6px;">☣</div>
+              <h1 style="font-family:var(--font-display);font-weight:900;font-size:56px;margin:0 0 8px;letter-spacing:-.01em;">{{ attrProcTitle }}</h1>
+              <p style="font-family:var(--font-body);font-size:24px;line-height:1.4;color:var(--fg2);margin:0 auto 26px;max-width:600px;">{{ t.attrProcHint }}</p>
+              <div style="display:flex;align-items:center;gap:18px;max-width:600px;margin:0 auto;">
+                <div style="flex:1;height:14px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden;"><div style="height:100%;width:{{ attrProcPct }};background:linear-gradient(90deg,var(--pitch-500),var(--gold-400));border-radius:8px;transition:width .5s;"></div></div>
+                <span style="font-family:var(--font-display);font-weight:900;font-size:34px;line-height:1;color:var(--pitch-300);font-variant-numeric:tabular-nums;white-space:nowrap;">{{ attrProcNum }}<span style="font-size:20px;color:var(--fg3);">/{{ attrProcTotal }}</span></span>
+              </div>
+              <div style="margin-top:16px;font-family:var(--font-mono);font-size:16px;color:var(--fg3);letter-spacing:.06em;">{{ attrProcCount }}</div>
+            </div>
+          </div>
+        </sc-if>
+
         <!-- elimination overlay -->
         <sc-if value="{{ showElim }}">
           <div style="position:absolute;inset:0;background:rgba(4,6,11,.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
@@ -490,7 +508,7 @@
 class Component extends DCLogic {
   constructor(props){
     super(props);
-    this.state = { i: 0, lang: (props && props.language) || 'nl', claimStep: 0 };
+    this.state = { i: 0, lang: (props && props.language) || 'nl', claimStep: 0, attrDone: 0 };
     this.stageRef = React.createRef();
     this.qr = this.buildQR();
   }
@@ -507,10 +525,23 @@ class Component extends DCLogic {
     setTimeout(this._fit, 120);
     setTimeout(this._fit, 400);
     this.maybeClaim();
+    this.maybeAttr();
   }
-  componentDidUpdate(){ if(this._fit) this._fit(); this.maybeClaim(); }
-  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); this.stopClaim(); }
+  componentDidUpdate(){ if(this._fit) this._fit(); this.maybeClaim(); this.maybeAttr(); }
+  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); this.stopClaim(); this.stopAttr(); }
   stopClaim(){ if(this._claimTimer){ clearInterval(this._claimTimer); this._claimTimer=null; } }
+  stopAttr(){ if(this._attrTimer){ clearInterval(this._attrTimer); this._attrTimer=null; } }
+  maybeAttr(){
+    const inAttr = this.state.i===7;
+    if(inAttr && !this._attrTimer){
+      if((this.state.attrDone||0) >= this.ATTR_TOTAL) this.setState({attrDone:0});
+      this._attrTimer = setInterval(()=>{
+        this.setState(s=>({ attrDone: Math.min(this.ATTR_TOTAL, (s.attrDone||0)+1) }), ()=>{
+          if(this.state.attrDone>=this.ATTR_TOTAL) this.stopAttr();
+        });
+      }, 1400);
+    } else if(!inAttr && this._attrTimer){ this.stopAttr(); }
+  }
   maybeClaim(){
     const inClaim = this.state.i===2;
     if(inClaim && !this._claimTimer){
@@ -631,7 +662,8 @@ class Component extends DCLogic {
       missionReveal:'Geheime missies onthuld', met:'Voltooid', failed:'Niet gehaald', replay:'Opnieuw spelen',
       winKicker:'Overwinning', prev:'Vorige', next:'Volgende', langLabel:'Taal',
       claimKicker:'Startopstelling · Claimen', claimTitle:'Spelers claimen hun gebieden', claimCounterLabel:'gebieden verdeeld', claimPanelTitle:'Geclaimd',
-      states:['Lobby','Volgorde bepalen','Gebieden claimen','Hoofdscherm','Gebiedsselectie','Gevecht','Gebeurteniskaart','Speler uitgeschakeld','Winnaar'] },
+      attrProcKicker:'Gebeurtenis verwerkt', attrProcNoTimer:'Reageren buiten de beurt', attrProcOf:'van de', attrProcChosen:'spelers hebben gekozen', attrProcHint:'Getroffen spelers halen tegelijk legers weg — geen timer.',
+      states:['Lobby','Volgorde bepalen','Gebieden claimen','Hoofdscherm','Gebiedsselectie','Gevecht','Gebeurteniskaart','Gebeurtenis verwerkt','Speler uitgeschakeld','Winnaar'] },
     en:{ lobbyKicker:'Lobby', join:'Scan to join', waitSlot:'Open slot', waiting:'Waiting for the host to start the game…',
       playersJoined:'Players joined', settings:'Settings',
       setMap:'Map', mapVal:'Standard · 43 territories',
@@ -646,7 +678,8 @@ class Component extends DCLogic {
       missionReveal:'Secret missions revealed', met:'Complete', failed:'Incomplete', replay:'Play again',
       winKicker:'Victory', prev:'Previous', next:'Next', langLabel:'Language',
       claimKicker:'Setup · Claim', claimTitle:'Players are claiming territories', claimCounterLabel:'territories dealt', claimPanelTitle:'Claimed',
-      states:['Lobby','Turn order','Claim territories','Main board','Region select','Combat','Event card','Player eliminated','Winner'] },
+      attrProcKicker:'Event resolved', attrProcNoTimer:'Reacting off-turn', attrProcOf:'of', attrProcChosen:'players have chosen', attrProcHint:'Affected players remove armies at the same time — no timer.',
+      states:['Lobby','Turn order','Claim territories','Main board','Region select','Combat','Event card','Event resolved','Player eliminated','Winner'] },
   }; }
 
   get FEED(){ return [
@@ -657,7 +690,12 @@ class Component extends DCLogic {
     {p:5, nl:'verovert Afghanistan', en:'conquers Afghanistan'},
   ]; }
 
-  next = () => this.setState(s => ({ i: Math.min(8, s.i+1) }));
+  get ATTR_TOTAL(){ return 5; }
+  get ATTR_HITS(){ return [
+    {id:'scandinavia',dec:3}, {id:'brazil',dec:3}, {id:'china',dec:3}, {id:'north-africa',dec:3}, {id:'afghanistan',dec:3},
+  ]; }
+
+  next = () => this.setState(s => ({ i: Math.min(9, s.i+1) }));
   prev = () => this.setState(s => ({ i: Math.max(0, s.i-1) }));
   go = (n) => this.setState({ i: n });
   toggleLang = () => this.setState(s => ({ lang: s.lang === 'nl' ? 'en' : 'nl' }));
@@ -675,17 +713,24 @@ class Component extends DCLogic {
       {turn:1, phase:1, timer:'0:24', mode:'low'},
       {turn:1, phase:1, timer:t.paused, mode:'paused'},
       {turn:0, phase:0, timer:'2:58', mode:'normal'},
+      {turn:0, phase:0, timer:t.paused, mode:'paused'},
       {turn:0, phase:1, timer:'1:52', mode:'normal'},
     ][i] || {turn:0,phase:0,timer:'3:00',mode:'normal'};
 
     const isClaim = i===2;
-    const isBoard = i>=3 && i<=7;
-    const showSelection = i===4, showCombat = i===5, showEvent = i===6, showElim = i===7;
+    const isBoard = i>=3 && i<=8;
+    const showSelection = i===4, showCombat = i===5, showEvent = i===6, showAttrition = i===7, showElim = i===8;
     const elimIdx = 2, elimByIdx = 0, autoPassIdx = 3;
 
+    // attrition (event resolution) progress
+    const attrDone = Math.max(0, Math.min(this.ATTR_TOTAL, this.state.attrDone||0));
+    const attrHits = this.ATTR_HITS;
+
     // territory owner/army overrides
-    const ownerOf = (tr)=>{ if(i===5 && tr.id==='ukraine') return 1; if(i>=7 && tr.o===elimIdx) return elimByIdx; return tr.o; };
-    const armyOf  = (tr)=>{ if(i===5 && tr.id==='ukraine') return 3; if(i===5 && tr.id==='scandinavia') return 2; return tr.a; };
+    const ownerOf = (tr)=>{ if(i===5 && tr.id==='ukraine') return 1; if(i>=8 && tr.o===elimIdx) return elimByIdx; return tr.o; };
+    const armyOf  = (tr)=>{ if(i===5 && tr.id==='ukraine') return 3; if(i===5 && tr.id==='scandinavia') return 2;
+      if(showAttrition){ const h=attrHits.findIndex(x=>x.id===tr.id); if(h>=0 && attrDone>h) return Math.max(1, tr.a - attrHits[h].dec); }
+      return tr.a; };
     const HL = { 'scandinavia':'src', 'iceland':'tgt', 'northern-europe':'tgt', 'ukraine':'tgt' };
     const origins = this.ORIGINS;
 
@@ -711,15 +756,16 @@ class Component extends DCLogic {
 
     // player panel
     const panelPlayers = P.map((p, idx) => {
-      const eliminated = (i>=7 && idx===elimIdx);
-      const autoPass = (i>=7 && idx===autoPassIdx);
+      const eliminated = (i>=8 && idx===elimIdx);
+      const autoPass = (i>=8 && idx===autoPassIdx);
       const isCurrent = (idx===cfg.turn) && !eliminated;
       const boostc = p.boost ? '#f2c14e' : '#54627a';
       const roleLine = p.role[L] + ' · ' + p.origin[L];
       // adjusted counts for eliminated scenario
       let terrN = p.terr, armyN = p.army;
-      if (i>=7 && idx===elimIdx){ terrN=0; armyN=0; }
-      if (i>=7 && idx===elimByIdx){ terrN=p.terr+6; armyN=p.army+9; }
+      if (i>=8 && idx===elimIdx){ terrN=0; armyN=0; }
+      if (i>=8 && idx===elimByIdx){ terrN=p.terr+6; armyN=p.army+9; }
+      if (showAttrition){ const hit=this.ATTR_HITS.filter((h,k)=>attrDone>k).reduce((sum,h)=>{ const tr=this.TERR.find(x=>x.id===h.id); return (tr && tr.o===idx) ? sum+Math.min(h.dec, tr.a-1) : sum; },0); if(hit>0) armyN=p.army-hit; }
       return { hex:p.hex, on:p.on, sym:p.sym, name:p.name, cw:p.cw[L], roleLine, boostc,
         terr:terrN, army:armyN, isCurrent, eliminated, autoPass,
         rowbg: isCurrent ? 'rgba(242,169,34,.10)' : 'rgba(255,255,255,.03)',
@@ -818,9 +864,13 @@ class Component extends DCLogic {
       stageRef: this.stageRef, t, lang, isNL: lang==='nl', isEN: lang==='en',
       nlColor: lang==='nl' ? '#04060b' : 'var(--fg3)', enColor: lang==='en' ? '#ffffff' : 'var(--fg3)',
       toggleLang:this.toggleLang, next:this.next, prev:this.prev,
-      stateNum: i+1, total: 9, stateName: t.states[i], dots,
-      isLobby: i===0, isOrder: i===1, isClaim, isBoard, isWinner: i===8,
-      showSelection, showCombat, showEvent, showElim,
+      stateNum: i+1, total: 10, stateName: t.states[i], dots,
+      isLobby: i===0, isOrder: i===1, isClaim, isBoard, isWinner: i===9,
+      showSelection, showCombat, showEvent, showElim, showAttrition,
+      attrProcTitle: (lang==='nl'?'Epidemie in de steden':'Epidemic in the cities'),
+      attrProcCount: `${attrDone} ${t.attrProcOf} ${this.ATTR_TOTAL} ${t.attrProcChosen}`,
+      attrProcPct: Math.round(attrDone/this.ATTR_TOTAL*100)+'%',
+      attrProcNum: attrDone, attrProcTotal: this.ATTR_TOTAL,
       // claim
       claimTerr, claimPanel, claimCounter, claimHasFlare, flareX:flareT.cx, flareY:flareT.cy,
       claimTurnHex:claimTurnP.hex, claimTurnOn:claimTurnP.on, claimTurnSym:claimTurnP.sym, claimTurnName:claimTurnP.name, claimTurnCw:claimTurnP.cw[L], claimTurnGlow:claimTurnP.hex+'99',
