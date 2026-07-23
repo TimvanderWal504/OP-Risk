@@ -161,10 +161,11 @@ Klassiek: **Versterken → Aanvallen → Verplaatsen (Fortify)**.
 ### 5.3 Gevechten & dobbelen
 
 1. Aanvaller kiest herkomst- en doelgebied (hybride selectie §2.3) en het aantal dobbelstenen. **Kernregel:** aanvallen kan alleen vanuit een gebied met minimaal 2 legers, en het aantal aanvalsdobbelstenen is maximaal (legers in het brongebied − 1), met een absoluut maximum van 3.
-2. Aanvaller drukt **"Gooi"** — dit is tegelijk de bevestiging van de aanval (§5.5).
-3. De verdediger krijgt op zijn telefoon de keuze: verdedigen met 1 of 2 dobbelstenen. **Harde regel:** een verdediger met slechts 1 leger in het gebied kan alleen 1 dobbelsteen kiezen (de UI toont dan geen keuze). **De verdediger heeft geen timer.**
-4. De server gooit; de dobbelstenen rollen zichtbaar het TV-scherm in. Uitkomst (verliezen per kant) wordt op de TV getoond en verwerkt.
-5. Bij verovering: aanvaller kiest hoeveel legers hij meeverplaatst (minimaal het aantal gebruikte aanvalsdobbelstenen).
+2. Aanvaller drukt **"Gooi"** — dit is tegelijk de bevestiging van de aanval (§5.5). De server gooit meteen de aanvalsdobbelstenen, zichtbaar op TV.
+3. Heeft de aanvaller een actieve `Reroll`-rol (§8), dan mag hij — nog vóórdat de verdediger heeft gegooid — zelf kiezen welke van zijn eigen dobbelstenen hij herwerpt (tot het aantal dat de rol per beurt toestaat). Dit is dus altijd vóór enige vergelijking met de verdediger.
+4. De verdediger krijgt op zijn telefoon de keuze: verdedigen met 1 of 2 dobbelstenen. **Harde regel:** een verdediger met slechts 1 leger in het gebied kan alleen 1 dobbelsteen kiezen (de UI toont dan geen keuze). **De verdediger heeft geen timer.**
+5. De server gooit de verdedigingsdobbelstenen, zichtbaar op TV. Uitkomst (verliezen per kant) wordt bepaald door de (eventueel herworpen) aanvalsworp tegen de verdedigingsworp te vergelijken, en op de TV getoond en verwerkt.
+6. Bij verovering: aanvaller kiest hoeveel legers hij meeverplaatst (minimaal het aantal gebruikte aanvalsdobbelstenen).
 
 ### 5.4 Beurttimer
 
@@ -259,7 +260,7 @@ Effect-types in v1:
 |---|---|---|
 | `ExtraReinforcement` | `amount` | Extra legers in de versterkingsfase |
 | `CardTradeBonus` | `amount` | Extra legers bij kaarteninleg |
-| `Reroll` | `perTurn` | Herwerp per beurt N verloren dobbelstenen (zichtbaar op TV als "herworpen"). De herwerp-prompt heeft **geen timer** (net als de verdediger-keuze; de beurttimer staat tijdens het gevecht toch al stil) |
+| `Reroll` | `perTurn` | De aanvaller mag, na zijn eigen worp maar **vóórdat de verdediger gooit**, per beurt N van zijn eigen dobbelstenen zelf kiezen om te herwerpen (zichtbaar op TV als "herworpen") — niet gebaseerd op "verloren", want er is op dat moment nog niets met de verdediger vergeleken. De herwerp-prompt heeft **geen timer** (net als de verdediger-keuze; de beurttimer staat tijdens het gevecht toch al stil) |
 | `FortifyUpgrade` | `moves` of `throughEnemy` | Extra verplaatsing, of pad door 1 vijandelijk gebied |
 
 Bewuste keuze: **geen verborgen kansmanipulatie** (gewogen dobbelstenen). Alle voordelen zijn zichtbaar en telbaar op het bord, zodat uitkomsten aan tafel niet als oneerlijk voelen.

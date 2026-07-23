@@ -68,6 +68,47 @@ public class CardTradeCalculatorTests
         Assert.Empty(outcome.OwnedTerritoryBonuses);
     }
 
+    [Fact]
+    public void RolBonus_MetRollenAanEnHerkomstlandInBezit_TeltMeeBijSetWaarde()
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "diplomaat"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, settings: settings, nextTradeValue: 8)
+            .WithTerritory(new TerritoryOwnership("great-britain", "p1", 1));
+
+        var outcome = CardTradeCalculator.Evaluate(state, "p1", []);
+
+        Assert.Equal(10, outcome.SetValue);
+    }
+
+    [Fact]
+    public void RolBonus_ZonderHerkomstlandInBezit_TeltNietMee()
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "diplomaat"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, settings: settings, nextTradeValue: 8)
+            .WithTerritory(new TerritoryOwnership("great-britain", "p2", 1));
+
+        var outcome = CardTradeCalculator.Evaluate(state, "p1", []);
+
+        Assert.Equal(8, outcome.SetValue);
+    }
+
+    [Fact]
+    public void RolBonus_MetRollenUit_TeltNietMeeOokNietBijBezit()
+    {
+        var players = new[] { TestGame.Player("p1", "red", roleId: "diplomaat"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, nextTradeValue: 8)
+            .WithTerritory(new TerritoryOwnership("great-britain", "p1", 1));
+
+        var outcome = CardTradeCalculator.Evaluate(state, "p1", []);
+
+        Assert.Equal(8, outcome.SetValue);
+    }
+
     [Theory]
     [InlineData(4, 6)]
     [InlineData(6, 8)]

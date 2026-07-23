@@ -578,14 +578,33 @@
                 <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--fg3);">{{ t.resultShort }}</span>
                 <div style="display:flex;gap:10px;">
                   <sc-for list="{{ resultDice }}" as="d" hint-placeholder-count="3">
-                    <div style="width:58px;height:58px;border-radius:13px;background:{{ me.hex }};display:grid;grid-template-columns:repeat(3,1fr);padding:8px;gap:3px;box-shadow:0 8px 18px rgba(0,0,0,.5);animation:{{ d.anim }};">
+                    <div style="width:58px;height:58px;border-radius:13px;background:{{ me.hex }};display:grid;grid-template-columns:repeat(3,1fr);padding:8px;gap:3px;box-shadow:0 8px 18px rgba(0,0,0,.5);outline:3px solid {{ d.ring }};outline-offset:2px;animation:{{ d.anim }};">
                       <sc-for list="{{ d.pips }}" as="pip" hint-placeholder-count="9"><div style="display:flex;align-items:center;justify-content:center;"><sc-if value="{{ pip.on }}"><div style="width:9px;height:9px;border-radius:50%;background:{{ me.on }};"></div></sc-if></div></sc-for>
                     </div>
                   </sc-for>
                 </div>
-                <div style="font-family:var(--font-display);font-weight:900;font-size:24px;color:var(--pitch-300);animation:phPop .4s .5s both;">{{ atkResultLine }}</div>
+                <div style="font-family:var(--font-display);font-weight:900;font-size:24px;color:{{ reroll.resultColor }};animation:phPop .4s .5s both;">{{ atkResultLine }}</div>
                 <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);max-width:260px;">{{ t.detailsOnTv }}</div>
               </div>
+              <sc-if value="{{ reroll.avail }}">
+                <div style="background:rgba(242,169,34,.1);border:1px solid var(--gold-700);border-radius:16px;padding:12px 14px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:36px;height:36px;flex:none;border-radius:10px;background:rgba(242,169,34,.18);border:1px solid var(--gold-600);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gold-300);">⚔</span>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--gold-300);">{{ reroll.title }}</div>
+                      <div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ reroll.home }}</div>
+                    </div>
+                    <span style="flex:none;font-family:var(--font-body);font-weight:800;font-size:11px;letter-spacing:.02em;color:var(--gold-300);background:rgba(242,169,34,.16);border-radius:7px;padding:4px 8px;white-space:nowrap;">{{ reroll.counter }}</span>
+                  </div>
+                  <button onClick="{{ reroll.use }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:none;border-radius:13px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:16px;cursor:pointer;">⚔ {{ reroll.cta }}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ reroll.used }}">
+                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px;opacity:.75;">
+                  <span style="width:34px;height:34px;flex:none;border-radius:10px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">✓</span>
+                  <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--fg2);">{{ reroll.usedLabel }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--pitch-300);">{{ reroll.wonNote }}</div></div>
+                </div>
+              </sc-if>
               <div style="display:flex;flex-direction:column;gap:9px;">
                 <button onClick="{{ attackAgain }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border:none;border-radius:16px;background:#c0392b;color:#fff;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;">{{ t.attackAgain }}</button>
                 <div style="display:flex;gap:9px;">
@@ -668,6 +687,150 @@
                 <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ fortLeaveNote }}</div>
               </div>
               <button onClick="{{ confirmFortify }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmMove }}</button>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- CARD TRADE BONUS (Diplomaat) -->
+          <sc-if value="{{ isCardBonus }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:16px 16px 18px;">
+            <div style="display:flex;align-items:center;gap:11px;background:{{ scBanner.soft }};border:1px solid {{ scBanner.border }};border-radius:14px;padding:11px 13px;">
+              <span style="width:44px;height:44px;flex:none;border-radius:11px;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:21px;color:{{ scBanner.accent }};">{{ scBanner.sym }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:{{ scBanner.accent }};">{{ scBanner.role }}</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.1;">{{ scBanner.title }}</div>
+                <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+              <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
+              <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
+            </div>
+            <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:11px;margin-top:12px;">
+              <div>
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--fg3);margin:0 2px 7px;">{{ cardBonus.setLabel }}</div>
+                <div style="display:flex;gap:8px;">
+                  <sc-for list="{{ cbCards }}" as="c" hint-placeholder-count="3">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:12px 6px;">
+                      <span style="font-size:24px;">{{ c.icon }}</span>
+                      <span style="font-family:var(--font-body);font-size:11px;color:var(--fg3);">{{ c.type }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:13px 15px;">
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--fg3);margin-bottom:9px;">{{ cardBonus.breakLabel }}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;">
+                  <span style="font-family:var(--font-body);font-size:14.5px;color:var(--fg2);">{{ cardBonus.baseLabel }}</span>
+                  <span style="font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--fg1);">{{ cardBonus.baseVal }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;">
+                  <span style="font-family:var(--font-body);font-size:14.5px;color:{{ cardBonus.bonusColor }};">{{ cardBonus.bonusLabel }}</span>
+                  <span style="font-family:var(--font-display);font-weight:800;font-size:17px;color:{{ cardBonus.bonusColor }};">{{ cardBonus.bonusVal }}</span>
+                </div>
+                <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--fg1);">{{ cardBonus.totalLabel }}</span>
+                  <span style="font-family:var(--font-display);font-weight:900;font-size:30px;line-height:1;color:{{ cardBonus.totalColor }};">{{ cardBonus.total }}</span>
+                </div>
+              </div>
+              <div style="font-family:var(--font-body);font-size:12.5px;line-height:1.4;color:{{ cardBonus.noteColor }};text-wrap:pretty;padding:0 2px;">{{ cardBonus.note }}</div>
+            </div>
+            <button onClick="{{ next }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;box-shadow:0 8px 22px rgba(242,169,34,.35);">{{ cardBonus.cta }}</button>
+          </div>
+          </sc-if>
+
+          <!-- FORTIFY THROUGH ENEMY (Smokkelaar) -->
+          <sc-if value="{{ isFortEnemy }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:16px 16px 18px;">
+            <div style="display:flex;align-items:center;gap:11px;background:{{ scBanner.soft }};border:1px solid {{ scBanner.border }};border-radius:14px;padding:11px 13px;">
+              <span style="width:44px;height:44px;flex:none;border-radius:11px;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:21px;color:{{ scBanner.accent }};">{{ scBanner.sym }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:{{ scBanner.accent }};">{{ scBanner.role }}</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.1;">{{ scBanner.title }}</div>
+                <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+              <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
+              <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
+            </div>
+            <div style="font-family:var(--font-display);font-weight:800;font-size:18px;margin:13px 2px 2px;">{{ feStepTitle }}</div>
+            <div style="font-family:var(--font-body);font-size:12.5px;color:var(--fg3);margin:0 2px 10px;">{{ feFromLabel }}</div>
+            <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
+              <sc-for list="{{ feDests }}" as="d" hint-placeholder-count="3">
+                <button style="display:flex;align-items:center;gap:12px;width:100%;min-height:66px;padding:0 14px;border-radius:16px;background:{{ d.bg }};border:2px solid {{ d.border }};color:var(--fg1);cursor:{{ d.cursor }};opacity:{{ d.op }};text-align:left;">
+                  <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ me.on }};">{{ me.sym }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ d.name }}</span>
+                      <sc-if value="{{ d.showTag }}"><span style="font-family:var(--font-body);font-weight:800;font-size:10px;letter-spacing:.03em;text-transform:uppercase;color:{{ d.tagColor }};background:{{ d.tagBg }};border-radius:6px;padding:3px 6px;">{{ d.tag }}</span></sc-if>
+                    </div>
+                    <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);margin-top:2px;">{{ d.path }}</div>
+                  </div>
+                  <span style="flex:none;font-size:20px;color:{{ d.iconColor }};">{{ d.icon }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:9px;margin-top:11px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+              <span style="font-size:17px;color:{{ scBanner.accent }};line-height:1.2;">⚑</span>
+              <span style="font-family:var(--font-body);font-size:12.5px;line-height:1.4;color:var(--fg2);text-wrap:pretty;">{{ feHint }}</span>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- FORTIFY TWICE (Ingenieur) -->
+          <sc-if value="{{ isFortMoves }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:16px 16px 18px;">
+            <div style="display:flex;align-items:center;gap:11px;background:{{ scBanner.soft }};border:1px solid {{ scBanner.border }};border-radius:14px;padding:11px 13px;">
+              <span style="width:44px;height:44px;flex:none;border-radius:11px;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:21px;color:{{ scBanner.accent }};">{{ scBanner.sym }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:{{ scBanner.accent }};">{{ scBanner.role }}</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.1;">{{ scBanner.title }}</div>
+                <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+              <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
+              <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
+            </div>
+            <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:11px;margin-top:13px;">
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(132,173,40,.08);border:1px solid var(--pitch-700);border-radius:14px;padding:12px 14px;">
+                <span style="width:34px;height:34px;flex:none;border-radius:9px;background:rgba(132,173,40,.16);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--pitch-300);">✓</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--pitch-300);">{{ fortMoves.step1Label }} · {{ fortMoves.doneTag }}</div>
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ fortMoves.firstDone }}</div>
+                </div>
+              </div>
+              <sc-if value="{{ fortMoves.atSecond }}">
+                <div style="background:{{ scBanner.soft }};border:1px solid {{ scBanner.border }};border-radius:14px;padding:14px;">
+                  <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:{{ scBanner.accent }};">{{ fortMoves.step2Label }}</div>
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:17px;margin-top:4px;">{{ fortMoves.inProgress }}</div>
+                  <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);margin-top:5px;text-wrap:pretty;">{{ fortMoves.inProgressSub }}</div>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ fortMoves.canSecond }}">
+              <sc-if value="{{ fortMoves.atFirst }}">
+                <button onClick="{{ fortMoves.startSecond }}" style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;width:100%;padding:13px 16px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">
+                  <span style="font-family:var(--font-display);font-weight:900;font-size:18px;">＋ {{ fortMoves.secondCta }}</span>
+                  <span style="font-family:var(--font-body);font-weight:600;font-size:11.5px;opacity:.85;">{{ fortMoves.secondSub }}</span>
+                </button>
+                <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ fortMoves.endCta }}</button>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ fortMoves.locked }}">
+              <div style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;border:1px dashed var(--border-strong);border-radius:16px;background:rgba(255,255,255,.02);opacity:.7;">
+                <span style="width:34px;height:34px;flex:none;border-radius:9px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">🔒</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--fg3);">{{ fortMoves.lockedCta }}</div>
+                  <div style="font-family:var(--font-body);font-size:11.5px;color:#d07a7a;">{{ fortMoves.lockedSub }}</div>
+                </div>
+              </div>
+              <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:56px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ fortMoves.endCta }}</button>
+            </sc-if>
+            <sc-if value="{{ fortMoves.atSecond }}">
+              <button onClick="{{ fortMoves.end }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ fortMoves.confirmCta }}</button>
             </sc-if>
           </div>
           </sc-if>
@@ -996,7 +1159,8 @@ class Component extends DCLogic {
       claimSel: null, claimedIds: {}, claimCounts: [6,5,6,6,5,5], claimMine: true,
       setupPlaced: {}, setupPool: 5,
       reinfExtra: {}, reinfPool: 12,
-      atk: 0, atkSrc: null, atkTgt: null, diceN: 3,
+      atk: 0, atkSrc: null, atkTgt: null, diceN: 3, reroll: 0,
+      homeHeld: true, fortMove: 0,
       moveN: 3,
       defended: 0,
       attrIdx: 0, attrRemoved: {}, attrWaitDone: 3,
@@ -1027,7 +1191,7 @@ class Component extends DCLogic {
 
   pips(v){ const m={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}; const on=m[v]||[]; return Array.from({length:9},(_,k)=>({on:on.indexOf(k)>=0})); }
 
-  get KEYS(){ return ['start','settings','waiting','join','order','claim','setup','idle','reinf','attack','conquest','defend','attrition','attritionWait','fortify','elim','reconnect','winner']; }
+  get KEYS(){ return ['start','settings','waiting','join','order','claim','setup','idle','reinf','cardBonus','attack','conquest','defend','attrition','attritionWait','fortify','fortifyEnemy','fortifyMoves','elim','reconnect','winner']; }
 
   // ArmyAttrition event: several players react at once, off-turn
   get ATTR(){ return {
@@ -1134,7 +1298,7 @@ class Component extends DCLogic {
       attrSkipTitle:'Je hebt te weinig legers om te verwijderen', attrSkipSub:'Al je gebieden staan al op het minimum van 1 leger, dus je slaat dit over.', attrSkipCta:'Ga verder',
       attrWaitKicker:'Gebeurtenis wordt verwerkt', attrWaitTitle:'Wachten op anderen', attrWaitListLabel:'Spelers die nog moeten kiezen', attrWaitChosen:'Klaar', attrWaitStillChoosing:'Nog aan het kiezen', attrWaitNext:'Volgende speler bevestigt (demo)', attrWaitAllDone:'Iedereen heeft gekozen — het spel gaat verder.',
       timerTurn:'Beurttijd', timerFortify:'Verplaatsen', paused:'Gepauzeerd',
-      states:['Start','Instellingen','Wachten op spelers','Joinen','Volgorde dobbelen','Gebied claimen','Startopstelling','Niet aan de beurt','Versterken','Aanvallen','Verovering','Verdedigen','Legers verwijderen','Wachten op anderen','Verplaatsen','Uitgeschakeld','Opnieuw verbinden','Winnaar'] },
+      states:['Start','Instellingen','Wachten op spelers','Joinen','Volgorde dobbelen','Gebied claimen','Startopstelling','Niet aan de beurt','Versterken','Kaartenset inleveren','Aanvallen','Verovering','Verdedigen','Legers verwijderen','Wachten op anderen','Verplaatsen','Roleffect · door vijand','Roleffect · 2× verplaatsen','Uitgeschakeld','Opnieuw verbinden','Winnaar'] },
     en:{ next:'Next', prev:'Back', roll:'Roll', confirm:'Confirm', langLabel:'Lang', taken:'taken', you:'you', hostBadge:'HOST',
       appTagline:'Conquer the world — one phone per commander.', startNew:'Start a new game', startNewSub:'You become the host and set it up.', startJoin:'Join a game', startJoinSub:'Scan the QR code on the TV.', startFoot:'2–7 players · local network',
       setKicker:'New game', setTitle:'Settings', grpRules:'Game rules', grpExtras:'Extra game elements',
@@ -1172,11 +1336,11 @@ class Component extends DCLogic {
       attrSkipTitle:'You have too few armies to remove', attrSkipSub:'All your territories are already at the minimum of 1 army, so you skip this.', attrSkipCta:'Continue',
       attrWaitKicker:'Resolving event', attrWaitTitle:'Waiting for others', attrWaitListLabel:'Players still to choose', attrWaitChosen:'Done', attrWaitStillChoosing:'Still choosing', attrWaitNext:'Next player confirms (demo)', attrWaitAllDone:'Everyone has chosen — the game continues.',
       timerTurn:'Turn time', timerFortify:'Fortify', paused:'Paused',
-      states:['Start','Settings','Waiting for players','Join','Roll for order','Claim territory','Setup','Not your turn','Reinforce','Attack','Conquest','Defend','Remove armies','Waiting for others','Fortify','Eliminated','Reconnect','Winner'] },
+      states:['Start','Settings','Waiting for players','Join','Roll for order','Claim territory','Setup','Not your turn','Reinforce','Card trade-in','Attack','Conquest','Defend','Remove armies','Waiting for others','Fortify','Role effect · through enemy','Role effect · fortify twice','Eliminated','Reconnect','Winner'] },
   }; }
 
   // ---- nav ----
-  go = (n) => this.setState({ i:n, tab:null, manageOpen:false, orderRolled:false, claimSel:null, claimedIds:{}, claimCounts:[6,5,6,6,5,5], claimMine:true, atk:0, atkSrc:null, atkTgt:null, defended:0, attrIdx:0, attrRemoved:{}, attrWaitDone:3, fort:0, fortSrc:null, fortDest:null, rec:0, join:0, voted:false, setupPool:5, setupPlaced:{}, reinfPool:12, reinfExtra:{}, moveN:3, fortN:3 });
+  go = (n) => this.setState({ i:n, tab:null, manageOpen:false, orderRolled:false, claimSel:null, claimedIds:{}, claimCounts:[6,5,6,6,5,5], claimMine:true, atk:0, atkSrc:null, atkTgt:null, reroll:0, defended:0, attrIdx:0, attrRemoved:{}, attrWaitDone:3, fort:0, fortSrc:null, fortDest:null, homeHeld:true, fortMove:0, rec:0, join:0, voted:false, setupPool:5, setupPlaced:{}, reinfPool:12, reinfExtra:{}, moveN:3, fortN:3 });
   goKey = (k) => this.go(this.KEYS.indexOf(k));
   // skip the Claim step unless the host chose "Claimen"
   skips = (k) => k==='claim' && this.state.settings.layout!=='claim';
@@ -1227,8 +1391,9 @@ class Component extends DCLogic {
   pickSrc = (id) => this.setState({ atkSrc:id, atk:1 });
   pickTgt = (id) => this.setState({ atkTgt:id, atk:2 });
   setDice = (n) => this.setState({ diceN:n });
-  rollAttack = () => this.setState({ atk:3 });
-  attackAgain = () => this.setState({ atk:2 });
+  rollAttack = () => this.setState({ atk:3, reroll:0 });
+  useReroll = () => this.setState({ reroll:1 });
+  attackAgain = () => this.setState({ atk:2, reroll:0 });
   atkNewFight = () => this.setState({ atk:0, atkSrc:null, atkTgt:null });
   toFortify = () => this.goKey('fortify');
   // conquest
@@ -1250,6 +1415,10 @@ class Component extends DCLogic {
   fortInc = () => this.setState(s=>({ fortN: Math.min(this.fortMax, s.fortN+1) }));
   fortDec = () => this.setState(s=>({ fortN: Math.max(1, s.fortN-1) }));
   confirmFortify = () => this.goKey('idle');
+  // role-effect showcases
+  setHome = (v) => this.setState({ homeHeld:v });
+  startSecondMove = () => this.setState({ fortMove:1 });
+  endFortifyDemo = () => this.goKey('idle');
   // elim/reconnect
   castVote = () => this.setState(s=>({ voted:!s.voted }));
   recSwitch = () => this.setState({ rec:1 });
@@ -1287,7 +1456,8 @@ class Component extends DCLogic {
       isJoin=key==='join', isOrder=key==='order', isClaim=key==='claim', isSetup=key==='setup', isIdle=key==='idle',
       isReinf=key==='reinf', isAttack=key==='attack', isConquest=key==='conquest', isDefend=key==='defend',
       isFortify=key==='fortify', isElim=key==='elim', isReconnect=key==='reconnect', isWinner=key==='winner',
-      isAttrition=key==='attrition', isAttritionWait=key==='attritionWait';
+      isAttrition=key==='attrition', isAttritionWait=key==='attritionWait',
+      isCardBonus=key==='cardBonus', isFortEnemy=key==='fortifyEnemy', isFortMoves=key==='fortifyMoves';
     const inGame = ['setup','idle','reinf','attack','conquest','fortify'].includes(key);
     const showHeader = inGame;
     const showTabs = inGame;
@@ -1452,8 +1622,26 @@ class Component extends DCLogic {
         border: selD?'var(--gold-400)':'var(--border)', bg: selD?'rgba(242,169,34,.14)':(dis?'rgba(255,255,255,.02)':'rgba(255,255,255,.04)'),
         numc: dis?'var(--fg3)':(selD?'var(--gold-300)':'var(--fg1)'), labelc: dis?'var(--fg3)':'var(--fg2)' }; });
     const diceHint = lang==='nl'?`Max ${maxDice} — je hebt ${srcArmies} legers in ${srcName} (1 blijft altijd staan).`:`Max ${maxDice} — you have ${srcArmies} armies in ${srcName} (1 always stays).`;
-    const resultDice=[6,5,2].slice(0,this.state.diceN).map((v,idx)=>({ pips:this.pips(v), anim:`phDice .8s cubic-bezier(.2,.8,.3,1) ${(idx*0.12).toFixed(2)}s both` }));
-    const atkResultLine = lang==='nl'?'Verdediger −2 · jij −0':'Defender −2 · you −0';
+    const rerollUsed = this.state.reroll===1;
+    const atkDiceBase = [6,4,2].slice(0,this.state.diceN);
+    const lostIdx = atkDiceBase.length-1;
+    const atkDiceShown = atkDiceBase.slice(); if(rerollUsed) atkDiceShown[lostIdx]=5;
+    const resultDice = atkDiceShown.map((v,idx)=>({ pips:this.pips(v),
+      ring: (!rerollUsed && idx===lostIdx) ? '#ff5257' : (rerollUsed && idx===lostIdx ? 'var(--pitch-400)' : 'transparent'),
+      anim:`phDice .8s cubic-bezier(.2,.8,.3,1) ${(idx*0.12).toFixed(2)}s both` }));
+    const atkResultLine = rerollUsed ? (lang==='nl'?'Verdediger −2 · jij −0':'Defender −2 · you −0') : (lang==='nl'?'Verdediger −1 · jij −1':'Defender −1 · you −1');
+    const reroll = {
+      avail: atkRolled && !rerollUsed, used: rerollUsed,
+      title: lang==='nl'?'Generaal · herworp':'General · reroll',
+      counter: lang==='nl'?'nog 1 herworp deze beurt':'1 reroll left this turn',
+      cta: lang==='nl'?'Herwerp verloren dobbelsteen':'Reroll the lost die',
+      usedLabel: lang==='nl'?'Herworp gebruikt deze beurt':'Reroll used this turn',
+      home: lang==='nl'?'Actief zolang je Scandinavië bezit':'Active while you hold Scandinavia',
+      resultColor: rerollUsed?'var(--pitch-300)':'var(--fg1)',
+      lostNote: lang==='nl'?'1 dobbelsteen verloren':'1 die lost',
+      wonNote: lang==='nl'?'Herworp geslaagd — 2 → 5':'Reroll won — 2 → 5',
+      use: this.useReroll,
+    };
 
     // ---------- conquest ----------
     this.conquestMin=this.state.diceN; this.conquestMax=srcArmies-1;
@@ -1486,6 +1674,72 @@ class Component extends DCLogic {
     this.fortMax=fortSrcArmies-1;
     const fortN=Math.max(1, Math.min(this.fortMax, this.state.fortN));
     const fortLeaveNote = lang==='nl'?`${fortSrcArmies-fortN} blijft in ${fortSrcName} (min. 1)`:`${fortSrcArmies-fortN} stays in ${fortSrcName} (min. 1)`;
+
+    // ---------- role-effect showcases ----------
+    const homeHeld=this.state.homeHeld;
+    const scCfg = {
+      cardBonus:    { sym:'✦', role: lang==='nl'?'Diplomaat':'Diplomat',  title: lang==='nl'?'Kaartenset inleveren':'Trade in a card set',    home: lang==='nl'?'Brazilië':'Brazil',           accent:'#e0a81c' },
+      fortifyEnemy: { sym:'⚑', role: lang==='nl'?'Smokkelaar':'Smuggler',  title: lang==='nl'?'Verplaatsen door vijandgebied':'Fortify through enemy', home: lang==='nl'?'Noord-Afrika':'North Africa', accent:'#a65fa0' },
+      fortifyMoves: { sym:'⚙', role: lang==='nl'?'Ingenieur':'Engineer',   title: lang==='nl'?'Twee keer verplaatsen':'Fortify twice',        home: lang==='nl'?'Congo':'Congo',               accent:'#6ea23c' },
+    };
+    const sc = scCfg[key] || scCfg.cardBonus;
+    const scAccent = sc.accent;
+    const scBanner = { sym:sc.sym, role:(lang==='nl'?'Roleffect · ':'Role effect · ')+sc.role, title:sc.title,
+      homeLine:(lang==='nl'?'Herkomstland · ':'Home country · ')+sc.home, accent:scAccent, soft:scAccent+'26', border:scAccent+'66' };
+    const home = {
+      heldBg: homeHeld?scAccent:'transparent', heldFg: homeHeld?'#04060b':'var(--fg3)',
+      lostBg: !homeHeld?'rgba(199,90,90,.18)':'transparent', lostFg: !homeHeld?'#f0a0a0':'var(--fg3)', lostBorder: !homeHeld?'#7a3b3b':'transparent',
+      setHeld:()=>this.setHome(true), setLost:()=>this.setHome(false),
+      heldLabel: lang==='nl'?'Herkomstland bezit':'Home held', lostLabel: lang==='nl'?'Herkomstland verloren':'Home lost' };
+
+    // card-trade bonus (Diplomaat)
+    const cbCards = [ {icon:'♟', type:lang==='nl'?'Infanterie':'Infantry'}, {icon:'♞', type:lang==='nl'?'Cavalerie':'Cavalry'}, {icon:'♜', type:lang==='nl'?'Artillerie':'Artillery'} ];
+    const cbBonus = homeHeld?2:0, cbTotal = 8+cbBonus;
+    const cardBonus = {
+      setLabel: lang==='nl'?'Ingeleverde set (3 verschillende)':'Set turned in (3 different)',
+      breakLabel: lang==='nl'?'Legers uit deze inleg':'Armies from this trade',
+      baseLabel: lang==='nl'?'Set basiswaarde':'Set base value', baseVal:'+8',
+      bonusLabel: (lang==='nl'?'Rol · Diplomaat':'Role · Diplomat')+' ('+sc.home+')',
+      bonusVal: homeHeld?'+2':'+0', bonusColor: homeHeld?'var(--pitch-300)':'var(--fg3)',
+      totalLabel: lang==='nl'?'Totaal':'Total', total:'+'+cbTotal, totalColor: homeHeld?'var(--gold-300)':'var(--fg1)',
+      note: homeHeld ? (lang==='nl'?'Je bezit Brazilië — de rol-bonus telt mee bovenop de basiswaarde.':'You hold Brazil — the role bonus stacks on the base value.') : (lang==='nl'?'Herkomstland verloren — geen rol-bonus, alleen de basiswaarde van de set.':'Home country lost — no role bonus, only the set base value.'),
+      noteColor: homeHeld?'var(--pitch-300)':'#f0a0a0',
+      cta: (lang==='nl'?'Inleveren: +':'Trade in: +')+cbTotal+(lang==='nl'?' legers':' armies') };
+
+    // fortify through enemy (Smokkelaar)
+    const feSrc = { name: lang==='nl'?'Noord-Afrika':'North Africa', armies:6 };
+    const feStepTitle = lang==='nl'?'Kies de bestemming':'Choose the destination';
+    const feFromLabel = (lang==='nl'?'Vanuit ':'From ')+feSrc.name+' · '+feSrc.armies+(lang==='nl'?' legers':' armies');
+    const feDests = [
+      {name:lang==='nl'?'West-Europa':'Western Europe', path:lang==='nl'?'via je eigen pad':'via your own path', special:false, enabled:true},
+      {name:lang==='nl'?'Egypte':'Egypt', path:lang==='nl'?'via je eigen pad':'via your own path', special:false, enabled:true},
+      {name:lang==='nl'?'Oost-Afrika':'East Africa', path:lang==='nl'?'via Congo (vijandelijk)':'via Congo (enemy)', special:true, enabled:homeHeld},
+    ].map(d=>({ name:d.name, path:d.path, special:d.special, enabled:d.enabled,
+      border: d.special ? (d.enabled?scAccent:'var(--border)') : 'var(--border)',
+      bg: d.special ? (d.enabled?scAccent+'22':'rgba(255,255,255,.02)') : 'rgba(255,255,255,.04)',
+      op: d.enabled?1:0.55, cursor: d.enabled?'pointer':'not-allowed',
+      icon: d.special?'⚑':'›', iconColor: d.special?(d.enabled?scAccent:'var(--fg3)'):'var(--fg3)',
+      showTag: d.special, tag: d.enabled ? (lang==='nl'?'Smokkelaar':'Smuggler') : (lang==='nl'?'Vereist herkomstland':'Needs home country'),
+      tagColor: d.enabled?scAccent:'#d07a7a', tagBg: d.enabled?scAccent+'22':'rgba(199,90,90,.14)' }));
+    const feHint = homeHeld ? (lang==='nl'?'Als Smokkelaar mag je een pad aanleggen dwars door één vijandelijk gebied.':'As the Smuggler you may route a path through one enemy territory.') : (lang==='nl'?'Zonder je herkomstland verval je naar normale verplaatsing — alleen via eigen gebieden.':'Without your home country you fall back to normal fortify — own territories only.');
+
+    // fortify twice (Ingenieur)
+    const fmMove=this.state.fortMove, fmTotal=homeHeld?2:1;
+    const fortMoves = {
+      total:fmTotal, canSecond:homeHeld, locked:!homeHeld, atFirst:fmMove===0, atSecond:fmMove===1,
+      step1Label:(lang==='nl'?'Verplaatsing 1 van ':'Move 1 of ')+fmTotal,
+      step2Label:(lang==='nl'?'Verplaatsing 2 van 2':'Move 2 of 2'),
+      firstDone:lang==='nl'?'4 legers · Congo → Oost-Afrika':'4 armies · Congo → East Africa',
+      doneTag:lang==='nl'?'voltooid':'done',
+      secondCta:lang==='nl'?'Tweede verplaatsing':'Second move',
+      secondSub:lang==='nl'?'Je mag nog één keer verplaatsen zonder de fase te verlaten.':'You may fortify once more without leaving the phase.',
+      lockedCta:lang==='nl'?'Tweede verplaatsing vergrendeld':'Second move locked',
+      lockedSub:lang==='nl'?'Vereist je herkomstland (Congo).':'Requires your home country (Congo).',
+      endCta:lang==='nl'?'Fase beëindigen':'End phase',
+      inProgress:lang==='nl'?'2e verplaatsing · Groot-Brittannië → Scandinavië':'2nd move · Great Britain → Scandinavia',
+      inProgressSub:lang==='nl'?'Kies bron, bestemming en aantal — daarna eindigt de fase.':'Pick source, destination and amount — then the phase ends.',
+      confirmCta:lang==='nl'?'Bevestig & fase beëindigen':'Confirm & end phase',
+      startSecond:this.startSecondMove, end:this.endFortifyDemo };
 
     // ---------- elim ----------
     const elimSub = lang==='nl'?'Al je legers zijn verslagen. Je blijft toeschouwer tot het spel eindigt.':'All your armies are defeated. You remain a spectator until the game ends.';
@@ -1579,6 +1833,8 @@ class Component extends DCLogic {
       stateNum:i+1, total:this.KEYS.length, stateName:t.states[i], dots,
       clock:'20:47', me, joinedCount:'6',
       isStart,isSettings,isWaiting,isJoin,isOrder,isClaim,isSetup,isIdle,isReinf,isAttack,isConquest,isDefend,isFortify,isElim,isReconnect,isWinner,isAttrition,isAttritionWait,
+      isCardBonus,isFortEnemy,isFortMoves, homeHeld, scBanner, home,
+      cardBonus, cbCards, feSrc, feStepTitle, feFromLabel, feDests, feHint, fortMoves,
       showHeader,showTabs, headerSub, timerLabel, timerText,
       timerShow: timerMode!=='none', timerNormal:timerMode==='normal', timerLow:timerMode==='low', timerPaused:timerMode==='paused',
       active,
@@ -1611,7 +1867,7 @@ class Component extends DCLogic {
       idleFeed: [ {pi:3,nl:'verstevigt Brazilië: +5 legers',en:'reinforces Brazil: +5 armies'}, {pi:0,nl:'valt Congo aan vanuit Egypte',en:'attacks Congo from Egypt'}, {pi:5,nl:'legt 3 kaarten in: +8 legers',en:'trades 3 cards: +8 armies'} ].map(f=>{ const cc=pc(f.pi); return {hex:cc.hex,on:cc.on,sym:cc.sym,cw:cc.cw,text:f[lang]}; }),
       tabCards,
       // attack
-      atkPickSrc,atkPickTgt,atkPickDice,atkRolled,atkSteps,atkSources,srcName,atkTargets,tgtName,diceOptions,diceHint,rollAttack:this.rollAttack,resultDice,atkResultLine, attackAgain:this.attackAgain, atkNewFight:this.atkNewFight, toFortify:this.toFortify,
+      atkPickSrc,atkPickTgt,atkPickDice,atkRolled,atkSteps,atkSources,srcName,atkTargets,tgtName,diceOptions,diceHint,rollAttack:this.rollAttack,resultDice,atkResultLine, attackAgain:this.attackAgain, atkNewFight:this.atkNewFight, toFortify:this.toFortify, reroll,
       // conquest
       moveN,moveMinNote,moveDec:this.moveDec,moveInc:this.moveInc,moveDecCursor,moveIncCursor,confirmConquest:this.confirmConquest,
       // defend

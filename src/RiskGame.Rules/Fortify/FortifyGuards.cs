@@ -1,5 +1,6 @@
 using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -61,12 +62,74 @@ public static class FortifyGuards
     }
 
     private static bool HasFortifyPath(
-        GameState state, string playerId, string fromTerritoryId, string toTerritoryId) =>
-        state.Map.Adjacency.HasPath(
-            fromTerritoryId,
-            toTerritoryId,
-            territoryId => state.Territory(territoryId).OwnerPlayerId == playerId,
-            BuildBlockedBorderPredicate(state));
+        GameState state, string playerId, string fromTerritoryId, string toTerritoryId)
+    {
+        var allowThroughEnemy = RoleEffects.Active<FortifyUpgradeEffect>(state, playerId)
+            is { ThroughEnemy: true };
+        var maxEnemyPasses = allowThroughEnemy ? 1 : 0;
+
+        return HasPathWithEnemyBudget(
+            state, playerId, fromTerritoryId, toTerritoryId, maxEnemyPasses, BuildBlockedBorderPredicate(state));
+    }
+
+    /// <summary>
+    /// BFS met een budget van maximaal <paramref name="maxEnemyPasses"/> niet-eigen
+    /// tussengebieden op het pad (FO §8: `FortifyUpgrade`/`throughEnemy`). Kan niet via de
+    /// generieke <see cref="AdjacencyGraph.HasPath"/>: die kent alleen "traversable ja/nee"
+    /// per gebied, geen budget dat per pad kan opraken, dus de bezoek-status hier is
+    /// (gebied, resterend budget) in plaats van alleen het gebied.
+    /// </summary>
+    private static bool HasPathWithEnemyBudget(
+        GameState state,
+        string playerId,
+        string from,
+        string to,
+        int maxEnemyPasses,
+        Func<Border, bool>? isBorderBlocked)
+    {
+        if (from == to)
+        {
+            return true;
+        }
+
+        var visited = new HashSet<(string TerritoryId, int BudgetUsed)>();
+        var start = (TerritoryId: from, BudgetUsed: 0);
+        visited.Add(start);
+
+        var queue = new Queue<(string TerritoryId, int BudgetUsed)>();
+        queue.Enqueue(start);
+
+        while (queue.Count > 0)
+        {
+            var (currentId, budgetUsed) = queue.Dequeue();
+
+            foreach (var border in state.Map.Adjacency.Borders(currentId))
+            {
+                if (isBorderBlocked?.Invoke(border) == true)
+                {
+                    continue;
+                }
+
+                var neighbourId = border.From == currentId ? border.To : border.From;
+                var isOwnTerritory = state.Territory(neighbourId).OwnerPlayerId == playerId;
+                var neighbourBudgetUsed = isOwnTerritory ? budgetUsed : budgetUsed + 1;
+
+                if (neighbourBudgetUsed > maxEnemyPasses || !visited.Add((neighbourId, neighbourBudgetUsed)))
+                {
+                    continue;
+                }
+
+                if (neighbourId == to && isOwnTerritory)
+                {
+                    return true;
+                }
+
+                queue.Enqueue((neighbourId, neighbourBudgetUsed));
+            }
+        }
+
+        return false;
+    }
 
     private static Func<Border, bool>? BuildBlockedBorderPredicate(GameState state)
     {

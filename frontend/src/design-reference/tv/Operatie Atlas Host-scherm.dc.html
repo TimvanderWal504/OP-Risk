@@ -307,6 +307,11 @@
                       </div>
                     </sc-for>
                   </div>
+                  <div style="display:flex;align-items:center;gap:10px;background:rgba(242,169,34,.14);border:1px solid var(--gold-700);border-radius:999px;padding:7px 16px;margin-top:2px;">
+                    <span style="font-size:18px;color:var(--gold-300);line-height:1;">{{ combatReroll.sym }}</span>
+                    <span style="font-family:var(--font-body);font-weight:700;font-size:16px;color:var(--fg2);">{{ combatReroll.label }}</span>
+                    <span style="font-family:var(--font-display);font-weight:900;font-size:16px;color:var(--gold-300);">{{ combatReroll.count }}</span>
+                  </div>
                 </div>
                 <span style="font-family:var(--font-display);font-weight:900;font-size:44px;color:var(--fg3);">{{ t.vs }}</span>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
@@ -356,9 +361,13 @@
                     <span style="font-family:var(--font-display);font-weight:800;font-size:23px;line-height:1;color:{{ p.namec }};text-decoration:{{ p.strike }};">{{ p.name }}</span>
                     <sc-if value="{{ p.isCurrent }}"><span style="font-family:var(--font-body);font-weight:800;font-size:11px;letter-spacing:.1em;color:#0a0e17;background:var(--gold-400);padding:3px 7px;border-radius:6px;">{{ t.nowTag }}</span></sc-if>
                   </div>
-                  <div style="display:flex;align-items:center;gap:7px;margin-top:5px;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:{{ p.boostc }};flex:none;"></span>
-                    <span style="font-family:var(--font-body);font-size:14px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.roleLine }}</span>
+                  <div style="display:flex;align-items:center;gap:7px;margin-top:6px;">
+                    <span style="display:flex;align-items:center;gap:5px;flex:none;padding:3px 8px 3px 6px;border-radius:8px;background:{{ p.effChipBg }};border:1px solid {{ p.effChipBorder }};">
+                      <span style="font-size:14px;line-height:1;color:{{ p.effSymColor }};">{{ p.roleSym }}</span>
+                      <span style="font-family:var(--font-body);font-weight:700;font-size:11.5px;letter-spacing:.01em;color:{{ p.effLabelColor }};white-space:nowrap;">{{ p.effShort }}</span>
+                    </span>
+                    <span style="font-family:var(--font-body);font-size:13px;color:{{ p.roleNameColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.roleName }}</span>
+                    <sc-if value="{{ p.effOff }}"><span style="flex:none;font-family:var(--font-body);font-weight:800;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#d07a7a;border:1px solid #7a3b3b;border-radius:5px;padding:2px 5px;">boost uit</span></sc-if>
                   </div>
                 </div>
                 <div style="display:flex;gap:14px;flex:none;">
@@ -577,12 +586,12 @@ class Component extends DCLogic {
   }
 
   get PLAYERS(){ return [
-    {cw:['Rood','Red'],     name:'Sanne', hex:'#c0392b', on:'#ffffff', sym:'▲', role:['President','President'], origin:['Oost-VS','Eastern US'],       boost:false, terr:7, army:18, mission:['Schakel de groene speler uit','Eliminate the green player'], met:true,  voted:true},
-    {cw:['Blauw','Blue'],   name:'Tomas', hex:'#215c9c', on:'#ffffff', sym:'●', role:['Generaal','General'],   origin:['Scandinavië','Scandinavia'],   boost:true,  terr:7, army:22, mission:['Verover heel Europa en Zuid-Amerika','Conquer all of Europe and South America'], met:false, voted:true},
-    {cw:['Groen','Green'],  name:'Iris',  hex:'#4f7a2e', on:'#ffffff', sym:'■', role:['Ingenieur','Engineer'], origin:['Congo','Congo'],               boost:true,  terr:6, army:17, mission:['Bezit 18 gebieden met elk ≥ 2 legers','Hold 18 territories with ≥ 2 armies each'], met:false, voted:false},
-    {cw:['Geel','Yellow'],  name:'Diego', hex:'#e0a81c', on:'#1a1206', sym:'★', role:['Diplomaat','Diplomat'], origin:['Brazilië','Brazil'],           boost:true,  terr:9, army:30, mission:['Verover Noord-Amerika en Oceanië','Conquer North America and Oceania'], met:false, voted:true},
-    {cw:['Paars','Purple'], name:'Noor',  hex:'#8e4585', on:'#ffffff', sym:'✚', role:['Smokkelaar','Smuggler'],origin:['Noord-Afrika','North Africa'], boost:true,  terr:6, army:19, mission:['Bezit 24 gebieden','Hold 24 territories'], met:false, voted:false},
-    {cw:['Cyaan','Cyan'],   name:'Vera',  hex:'#158f8a', on:'#ffffff', sym:'⬡', role:['Admiraal','Admiral'],   origin:['Oeral','Ural'],                boost:true,  terr:7, army:26, mission:['Verover heel Azië','Conquer all of Asia'], met:false, voted:true},
+    {cw:['Rood','Red'],     name:'Sanne', hex:'#c0392b', on:'#ffffff', sym:'▲', role:['President','President'], roleSym:'★', eff:['+1 leger / beurt','+1 army / turn'],           origin:['Oost-VS','Eastern US'],       boost:false, terr:7, army:18, mission:['Schakel de groene speler uit','Eliminate the green player'], met:true,  voted:true},
+    {cw:['Blauw','Blue'],   name:'Tomas', hex:'#215c9c', on:'#ffffff', sym:'●', role:['Generaal','General'],   roleSym:'⚔', eff:['herworp aanval','reroll attack'],                origin:['Scandinavië','Scandinavia'],   boost:true,  terr:7, army:22, mission:['Verover heel Europa en Zuid-Amerika','Conquer all of Europe and South America'], met:false, voted:true},
+    {cw:['Groen','Green'],  name:'Iris',  hex:'#4f7a2e', on:'#ffffff', sym:'■', role:['Ingenieur','Engineer'], roleSym:'⚙', eff:['2× verplaatsen','fortify ×2'],                    origin:['Congo','Congo'],               boost:true,  terr:6, army:17, mission:['Bezit 18 gebieden met elk ≥ 2 legers','Hold 18 territories with ≥ 2 armies each'], met:false, voted:false},
+    {cw:['Geel','Yellow'],  name:'Diego', hex:'#e0a81c', on:'#1a1206', sym:'★', role:['Diplomaat','Diplomat'], roleSym:'✦', eff:['+2 bij kaarten','+2 on trade'],                    origin:['Brazilië','Brazil'],           boost:true,  terr:9, army:30, mission:['Verover Noord-Amerika en Oceanië','Conquer North America and Oceania'], met:false, voted:true},
+    {cw:['Paars','Purple'], name:'Noor',  hex:'#8e4585', on:'#ffffff', sym:'✚', role:['Smokkelaar','Smuggler'],roleSym:'⚑', eff:['pad door vijand','path thru enemy'],               origin:['Noord-Afrika','North Africa'], boost:true,  terr:6, army:19, mission:['Bezit 24 gebieden','Hold 24 territories'], met:false, voted:false},
+    {cw:['Cyaan','Cyan'],   name:'Vera',  hex:'#158f8a', on:'#ffffff', sym:'⬡', role:['Admiraal','Admiral'],   roleSym:'⚓', eff:['herworp verdediging','reroll defence'],           origin:['Oeral','Ural'],                boost:true,  terr:7, army:26, mission:['Verover heel Azië','Conquer all of Asia'], met:false, voted:true},
   ]; }
 
   get ORIGINS(){ return {'eastern-us':0,'scandinavia':1,'congo':2,'brazil':3,'north-africa':4,'ural':5}; }
@@ -767,6 +776,13 @@ class Component extends DCLogic {
       if (i>=8 && idx===elimByIdx){ terrN=p.terr+6; armyN=p.army+9; }
       if (showAttrition){ const hit=this.ATTR_HITS.filter((h,k)=>attrDone>k).reduce((sum,h)=>{ const tr=this.TERR.find(x=>x.id===h.id); return (tr && tr.o===idx) ? sum+Math.min(h.dec, tr.a-1) : sum; },0); if(hit>0) armyN=p.army-hit; }
       return { hex:p.hex, on:p.on, sym:p.sym, name:p.name, cw:p.cw[L], roleLine, boostc,
+        roleSym:p.roleSym, roleName:p.role[L], effShort:p.eff[L], effActive:p.boost,
+        effChipBg: p.boost ? 'rgba(242,169,34,.14)' : 'rgba(255,255,255,.03)',
+        effChipBorder: p.boost ? 'var(--gold-700)' : 'var(--border)',
+        effSymColor: eliminated ? 'var(--fg3)' : (p.boost ? 'var(--gold-300)' : 'var(--fg3)'),
+        effLabelColor: eliminated ? 'var(--fg3)' : (p.boost ? 'var(--fg2)' : 'var(--fg3)'),
+        roleNameColor: eliminated ? 'var(--fg3)' : (p.boost ? 'var(--fg2)' : 'var(--fg3)'),
+        effOff: !p.boost && !eliminated,
         terr:terrN, army:armyN, isCurrent, eliminated, autoPass,
         rowbg: isCurrent ? 'rgba(242,169,34,.10)' : 'rgba(255,255,255,.03)',
         rowborder: isCurrent ? 'var(--gold-600)' : 'var(--border)',
@@ -887,6 +903,7 @@ class Component extends DCLogic {
       orderDice, orderList,
       // combat
       atk, def, atkDice, defDice, combatResult, moveIn,
+      combatReroll: { sym:'⚔', label: lang==='nl'?'Generaal · herworp':'General · reroll', count: lang==='nl'?'nog 1 dit gevecht':'1 left this battle' },
       // event
       eventTitle, eventDesc, eventAfter, activeTitle, activeDuration,
       // elim

@@ -1,4 +1,5 @@
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Rules.Reinforcement;
@@ -26,7 +27,9 @@ public static class CardTradeCalculator
             .Select(card => new TerritoryBonus(card.TerritoryId!, state.Map.SetRules.OwnedTerritoryBonus))
             .ToList();
 
-        return new CardTradeOutcome(state.Deck.NextTradeValue, ownedTerritoryBonuses);
+        var roleBonus = RoleEffects.Active<CardTradeBonusEffect>(state, playerId)?.Amount ?? 0;
+
+        return new CardTradeOutcome(state.Deck.NextTradeValue + roleBonus, ownedTerritoryBonuses);
     }
 
     /// <summary>De volgende inlegwaarde na deze inleg: 4, 6, 8, 10, 12, 15, daarna +5.</summary>

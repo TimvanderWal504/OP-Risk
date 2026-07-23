@@ -1,6 +1,5 @@
 using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
-using RiskGame.Rules.Validation;
 
 namespace RiskGame.Rules.Reinforcement;
 
@@ -31,29 +30,6 @@ public static class ReinforcementCalculator
             .Where(continent => state.OwnsEntireContinent(playerId, continent.Id))
             .Sum(continent => continent.Bonus);
 
-    private static int RoleBonus(GameState state, string playerId)
-    {
-        if (!state.Settings.RolesEnabled)
-        {
-            return 0;
-        }
-
-        var player = state.Player(playerId);
-
-        if (player.RoleId is null)
-        {
-            return 0;
-        }
-
-        var role = state.Map.Roles.FirstOrDefault(role => role.Id == player.RoleId);
-
-        if (role is not { Effect: ExtraReinforcementEffect effect })
-        {
-            return 0;
-        }
-
-        return Guards.OwnsTerritory(state, playerId, role.OriginTerritory).IsSuccess
-            ? effect.Amount
-            : 0;
-    }
+    private static int RoleBonus(GameState state, string playerId) =>
+        RoleEffects.Active<ExtraReinforcementEffect>(state, playerId)?.Amount ?? 0;
 }
