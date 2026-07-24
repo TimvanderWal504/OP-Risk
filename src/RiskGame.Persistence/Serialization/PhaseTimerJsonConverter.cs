@@ -20,7 +20,8 @@ public sealed class PhaseTimerJsonConverter : JsonConverter<PhaseTimer>
 
         return new PhaseTimer(
             TimeSpan.Parse(root.GetProperty("remaining").GetString()!),
-            root.GetProperty("isPaused").GetBoolean());
+            root.GetProperty("isPaused").GetBoolean(),
+            root.GetProperty("lastUpdatedUtc").GetDateTimeOffset());
     }
 
     public override void Write(Utf8JsonWriter writer, PhaseTimer value, JsonSerializerOptions options)
@@ -28,6 +29,7 @@ public sealed class PhaseTimerJsonConverter : JsonConverter<PhaseTimer>
         writer.WriteStartObject();
         writer.WriteString("remaining", value.Remaining.ToString());
         writer.WriteBoolean("isPaused", value.IsPaused);
+        writer.WriteString("lastUpdatedUtc", value.LastUpdatedUtc);
         writer.WriteEndObject();
     }
 }
