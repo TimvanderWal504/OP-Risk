@@ -74,6 +74,43 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store)
         return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
     }
 
+    /// <summary>
+    /// Forceert de overstap naar Verplaatsen zodra de gedeelde Versterken/Aanvallen-timer
+    /// afloopt (FO §5.4) — vanuit zowel Versterken als Aanvallen rechtstreeks naar
+    /// Verplaatsen, in tegenstelling tot <see cref="EndPhaseAsync"/> dat via Versterken
+    /// altijd eerst naar Aanvallen stapt. Geen speler-commando: wordt alleen aangeroepen
+    /// door <see cref="TurnTimerBackgroundService"/>, dus geen <c>IsActivePlayer</c>-guard
+    /// nodig — <paramref name="playerId"/> is al de bekende actieve speler.
+    /// </summary>
+    public async Task<Result<GameStateDto>> ForceAdvanceToFortifyAsync(string gameId, string playerId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+        }
+
+        if (state.TurnState is not { ActivePlayerId: var activePlayerId } turnState
+            || activePlayerId != playerId
+            || turnState.TurnPhase is not (TurnPhase.Reinforce or TurnPhase.Attack)
+            || turnState.PendingCombat is not null)
+        {
+            return Result<GameStateDto>.Failure(
+                $"Kan de Versterken/Aanvallen-timer niet forceren voor speler '{playerId}': " +
+                "de beurt staat niet meer in de verwachte fase.");
+        }
+
+        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, TurnPhase.Fortify));
+
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+    }
+
     public async Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();

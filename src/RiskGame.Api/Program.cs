@@ -4,6 +4,7 @@ using RiskGame.Api;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Endpoints;
 using RiskGame.Api.Hubs;
+using RiskGame.Api.Services;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Store;
 using RiskGame.Rules.Abstractions;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<SetupCommandHandler>();
 builder.Services.AddScoped<ReinforceCommandHandler>();
 builder.Services.AddScoped<AttackCommandHandler>();
 builder.Services.AddScoped<TurnFlowCommandHandler>();
+builder.Services.AddHostedService<TurnTimerBackgroundService>();
 builder.Services.AddSignalR(options => options.AddFilter<HubExceptionLoggingFilter>());
 
 var app = builder.Build();
