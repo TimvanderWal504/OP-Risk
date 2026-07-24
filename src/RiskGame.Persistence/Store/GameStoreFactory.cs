@@ -27,6 +27,14 @@ public static class GameStoreFactory
             options.Connection(connectionString);
             options.Events.StreamIdentity = StreamIdentity.AsString;
             options.Schema.For<GameState>().Identity(state => state.GameId);
+
+            // Server-side filteren op Phase (TurnTimerBackgroundService) zonder de JSONB te
+            // raken: GameState heeft een volledig handgeschreven GameStateJsonConverter
+            // (RiskGame.Persistence.Serialization), waardoor Martens LINQ->SQL-vertaling de
+            // JSONB-vorm van "phase" niet betrouwbaar kan matchen. Een duplicated column
+            // omzeilt dat door Phase apart, doorzoekbaar op te slaan.
+            options.Schema.For<GameState>()
+                .Duplicate(state => state.Phase, configure: index => index.Name = "idx_gamestate_phase");
             options.Projections.Add(new GameProjection(mapSource), ProjectionLifecycle.Inline);
             options.UseSystemTextJsonForSerialization(
                 configure: json =>
