@@ -321,7 +321,14 @@
                   </button>
                 </sc-for>
               </div>
-              <div style="flex:none;padding-top:14px;"><button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmRole }}</button></div>
+              <div style="flex:none;padding-top:14px;">
+                <sc-if value="{{ roleSelected }}">
+                  <button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">✓ {{ t.confirmRole }}</button>
+                </sc-if>
+                <sc-if value="{{ roleSelectedNot }}">
+                  <div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px dashed var(--border-strong);border-radius:16px;color:var(--fg3);font-family:var(--font-body);font-size:14px;">{{ t.pickRoleFirst }}</div>
+                </sc-if>
+              </div>
             </sc-if>
             <!-- waiting -->
             <sc-if value="{{ joinWait }}">
@@ -573,6 +580,10 @@
               <div style="text-align:center;font-family:var(--font-body);font-size:11.5px;color:var(--fg3);margin-top:8px;">{{ t.rollIsConfirm }}</div>
             </sc-if>
 
+            <sc-if value="{{ atkPreRoll }}">
+              <button onClick="{{ endAttackPhase }}" style="flex:none;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.endAtkPhase }} ›</button>
+            </sc-if>
+
             <sc-if value="{{ atkRolled }}">
               <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;">
                 <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--fg3);">{{ t.resultShort }}</span>
@@ -687,6 +698,9 @@
                 <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ fortLeaveNote }}</div>
               </div>
               <button onClick="{{ confirmFortify }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmMove }}</button>
+            </sc-if>
+            <sc-if value="{{ fortPreConfirm }}">
+              <button onClick="{{ endFortifyPhase }}" style="flex:none;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.endFortPhase }} ›</button>
             </sc-if>
           </div>
           </sc-if>
@@ -1154,7 +1168,7 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       i: 0, lang: (props && props.language) || 'nl',
-      join: 0, colorPick: 1, rolePick: 1, tab: null,
+      join: 0, colorPick: 1, rolePick: null, tab: null,
       orderRolled: false,
       claimSel: null, claimedIds: {}, claimCounts: [6,5,6,6,5,5], claimMine: true,
       setupPlaced: {}, setupPool: 5,
@@ -1284,7 +1298,7 @@ class Component extends DCLogic {
       nowPlaying:'Aan de beurt', recent:'Wat er gebeurt', whileYouWait:'Terwijl je wacht', turnComesToYou:'Je krijgt vanzelf bericht als jij aan zet bent.',
       reinfKicker:'Versterken', reinfDistribute:'Verdeel je legers', toPlace:'te verdelen', reinfBuildup:'Opbouw', cardsMandatory:'Kaarten inleggen (verplicht)', escalate:'Escalerende waarde',
       atkFrom:'Aanvallen vanuit', atkFromSub:'Kies een van je gebieden dat kan aanvallen.', atkTo:'Kies je doelwit', atkFromLabel:'Vanuit', armiesWord:'legers', targetsWord:'doelen',
-      atkDiceTitle:'Hoeveel dobbelstenen?', rollIsConfirm:'"Gooi" bevestigt tegelijk de aanval.', resultShort:'Uitkomst', attackAgain:'Nog een keer aanvallen', otherFight:'Ander gevecht', toFortify:'Naar Verplaatsen',
+      atkDiceTitle:'Hoeveel dobbelstenen?', rollIsConfirm:'"Gooi" bevestigt tegelijk de aanval.', resultShort:'Uitkomst', attackAgain:'Nog een keer aanvallen', otherFight:'Ander gevecht', endAtkPhase:'Aanvalsfase beëindigen', endFortPhase:'Verplaatsfase beëindigen', pickRoleFirst:'Kies eerst een rol hierboven', toFortify:'Naar Verplaatsen',
       captured:'Veroverd!', moveHowMany:'Hoeveel legers verplaats je mee?',
       underAttack:'Je wordt aangevallen', defendChoose:'Verdedig dit gebied.', noTimerDefend:'Geen timer — neem je tijd', defendWith1:'dobbelsteen', defendWith2:'dobbelstenen', defendTip:'2 dobbelstenen = meer verdediging, maar je zet 2 legers op het spel.', backToWait:'Terug naar het spel',
       fortFrom:'Verplaatsen vanuit', fortFromSub:'Kies een gebied met legers over.', fortTo:'Kies de bestemming', fortPathSub:'Bereikbaar via een aaneengesloten pad van je eigen gebieden.', fortCount:'Hoeveel legers?', confirmMove:'Bevestig verplaatsing',
@@ -1322,7 +1336,7 @@ class Component extends DCLogic {
       nowPlaying:'Now playing', recent:"What's happening", whileYouWait:'While you wait', turnComesToYou:"You'll be notified when it's your move.",
       reinfKicker:'Reinforce', reinfDistribute:'Distribute your armies', toPlace:'to place', reinfBuildup:'Build-up', cardsMandatory:'Trade cards (required)', escalate:'Escalating value',
       atkFrom:'Attack from', atkFromSub:'Pick one of your territories that can attack.', atkTo:'Choose your target', atkFromLabel:'From', armiesWord:'armies', targetsWord:'targets',
-      atkDiceTitle:'How many dice?', rollIsConfirm:'"Roll" also confirms the attack.', resultShort:'Result', attackAgain:'Attack again', otherFight:'Other fight', toFortify:'To Fortify',
+      atkDiceTitle:'How many dice?', rollIsConfirm:'"Roll" also confirms the attack.', resultShort:'Result', attackAgain:'Attack again', otherFight:'Other fight', endAtkPhase:'End attack phase', endFortPhase:'End fortify phase', pickRoleFirst:'Pick a role above first', toFortify:'To Fortify',
       captured:'Captured!', moveHowMany:'How many armies do you move in?',
       underAttack:'You are under attack', defendChoose:'Defend this territory.', noTimerDefend:'No timer — take your time', defendWith1:'die', defendWith2:'dice', defendTip:'2 dice = stronger defence, but 2 armies at risk.', backToWait:'Back to the game',
       fortFrom:'Fortify from', fortFromSub:'Pick a territory with spare armies.', fortTo:'Choose the destination', fortPathSub:'Reachable via a connected path of your own territories.', fortCount:'How many armies?', confirmMove:'Confirm move',
@@ -1396,6 +1410,8 @@ class Component extends DCLogic {
   attackAgain = () => this.setState({ atk:2, reroll:0 });
   atkNewFight = () => this.setState({ atk:0, atkSrc:null, atkTgt:null });
   toFortify = () => this.goKey('fortify');
+  endAttackPhase = () => this.goKey('fortify');
+  endFortifyPhase = () => this.goKey('idle');
   // conquest
   moveInc = () => this.setState(s=>({ moveN: Math.min(this.conquestMax, s.moveN+1) }));
   moveDec = () => this.setState(s=>({ moveN: Math.max(this.conquestMin, s.moveN-1) }));
@@ -1559,7 +1575,9 @@ class Component extends DCLogic {
         bg: sel?'rgba(33,92,15,.16)':(taken?'rgba(255,255,255,.02)':'rgba(255,255,255,.04)'),
         op: taken?0.42:1, cursor: taken?'not-allowed':'pointer',
         pick: taken?(()=>{}):(()=>this.pickRole(idx)) }; });
-    const mySelRole=(roleChoose && !roleTakenSet[this.state.rolePick]) ? R[this.state.rolePick] : null;
+    const mySelRole=(roleChoose && !roleTakenSet[this.state.rolePick] && this.state.rolePick!=null && this.state.rolePick!==-1) ? R[this.state.rolePick] : null;
+    const roleSelected=joinRole && !!mySelRole;
+    const roleSelectedNot=joinRole && !mySelRole;
     const myRoleLine=mySelRole?(mySelRole.name[L]+' · '+mySelRole.origin[L]):null;
     const colorChips = C.map((c,idx)=>{ const taken=!!takenSet[idx]; const sel=this.state.colorPick===idx&&!taken;
       return { label:c.cw[L], hex:c.hex, on:c.on, sym:c.sym, taken, sel,
@@ -1605,6 +1623,7 @@ class Component extends DCLogic {
     // ---------- attack ----------
     const atk=this.state.atk;
     const atkPickSrc=isAttack&&atk===0, atkPickTgt=isAttack&&atk===1, atkPickDice=isAttack&&atk===2, atkRolled=isAttack&&atk>=3;
+    const atkPreRoll=isAttack&&atk<3;
     const atkSteps=[t.atkFrom, t.atkTo, t.atkDiceTitle.replace('?',''), t.roll].map((label,k)=>({ label, c: k<=atk?'var(--gold-400)':'var(--border-strong)', tc: k<=atk?'var(--gold-300)':'var(--fg3)' }));
     const attackSourcesData=[ {id:'scandinavie',a:5,tg:3}, {id:'westeuropa',a:3,tg:1}, {id:'brazilie',a:6,tg:2} ];
     const atkSources = attackSourcesData.map(s=>({ name:tn(s.id), armies:s.a, targets:s.tg, pick:()=>this.pickSrc(s.id) }));
@@ -1660,6 +1679,7 @@ class Component extends DCLogic {
     // ---------- fortify ----------
     const fort=this.state.fort;
     const fortPickSrc=isFortify&&fort===0, fortPickDest=isFortify&&fort===1, fortPickN=isFortify&&fort===2;
+    const fortPreConfirm=isFortify&&fort<2;
     const fortSteps=[t.fortFrom, t.fortTo, t.fortCount].map((label,k)=>({ label, c: k<=fort?'var(--pitch-500)':'var(--border-strong)', tc: k<=fort?'var(--pitch-300)':'var(--fg3)' }));
     const fortSrcData=[ {id:'grootbrittannie',a:4}, {id:'scandinavie',a:5}, {id:'brazilie',a:6} ];
     const fortSources=fortSrcData.map(s=>({ name:tn(s.id), armies:s.a, pick:()=>this.pickFortSrc(s.id) }));
@@ -1853,7 +1873,7 @@ class Component extends DCLogic {
       // manage
       openManage:this.openManage, closeManage:this.closeManage, manageOpen:this.state.manageOpen, managePlayers,
       // join
-      joinName,joinColor,joinRole,joinWait,joinSteps,nameValue,colorChips,roleChips,myRoleLine, joinNext:this.joinNext,
+      joinName,joinColor,joinRole,joinWait,joinSteps,nameValue,colorChips,roleChips,myRoleLine,roleSelected,roleSelectedNot, joinNext:this.joinNext,
       // order
       orderRolled,orderIdle,orderPips, rollOrder:this.rollOrder,
       // claim
@@ -1867,13 +1887,13 @@ class Component extends DCLogic {
       idleFeed: [ {pi:3,nl:'verstevigt Brazilië: +5 legers',en:'reinforces Brazil: +5 armies'}, {pi:0,nl:'valt Congo aan vanuit Egypte',en:'attacks Congo from Egypt'}, {pi:5,nl:'legt 3 kaarten in: +8 legers',en:'trades 3 cards: +8 armies'} ].map(f=>{ const cc=pc(f.pi); return {hex:cc.hex,on:cc.on,sym:cc.sym,cw:cc.cw,text:f[lang]}; }),
       tabCards,
       // attack
-      atkPickSrc,atkPickTgt,atkPickDice,atkRolled,atkSteps,atkSources,srcName,atkTargets,tgtName,diceOptions,diceHint,rollAttack:this.rollAttack,resultDice,atkResultLine, attackAgain:this.attackAgain, atkNewFight:this.atkNewFight, toFortify:this.toFortify, reroll,
+      atkPickSrc,atkPickTgt,atkPickDice,atkRolled,atkPreRoll,atkSteps,atkSources,srcName,atkTargets,tgtName,diceOptions,diceHint,rollAttack:this.rollAttack,resultDice,atkResultLine, attackAgain:this.attackAgain, atkNewFight:this.atkNewFight, toFortify:this.toFortify, endAttackPhase:this.endAttackPhase, reroll,
       // conquest
       moveN,moveMinNote,moveDec:this.moveDec,moveInc:this.moveInc,moveDecCursor,moveIncCursor,confirmConquest:this.confirmConquest,
       // defend
       defendIdle,defendDone,attacker,defendLine,defendDice,defendResult,defendOne:this.defendOne,defendTwo:this.defendTwo,
       // fortify
-      fortPickSrc,fortPickDest,fortPickN,fortSteps,fortSources,fortDests,fortSrcName,fortDestName,fortN,fortLeaveNote,fortDec:this.fortDec,fortInc:this.fortInc,confirmFortify:this.confirmFortify,
+      fortPickSrc,fortPickDest,fortPickN,fortPreConfirm,fortSteps,fortSources,fortDests,fortSrcName,fortDestName,fortN,fortLeaveNote,fortDec:this.fortDec,fortInc:this.fortInc,confirmFortify:this.confirmFortify,endFortifyPhase:this.endFortifyPhase,
       // attrition
       attrEffect, attrNeed, attrSkip, attrChoose, attrWho, attrLeft, attrLeftColor, attrReady, attrNotReady, attrRows, attrRemainLabel, attrDemoLabel,
       advanceAttr:this.advanceAttr,
