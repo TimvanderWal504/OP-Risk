@@ -1,4 +1,8 @@
+/* Moet als eerste @import staan (CSS-spec) — colors_and_type.css bevat 'm ook, maar op
+   een positie die na Tailwind's output valt en dus genegeerd zou worden. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
+@import "./design-reference/shared/ds/colors_and_type.css";
 @import "./design-reference/shared/ds/twc-theme.css";
 
 html,

@@ -31,9 +31,9 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
               key={player.id}
               className="flex items-center gap-4 rounded-card border border-border bg-white/3 p-4"
             >
-              <PlayerAvatar colorHex={color?.hex} isHost={player.isHost} />
+              <PlayerAvatar colorHex={color?.hex} colorSymbol={color?.symbol} isHost={player.isHost} />
               <div className="min-w-0">
-                <div className="truncate font-display text-h3 font-bold">{player.name}</div>
+                <div className="truncate font-display text-h2 font-bold">{player.name}</div>
                 <div className="truncate text-sm text-fg-muted">
                   {color?.name ?? 'Nog geen kleur'}
                   {role ? ` · ${role.name}` : ''}

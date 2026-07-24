@@ -47,7 +47,7 @@ public static class GameStateDtoMapper
 
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
-            colors, roles, ToDto(state.Settings));
+            colors, roles, ToDto(state.Settings), state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null);
     }
 
     private static GameSettingsDto ToDto(GameSettings settings) => new(

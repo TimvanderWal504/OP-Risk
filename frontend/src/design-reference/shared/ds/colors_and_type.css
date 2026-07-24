@@ -90,6 +90,20 @@
 
   --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
   --podium-gold:#d4a017; --podium-silver:#9aa7b8; --podium-bronze:#b06b2c;
+
+  /* ===========================================================================
+     PLAYER COLORS — Operatie Atlas seats (7 max)
+     Each seat: --player-N (fill/swatch) + --player-N-on (symbol/text on fill).
+     Symbols (colorblind-safe) are documented, not CSS: ▲ ● ■ ★ ✚ ⬡ ◆
+     Single source of truth — mirrored by COLORS[] in both DC files.
+     =========================================================================== */
+  --player-red:#c0392b;    --player-red-on:#ffffff;    /* ▲ Rood   */
+  --player-blue:#215c9c;   --player-blue-on:#ffffff;   /* ● Blauw  */
+  --player-green:#4f7a2e;  --player-green-on:#ffffff;  /* ■ Groen  */
+  --player-yellow:#e0a81c; --player-yellow-on:#1a1206; /* ★ Geel   */
+  --player-purple:#8e4585; --player-purple-on:#ffffff; /* ✚ Paars  */
+  --player-cyan:#158f8a;   --player-cyan-on:#ffffff;   /* ⬡ Cyaan  */
+  --player-orange:#d9822b; --player-orange-on:#1a1206; /* ◆ Oranje */
 }
 
 /* ===========================================================================

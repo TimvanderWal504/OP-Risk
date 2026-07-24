@@ -6,15 +6,18 @@ import { TvPage } from './routes/tv/TvPage'
 import { PhonePage } from './routes/phone/PhonePage'
 import { HomePage } from './routes/phone/HomePage'
 import './index.css'
+import { GameHubProvider } from './hooks/useSignalR'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/tv/:gameId" element={<TvPage />} />
-        <Route path="/play/:gameId" element={<PhonePage />} />
-      </Routes>
+      <GameHubProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/tv/:gameId" element={<TvPage />} />
+          <Route path="/play/:gameId" element={<PhonePage />} />
+        </Routes>
+      </GameHubProvider>
     </BrowserRouter>
   </StrictMode>,
 )

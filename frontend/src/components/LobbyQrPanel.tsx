@@ -36,7 +36,7 @@ export function LobbyQrPanel({ gameId, origin = window.location.origin }: LobbyQ
       <div
         role="img"
         aria-label={`QR-code om te joinen op ${joinUrl}`}
-        className="w-64 rounded-card bg-white p-4 [&_svg]:h-full [&_svg]:w-full"
+        className="w-64 rounded-card bg-white p-4 shadow-[0_0_0_6px_rgba(132,173,40,0.25)] [&_svg]:h-full [&_svg]:w-full"
         dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
       />
       <p className="font-display text-h2 font-bold">Scan om te joinen</p>

@@ -71,8 +71,11 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var dto = GameStateDtoMapper.ToDto(updated!) with
+        {
+            OrderRollState = new OrderRollStateDto(updatedProgress.StillToRoll),
+        };
 
-        return Result<OrderRollResult>.Success(
-            new OrderRollResult(die1, die2, GameStateDtoMapper.ToDto(updated!)));
+        return Result<OrderRollResult>.Success(new OrderRollResult(die1, die2, dto));
     }
 }

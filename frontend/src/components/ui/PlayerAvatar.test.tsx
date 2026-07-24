@@ -12,4 +12,15 @@ describe('PlayerAvatar', () => {
     render(<PlayerAvatar colorHex="#215C9C" isHost={false} />)
     expect(screen.queryByText('★')).not.toBeInTheDocument()
   })
+
+  it('toont het kleursymbool voor een niet-host', () => {
+    render(<PlayerAvatar colorHex="#215C9C" colorSymbol="square" isHost={false} />)
+    expect(screen.getByText('■')).toBeInTheDocument()
+  })
+
+  it('toont de ster in plaats van het kleursymbool voor een host', () => {
+    render(<PlayerAvatar colorHex="#215C9C" colorSymbol="square" isHost />)
+    expect(screen.getByText('★')).toBeInTheDocument()
+    expect(screen.queryByText('■')).not.toBeInTheDocument()
+  })
 })

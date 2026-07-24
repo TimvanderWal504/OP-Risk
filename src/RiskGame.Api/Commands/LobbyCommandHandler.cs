@@ -156,8 +156,17 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var dto = GameStateDtoMapper.ToDto(updated!);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        if (dto.Phase == GamePhaseDto.OrderRoll)
+        {
+            dto = dto with
+            {
+                OrderRollState = new OrderRollStateDto(updated!.Players.Select(player => player.Id).ToArray()),
+            };
+        }
+
+        return Result<GameStateDto>.Success(dto);
     }
 
     public async Task<Result<GameStateDto>> SelectRoleAsync(string gameId, string playerId, string roleId)

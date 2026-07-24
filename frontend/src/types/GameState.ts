@@ -57,6 +57,11 @@ export interface TurnStateDto {
   pendingCombat: PendingCombatDto | null
 }
 
+/** Spiegelt RiskGame.Api.Dtos.OrderRollStateDto — wie er nog mag gooien voor de volgorde. */
+export interface OrderRollStateDto {
+  playersStillToRoll: string[]
+}
+
 export interface GameStateDto {
   gameId: string
   phase: GamePhaseDto
@@ -68,4 +73,6 @@ export interface GameStateDto {
   colors: PlayerColorDto[]
   roles: RoleSummaryDto[]
   settings: GameSettingsDto
+  orderRollState: OrderRollStateDto | null,
+  stateVersion: number
 }

@@ -69,8 +69,26 @@
   /* Champion / podium accents */
   --gold:   #d4a017;
   --silver: #9aa7b8;
-  --bronze: #b06b2c;
+  --bronze: #b06b2c;  
+  
+  /* ===========================================================================
+     PLAYER COLORS — Operatie Atlas seats (7 max)
+     Each seat: --player-N (fill/swatch) + --player-N-on (symbol/text on fill).
+     Symbols (colorblind-safe) are documented, not CSS: ▲ ● ■ ★ ✚ ⬡ ◆
+     Single source of truth — mirrored by COLORS[] in both DC files.
+     =========================================================================== */
+  --player-red:#c0392b;    --player-red-on:#ffffff;    /* ▲ Rood   */
+  --player-blue:#215c9c;   --player-blue-on:#ffffff;   /* ● Blauw  */
+  --player-green:#4f7a2e;  --player-green-on:#ffffff;  /* ■ Groen  */
+  --player-yellow:#e0a81c; --player-yellow-on:#1a1206; /* ★ Geel   */
+  --player-purple:#8e4585; --player-purple-on:#ffffff; /* ✚ Paars  */
+  --player-cyan:#158f8a;   --player-cyan-on:#ffffff;   /* ⬡ Cyaan  */
+  --player-orange:#d9822b; --player-orange-on:#1a1206; /* ◆ Oranje */
 }
+
+/* ===========================================================================
+   SEMANTIC — dark mode (premium broadcast ink)
+   =========================================================================== */
 
 /* Dark — premium broadcast ink (cool, slightly blue) */
 @media (prefers-color-scheme: dark) {

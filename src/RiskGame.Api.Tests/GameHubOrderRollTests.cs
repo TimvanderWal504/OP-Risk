@@ -148,12 +148,57 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
         Assert.Equal(4, aliceRoll.Die2);
         Assert.Equal(GamePhaseDto.OrderRoll, aliceRoll.State.Phase);
         Assert.Empty(aliceRoll.State.TurnOrder);
+        Assert.Equal([bobId], aliceRoll.State.OrderRollState?.PlayersStillToRoll);
 
         var bobRoll = await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, bobId);
         Assert.Equal(3, bobRoll.Die1);
         Assert.Equal(2, bobRoll.Die2);
         Assert.Equal(GamePhaseDto.Claiming, bobRoll.State.Phase);
         Assert.Equal([aliceId, bobId], bobRoll.State.TurnOrder);
+        Assert.Empty(bobRoll.State.OrderRollState?.PlayersStillToRoll ?? []);
+    }
+
+    [Fact]
+    public async Task StartGame_GaatNaarOrderRoll_IedereenMagInRonde1Gooien()
+    {
+        var gameId = await CreateGameAsync(_client);
+        await using var connection = await ConnectAsync(_factory, _client);
+
+        var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
+        var bobId = await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
+
+        var state = await connection.InvokeAsync<GameStateDto>("StartGame", gameId, aliceId);
+
+        Assert.Equal([aliceId, bobId], state.OrderRollState?.PlayersStillToRoll);
+    }
+
+    [Fact]
+    public async Task RollForOrder_BroadcastDiceRolledNaarToeschouwerDieNietZelfGooit()
+    {
+        var random = new SequenceRandomSource(0, 1, 6, 4, 3, 2);
+        await using var factory = CreateFactory(random);
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
+        await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
+        await connection.InvokeAsync<GameStateDto>("StartGame", gameId, aliceId);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var received = new TaskCompletionSource<DiceRolledMessage>();
+        spectator.On<DiceRolledMessage>("DiceRolled", message => received.TrySetResult(message));
+
+        await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, aliceId);
+
+        var completed = await Task.WhenAny(received.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        Assert.Same(received.Task, completed);
+
+        var message = await received.Task;
+        Assert.Equal(aliceId, message.PlayerId);
+        Assert.Equal([6, 4], message.Dice);
+        Assert.Equal("order-roll", message.Context);
     }
 
     [Fact]

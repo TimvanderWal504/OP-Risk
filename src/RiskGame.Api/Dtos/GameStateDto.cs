@@ -14,7 +14,18 @@ public sealed record GameStateDto(
     TurnStateDto? TurnState,
     IReadOnlyList<PlayerColorDto> Colors,
     IReadOnlyList<RoleSummaryDto> Roles,
-    GameSettingsDto Settings);
+    GameSettingsDto Settings,
+    OrderRollStateDto? OrderRollState = null,
+    int StateVersion = 0);
+
+/// <summary>
+/// Wie er nu nog mag gooien voor de spelersvolgorde (FO §2.1). Alleen gevuld door
+/// <c>StartGame</c> (bij binnenkomst in de fase: iedereen) en <c>RollForOrder</c> (de
+/// tie-break-voortgang uit <see cref="RiskGame.Rules.TurnFlow.OrderRollCalculator"/> — al
+/// berekend, dus geen event-stream-toegang nodig in de mapper). <c>WatchGame</c> levert dit
+/// veld niet: reconnect midden in een order-roll is bouwstap 6.
+/// </summary>
+public sealed record OrderRollStateDto(IReadOnlyList<string> PlayersStillToRoll);
 
 /// <summary>
 /// Draad-representatie van de kleurencatalogus van de kaartvariant

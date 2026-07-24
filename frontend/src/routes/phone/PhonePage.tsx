@@ -4,15 +4,24 @@ import { JoinNameStep } from '../../components/JoinNameStep'
 import { JoinColorStep } from '../../components/JoinColorStep'
 import { JoinRoleStep } from '../../components/JoinRoleStep'
 import { JoinWaitStep } from '../../components/JoinWaitStep'
+import { OrderRollWaitStep } from '../../components/OrderRollWaitStep'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto } from '../../types/GameState'
 import { RoleAssignmentModeDto } from '../../types/GameSettings'
 
 export function PhonePage() {
   const { gameId } = useParams<{ gameId: string }>()
-  const { state, playerId, error, joinGame, chooseColor, selectRole, startGame } = useGameState(
-    gameId!,
-  )
+  const {
+    state,
+    playerId,
+    error,
+    orderRollThrows,
+    joinGame,
+    chooseColor,
+    selectRole,
+    startGame,
+    rollForOrder,
+  } = useGameState(gameId!)
 
   if (!state || !playerId) {
     return (
@@ -28,6 +37,19 @@ export function PhonePage() {
     return (
       <PhoneShell>
         <JoinNameStep onSubmit={joinGame} error={error} />
+      </PhoneShell>
+    )
+  }
+
+  if (state.phase === GamePhaseDto.OrderRoll) {
+    return (
+      <PhoneShell>
+        <OrderRollWaitStep
+          myDice={orderRollThrows[playerId]}
+          canRoll={state.orderRollState !== null}
+          onRoll={rollForOrder}
+          error={error}
+        />
       </PhoneShell>
     )
   }

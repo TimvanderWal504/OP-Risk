@@ -30,7 +30,7 @@ export function JoinWaitStep({
 }: JoinWaitStepProps) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 p-5 text-center">
-      <PlayerAvatar colorHex={color?.hex} isHost={me.isHost} size="lg" />
+      <PlayerAvatar colorHex={color?.hex} colorSymbol={color?.symbol} isHost={me.isHost} size="lg" />
       <div>
         <p className="font-display text-h1 font-black">Je bent aangemeld</p>
         <p className="text-fg-muted">
