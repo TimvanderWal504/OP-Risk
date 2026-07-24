@@ -250,7 +250,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1"],
             turnState: new TurnState(
-                "p1", TurnPhase.Reinforce, new PhaseTimer(settings.TurnTimer), PendingCombat: null, armiesRemaining),
+                "p1", TurnPhase.Reinforce, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null, armiesRemaining),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 

@@ -110,7 +110,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
-                "p1", turnPhase, new PhaseTimer(settings.TurnTimer), pendingCombat, ArmiesRemaining: 0),
+                "p1", turnPhase, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), pendingCombat, ArmiesRemaining: 0),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 

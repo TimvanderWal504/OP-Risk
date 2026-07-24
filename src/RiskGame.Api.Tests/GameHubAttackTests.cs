@@ -114,7 +114,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
-                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer), PendingCombat: null),
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
