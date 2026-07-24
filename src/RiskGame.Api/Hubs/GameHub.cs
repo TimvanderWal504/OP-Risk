@@ -20,10 +20,12 @@ public sealed record CombatResultResponse(
     GameStateDto State);
 
 /// <summary>
-/// SignalR-hub voor de lobby-commando's (TO §4.1). Dun: elke methode delegeert de
-/// TO §4-pijplijn naar <see cref="LobbyCommandHandler"/> en zet een mislukt
-/// <see cref="Result{T}"/> om in een <see cref="HubException"/> — de enige manier om een
-/// foutmelding terug te geven zonder de state van andere clients te raken.
+/// SignalR-hub voor alle spelcommando's (TO §4.1): lobby, order-roll, startopstelling,
+/// rol-/missietoewijzing, versterken, aanvallen en de generieke beurtoverstap (Fortify/
+/// EndPhase/EndTurn). Dun: elke methode delegeert de TO §4-pijplijn naar de bijbehorende
+/// command handler en zet een mislukt <see cref="Result{T}"/> om in een
+/// <see cref="HubException"/> — de enige manier om een foutmelding terug te geven zonder
+/// de state van andere clients te raken.
 /// </summary>
 /// <remarks>
 /// Nog geen groepen/privacy-grens (TO §6.1) en geen sessietokens (TO §6.3): deze plak
@@ -35,7 +37,8 @@ public sealed class GameHub(
     OrderRollCommandHandler orderRollCommands,
     SetupCommandHandler setupCommands,
     ReinforceCommandHandler reinforceCommands,
-    AttackCommandHandler attackCommands) : Hub
+    AttackCommandHandler attackCommands,
+    TurnFlowCommandHandler turnFlowCommands) : Hub
 {
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -127,6 +130,28 @@ public sealed class GameHub(
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
     {
         var result = await attackCommands.MoveAfterConquestAsync(gameId, playerId, armiesToMove);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> Fortify(
+        string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
+    {
+        var result = await turnFlowCommands.FortifyAsync(gameId, playerId, fromTerritoryId, toTerritoryId, armiesToMove);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> EndPhase(string gameId, string playerId)
+    {
+        var result = await turnFlowCommands.EndPhaseAsync(gameId, playerId);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<GameStateDto> EndTurn(string gameId, string playerId)
+    {
+        var result = await turnFlowCommands.EndTurnAsync(gameId, playerId);
 
         return Unwrap(result, state => state);
     }

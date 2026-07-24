@@ -18,8 +18,8 @@ namespace RiskGame.Api.Tests;
 /// Bewijst de TO §4-pijplijn voor <c>DeclareAttack</c>, <c>ChooseDefenseDice</c> en
 /// <c>MoveAfterConquest</c> (FO §5.3) end-to-end. Zelfde opzet als
 /// <see cref="GameHubReinforceTests"/>: het spel wordt rechtstreeks in de gewenste
-/// startsituatie opgebouwd (<c>EndPhase</c>/<c>EndTurn</c> bestaat nog niet — dat is een
-/// volgende, generieke plak), en de dobbelworpen liggen vooraf vast via
+/// startsituatie opgebouwd in plaats van via <c>EndPhase</c>/<c>EndTurn</c>
+/// (<see cref="GameHubTurnFlowTests"/>), en de dobbelworpen liggen vooraf vast via
 /// <see cref="SequenceRandomSource"/> zodat de uitkomst reproduceerbaar is.
 /// </summary>
 [Collection(PostgresCollection.Name)]

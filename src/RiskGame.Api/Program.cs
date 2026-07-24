@@ -29,6 +29,7 @@ builder.Services.AddScoped<OrderRollCommandHandler>();
 builder.Services.AddScoped<SetupCommandHandler>();
 builder.Services.AddScoped<ReinforceCommandHandler>();
 builder.Services.AddScoped<AttackCommandHandler>();
+builder.Services.AddScoped<TurnFlowCommandHandler>();
 builder.Services.AddSignalR(options => options.AddFilter<HubExceptionLoggingFilter>());
 
 var app = builder.Build();
