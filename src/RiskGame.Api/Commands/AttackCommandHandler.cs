@@ -26,7 +26,7 @@ public sealed record ChooseDefenseDiceResult(
 /// handler rijgt ze aan elkaar, net als <see cref="ReinforceCommandHandler"/> dat deed
 /// voor Versterken.
 /// </summary>
-public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random)
+public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
 {
     public async Task<Result<DeclareAttackResult>> DeclareAttackAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
@@ -50,9 +50,14 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         var attackerRolls = CombatResolver.RollDice(attackDice, random);
 
+        var now = timeProvider.GetUtcNow();
+        var timer = state.TurnState!.Timer!;
+        var remaining = timer.Tick(now - timer.LastUpdatedUtc).Remaining;
+
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
         session.Events.Append(
-            gameId, new AttackDeclared(gameId, playerId, fromTerritoryId, toTerritoryId, attackDice));
+            gameId,
+            new AttackDeclared(gameId, playerId, fromTerritoryId, toTerritoryId, attackDice, remaining, now));
 
         await session.SaveChangesAsync();
 
@@ -95,6 +100,14 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         var outcome = CombatResolver.Compare(attackerRolls, defenderRolls);
 
+        var fromArmyCount = state.Territory(pendingCombat.FromTerritoryId).ArmyCount;
+        var toArmyCount = state.Territory(pendingCombat.ToTerritoryId).ArmyCount;
+        var conquest = ConquestResolution.Apply(fromArmyCount, toArmyCount, outcome);
+
+        // De timer hervat hier alleen als het gevecht meteen klaar is (geen verovering); bij
+        // een verovering blijft hij gepauzeerd tot ArmiesMovedAfterConquest (FO §5.4).
+        var resumedAtUtc = conquest.Conquered ? (DateTimeOffset?)null : timeProvider.GetUtcNow();
+
         session.Events.Append(gameId, new CombatResolved(
             gameId,
             attackerId,
@@ -103,11 +116,8 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             attackerRolls,
             defenderRolls,
             outcome.AttackerLosses,
-            outcome.DefenderLosses));
-
-        var fromArmyCount = state.Territory(pendingCombat.FromTerritoryId).ArmyCount;
-        var toArmyCount = state.Territory(pendingCombat.ToTerritoryId).ArmyCount;
-        var conquest = ConquestResolution.Apply(fromArmyCount, toArmyCount, outcome);
+            outcome.DefenderLosses,
+            resumedAtUtc));
 
         if (conquest.Conquered)
         {
@@ -161,7 +171,12 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         }
 
         session.Events.Append(gameId, new ArmiesMovedAfterConquest(
-            gameId, playerId, pendingCombat!.FromTerritoryId, pendingCombat.ToTerritoryId, armiesToMove));
+            gameId,
+            playerId,
+            pendingCombat!.FromTerritoryId,
+            pendingCombat.ToTerritoryId,
+            armiesToMove,
+            timeProvider.GetUtcNow()));
 
         await session.SaveChangesAsync();
 

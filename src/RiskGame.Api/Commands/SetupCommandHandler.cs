@@ -3,6 +3,7 @@ using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
+using RiskGame.Rules.TurnFlow;
 using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Commands;
@@ -12,7 +13,7 @@ namespace RiskGame.Api.Commands;
 /// (FO §5.1). Geen dobbelen nodig, dus geen <see cref="RiskGame.Rules.Abstractions.IRandomSource"/>
 /// — alleen guards, event(s) appenden en de nieuwe projectie teruggeven.
 /// </summary>
-public sealed class SetupCommandHandler(IDocumentStore store)
+public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeProvider)
 {
     public async Task<Result<GameStateDto>> ClaimTerritoryAsync(string gameId, string playerId, string territoryId)
     {
@@ -80,7 +81,11 @@ public sealed class SetupCommandHandler(IDocumentStore store)
 
         if (totalArmiesPlaced == totalArmiesExpected)
         {
-            session.Events.Append(gameId, new PhaseChanged(gameId, state.TurnOrder[0], TurnPhase.Reinforce));
+            var now = timeProvider.GetUtcNow();
+            var timer = PhaseTimerFactory.ForPhase(TurnPhase.Reinforce, state.Settings, currentTimer: null, now);
+
+            session.Events.Append(
+                gameId, new PhaseChanged(gameId, state.TurnOrder[0], TurnPhase.Reinforce, timer.Remaining, now));
         }
 
         await session.SaveChangesAsync();

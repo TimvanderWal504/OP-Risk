@@ -17,7 +17,7 @@ namespace RiskGame.Api.Commands;
 /// Aanvallen. Kaart trekken bij verovering en missie-/wincheck horen niet bij deze plak
 /// (TO §11, latere bouwstap).
 /// </summary>
-public sealed class TurnFlowCommandHandler(IDocumentStore store)
+public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider)
 {
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
@@ -64,8 +64,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store)
         }
 
         var nextPhase = TurnPhaseTransitions.Next(state.TurnState!.TurnPhase);
+        var now = timeProvider.GetUtcNow();
+        var timer = PhaseTimerFactory.ForPhase(nextPhase, state.Settings, state.TurnState.Timer, now);
 
-        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, nextPhase));
+        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, nextPhase, timer.Remaining, now));
 
         await session.SaveChangesAsync();
 
@@ -102,7 +104,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store)
                 "de beurt staat niet meer in de verwachte fase.");
         }
 
-        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, TurnPhase.Fortify));
+        var now = timeProvider.GetUtcNow();
+        var timer = PhaseTimerFactory.ForPhase(TurnPhase.Fortify, state.Settings, turnState.Timer, now);
+
+        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, TurnPhase.Fortify, timer.Remaining, now));
 
         await session.SaveChangesAsync();
 
@@ -136,8 +141,12 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store)
                 "Kan de beurt niet doorschuiven: geen andere actieve speler gevonden.");
         }
 
+        var now = timeProvider.GetUtcNow();
+        var timer = PhaseTimerFactory.ForPhase(TurnPhase.Reinforce, state.Settings, currentTimer: null, now);
+
         session.Events.Append(gameId, new TurnEnded(gameId, playerId));
-        session.Events.Append(gameId, new PhaseChanged(gameId, nextPlayerId, TurnPhase.Reinforce));
+        session.Events.Append(
+            gameId, new PhaseChanged(gameId, nextPlayerId, TurnPhase.Reinforce, timer.Remaining, now));
 
         await session.SaveChangesAsync();
 
