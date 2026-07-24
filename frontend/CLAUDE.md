@@ -6,8 +6,8 @@
   krijgen data via props en renderen — ze roepen zelf nooit SignalR aan. Alle
   state/data-logica zit in `hooks/` (`useSignalR`, `useGameState`) en wordt
   als props doorgegeven.
-- **Kleine, samenstelbare componenten** i.p.v. één groot TV- of
-  telefoonscherm-component: bouw op uit `MapOverlay`, `TurnIndicator`,
+- **Kleine, samenstelbare componenten in `components\ui`** i.p.v. één groot 
+  TV-of telefoonscherm-component: bouw op uit `MapOverlay`, `TurnIndicator`,
   `DiceRoller`, `TerritoryLabel`, etc. — elk apart testbaar en herbruikbaar.
 - **Typed props via interfaces in `types/`**, nooit `any`. Eén interface per
   component-props, gedeelde domeintypes (GameState, Territory, Player) apart
@@ -31,6 +31,9 @@
 - Gedeelde DTO-types (GameState, Territory, Player) staan in `types/` en
   spiegelen exact de C#-DTO's — zelfde veldnamen, zelfde structuur. Eén bron
   van waarheid per type; niet "handig" hernoemen aan de TS-kant.
+- Kleine, samenstelbare componenten staan in `components\ui` en bevatten 
+  onderdelen die elk scherm/component kan hergebruiken om zoveel mogelijk
+  componenten te kunnen hergebruiken en de codebase clean te houden.
 
 ## Styling
 

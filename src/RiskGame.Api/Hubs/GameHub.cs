@@ -1,7 +1,9 @@
+using Marten;
 using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Dtos;
 using RiskGame.Rules.Results;
+using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Hubs;
 
@@ -28,11 +30,13 @@ public sealed record CombatResultResponse(
 /// de state van andere clients te raken.
 /// </summary>
 /// <remarks>
-/// Nog geen groepen/privacy-grens (TO §6.1) en geen sessietokens (TO §6.3): deze plak
-/// retourneert de bijgewerkte state alleen als RPC-resultaat aan de aanroeper. Dat volgt
-/// in een latere plak.
+/// Groepen (TO §6.1): één groep per spel, <c>game-{id}-all</c>. De tv-specifieke en
+/// per-speler-privé-groepen volgen in een latere plak zodra er daadwerkelijk privé-DTO's
+/// (handkaarten/geheime missies) gepusht moeten worden — nu zou dat ongebruikte
+/// infrastructuur zijn. Sessietokens/reconnect (TO §6.3) volgen in bouwstap 6.
 /// </remarks>
 public sealed class GameHub(
+    IDocumentStore store,
     LobbyCommandHandler lobbyCommands,
     OrderRollCommandHandler orderRollCommands,
     SetupCommandHandler setupCommands,
@@ -40,53 +44,73 @@ public sealed class GameHub(
     AttackCommandHandler attackCommands,
     TurnFlowCommandHandler turnFlowCommands) : Hub
 {
+    /// <summary>
+    /// Voegt de aanroepende connectie toe aan de spelgroep en levert de huidige state —
+    /// de enige aanroep die de TV doet na het (handmatig) navigeren naar <c>/tv/:gameId</c>.
+    /// </summary>
+    public async Task<GameStateDto> WatchGame(string gameId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+
+        await using var session = store.QuerySession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        return state is not null
+            ? GameStateDtoMapper.ToDto(state)
+            : throw new HubException($"Onbekend spel '{gameId}'.");
+    }
+
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
+        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+
         var result = await lobbyCommands.JoinGameAsync(gameId, playerName);
 
-        return Unwrap(result, joinResult => new JoinGameResponse(joinResult.PlayerId, joinResult.State));
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, joinResult => new JoinGameResponse(joinResult.PlayerId, joinResult.State), r => r.State);
     }
 
     public async Task<GameStateDto> ChooseColor(string gameId, string playerId, string colorId)
     {
         var result = await lobbyCommands.ChooseColorAsync(gameId, playerId, colorId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> StartGame(string gameId, string playerId)
     {
         var result = await lobbyCommands.StartGameAsync(gameId, playerId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> SelectRole(string gameId, string playerId, string roleId)
     {
         var result = await lobbyCommands.SelectRoleAsync(gameId, playerId, roleId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<OrderRollResponse> RollForOrder(string gameId, string playerId)
     {
         var result = await orderRollCommands.RollForOrderAsync(gameId, playerId);
 
-        return Unwrap(result, rollResult => new OrderRollResponse(rollResult.Die1, rollResult.Die2, rollResult.State));
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, rollResult => new OrderRollResponse(rollResult.Die1, rollResult.Die2, rollResult.State), r => r.State);
     }
 
     public async Task<GameStateDto> ClaimTerritory(string gameId, string playerId, string territoryId)
     {
         var result = await setupCommands.ClaimTerritoryAsync(gameId, playerId, territoryId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> PlaceInitialArmy(string gameId, string playerId, string territoryId)
     {
         var result = await setupCommands.PlaceInitialArmyAsync(gameId, playerId, territoryId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> PlaceReinforcements(
@@ -94,14 +118,14 @@ public sealed class GameHub(
     {
         var result = await reinforceCommands.PlaceReinforcementsAsync(gameId, playerId, territoryId, amount);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> TradeInCards(string gameId, string playerId, string[] cardIds)
     {
         var result = await reinforceCommands.TradeInCardsAsync(gameId, playerId, cardIds);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<DeclareAttackResponse> DeclareAttack(
@@ -110,28 +134,32 @@ public sealed class GameHub(
         var result = await attackCommands.DeclareAttackAsync(
             gameId, playerId, fromTerritoryId, toTerritoryId, attackDice);
 
-        return Unwrap(result, declareResult =>
-            new DeclareAttackResponse(declareResult.AttackerRolls, declareResult.State));
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, declareResult => new DeclareAttackResponse(declareResult.AttackerRolls, declareResult.State), r => r.State);
     }
 
     public async Task<CombatResultResponse> ChooseDefenseDice(string gameId, string playerId, int defenseDice)
     {
         var result = await attackCommands.ChooseDefenseDiceAsync(gameId, playerId, defenseDice);
 
-        return Unwrap(result, combatResult => new CombatResultResponse(
-            combatResult.AttackerRolls,
-            combatResult.DefenderRolls,
-            combatResult.AttackerLosses,
-            combatResult.DefenderLosses,
-            combatResult.Conquered,
-            combatResult.State));
+        return await UnwrapAndBroadcastAsync(
+            gameId,
+            result,
+            combatResult => new CombatResultResponse(
+                combatResult.AttackerRolls,
+                combatResult.DefenderRolls,
+                combatResult.AttackerLosses,
+                combatResult.DefenderLosses,
+                combatResult.Conquered,
+                combatResult.State),
+            r => r.State);
     }
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
     {
         var result = await attackCommands.MoveAfterConquestAsync(gameId, playerId, armiesToMove);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> Fortify(
@@ -139,25 +167,42 @@ public sealed class GameHub(
     {
         var result = await turnFlowCommands.FortifyAsync(gameId, playerId, fromTerritoryId, toTerritoryId, armiesToMove);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> EndPhase(string gameId, string playerId)
     {
         var result = await turnFlowCommands.EndPhaseAsync(gameId, playerId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
     public async Task<GameStateDto> EndTurn(string gameId, string playerId)
     {
         var result = await turnFlowCommands.EndTurnAsync(gameId, playerId);
 
-        return Unwrap(result, state => state);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state);
     }
 
-    private static TResponse Unwrap<T, TResponse>(Result<T> result, Func<T, TResponse> onSuccess) =>
-        result.IsSuccess
-            ? onSuccess(result.Value)
-            : throw new HubException(string.Join(" | ", result.Errors));
+    private static string GroupName(string gameId) => $"game-{gameId}-all";
+
+    /// <summary>
+    /// Eén centrale plek voor de push-compositie (src/CLAUDE.md, API-grens): elk geslaagd
+    /// commando pusht de bijgewerkte state naar de hele spelgroep, niet alleen naar de
+    /// aanroeper. Dit is ook de plek waar een toekomstige privacy-grens (TO §6.1) zou
+    /// landen zodra er privé-DTO's bijkomen.
+    /// </summary>
+    private async Task<TResponse> UnwrapAndBroadcastAsync<T, TResponse>(
+        string gameId, Result<T> result, Func<T, TResponse> onSuccess, Func<TResponse, GameStateDto> extractState)
+    {
+        if (!result.IsSuccess)
+        {
+            throw new HubException(string.Join(" | ", result.Errors));
+        }
+
+        var response = onSuccess(result.Value);
+        await Clients.Group(GroupName(gameId)).SendAsync("GameStateUpdated", extractState(response));
+
+        return response;
+    }
 }

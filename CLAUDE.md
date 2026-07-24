@@ -79,8 +79,9 @@ met een korte titel + waarom in de body. Als een taak groot genoeg is om een
 samenvatting te verdienen, hoort die in de commit message, niet in een bestand.
 
 ## Technische kaders per stack
-Zie src/CLAUDE.md (SOLID/DRY/Clean Code) en frontend/CLAUDE.md
+Zie src/CLAUDE.md (SOLID/DRY/Clean Code) en frontend/CLAUDE.md.
 (component-driven development) — automatisch actief als je in die map werkt.
+Meld altijd wanneer je één van de twee documenten hebt gelezen.
 
 ## Werkwijze (agent-regie)
 

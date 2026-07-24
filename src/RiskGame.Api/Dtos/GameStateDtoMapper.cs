@@ -37,9 +37,49 @@ public static class GameStateDtoMapper
                 state.TurnState.ArmiesRemaining,
                 ToDto(state.TurnState.PendingCombat));
 
+        var colors = state.Map.Colors
+            .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.Symbol))
+            .ToArray();
+
+        var roles = state.Map.Roles
+            .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description))
+            .ToArray();
+
         return new GameStateDto(
-            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState);
+            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
+            colors, roles, ToDto(state.Settings));
     }
+
+    private static GameSettingsDto ToDto(GameSettings settings) => new(
+        ToDto(settings.WinCondition),
+        ToDto(settings.SetupMode),
+        settings.StartingArmies,
+        (int)settings.TurnTimer.TotalSeconds,
+        (int)settings.FortifyTimer.TotalSeconds,
+        settings.RolesEnabled,
+        ToDto(settings.RoleAssignment),
+        settings.EventsEnabled);
+
+    private static WinConditionDto ToDto(WinCondition winCondition) => winCondition switch
+    {
+        WinCondition.WorldDomination => WinConditionDto.WorldDomination,
+        WinCondition.SecretMissions => WinConditionDto.SecretMissions,
+        _ => throw new ArgumentOutOfRangeException(nameof(winCondition), winCondition, "Onbekende winconditie."),
+    };
+
+    private static SetupModeDto ToDto(SetupMode setupMode) => setupMode switch
+    {
+        SetupMode.Random => SetupModeDto.Random,
+        SetupMode.Claiming => SetupModeDto.Claiming,
+        _ => throw new ArgumentOutOfRangeException(nameof(setupMode), setupMode, "Onbekende opstelmodus."),
+    };
+
+    private static RoleAssignmentModeDto ToDto(RoleAssignmentMode roleAssignment) => roleAssignment switch
+    {
+        RoleAssignmentMode.Random => RoleAssignmentModeDto.Random,
+        RoleAssignmentMode.Choose => RoleAssignmentModeDto.Choose,
+        _ => throw new ArgumentOutOfRangeException(nameof(roleAssignment), roleAssignment, "Onbekende roltoewijzing."),
+    };
 
     private static PendingCombatDto? ToDto(PendingCombat? pendingCombat) => pendingCombat is null
         ? null
