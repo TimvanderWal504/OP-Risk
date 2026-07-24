@@ -14,6 +14,8 @@ public static class AttackGuards
 {
     private const int MinAttackDice = 1;
     private const int MaxAttackDice = 3;
+    private const int MinDefenseDice = 1;
+    private const int MaxDefenseDice = 2;
 
     /// <summary>
     /// Of <paramref name="playerId"/> vanuit <paramref name="fromTerritoryId"/> een aanval
@@ -126,6 +128,55 @@ public static class AttackGuards
                 : ValidationResult.Failure(
                     $"Er moet minimaal 1 leger achterblijven in '{fromTerritoryId}' " +
                     $"({fromArmyCount} beschikbaar, {armiesToMove} opgegeven)."));
+    }
+
+    /// <summary>
+    /// Of <paramref name="playerId"/> — de verdediger, niet de actieve speler — met
+    /// <paramref name="defenseDice"/> dobbelstenen mag verdedigen tegen het lopende gevecht
+    /// (FO §5.3 stap 4, TO §4.1). Harde regel: een verdediger met nog maar 1 leger in het
+    /// doelgebied kan alleen met 1 dobbelsteen verdedigen.
+    /// </summary>
+    public static ValidationResult CanChooseDefenseDice(
+        GameState state, string playerId, int defenseDice)
+    {
+        var preconditions = ValidationResult.Combine(
+            Guards.PlayerExists(state, playerId),
+            Guards.IsNotEliminated(state, playerId),
+            Guards.IsInTurnPhase(state, TurnPhase.Attack));
+
+        if (!preconditions.IsSuccess)
+        {
+            return preconditions;
+        }
+
+        var pendingCombat = state.TurnState!.PendingCombat;
+
+        if (pendingCombat is null)
+        {
+            return ValidationResult.Failure("Er is geen gevecht om te verdedigen.");
+        }
+
+        if (state.Territory(pendingCombat.ToTerritoryId).OwnerPlayerId != playerId)
+        {
+            return ValidationResult.Failure(
+                $"Speler '{playerId}' is niet de verdediger van dit gevecht.");
+        }
+
+        var defenderArmyCount = state.Territory(pendingCombat.ToTerritoryId).ArmyCount;
+
+        if (defenderArmyCount == 1)
+        {
+            return defenseDice == 1
+                ? ValidationResult.Success()
+                : ValidationResult.Failure(
+                    $"Gebied '{pendingCombat.ToTerritoryId}' heeft nog maar 1 leger; " +
+                    "verdedigen kan dan alleen met 1 dobbelsteen.");
+        }
+
+        return defenseDice is MinDefenseDice or MaxDefenseDice
+            ? ValidationResult.Success()
+            : ValidationResult.Failure(
+                $"Aantal verdedigingsdobbelstenen moet {MinDefenseDice} of {MaxDefenseDice} zijn.");
     }
 
     private static ValidationResult IsEnemyOwned(

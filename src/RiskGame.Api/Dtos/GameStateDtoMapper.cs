@@ -21,7 +21,8 @@ public static class GameStateDtoMapper
             .ToArray();
 
         var players = state.Players
-            .Select(player => new PlayerDto(player.Id, player.Name, player.ColorId, player.RoleId, player.IsHost))
+            .Select(player => new PlayerDto(
+                player.Id, player.Name, player.ColorId, player.RoleId, player.IsHost, player.IsEliminated))
             .ToArray();
 
         var territories = state.Territories
@@ -31,11 +32,18 @@ public static class GameStateDtoMapper
         var turnState = state.TurnState is null
             ? null
             : new TurnStateDto(
-                state.TurnState.ActivePlayerId, ToDto(state.TurnState.TurnPhase), state.TurnState.ArmiesRemaining);
+                state.TurnState.ActivePlayerId,
+                ToDto(state.TurnState.TurnPhase),
+                state.TurnState.ArmiesRemaining,
+                ToDto(state.TurnState.PendingCombat));
 
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState);
     }
+
+    private static PendingCombatDto? ToDto(PendingCombat? pendingCombat) => pendingCombat is null
+        ? null
+        : new PendingCombatDto(pendingCombat.FromTerritoryId, pendingCombat.ToTerritoryId, pendingCombat.AttackDice);
 
     private static TurnPhaseDto ToDto(TurnPhase turnPhase) => turnPhase switch
     {

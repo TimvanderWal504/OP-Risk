@@ -189,4 +189,91 @@ public class AttackGuardsTests
         Assert.False(result.IsSuccess);
         Assert.Contains("afgesloten", result.Errors.Single());
     }
+
+    private static GameState PendingAlaskaVsAlberta(int albertaArmies = 2) =>
+        TestGame.InProgress(
+                turnPhase: TurnPhase.Attack,
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", albertaArmies));
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void Verdedigen_MetGeldigAantalDobbelstenen_IsGeldig(int defenseDice)
+    {
+        var state = PendingAlaskaVsAlberta(albertaArmies: 2);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Verdedigen_MetTweeDobbelstenenBijEenLeger_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta(albertaArmies: 1);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("alleen met 1 dobbelsteen", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Verdedigen_MetEenDobbelsteenBijEenLeger_IsGeldig()
+    {
+        var state = PendingAlaskaVsAlberta(albertaArmies: 1);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Verdedigen_MetDrieDobbelstenen_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta(albertaArmies: 3);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 3);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("moet 1 of 2 zijn", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Verdedigen_DoorNietDeVerdediger_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta();
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p1", defenseDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("niet de verdediger", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Verdedigen_ZonderLopendGevecht_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 2));
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("geen gevecht", result.Errors.Single());
+    }
+
+    [Fact]
+    public void Verdedigen_BuitenDeAanvalsfase_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Reinforce)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 2));
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
+
+        Assert.False(result.IsSuccess);
+    }
 }

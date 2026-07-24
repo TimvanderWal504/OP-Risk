@@ -9,6 +9,16 @@ public sealed record JoinGameResponse(string PlayerId, GameStateDto State);
 
 public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
 
+public sealed record DeclareAttackResponse(IReadOnlyList<int> AttackerRolls, GameStateDto State);
+
+public sealed record CombatResultResponse(
+    IReadOnlyList<int> AttackerRolls,
+    IReadOnlyList<int> DefenderRolls,
+    int AttackerLosses,
+    int DefenderLosses,
+    bool Conquered,
+    GameStateDto State);
+
 /// <summary>
 /// SignalR-hub voor de lobby-commando's (TO §4.1). Dun: elke methode delegeert de
 /// TO §4-pijplijn naar <see cref="LobbyCommandHandler"/> en zet een mislukt
@@ -24,7 +34,8 @@ public sealed class GameHub(
     LobbyCommandHandler lobbyCommands,
     OrderRollCommandHandler orderRollCommands,
     SetupCommandHandler setupCommands,
-    ReinforceCommandHandler reinforceCommands) : Hub
+    ReinforceCommandHandler reinforceCommands,
+    AttackCommandHandler attackCommands) : Hub
 {
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -86,6 +97,36 @@ public sealed class GameHub(
     public async Task<GameStateDto> TradeInCards(string gameId, string playerId, string[] cardIds)
     {
         var result = await reinforceCommands.TradeInCardsAsync(gameId, playerId, cardIds);
+
+        return Unwrap(result, state => state);
+    }
+
+    public async Task<DeclareAttackResponse> DeclareAttack(
+        string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
+    {
+        var result = await attackCommands.DeclareAttackAsync(
+            gameId, playerId, fromTerritoryId, toTerritoryId, attackDice);
+
+        return Unwrap(result, declareResult =>
+            new DeclareAttackResponse(declareResult.AttackerRolls, declareResult.State));
+    }
+
+    public async Task<CombatResultResponse> ChooseDefenseDice(string gameId, string playerId, int defenseDice)
+    {
+        var result = await attackCommands.ChooseDefenseDiceAsync(gameId, playerId, defenseDice);
+
+        return Unwrap(result, combatResult => new CombatResultResponse(
+            combatResult.AttackerRolls,
+            combatResult.DefenderRolls,
+            combatResult.AttackerLosses,
+            combatResult.DefenderLosses,
+            combatResult.Conquered,
+            combatResult.State));
+    }
+
+    public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
+    {
+        var result = await attackCommands.MoveAfterConquestAsync(gameId, playerId, armiesToMove);
 
         return Unwrap(result, state => state);
     }

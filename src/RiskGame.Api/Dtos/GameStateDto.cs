@@ -16,10 +16,14 @@ public sealed record GameStateDto(
 public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int ArmyCount);
 
 /// <summary>
-/// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>. Nog geen timer of
-/// <c>PendingCombat</c> — die horen bij latere plakken (aftellen resp. de aanvalsfase).
+/// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>. Nog geen timer —
+/// die hoort bij een latere plak (aftellen, TO §5.3).
 /// </summary>
-public sealed record TurnStateDto(string ActivePlayerId, TurnPhaseDto TurnPhase, int ArmiesRemaining);
+public sealed record TurnStateDto(
+    string ActivePlayerId, TurnPhaseDto TurnPhase, int ArmiesRemaining, PendingCombatDto? PendingCombat);
+
+/// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.PendingCombat"/>.</summary>
+public sealed record PendingCombatDto(string FromTerritoryId, string ToTerritoryId, int AttackDice);
 
 public enum TurnPhaseDto
 {

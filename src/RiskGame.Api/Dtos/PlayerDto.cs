@@ -6,4 +6,5 @@ namespace RiskGame.Api.Dtos;
 /// alleen naar de eigen speler-groep (TO §6.1, een latere plak: groepsgewijze SignalR-push
 /// bestaat nog niet, dus dat kan nu nog niet per-speler afgeschermd worden).
 /// </summary>
-public sealed record PlayerDto(string Id, string Name, string? ColorId, string? RoleId, bool IsHost);
+public sealed record PlayerDto(
+    string Id, string Name, string? ColorId, string? RoleId, bool IsHost, bool IsEliminated);
