@@ -34,6 +34,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = new MapDefinitionSource(MapsRoot);
+        var now = DateTimeOffset.UtcNow;
 
         await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
         await using var session = store.LightweightSession();
@@ -54,21 +55,25 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new RoleAssigned(gameId, "p1", "diplomaat"),
             new MissionAssigned(gameId, "p1", "eliminate-blue"),
             new MissionAssigned(gameId, "p2", "territory-24"),
-            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, now),
             new ArmiesReinforced(gameId, "p1", "alaska", 3),
-            new PhaseChanged(gameId, "p1", TurnPhase.Attack),
-            new AttackDeclared(gameId, "p1", "alaska", "northwest-territory", AttackDice: 2),
+            new PhaseChanged(gameId, "p1", TurnPhase.Attack, Settings.TurnTimer, now.AddSeconds(1)),
+            new AttackDeclared(
+                gameId, "p1", "alaska", "northwest-territory", AttackDice: 2,
+                Remaining: Settings.TurnTimer, OccurredAtUtc: now.AddSeconds(2)),
             new DiceRolled(gameId, "p1", [6, 4]),
             new DiceRolled(gameId, "p2", [3]),
             new CombatResolved(
                 gameId, "p1", "alaska", "northwest-territory",
-                AttackerRolls: [6, 4], DefenderRolls: [3], AttackerLosses: 0, DefenderLosses: 1),
+                AttackerRolls: [6, 4], DefenderRolls: [3], AttackerLosses: 0, DefenderLosses: 1,
+                OccurredAtUtc: null),
             new TerritoryConquered(gameId, "p1", "northwest-territory"),
-            new ArmiesMovedAfterConquest(gameId, "p1", "alaska", "northwest-territory", 2),
-            new PhaseChanged(gameId, "p1", TurnPhase.Fortify),
+            new ArmiesMovedAfterConquest(
+                gameId, "p1", "alaska", "northwest-territory", 2, now.AddSeconds(3)),
+            new PhaseChanged(gameId, "p1", TurnPhase.Fortify, Settings.FortifyTimer, now.AddSeconds(4)),
             new Fortified(gameId, "p1", "northwest-territory", "alaska", 1),
             new TurnEnded(gameId, "p1"),
-            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce));
+            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce, Settings.TurnTimer, now.AddSeconds(5)));
 
         await session.SaveChangesAsync();
 
@@ -159,7 +164,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             players: [player],
             territories,
             turnOrder: ["p1"],
-            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -236,7 +241,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var projection = new GameProjection(mapSource);
 
-        var afterPhaseChanged = projection.Apply(initialState, new PhaseChanged(gameId, "p1", TurnPhase.Reinforce));
+        var afterPhaseChanged = projection.Apply(
+            initialState,
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, DateTimeOffset.UtcNow));
         Assert.Equal(3, afterPhaseChanged.TurnState!.ArmiesRemaining);
 
         var afterReinforce = projection.Apply(afterPhaseChanged, new ArmiesReinforced(gameId, "p1", "alaska", 2));
@@ -279,7 +286,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             players: [player],
             territories,
             turnOrder: ["p1"],
-            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [drawnCard, remainingCard], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -337,7 +344,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             players: [conqueror, eliminated],
             territories,
             turnOrder: ["p1", "p2"],
-            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -512,7 +519,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             players: [],
             territories,
             turnOrder: ["p1"],
-            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer), PendingCombat: null),
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 

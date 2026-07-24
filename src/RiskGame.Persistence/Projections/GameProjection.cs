@@ -135,21 +135,14 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     }
 
     /// <summary>
-    /// Bepaalt de nieuwe <see cref="PhaseTimer"/> volgens FO §5.4: Versterken start altijd
-    /// een verse beurttimer (nieuwe beurt of eerste beurt na setup), Aanvallen deelt diezelfde
-    /// doorlopende timer met Versterken (geen aparte timer per fase), en Verplaatsen krijgt
-    /// een eigen, verse <see cref="GameSettings.FortifyTimer"/>.
+    /// Puur vouwwerk: welke timerduur bij welke fase hoort is al bepaald door
+    /// <see cref="RiskGame.Rules.TurnFlow.PhaseTimerFactory"/> vóórdat dit event ontstond
+    /// (FO §5.4) — deze vouwregel neemt <see cref="PhaseChanged.Remaining"/> en
+    /// <see cref="PhaseChanged.OccurredAtUtc"/> alleen nog over.
     /// </summary>
     public GameState Apply(GameState state, PhaseChanged @event)
     {
-        var timer = @event.TurnPhase switch
-        {
-            TurnPhase.Reinforce => new PhaseTimer(state.Settings.TurnTimer),
-            TurnPhase.Attack => state.TurnState?.Timer ?? new PhaseTimer(state.Settings.TurnTimer),
-            TurnPhase.Fortify => new PhaseTimer(state.Settings.FortifyTimer),
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(@event), @event.TurnPhase, "Onbekende beurtfase."),
-        };
+        var timer = new PhaseTimer(@event.Remaining, IsPaused: false, @event.OccurredAtUtc);
 
         var armiesRemaining = @event.TurnPhase == TurnPhase.Reinforce
             ? ReinforcementCalculator.CalculateArmies(state, @event.PlayerId)
@@ -227,7 +220,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         state.WithTurnState(state.TurnState! with
         {
             PendingCombat = new PendingCombat(@event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice),
-            Timer = state.TurnState!.Timer!.Pause(),
+            Timer = state.TurnState!.Timer!.Pause(@event.Remaining, @event.OccurredAtUtc),
         });
 
     /// <summary>
@@ -256,7 +249,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTurnState(state.TurnState! with
             {
                 PendingCombat = null,
-                Timer = state.TurnState!.Timer!.Resume(),
+                Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc!.Value),
             });
         }
 
@@ -282,7 +275,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return state.WithTurnState(state.TurnState! with
         {
             PendingCombat = null,
-            Timer = state.TurnState!.Timer!.Resume(),
+            Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc),
         });
     }
 

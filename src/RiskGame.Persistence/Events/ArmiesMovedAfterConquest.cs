@@ -7,5 +7,11 @@ namespace RiskGame.Persistence.Events;
 /// <see cref="Rules.State.TurnState.PendingCombat"/> terug naar <c>null</c> en hervat de
 /// beurttimer.
 /// </summary>
+/// <param name="OccurredAtUtc">Tijdstip waarop de beurttimer hervat wordt (FO §5.4).</param>
 public sealed record ArmiesMovedAfterConquest(
-    string GameId, string PlayerId, string FromTerritoryId, string ToTerritoryId, int Amount);
+    string GameId,
+    string PlayerId,
+    string FromTerritoryId,
+    string ToTerritoryId,
+    int Amount,
+    DateTimeOffset OccurredAtUtc);
