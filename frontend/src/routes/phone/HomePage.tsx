@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CreateGameForm } from '../../components/CreateGameForm'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { TextField } from '../../components/ui/TextField'
@@ -16,6 +17,7 @@ export function HomePage() {
   const [mode, setMode] = useState<Mode>('choose')
   const [joinCode, setJoinCode] = useState('')
   const navigate = useNavigate()
+  const { t } = useTranslation(['home', 'common'])
 
   if (mode === 'create') {
     return (
@@ -38,18 +40,18 @@ export function HomePage() {
       <PhoneShell>
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
           <div className="flex flex-1 flex-col gap-4 p-5">
-            <h1 className="font-display text-h1 font-bold">Spelcode</h1>
+            <h1 className="font-display text-h1 font-bold">{t('home:joinCode.title')}</h1>
             <TextField
               autoFocus
               uppercase
               value={joinCode}
               onChange={setJoinCode}
-              placeholder="bv. ATLAS7"
+              placeholder={t('home:joinCode.placeholder')}
             />
           </div>
           <Footer>
             <Button type="submit" disabled={!joinCode.trim()}>
-              Deelnemen
+              {t('common:actions.join')}
             </Button>
           </Footer>
         </form>
@@ -62,9 +64,9 @@ export function HomePage() {
       <div className="flex flex-1 flex-col px-6 pt-10 pb-6">
         <div className="text-center">
           <h1 className="font-display text-[34px] leading-tight font-black tracking-[.08em]">
-            OPERATIE ATLAS
+            {t('home:title')}
           </h1>
-          <p className="mt-2 text-sm text-fg-muted">Verover de wereld — één telefoon per veldheer.</p>
+          <p className="mt-2 text-sm text-fg-muted">{t('home:tagline')}</p>
         </div>
 
         <div className="flex flex-1 flex-col justify-center gap-4">
@@ -80,9 +82,11 @@ export function HomePage() {
               ✦
             </span>
             <span className="flex-1">
-              <span className="block font-display text-[22px] font-black">Nieuw spel starten</span>
+              <span className="block font-display text-[22px] font-black">
+                {t('home:createCard.title')}
+              </span>
               <span className="mt-0.5 block text-[13px] text-fg-muted">
-                Jij wordt de host en stelt het spel in.
+                {t('home:createCard.description')}
               </span>
             </span>
             <span className="text-[22px] text-gold-300">›</span>
@@ -97,14 +101,18 @@ export function HomePage() {
               ⌂
             </span>
             <span className="flex-1">
-              <span className="block font-display text-[22px] font-black">Deelnemen aan een spel</span>
-              <span className="mt-0.5 block text-[13px] text-fg-muted">Scan de QR-code op de TV.</span>
+              <span className="block font-display text-[22px] font-black">
+                {t('home:joinCard.title')}
+              </span>
+              <span className="mt-0.5 block text-[13px] text-fg-muted">
+                {t('home:joinCard.description')}
+              </span>
             </span>
             <span className="text-[22px] text-fg-muted">›</span>
           </button>
         </div>
 
-        <p className="text-center text-xs text-fg-muted">2 t/m 7 spelers · lokaal netwerk</p>
+        <p className="text-center text-xs text-fg-muted">{t('home:footer.playerCount')}</p>
       </div>
     </PhoneShell>
   )
