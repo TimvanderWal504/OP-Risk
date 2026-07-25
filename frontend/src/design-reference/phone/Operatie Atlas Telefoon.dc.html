@@ -1189,8 +1189,30 @@ class Component extends DCLogic {
       autoPass: { 2: true, 4: false },
     };
     this.stageRef = React.createRef();
+    this._colors = this.resolveColors();
+  }
+  // Read the 7 player colors from ds/colors_and_type.css (--player-* tokens),
+  // falling back to DEFAULT_COLORS if a var is missing.
+  resolveColors(){
+    const cs = (typeof getComputedStyle==='function') ? getComputedStyle(document.documentElement) : null;
+    const v = (name, fb) => { const x = cs && cs.getPropertyValue(name).trim(); return x || fb; };
+    return this.DEFAULT_COLORS.map(c => ({
+      cw: c.cw, sym: c.sym,
+      hex: v('--player-'+c.key, c.hex),
+      on:  v('--player-'+c.key+'-on', c.on),
+    }));
+  }
+  // The stylesheet loads async, so colors resolved in the constructor may still
+  // be the fallbacks. Re-resolve after mount (retry while CSS settles) and re-render.
+  refreshColors(){
+    const next = this.resolveColors();
+    const changed = JSON.stringify(next) !== JSON.stringify(this._colors);
+    this._colors = next;
+    if(changed) this.forceUpdate();
   }
   componentDidMount(){
+    this.refreshColors();
+    [60,200,600].forEach(t => setTimeout(() => this.refreshColors(), t));
     this._fit = () => {
       const el = this.stageRef.current; if(!el || !el.parentElement) return;
       const w = el.parentElement.clientWidth, h = el.parentElement.clientHeight;
@@ -1236,14 +1258,19 @@ class Component extends DCLogic {
     {cont:['Oceanië','Oceania'], t:[{id:'c_nieuwguinea',nl:'Nieuw-Guinea',en:'New Guinea'}]},
   ]; }
 
-  get COLORS(){ return [
-    {cw:['Rood','Red'],hex:'#c0392b',on:'#fff',sym:'▲'},
-    {cw:['Blauw','Blue'],hex:'#215c9c',on:'#fff',sym:'●'},
-    {cw:['Groen','Green'],hex:'#4f7a2e',on:'#fff',sym:'■'},
-    {cw:['Geel','Yellow'],hex:'#e0a81c',on:'#1a1206',sym:'★'},
-    {cw:['Paars','Purple'],hex:'#8e4585',on:'#fff',sym:'✚'},
-    {cw:['Turquoise','Turquoise'],hex:'#158f8a',on:'#fff',sym:'⬡'},
-    {cw:['Oranje','Orange'],hex:'#d9822b',on:'#1a1206',sym:'◆'},
+  // Player colors live in ds/colors_and_type.css (--player-*). Resolved from
+  // there at construction so the stylesheet stays the single source of truth.
+  get COLORS(){ return this._colors || this.DEFAULT_COLORS; }
+  // Fallback if the CSS tokens can't be read; keep in sync with --player-* in
+  // ds/colors_and_type.css. `key` maps to the --player-<key> variable name.
+  get DEFAULT_COLORS(){ return [
+    {key:'red',    cw:['Rood','Red'],      hex:'#c0392b', on:'#ffffff', sym:'▲'},
+    {key:'blue',   cw:['Blauw','Blue'],    hex:'#215c9c', on:'#ffffff', sym:'●'},
+    {key:'green',  cw:['Groen','Green'],   hex:'#4f7a2e', on:'#ffffff', sym:'■'},
+    {key:'yellow', cw:['Geel','Yellow'],   hex:'#e0a81c', on:'#1a1206', sym:'★'},
+    {key:'purple', cw:['Paars','Purple'],  hex:'#8e4585', on:'#ffffff', sym:'✚'},
+    {key:'cyan',   cw:['Cyaan','Cyan'],    hex:'#158f8a', on:'#ffffff', sym:'⬡'},
+    {key:'orange', cw:['Oranje','Orange'], hex:'#d9822b', on:'#1a1206', sym:'◆'},
   ]; }
   // roles: name + home country + full effect description (data-driven, FO §7)
   get ROLES(){ return [

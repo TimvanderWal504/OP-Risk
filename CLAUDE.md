@@ -11,6 +11,14 @@ telefoon-scherm per speler.
 1. `docs/functioneel-ontwerp-risk.md` — spelregels; nooit zelf invullen bij twijfel, vraag het na
 2. `docs/technisch-ontwerp-risk.md` — architectuur en stack
 3. `data/*.json` — alle kaart-, kleur-, kaartendeck- en grenzendata
+4. `frontend/src/design-reference/` — **normatief** voor alles wat zichtbaar of
+   bewegend is: layout, spacing, typografie, kleur, states, animatie en timing.
+   - TV/host: `frontend/src/design-reference/tv/Operatie Atlas Host-scherm.dc.html`
+   - Telefoon: `frontend/src/design-reference/phone/Operatie Atlas Telefoon.dc.html`
+
+Deze vier zijn even bindend. Het design is geen inspiratie en geen richting —
+het is de specificatie van de visuele laag, met dezelfde status als het FO voor
+de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
 
 ## Repo-indeling
 
@@ -30,9 +38,17 @@ telefoon-scherm per speler.
 
 ## Werkafspraken
 
-- `design-reference/` is read-only referentiemateriaal. Nooit bewerken; wel
-  overnemen naar `components/`, met echte state (SignalR, server-authoritative)
-  in plaats van de mock-data uit de export.
+- `design-reference/` is read-only én normatief. Nooit bewerken. De componenten
+  in `components/` moeten visueel en qua beweging **niet te onderscheiden** zijn
+  van de export; alleen de databron verschilt (echte server-state via SignalR in
+  plaats van de mock-data uit de export).
+- **Het design mag niet "verbeterd" worden.** Andere spacing, ander lettertype,
+  een net iets vloeiendere animatie, een extra hover-state, een "consistenter"
+  raster: allemaal afwijkingen, ook als ze objectief mooier zijn. Zie je iets dat
+  echt fout lijkt in het design, dan is dat een bevinding die je meldt — geen
+  invulruimte, net als bij een ontbrekende spelregel.
+- `design-tokens.ts` en `motion.ts` (zie frontend/CLAUDE.md) zijn afgeleiden van
+  de export en zijn eveneens bevroren: alleen wijzigen als de export wijzigt.
 - `RiskGame.Rules` blijft vrij van ASP.NET-, SignalR-, Marten-, I/O- en
   tijdafhankelijkheden zodat spelregels deterministisch testbaar zijn. Dobbelen
   loopt altijd via een injecteerbare `IRandomSource`, nooit `System.Random` direct
@@ -90,8 +106,9 @@ Meld altijd wanneer je één van de twee documenten hebt gelezen.
   Bij een taak die meer dan ~5 bestanden raakt: eerst een plan voorleggen
   (plan mode), dan pas implementeren.
 - **Definition of done, altijd:** `dotnet build` groen, `dotnet test` groen,
-  en (bij frontend-werk) `pnpm run build` groen. Een taak zonder geslaagde
-  tests is niet af — ook niet "bijna af".
+  (bij frontend-werk) `pnpm run build` groen, én — bij elk component dat een
+  design-tegenhanger heeft — een afgeronde design-conformiteitscheck volgens
+  frontend/CLAUDE.md, inclusief de ingevulde afwijkingenlijst.
 - **Geen nieuwe dependencies zonder overleg.** NuGet- of (p)npm-packages
   toevoegen alleen na expliciete goedkeuring, met motivatie waarom het niet
   zonder kan.
