@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
-import type { GameStateDto } from '../types/GameState'
+import { GamePhaseDto, type GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage } from '../types/HubResponses'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
@@ -31,8 +31,11 @@ export function useTvGame(gameId: string) {
 
       applyState(updated)
 
+      // Alleen leegmaken zodra een nieuw spel weer bij de lobby begint — niet zodra de
+      // volgorde net bekend is, anders verdwijnen de worpen tijdens de reveal-hold
+      // (useHeldPhase) nog vóórdat de speler ze gezien heeft.
       setOrderRollThrows((current) =>
-        updated.turnOrder.length > 0 && Object.keys(current).length > 0 ? {} : current,
+        updated.phase === GamePhaseDto.Lobby && Object.keys(current).length > 0 ? {} : current,
       )
     }
 

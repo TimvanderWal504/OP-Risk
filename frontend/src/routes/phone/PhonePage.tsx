@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useGameState } from '../../hooks/useGameState'
+import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { JoinNameStep } from '../../components/JoinNameStep'
 import { JoinColorStep } from '../../components/JoinColorStep'
 import { JoinRoleStep } from '../../components/JoinRoleStep'
@@ -25,6 +26,7 @@ export function PhonePage() {
     startGame,
     rollForOrder,
   } = useGameState(gameId!)
+  const displayPhase = useHeldPhase(state?.phase)
 
   if (!state || !playerId) {
     return (
@@ -44,7 +46,7 @@ export function PhonePage() {
     )
   }
 
-  if (state.phase === GamePhaseDto.OrderRoll) {
+  if (displayPhase === GamePhaseDto.OrderRoll) {
     const myColor = state.colors.find((c) => c.id === me.colorId)
     return (
       <PhoneShell>
@@ -60,7 +62,7 @@ export function PhonePage() {
     )
   }
 
-  if (state.phase !== GamePhaseDto.Lobby) {
+  if (displayPhase !== GamePhaseDto.Lobby) {
     return (
       <PhoneShell>
         <div className="flex h-full items-center justify-center p-5 text-center text-fg-muted">

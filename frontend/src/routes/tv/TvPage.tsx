@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useTvGame } from '../../hooks/useTvGame'
+import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { LobbyQrPanel } from '../../components/LobbyQrPanel'
 import { LobbyPlayerList } from '../../components/LobbyPlayerList'
 import { LobbySettingsSummary } from '../../components/LobbySettingsSummary'
@@ -18,6 +19,7 @@ export function TvPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { t } = useTranslation(['lobby', 'orderRoll'])
   const { state, error, orderRollThrows } = useTvGame(gameId!)
+  const displayPhase = useHeldPhase(state?.phase)
 
   if (error) {
     return (
@@ -35,7 +37,7 @@ export function TvPage() {
     )
   }
 
-  if (state.phase === GamePhaseDto.OrderRoll) {
+  if (displayPhase === GamePhaseDto.OrderRoll) {
     return (
       <TvShell>
         <div className="flex h-full flex-col p-14 bg-hero-pattern">
@@ -53,7 +55,7 @@ export function TvPage() {
     )
   }
 
-  if (state.phase !== GamePhaseDto.Lobby) {
+  if (displayPhase !== GamePhaseDto.Lobby) {
     return (
       <TvShell>
         <div className="flex h-full items-center justify-center text-fg-muted">
