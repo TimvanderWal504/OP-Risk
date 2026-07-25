@@ -4,6 +4,7 @@ import type { LocaleTree } from '../i18n/types'
 export const common = {
   actions: {
     join: { nl: 'Deelnemen', en: 'Join' },
+    next: { nl: 'Volgende ›', en: 'Next ›' },
   },
   badges: {
     comingSoon: { nl: 'binnenkort', en: 'coming soon' },

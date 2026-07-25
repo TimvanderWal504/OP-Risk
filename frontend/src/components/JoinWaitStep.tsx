@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { TvUrlPanel } from './TvUrlPanel'
@@ -28,34 +29,31 @@ export function JoinWaitStep({
   onStart,
   error = null,
 }: JoinWaitStepProps) {
+  const { t } = useTranslation('join')
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 p-5 text-center">
       <PlayerAvatar colorHex={color?.hex} colorSymbol={color?.symbol} isHost={me.isHost} size="lg" />
       <div>
-        <p className="font-display text-h1 font-black">Je bent aangemeld</p>
+        <p className="font-display text-h1 font-black">{t('wait.title')}</p>
         <p className="text-fg-muted">
-          {me.name} · {color?.name ?? 'geen kleur'}
+          {me.name} · {color?.name ?? t('wait.noColor')}
         </p>
         {role && <p className="text-sm text-gold-300">{role.name}</p>}
       </div>
-      <p className="font-mono text-fg-muted">{joinedCount} spelers aanwezig</p>
+      <p className="font-mono text-fg-muted">{t('wait.playersPresent', { count: joinedCount })}</p>
 
       {isHost ? (
         <div className="flex w-full flex-col gap-3">
           <TvUrlPanel gameId={gameId} />
           {error && <p className="text-loss">{error}</p>}
           <Button disabled={!canStart} onClick={onStart}>
-            Spel starten
+            {t('wait.startGame')}
           </Button>
-          {!canStart && (
-            <p className="text-xs text-fg-muted">
-              Wachten tot alle spelers klaar zijn (minimaal aantal spelers, iedereen heeft een
-              kleur gekozen).
-            </p>
-          )}
+          {!canStart && <p className="text-xs text-fg-muted">{t('wait.waitingForPlayers')}</p>}
         </div>
       ) : (
-        <p className="text-fg-muted">Wachten tot de host het spel start…</p>
+        <p className="text-fg-muted">{t('wait.waitingForHost')}</p>
       )}
     </div>
   )

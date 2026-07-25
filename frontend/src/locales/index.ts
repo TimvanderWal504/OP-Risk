@@ -3,6 +3,7 @@ import { errors } from './errors'
 import { validation } from './validation'
 import { home } from './home'
 import { createGame } from './createGame'
+import { join } from './join'
 
 export const trees = {
   common,
@@ -10,4 +11,5 @@ export const trees = {
   validation,
   home,
   createGame,
+  join,
 } as const

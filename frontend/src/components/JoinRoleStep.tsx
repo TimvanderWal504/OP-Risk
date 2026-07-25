@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { RoleSummaryDto } from '../types/GameState'
 import { SelectableOption } from './ui/SelectableOption'
 
@@ -17,11 +18,17 @@ export function JoinRoleStep({
   onPick,
   error = null,
 }: JoinRoleStepProps) {
+  const { t } = useTranslation('join')
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-5">
-      <h1 className="font-display text-h1 font-bold">Kies je rol</h1>
+      <h1 className="font-display text-h1 font-bold">{t('role.title')}</h1>
       {error && <p className="text-loss">{error}</p>}
-      <div role="radiogroup" aria-label="Kies je rol" className="flex flex-1 flex-col gap-2.5 overflow-y-auto">
+      <div
+        role="radiogroup"
+        aria-label={t('role.ariaLabel')}
+        className="flex flex-1 flex-col gap-2.5 overflow-y-auto"
+      >
         {roles.map((role) => {
           const taken = takenRoleIds.includes(role.id) && selectedRoleId !== role.id
           const selected = selectedRoleId === role.id
@@ -36,7 +43,7 @@ export function JoinRoleStep({
             >
               <div className="flex items-center gap-3">
                 <span className="font-display font-bold">{role.name}</span>
-                {taken && <span className="ml-auto text-xs text-fg-muted">Bezet</span>}
+                {taken && <span className="ml-auto text-xs text-fg-muted">{t('role.taken')}</span>}
                 {selected && <span className="ml-auto text-pitch-400">✓</span>}
               </div>
               <p className="text-sm text-fg-secondary">{role.description}</p>
