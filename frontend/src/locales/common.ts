@@ -5,4 +5,7 @@ export const common = {
   actions: {
     join: { nl: 'Deelnemen', en: 'Join' },
   },
+  badges: {
+    comingSoon: { nl: 'binnenkort', en: 'coming soon' },
+  },
 } satisfies LocaleTree

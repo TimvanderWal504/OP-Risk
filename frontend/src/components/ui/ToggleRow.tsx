@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Switch } from './Switch'
 
 export interface ToggleRowProps {
@@ -21,6 +22,8 @@ export function ToggleRow({
   soon = false,
   onToggle,
 }: ToggleRowProps) {
+  const { t } = useTranslation('common')
+
   return (
     <div
       className={`flex items-center gap-3 rounded-card border border-border bg-white/3 px-3.5 py-3 ${disabled ? 'opacity-50' : ''}`}
@@ -31,7 +34,7 @@ export function ToggleRow({
           {label}
           {soon && (
             <span className="ml-1.5 rounded-md border border-border-strong px-1.5 py-0.5 text-[10px] font-bold tracking-[.08em] text-fg-muted">
-              binnenkort
+              {t('badges.comingSoon')}
             </span>
           )}
         </div>
