@@ -78,8 +78,11 @@ export function HomePage() {
               background: 'linear-gradient(120deg, rgba(242,169,34,.18), rgba(242,169,34,.04))',
             }}
           >
-            <span className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-gold-400 text-[28px] text-[#0a0e17]">
-              ✦
+            <span
+              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-gold-400 text-[28px] text-[#0a0e17]"
+              aria-hidden
+            >
+              {'✦'}
             </span>
             <span className="flex-1">
               <span className="block font-display text-[22px] font-black">
@@ -97,8 +100,11 @@ export function HomePage() {
             onClick={() => setMode('join')}
             className="flex w-full items-center gap-4 rounded-[20px] border border-border-strong bg-white/4 px-5 py-[22px] text-left"
           >
-            <span className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-pitch-500 text-[28px] text-[#04060b]">
-              ⌂
+            <span
+              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-pitch-500 text-[28px] text-[#04060b]"
+              aria-hidden
+            >
+              {'⌂'}
             </span>
             <span className="flex-1">
               <span className="block font-display text-[22px] font-black">

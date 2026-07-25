@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import i18next from 'eslint-plugin-i18next'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
@@ -34,6 +35,19 @@ export default defineConfig([
             'Zo blijft de naam bij import gelijk en is de component vindbaar.',
         },
       ],
+    },
+  },
+  {
+    // Bewaakt Fase 2/3 van de i18n-migratie: geen nieuwe hardcoded UI-tekst in
+    // JSX. Alleen op echte componenten/routes, niet op tests (die mogen
+    // literale mock-tekst gebruiken) of de bevroren design-reference-export.
+    // PlayerHeader.tsx: nog ongebruikt component (zie docs/i18n-inventory.md
+    // §1), wordt bij de eigen migratietaak meegenomen — niet hier.
+    files: ['src/components/**/*.tsx', 'src/routes/**/*.tsx'],
+    ignores: ['**/*.test.tsx', 'src/components/ui/PlayerHeader.tsx'],
+    plugins: { i18next },
+    rules: {
+      'i18next/no-literal-string': 'error',
     },
   },
 ])

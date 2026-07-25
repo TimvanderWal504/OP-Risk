@@ -45,7 +45,11 @@ export function JoinRoleStep({
               <div className="flex items-center gap-3">
                 <span className="font-display font-bold">{tDynamic(`${role.id}.name`, 'roles')}</span>
                 {taken && <span className="ml-auto text-xs text-fg-muted">{t('role.taken')}</span>}
-                {selected && <span className="ml-auto text-pitch-400">✓</span>}
+                {selected && (
+                  <span className="ml-auto text-pitch-400" aria-hidden>
+                    {'✓'}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-fg-secondary">{tDynamic(`${role.id}.description`, 'roles')}</p>
             </SelectableOption>

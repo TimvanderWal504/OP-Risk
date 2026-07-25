@@ -225,6 +225,21 @@ Bekende, geaccepteerde cosmetische afwijkingen tussen achtergrond en overlay: In
 
 Conform FO §2.3: de telefoon toont **nooit** een kaart om op te tikken, altijd een knoppenlijst van geldige opties. De TV highlight de corresponderende gebieden in de SVG-laag. Beide lijsten komen van dezelfde server-berekende set geldige opties.
 
+### 7.4 Vertalingen (i18n)
+
+`nl`/`en` via i18next/react-i18next. Bron van waarheid is een key-first
+boomstructuur per namespace in `frontend/src/locales/*.ts`
+(`{ key: { nl, en } }`), die bij app-init in het geheugen naar i18next-resources
+wordt geëxpandeerd (`frontend/src/i18n/expand.ts`) — er zijn geen losse
+`nl.json`/`en.json`-bestanden.
+
+**Bewust uitgesteld:** een exportscript dat de key-first bron naar platte
+per-taal JSON-bestanden splitst (bv. voor lazy-loading per taal, of om
+vertalers een los bestand te geven) heeft nu geen concrete afnemer — alle
+resources worden inline gebundeld. Bouw dit pas zodra een van die twee
+gevallen zich daadwerkelijk voordoet (bv. bij een merkbare bundle-omvang door
+extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
+
 ---
 
 ## 8. Beveiliging & integriteit
