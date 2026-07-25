@@ -6,7 +6,8 @@ import { TvPage } from './routes/tv/TvPage'
 import { PhonePage } from './routes/phone/PhonePage'
 import { HomePage } from './routes/phone/HomePage'
 import './index.css'
-import { GameHubProvider } from './hooks/useSignalR'
+import './i18n'
+import { GameHubProvider } from './hooks/GameHubProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,8 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr'
-
-type GameHubContext = { connection: HubConnection; connectionState: HubConnectionState }
-const Ctx = createContext<GameHubContext | null>(null)
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
+import { GameHubCtx } from './GameHubContext'
 
 export function GameHubProvider({ children }: { children: ReactNode }) {
   const [connection] = useState(() =>
@@ -42,11 +40,5 @@ export function GameHubProvider({ children }: { children: ReactNode }) {
     }
   }, [connection])
 
-  return <Ctx.Provider value={{ connection, connectionState }}>{children}</Ctx.Provider>
-}
-
-export function useSignalR() {
-  const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useSignalR moet binnen <GameHubProvider> gebruikt worden')
-  return ctx
+  return <GameHubCtx.Provider value={{ connection, connectionState }}>{children}</GameHubCtx.Provider>
 }
