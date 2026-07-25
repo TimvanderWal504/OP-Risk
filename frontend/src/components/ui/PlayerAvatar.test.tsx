@@ -3,29 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { PlayerAvatar } from './PlayerAvatar'
 
 describe('PlayerAvatar', () => {
-  it('toont de host-ster voor een host', () => {
-    render(<PlayerAvatar colorHex="#215C9C" isHost />)
-    expect(screen.getByText('★')).toBeInTheDocument()
-  })
-
-  it('toont geen ster voor een niet-host', () => {
-    render(<PlayerAvatar colorHex="#215C9C" isHost={false} />)
-    expect(screen.queryByText('★')).not.toBeInTheDocument()
-  })
-
-  it('toont het kleursymbool voor een niet-host', () => {
-    render(<PlayerAvatar colorHex="#215C9C" colorSymbol="square" isHost={false} />)
+  it('toont het kleursymbool', () => {
+    render(<PlayerAvatar colorHex="#215C9C" colorSymbol="square" />)
     expect(screen.getByText('■')).toBeInTheDocument()
   })
 
-  it('toont de ster in plaats van het kleursymbool voor een host', () => {
-    render(<PlayerAvatar colorHex="#215C9C" colorSymbol="square" isHost />)
-    expect(screen.getByText('★')).toBeInTheDocument()
-    expect(screen.queryByText('■')).not.toBeInTheDocument()
-  })
-
   it('past colorOnHex toe als tekstkleur van het symbool', () => {
-    render(<PlayerAvatar colorHex="#215C9C" colorOnHex="#FFFFFF" colorSymbol="square" isHost={false} />)
+    render(<PlayerAvatar colorHex="#215C9C" colorOnHex="#FFFFFF" colorSymbol="square" />)
     expect(screen.getByText('■').parentElement).toHaveStyle({ color: '#FFFFFF' })
   })
 })

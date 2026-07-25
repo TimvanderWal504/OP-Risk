@@ -17,7 +17,14 @@ function formatSeconds(seconds: number): string {
   return rest === 0 ? `${minutes} min` : `${minutes}:${rest.toString().padStart(2, '0')} min`
 }
 
-/** Instellingen-samenvatting op de TV (FO §10). */
+/**
+ * Instellingen-samenvatting op de TV (FO §10; Host-scherm.dc.html L92-103, `settingsRows`
+ * L807-815). Rijvolgorde en per-rij accentkleur zijn letterlijk uit de export overgenomen:
+ * winconditie in gold-400, "aan"-waarden in pitch-400, overige in fg1.
+ *
+ * De export toont maar één timer-rij ("Beurttimer") — geen aparte fortify-timer-rij, dus
+ * `fortifyTimerSeconds` wordt hier niet getoond (wel elders, in `CreateGameForm`).
+ */
 export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
   const { t } = useTranslation('lobby')
 
@@ -36,27 +43,39 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
     [RoleAssignmentModeDto.Choose]: t('roleAssignment.choose'),
   }
 
-  const rows: [string, string][] = [
-    [t('settings.winCondition'), winConditionLabels[settings.winCondition]],
-    [t('settings.setupMode'), setupModeLabels[settings.setupMode]],
-    [t('settings.startingArmies'), String(settings.startingArmies)],
-    [t('settings.turnTimer'), formatSeconds(settings.turnTimerSeconds)],
-    [t('settings.fortifyTimer'), formatSeconds(settings.fortifyTimerSeconds)],
+  const rows: [string, string, string][] = [
+    [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
+    [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--gold-400)'],
     [
       t('settings.roles'),
       settings.rolesEnabled ? roleAssignmentLabels[settings.roleAssignment] : t('settings.off'),
+      settings.rolesEnabled ? 'var(--pitch-400)' : 'var(--fg1)',
     ],
-    [t('settings.eventsRound'), settings.eventsEnabled ? t('settings.on') : t('settings.off')],
+    [
+      t('settings.eventsRound'),
+      settings.eventsEnabled ? t('settings.on') : t('settings.off'),
+      settings.eventsEnabled ? 'var(--pitch-400)' : 'var(--fg1)',
+    ],
+    [t('settings.setupMode'), setupModeLabels[settings.setupMode], 'var(--fg1)'],
+    [t('settings.startingArmies'), String(settings.startingArmies), 'var(--fg1)'],
+    [t('settings.turnTimer'), formatSeconds(settings.turnTimerSeconds), 'var(--fg1)'],
   ]
 
   return (
-    <div>
-      <p className="twc-eyebrow mb-4 text-gold-400">{t('settings.title')}</p>
-      <dl className="flex flex-col gap-0">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between border-b border-border py-3">
-            <dt className="text-fg-secondary">{label}</dt>
-            <dd className="font-display font-bold">{value}</dd>
+    <div
+      className="w-[440px] flex-none rounded-sheet border border-border-strong p-[28px_26px]"
+      style={{ background: 'linear-gradient(#101826,#0b111c)' }}
+    >
+      <p className="mb-[18px] text-[16px] font-extrabold tracking-[.14em] text-gold-400 uppercase">
+        {t('settings.title')}
+      </p>
+      <dl className="flex flex-col gap-1.5">
+        {rows.map(([label, value, color]) => (
+          <div key={label} className="flex items-center justify-between border-b border-border p-[15px_4px]">
+            <dt className="text-[20px] text-fg-secondary">{label}</dt>
+            <dd className="font-display text-[20px] font-extrabold" style={{ color }}>
+              {value}
+            </dd>
           </div>
         ))}
       </dl>

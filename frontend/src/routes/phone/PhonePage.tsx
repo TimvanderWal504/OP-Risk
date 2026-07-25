@@ -5,6 +5,7 @@ import { JoinNameStep } from '../../components/JoinNameStep'
 import { JoinColorStep } from '../../components/JoinColorStep'
 import { JoinRoleStep } from '../../components/JoinRoleStep'
 import { JoinWaitStep } from '../../components/JoinWaitStep'
+import { JoinHostWaitStep } from '../../components/JoinHostWaitStep'
 import { OrderRollWaitStep } from '../../components/OrderRollWaitStep'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto } from '../../types/GameState'
@@ -28,7 +29,7 @@ export function PhonePage() {
   if (!state || !playerId) {
     return (
       <PhoneShell>
-        <JoinNameStep onSubmit={joinGame} error={error} />
+        <JoinNameStep onSubmit={joinGame} stepIndex={0} stepCount={3} error={error} />
       </PhoneShell>
     )
   }
@@ -38,16 +39,19 @@ export function PhonePage() {
   if (!me) {
     return (
       <PhoneShell>
-        <JoinNameStep onSubmit={joinGame} error={error} />
+        <JoinNameStep onSubmit={joinGame} stepIndex={0} stepCount={3} error={error} />
       </PhoneShell>
     )
   }
 
   if (state.phase === GamePhaseDto.OrderRoll) {
+    const myColor = state.colors.find((c) => c.id === me.colorId)
     return (
       <PhoneShell>
         <OrderRollWaitStep
           myDice={orderRollThrows[playerId]}
+          colorHex={myColor?.hex ?? '#ffffff'}
+          colorOnHex={myColor?.onHex ?? '#000000'}
           canRoll={state.orderRollState !== null}
           onRoll={rollForOrder}
           error={error}
@@ -66,6 +70,10 @@ export function PhonePage() {
     )
   }
 
+  const rolePickingRequired =
+    state.settings.rolesEnabled && state.settings.roleAssignment === RoleAssignmentModeDto.Choose
+  const stepCount = rolePickingRequired ? 4 : 3
+
   if (!me.colorId) {
     return (
       <PhoneShell>
@@ -74,16 +82,14 @@ export function PhonePage() {
           takenColorIds={state.colors
             .map((c) => c.id)
             .filter((id) => !state.availableColorIds.includes(id))}
-          selectedColorId={null}
           onPick={chooseColor}
+          stepIndex={1}
+          stepCount={stepCount}
           error={error}
         />
       </PhoneShell>
     )
   }
-
-  const rolePickingRequired =
-    state.settings.rolesEnabled && state.settings.roleAssignment === RoleAssignmentModeDto.Choose
 
   if (rolePickingRequired && !me.roleId) {
     return (
@@ -91,8 +97,24 @@ export function PhonePage() {
         <JoinRoleStep
           roles={state.roles}
           takenRoleIds={state.players.map((p) => p.roleId).filter((id): id is string => id !== null)}
-          selectedRoleId={null}
           onPick={selectRole}
+          stepIndex={2}
+          stepCount={stepCount}
+          error={error}
+        />
+      </PhoneShell>
+    )
+  }
+
+  if (me.isHost) {
+    return (
+      <PhoneShell>
+        <JoinHostWaitStep
+          players={state.players}
+          colors={state.colors}
+          maxPlayers={state.colors.length}
+          canStart
+          onStart={startGame}
           error={error}
         />
       </PhoneShell>
@@ -105,15 +127,12 @@ export function PhonePage() {
   return (
     <PhoneShell>
       <JoinWaitStep
-        gameId={state.gameId}
         me={me}
         color={color}
         role={role}
         joinedCount={state.players.length}
-        isHost={me.isHost}
-        canStart
-        onStart={startGame}
-        error={error}
+        stepIndex={stepCount - 1}
+        stepCount={stepCount}
       />
     </PhoneShell>
   )

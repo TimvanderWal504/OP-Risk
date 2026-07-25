@@ -4,9 +4,16 @@ export type DiceValue = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface DiceProps {
   value: DiceValue
+  colorHex: string
+  colorOnHex: string
   /** Zijde in pixels. */
-  size?: number
-  variant?: 'attacker' | 'defender' | 'neutral'
+  size: number
+  radius: number
+  padding: number
+  gap: number
+  pipSize: number
+  boxShadow: string
+  animation?: string
 }
 
 /** Positie (0-8, links-boven → rechts-onder) van de stippen per ogenaantal. */
@@ -19,21 +26,10 @@ const PIP_LAYOUT: Record<DiceValue, number[]> = {
   6: [0, 2, 3, 5, 6, 8],
 }
 
-const FACE_CLASS: Record<NonNullable<DiceProps['variant']>, string> = {
-  attacker: 'bg-white',
-  defender: 'bg-surface-2 border border-border-strong',
-  neutral: 'bg-white',
-}
-
-const PIP_CLASS: Record<NonNullable<DiceProps['variant']>, string> = {
-  attacker: 'bg-loss',
-  defender: 'bg-white',
-  neutral: 'bg-[#0a0e17]',
-}
-
-/** Pure dobbelsteen-weergave. Toont een vaste worp (server-authoritative) —
- * bevat zelf geen worp- of kanslogica. */
-export function Dice({ value, size = 56, variant = 'neutral' }: DiceProps) {
+/** Pure dobbelsteen-weergave, getint met de kleur van de speler die gooit
+ * (nooit een vast aanvaller/verdediger-kleurenschema — geen enkele
+ * design-instantie doet dat). Bevat zelf geen worp- of kanslogica. */
+export function Dice({ value, colorHex, colorOnHex, size, radius, padding, gap, pipSize, boxShadow, animation }: DiceProps) {
   const { t } = useTranslation('common')
   const pips = PIP_LAYOUT[value]
 
@@ -41,13 +37,22 @@ export function Dice({ value, size = 56, variant = 'neutral' }: DiceProps) {
     <div
       role="img"
       aria-label={t('dice.ariaLabel', { value })}
-      className={`grid grid-cols-3 grid-rows-3 gap-1 rounded-input p-2 ${FACE_CLASS[variant]}`}
-      style={{ width: size, height: size }}
+      className="grid grid-cols-3 grid-rows-3"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        padding,
+        gap,
+        background: colorHex,
+        boxShadow,
+        animation,
+      }}
     >
       {Array.from({ length: 9 }).map((_, cell) => (
         <span key={cell} className="flex items-center justify-center">
           {pips.includes(cell) && (
-            <span className={`h-1/2 w-1/2 rounded-full ${PIP_CLASS[variant]}`} />
+            <span className="rounded-full" style={{ width: pipSize, height: pipSize, background: colorOnHex }} />
           )}
         </span>
       ))}

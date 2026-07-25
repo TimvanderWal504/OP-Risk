@@ -19,6 +19,8 @@ export const lobby = {
   },
   settings: {
     title: { nl: 'Instellingen', en: 'Settings' },
+    map: { nl: 'Kaart', en: 'Map' },
+    mapValue: { nl: 'Standaard · 43 gebieden', en: 'Standard · 43 territories' },
     winCondition: { nl: 'Winconditie', en: 'Win condition' },
     setupMode: { nl: 'Startopstelling', en: 'Starting setup' },
     startingArmies: { nl: 'Startlegers', en: 'Starting armies' },

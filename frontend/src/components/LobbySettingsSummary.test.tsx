@@ -20,10 +20,11 @@ describe('LobbySettingsSummary', () => {
       />,
     )
 
+    expect(screen.getByText('Kaart')).toBeInTheDocument()
     expect(screen.getByText('Geheime missies')).toBeInTheDocument()
     expect(screen.getByText('30')).toBeInTheDocument()
     expect(screen.getByText('3 min')).toBeInTheDocument()
-    expect(screen.getByText('1 min')).toBeInTheDocument()
+    expect(screen.queryByText('1 min')).not.toBeInTheDocument()
     expect(screen.getAllByText('Uit')).toHaveLength(2)
   })
 })

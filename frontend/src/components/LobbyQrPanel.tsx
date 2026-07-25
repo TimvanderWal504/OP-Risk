@@ -34,17 +34,20 @@ export function LobbyQrPanel({ gameId, origin = window.location.origin }: LobbyQ
   }, [joinUrl])
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-card border border-border-strong bg-surface-2 p-8">
+    <div
+      className="flex w-[560px] flex-none flex-col items-center justify-center rounded-sheet border border-border-strong p-9 shadow-[0_30px_80px_rgba(0,0,0,.5)]"
+      style={{ background: 'linear-gradient(#131c2b,#0d1420)' }}
+    >
       <div
         role="img"
         aria-label={t('qr.ariaLabel', { url: joinUrl })}
-        className="w-64 rounded-card bg-white p-4 shadow-[0_0_0_6px_rgba(132,173,40,0.25)] [&_svg]:h-full [&_svg]:w-full"
+        className="w-[360px] rounded-[18px] bg-white p-6 shadow-[0_0_0_6px_rgba(132,173,40,0.25)] [&_svg]:h-full [&_svg]:w-full"
         dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
       />
-      <p className="font-display text-h2 font-bold">{t('qr.scanToJoin')}</p>
-      <div className="flex items-center gap-3">
-        <span className="font-mono text-fg-muted">{joinUrl}</span>
-        <span className="rounded-chip bg-pitch-400 px-4 py-1 font-mono text-lg font-semibold tracking-wide text-fg-onbrand">
+      <p className="mt-[26px] font-display text-[30px] font-extrabold">{t('qr.scanToJoin')}</p>
+      <div className="mt-4 flex items-center gap-3.5">
+        <span className="font-mono text-[18px] text-fg-muted">{joinUrl}</span>
+        <span className="rounded-[10px] bg-pitch-400 px-4 py-1.5 font-mono text-[26px] font-semibold tracking-[.18em] text-[#04060b]">
           {gameId}
         </span>
       </div>

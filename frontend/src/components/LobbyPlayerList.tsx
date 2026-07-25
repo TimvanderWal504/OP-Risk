@@ -38,7 +38,6 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
                 colorHex={color?.hex}
                 colorOnHex={color?.onHex}
                 colorSymbol={color?.symbol}
-                isHost={player.isHost}
               />
               <div className="min-w-0">
                 <div className="truncate font-display text-h2 font-bold">{player.name}</div>

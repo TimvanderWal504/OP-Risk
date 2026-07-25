@@ -26,7 +26,7 @@ export function ToggleRow({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-card border border-border bg-white/3 px-3.5 py-3 ${disabled ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-3 rounded-[14px] border border-border bg-white/3 px-3.5 py-3 ${disabled ? 'opacity-50' : ''}`}
     >
       {icon && <span className="text-[22px]">{icon}</span>}
       <div className="min-w-0 flex-1">

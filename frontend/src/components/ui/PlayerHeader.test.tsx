@@ -39,4 +39,67 @@ describe('PlayerHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Instellingen' }))
     expect(onSettings).toHaveBeenCalledTimes(1)
   })
+
+  it('toont een kroonbadge voor de host', () => {
+    render(
+      <PlayerHeader name="Tomas" colorName="Blauw" colorHex="#215C9C" status="Jouw beurt" timer="2:41" isHost />,
+    )
+
+    expect(screen.getByLabelText('Host')).toBeInTheDocument()
+  })
+
+  it('toont geen kroonbadge voor een niet-host', () => {
+    render(<PlayerHeader name="Tomas" colorName="Blauw" colorHex="#215C9C" status="Jouw beurt" timer="2:41" />)
+
+    expect(screen.queryByLabelText('Host')).not.toBeInTheDocument()
+  })
+
+  it('toont de timer rood en pulserend bij timerState="low"', () => {
+    render(
+      <PlayerHeader
+        name="Tomas"
+        colorName="Blauw"
+        colorHex="#215C9C"
+        status="Jouw beurt"
+        timer="1:00"
+        timerState="low"
+      />,
+    )
+
+    expect(screen.getByText('1:00')).toHaveClass('animate-timer-low')
+  })
+
+  it('toont het ❚❚-prefix bij timerState="paused"', () => {
+    render(
+      <PlayerHeader
+        name="Tomas"
+        colorName="Blauw"
+        colorHex="#215C9C"
+        status="Jouw beurt"
+        timer="Gepauzeerd"
+        timerState="paused"
+      />,
+    )
+
+    expect(screen.getByText('❚❚ Gepauzeerd')).toBeInTheDocument()
+  })
+
+  it('geeft de actieve actieknop de gold-styling, de rest niet', () => {
+    render(
+      <PlayerHeader
+        name="Tomas"
+        colorName="Blauw"
+        colorHex="#215C9C"
+        status="Jouw beurt"
+        timer="2:41"
+        actions={[
+          { icon: '🃏', label: 'Mijn kaarten', active: true },
+          { icon: '🎯', label: 'Mijn missie' },
+        ]}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Mijn kaarten' })).toHaveClass('border-gold-600')
+    expect(screen.getByRole('button', { name: 'Mijn missie' })).not.toHaveClass('border-gold-600')
+  })
 })

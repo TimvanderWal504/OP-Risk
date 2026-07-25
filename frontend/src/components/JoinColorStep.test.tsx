@@ -9,20 +9,40 @@ const colors = [
 ]
 
 describe('JoinColorStep', () => {
-  it('blokkeert een bezette kleur en roept onPick aan voor een vrije kleur', async () => {
+  it('blokkeert een bezette kleur', () => {
+    render(
+      <JoinColorStep
+        colors={colors}
+        takenColorIds={['red']}
+        onPick={vi.fn()}
+        stepIndex={1}
+        stepCount={3}
+      />,
+    )
+
+    expect(screen.getByRole('radio', { name: /rood/i })).toBeDisabled()
+  })
+
+  it('roept onPick pas aan na selecteren én bevestigen', async () => {
     const onPick = vi.fn()
     render(
       <JoinColorStep
         colors={colors}
         takenColorIds={['red']}
-        selectedColorId={null}
         onPick={onPick}
+        stepIndex={1}
+        stepCount={3}
       />,
     )
 
-    expect(screen.getByRole('radio', { name: /rood/i })).toBeDisabled()
+    const confirmButton = screen.getByRole('button', { name: /kies deze kleur/i })
+    expect(confirmButton).toBeDisabled()
 
     await userEvent.click(screen.getByRole('radio', { name: /blauw/i }))
+    expect(onPick).not.toHaveBeenCalled()
+    expect(confirmButton).toBeEnabled()
+
+    await userEvent.click(confirmButton)
     expect(onPick).toHaveBeenCalledWith('blue')
   })
 })

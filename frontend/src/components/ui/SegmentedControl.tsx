@@ -16,7 +16,7 @@ export function SegmentedControl<T extends string | number>({
   onChange,
 }: SegmentedControlProps<T>) {
   return (
-    <div className="flex gap-2.5">
+    <div className="flex gap-[9px]">
       {options.map((option) => {
         const active = option.value === value
 
@@ -26,7 +26,7 @@ export function SegmentedControl<T extends string | number>({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(option.value)}
-            className={`min-h-13 flex-1 rounded-input border-2 font-display text-[15px] font-extrabold ${
+            className={`min-h-13 flex-1 rounded-[12px] border-2 font-display text-[15px] font-extrabold ${
               active
                 ? 'border-pitch-500 bg-pitch-500/14 text-fg'
                 : 'border-border bg-white/3 text-fg-muted'

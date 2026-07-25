@@ -18,6 +18,104 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Telefoon.dc.html L18: @keyframes phLow — enige plek waar het design een
+   animatie gebruikt buiten design-reference/ (dat bestand is bevroren). */
+@theme {
+  --animate-timer-low: phLow 0.7s infinite;
+}
+@keyframes phLow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+/* Host-scherm.dc.html L20 / Telefoon.dc.html L18 — dobbelsteen-worp-animaties,
+   toegepast via inline `animation` (motion.ts levert de per-index delay). */
+@keyframes atlasTumble {
+  0% {
+    transform: translate(-680px, -880px) rotate(-900deg) scale(0.55);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  58% {
+    transform: translate(60px, 40px) rotate(150deg) scale(1.1);
+  }
+  74% {
+    transform: translate(-30px, -18px) rotate(60deg) scale(1);
+  }
+  88% {
+    transform: translate(14px, 7px) rotate(-16deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes phDice {
+  0% {
+    transform: translateY(-420px) rotate(-540deg) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(24px) rotate(150deg) scale(1.08);
+  }
+  78% {
+    transform: translateY(-12px) rotate(48deg) scale(1);
+  }
+  90% {
+    transform: translateY(6px) rotate(-14deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Telefoon.dc.html L18-26 — wachtrij-stip, avatar/resultaat-reveal, rij-entree. */
+@keyframes phDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.6);
+  }
+}
+@keyframes phPop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes phRise {
+  0% {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 @utility bg-hero-pattern {
   background: 
     radial-gradient(90% 70% at 50% 22%, rgba(33, 89, 144, 0.14), rgba(4, 6, 11, 0) 62%),

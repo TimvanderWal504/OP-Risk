@@ -1,58 +1,126 @@
 import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto } from '../types/GameState'
-import { PlayerAvatar } from './ui/PlayerAvatar'
+import { ColorSymbol } from './ui/ColorSymbol'
 import { Dice, type DiceValue } from './ui/Dice'
+import { tvAnimations } from '../design-reference/shared/motion'
 
 export interface OrderRollTvPanelProps {
   players: PlayerDto[]
   colors: PlayerColorDto[]
   throws: Record<string, number[]>
+  /** Player-ids in eindvolgorde. Leeg/afwezig ⇒ ranglijst nog niet renderen. */
+  order?: string[]
 }
 
-/** Order-roll-weergave op de TV (FO §2.1): per speler de laatste worp, of "wacht op worp". */
-export function OrderRollTvPanel({ players, colors, throws }: OrderRollTvPanelProps) {
+const DICE_BOX_SHADOW = '0 18px 40px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.25)'
+
+/** Order-roll-weergave op de TV (FO §2.1, Host-scherm.dc.html L108-141): per
+ * speler 2 dobbelstenen in zijn eigen kleur, of "wacht op worp"; daaronder de
+ * eindvolgorde zodra de server die aanlevert. */
+export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTvPanelProps) {
   const { t } = useTranslation('orderRoll')
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <span className="twc-eyebrow">{t('title')}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {players.map((player) => {
+    <div className="flex flex-col items-center text-center">
+      <h1 className="mt-3 mb-1.5 font-display text-[64px] font-black leading-none tracking-[-.02em]">
+        {t('title')}
+      </h1>
+      <p className="mb-1.5 text-[22px] text-fg-muted">{t('sub')}</p>
+
+      <div className="mt-9 mb-2.5 flex flex-wrap justify-center gap-[26px]">
+        {players.map((player, idx) => {
           const color = colors.find((c) => c.id === player.colorId)
           const dice = throws[player.id]
+          if (!color) return null
 
           return (
-            <div
-              key={player.id}
-              className="flex items-center gap-4 rounded-card border border-border bg-white/3 p-4"
-            >
-              <PlayerAvatar
-                colorHex={color?.hex}
-                colorOnHex={color?.onHex}
-                colorSymbol={color?.symbol}
-                isHost={player.isHost}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-display text-h3 font-bold">{player.name}</div>
-                {dice ? (
-                  <div className="text-sm text-fg-muted">{t('total', { total: dice[0] + dice[1] })}</div>
-                ) : (
-                  <div className="text-sm text-fg-muted">{t('waitingForRoll')}</div>
-                )}
-              </div>
-              {dice && (
-                <div className="flex flex-none gap-2">
-                  <Dice value={dice[0] as DiceValue} size={40} />
-                  <Dice value={dice[1] as DiceValue} size={40} />
+            <div key={player.id} className="flex flex-col items-center gap-3.5">
+              {dice ? (
+                <>
+                  <Dice
+                    value={dice[0] as DiceValue}
+                    colorHex={color.hex}
+                    colorOnHex={color.onHex}
+                    size={118}
+                    radius={22}
+                    padding={16}
+                    gap={6}
+                    pipSize={20}
+                    boxShadow={DICE_BOX_SHADOW}
+                    animation={tvAnimations.orderRollDie(idx)}
+                  />
+                  <Dice
+                    value={dice[1] as DiceValue}
+                    colorHex={color.hex}
+                    colorOnHex={color.onHex}
+                    size={118}
+                    radius={22}
+                    padding={16}
+                    gap={6}
+                    pipSize={20}
+                    boxShadow={DICE_BOX_SHADOW}
+                    animation={tvAnimations.orderRollDie(idx)}
+                  />
+                </>
+              ) : (
+                <div className="flex h-[118px] w-[118px] items-center justify-center text-sm text-fg-muted">
+                  {t('waitingForRoll')}
                 </div>
               )}
+              <div className="flex items-center gap-2">
+                <span
+                  className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] text-[13px]"
+                  style={{ background: color.hex, color: color.onHex }}
+                >
+                  <ColorSymbol symbol={color.symbol} />
+                </span>
+                <span className="font-display text-[22px] font-bold">{player.name}</span>
+              </div>
             </div>
           )
         })}
       </div>
+
+      {order && order.length > 0 && (
+        <div className="mt-6 w-full max-w-[1500px]">
+          <div className="mb-3.5 text-center font-body text-[16px] font-black uppercase tracking-[.14em] text-fg-muted">
+            {t('turnOrder')}
+          </div>
+          <div className="flex justify-center gap-4">
+            {order.map((playerId, rank) => {
+              const player = players.find((p) => p.id === playerId)
+              const color = colors.find((c) => c.id === player?.colorId)
+              if (!player || !color) return null
+              const first = rank === 0
+
+              return (
+                <div
+                  key={playerId}
+                  className={`flex max-w-[220px] flex-1 items-center gap-4 rounded-[16px] border p-4 ${
+                    first ? 'border-gold-600 bg-gold-400/12' : 'border-border bg-white/3'
+                  }`}
+                >
+                  <span
+                    className={`font-display text-[44px] font-black leading-none ${first ? 'text-gold-300' : 'text-fg-muted'}`}
+                  >
+                    {rank + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <span
+                      className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] text-[15px]"
+                      style={{ background: color.hex, color: color.onHex }}
+                    >
+                      <ColorSymbol symbol={color.symbol} />
+                    </span>
+                    <div className="mt-1.5 truncate font-display text-[22px] font-bold">{player.name}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

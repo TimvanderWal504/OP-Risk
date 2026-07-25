@@ -25,4 +25,10 @@ describe('Button', () => {
     await userEvent.click(button)
     expect(onClick).not.toHaveBeenCalled()
   })
+
+  it('gebruikt de gouden CTA-styling bij variant="gold"', () => {
+    render(<Button variant="gold">Gooien</Button>)
+
+    expect(screen.getByRole('button', { name: 'Gooien' })).toHaveClass('bg-gold-400')
+  })
 })

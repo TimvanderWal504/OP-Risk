@@ -1,42 +1,56 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { SelectableOption } from './ui/SelectableOption'
+import { JoinProgressHeader } from './ui/JoinProgressHeader'
+import { Footer } from './ui/Footer'
+import { Button } from './ui/Button'
 import { tDynamic } from '../i18n/useT'
 
 export interface JoinColorStepProps {
   colors: PlayerColorDto[]
   takenColorIds: string[]
-  selectedColorId: string | null
   onPick: (colorId: string) => void
+  stepIndex: number
+  stepCount: number
   error?: string | null
 }
 
-/** Tweede join-stap (FO §3): kleur kiezen, bezette kleuren live geblokkeerd. */
+/** Tweede join-stap (FO §3): kleur kiezen, bezette kleuren live geblokkeerd.
+ * Select-dan-bevestig (Telefoon.dc.html L290-300): een klik zet alleen de
+ * lokale keuze, `onPick` (de server-call) gaat pas bij de bevestigingsknop. */
 export function JoinColorStep({
   colors,
   takenColorIds,
-  selectedColorId,
   onPick,
+  stepIndex,
+  stepCount,
   error = null,
 }: JoinColorStepProps) {
   const { t } = useTranslation('join')
+  const [pendingColorId, setPendingColorId] = useState<string | null>(null)
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-5">
-      <h1 className="font-display text-h1 font-bold">{t('color.title')}</h1>
-      {error && <p className="text-loss">{error}</p>}
+      <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
+      <div>
+        <h1 className="font-display text-[26px] font-extrabold">{t('color.title')}</h1>
+        <p className="mt-1.5 text-[15px] text-fg-muted">{t('color.sub')}</p>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {colors.map((color) => {
-          const taken = takenColorIds.includes(color.id) && selectedColorId !== color.id
-          const selected = selectedColorId === color.id
+          const taken = takenColorIds.includes(color.id)
+          const selected = pendingColorId === color.id
 
           return (
             <SelectableOption
               key={color.id}
               selected={selected}
               disabled={taken}
-              onSelect={() => onPick(color.id)}
+              onSelect={() => setPendingColorId(color.id)}
               className="flex min-h-16 items-center gap-3 px-4"
+              unselectedBorderVar="var(--border)"
+              disabledBorderVar="var(--border)"
             >
               <span
                 className="h-9 w-9 flex-none rounded-input"
@@ -54,6 +68,11 @@ export function JoinColorStep({
           )
         })}
       </div>
+      <Footer error={error}>
+        <Button disabled={!pendingColorId} onClick={() => pendingColorId && onPick(pendingColorId)}>
+          {t('color.confirm')}
+        </Button>
+      </Footer>
     </div>
   )
 }

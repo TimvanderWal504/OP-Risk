@@ -6,7 +6,7 @@ import { JoinNameStep } from './JoinNameStep'
 describe('JoinNameStep', () => {
   it('roept onSubmit met de getrimde naam aan', async () => {
     const onSubmit = vi.fn()
-    render(<JoinNameStep onSubmit={onSubmit} />)
+    render(<JoinNameStep onSubmit={onSubmit} stepIndex={0} stepCount={3} />)
 
     await userEvent.type(screen.getByPlaceholderText('Jouw naam'), '  Alice  ')
     await userEvent.click(screen.getByRole('button', { name: /volgende/i }))
@@ -15,7 +15,7 @@ describe('JoinNameStep', () => {
   })
 
   it('de knop is uitgeschakeld zonder naam', () => {
-    render(<JoinNameStep onSubmit={vi.fn()} />)
+    render(<JoinNameStep onSubmit={vi.fn()} stepIndex={0} stepCount={3} />)
 
     expect(screen.getByRole('button', { name: /volgende/i })).toBeDisabled()
   })

@@ -4,15 +4,16 @@ export interface PlayerAvatarProps {
   colorHex?: string | null
   colorOnHex?: string | null
   colorSymbol?: string | null
-  isHost: boolean
   size?: 'sm' | 'lg'
 }
 
-/** Gekleurde tegel met een host-ster, of anders het kleurenblind-vriendelijke
- * kleursymbool; valt terug op een neutrale achtergrond zolang de speler nog
- * geen kleur heeft. `colorOnHex` is de contrastkleur uit colors.json voor het
- * symbool bovenop `colorHex` (nooit zelf een kleur verzinnen). */
-export function PlayerAvatar({ colorHex, colorOnHex, colorSymbol, isHost, size = 'sm' }: PlayerAvatarProps) {
+/** Gekleurde tegel met het kleurenblind-vriendelijke kleursymbool; valt terug
+ * op een neutrale achtergrond zolang de speler nog geen kleur heeft.
+ * `colorOnHex` is de contrastkleur uit colors.json voor het symbool bovenop
+ * `colorHex` (nooit zelf een kleur verzinnen). Host-status wordt nergens in
+ * het design op deze tegel zelf getoond (altijd een los badge/naast de naam,
+ * context-afhankelijk) en hoort dus niet in dit component. */
+export function PlayerAvatar({ colorHex, colorOnHex, colorSymbol, size = 'sm' }: PlayerAvatarProps) {
   const sizeClass = size === 'lg' ? 'h-20 w-20 text-3xl' : 'h-14 w-14 text-2xl'
 
   return (
@@ -24,7 +25,7 @@ export function PlayerAvatar({ colorHex, colorOnHex, colorSymbol, isHost, size =
         color: colorOnHex ?? undefined,
       }}
     >
-      {isHost ? '★' : colorSymbol && <ColorSymbol symbol={colorSymbol} />}
+      {colorSymbol && <ColorSymbol symbol={colorSymbol} />}
     </div>
   )
 }

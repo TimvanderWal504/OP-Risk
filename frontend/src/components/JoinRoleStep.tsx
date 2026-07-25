@@ -1,45 +1,58 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RoleSummaryDto } from '../types/GameState'
 import { SelectableOption } from './ui/SelectableOption'
+import { JoinProgressHeader } from './ui/JoinProgressHeader'
+import { Footer } from './ui/Footer'
+import { Button } from './ui/Button'
 import { tDynamic } from '../i18n/useT'
 
 export interface JoinRoleStepProps {
   roles: RoleSummaryDto[]
   takenRoleIds: string[]
-  selectedRoleId: string | null
   onPick: (roleId: string) => void
+  stepIndex: number
+  stepCount: number
   error?: string | null
 }
 
-/** Derde join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen. */
+/** Derde join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen.
+ * Select-dan-bevestig (Telefoon.dc.html L303-330): een klik zet alleen de
+ * lokale keuze; zonder keuze toont de knopplek een placeholder-tekst i.p.v.
+ * een knop, met keuze verschijnt de bevestigingsknop die `onPick` aanroept. */
 export function JoinRoleStep({
   roles,
   takenRoleIds,
-  selectedRoleId,
   onPick,
+  stepIndex,
+  stepCount,
   error = null,
 }: JoinRoleStepProps) {
   const { t } = useTranslation('join')
+  const [pendingRoleId, setPendingRoleId] = useState<string | null>(null)
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-5">
-      <h1 className="font-display text-h1 font-bold">{t('role.title')}</h1>
-      {error && <p className="text-loss">{error}</p>}
+      <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
+      <div>
+        <h1 className="font-display text-[26px] font-extrabold">{t('role.title')}</h1>
+        <p className="mt-1.5 text-sm text-fg-secondary">{t('role.sub')}</p>
+      </div>
       <div
         role="radiogroup"
         aria-label={t('role.ariaLabel')}
         className="flex flex-1 flex-col gap-2.5 overflow-y-auto"
       >
         {roles.map((role) => {
-          const taken = takenRoleIds.includes(role.id) && selectedRoleId !== role.id
-          const selected = selectedRoleId === role.id
+          const taken = takenRoleIds.includes(role.id)
+          const selected = pendingRoleId === role.id
 
           return (
             <SelectableOption
               key={role.id}
               selected={selected}
               disabled={taken}
-              onSelect={() => onPick(role.id)}
+              onSelect={() => setPendingRoleId(role.id)}
               className="flex flex-col gap-2 p-4 text-left"
             >
               <div className="flex items-center gap-3">
@@ -56,6 +69,15 @@ export function JoinRoleStep({
           )
         })}
       </div>
+      <Footer error={error}>
+        {pendingRoleId ? (
+          <Button onClick={() => onPick(pendingRoleId)}>{t('role.confirm')}</Button>
+        ) : (
+          <div className="flex min-h-16 w-full items-center justify-center rounded-card border border-dashed border-border-strong text-sm text-fg-muted">
+            {t('role.pickFirst')}
+          </div>
+        )}
+      </Footer>
     </div>
   )
 }

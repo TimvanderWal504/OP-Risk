@@ -182,6 +182,8 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
               label={t('startingArmies.label')}
               sub={t('startingArmies.sub')}
               value={String(settings.startingArmies)}
+              valueFontSize={24}
+              valueMinWidth={34}
               canDecrement={settings.startingArmies > MIN_ARMIES}
               canIncrement={settings.startingArmies < MAX_ARMIES}
               onDecrement={() =>
@@ -252,7 +254,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
         </div>
       </div>
 
-      <Footer error={error}>
+      <Footer variant="gradient" error={error}>
         <Button type="submit" disabled={submitting}>
           {submitting ? t('submit.busy') : t('submit.idle')}
         </Button>
