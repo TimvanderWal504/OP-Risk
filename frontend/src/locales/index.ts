@@ -8,6 +8,11 @@ import { lobby } from './lobby'
 import { orderRoll } from './orderRoll'
 import { colors } from './colors'
 import { roles } from './roles'
+import { territories } from './territories'
+import { continents } from './continents'
+import { missions } from './missions'
+import { events } from './events'
+import { cards } from './cards'
 
 export const trees = {
   common,
@@ -20,4 +25,9 @@ export const trees = {
   orderRoll,
   colors,
   roles,
+  territories,
+  continents,
+  missions,
+  events,
+  cards,
 } as const
