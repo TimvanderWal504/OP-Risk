@@ -4,6 +4,7 @@ import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { TvUrlPanel } from './TvUrlPanel'
 import { PlayerAvatar } from './ui/PlayerAvatar'
 import { Button } from './ui/Button'
+import { tDynamic } from '../i18n/useT'
 
 export interface JoinWaitStepProps {
   gameId: string
@@ -37,9 +38,9 @@ export function JoinWaitStep({
       <div>
         <p className="font-display text-h1 font-black">{t('wait.title')}</p>
         <p className="text-fg-muted">
-          {me.name} · {color?.name ?? t('wait.noColor')}
+          {me.name} · {color ? tDynamic(color.id, 'colors') : t('wait.noColor')}
         </p>
-        {role && <p className="text-sm text-gold-300">{role.name}</p>}
+        {role && <p className="text-sm text-gold-300">{tDynamic(`${role.id}.name`, 'roles')}</p>}
       </div>
       <p className="font-mono text-fg-muted">{t('wait.playersPresent', { count: joinedCount })}</p>
 

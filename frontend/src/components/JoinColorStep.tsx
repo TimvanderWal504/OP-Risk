@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { SelectableOption } from './ui/SelectableOption'
+import { tDynamic } from '../i18n/useT'
 
 export interface JoinColorStepProps {
   colors: PlayerColorDto[]
@@ -42,7 +43,7 @@ export function JoinColorStep({
                 style={{ background: color.hex }}
                 aria-hidden
               />
-              <span className="font-display font-bold">{color.name}</span>
+              <span className="font-display font-bold">{tDynamic(color.id, 'colors')}</span>
               {taken && <span className="absolute right-3 text-xs text-fg-muted">{t('color.taken')}</span>}
               {selected && <span className="absolute right-3 text-pitch-400">✓</span>}
             </SelectableOption>

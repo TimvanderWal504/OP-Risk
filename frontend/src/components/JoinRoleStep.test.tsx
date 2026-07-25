@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { JoinRoleStep } from './JoinRoleStep'
 
 const roles = [
-  { id: 'smuggler', name: 'Smokkelaar', description: 'Herwerpt verloren dobbelstenen.' },
-  { id: 'general', name: 'Generaal', description: 'Extra legers per beurt.' },
+  { id: 'smokkelaar', name: 'Smokkelaar', description: 'Herwerpt verloren dobbelstenen.' },
+  { id: 'generaal', name: 'Generaal', description: 'Extra legers per beurt.' },
 ]
 
 describe('JoinRoleStep', () => {
@@ -14,7 +14,7 @@ describe('JoinRoleStep', () => {
     render(
       <JoinRoleStep
         roles={roles}
-        takenRoleIds={['smuggler']}
+        takenRoleIds={['smokkelaar']}
         selectedRoleId={null}
         onPick={onPick}
       />,
@@ -23,6 +23,6 @@ describe('JoinRoleStep', () => {
     expect(screen.getByRole('radio', { name: /smokkelaar/i })).toBeDisabled()
 
     await userEvent.click(screen.getByRole('radio', { name: /generaal/i }))
-    expect(onPick).toHaveBeenCalledWith('general')
+    expect(onPick).toHaveBeenCalledWith('generaal')
   })
 })

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { PlayerAvatar } from './ui/PlayerAvatar'
+import { tDynamic } from '../i18n/useT'
 
 export interface LobbyPlayerListProps {
   players: PlayerDto[]
@@ -37,8 +38,8 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
               <div className="min-w-0">
                 <div className="truncate font-display text-h2 font-bold">{player.name}</div>
                 <div className="truncate text-sm text-fg-muted">
-                  {color?.name ?? t('players.noColorYet')}
-                  {role ? ` · ${role.name}` : ''}
+                  {color ? tDynamic(color.id, 'colors') : t('players.noColorYet')}
+                  {role ? ` · ${tDynamic(`${role.id}.name`, 'roles')}` : ''}
                 </div>
               </div>
             </div>

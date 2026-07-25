@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { RoleSummaryDto } from '../types/GameState'
 import { SelectableOption } from './ui/SelectableOption'
+import { tDynamic } from '../i18n/useT'
 
 export interface JoinRoleStepProps {
   roles: RoleSummaryDto[]
@@ -42,11 +43,11 @@ export function JoinRoleStep({
               className="flex flex-col gap-2 p-4 text-left"
             >
               <div className="flex items-center gap-3">
-                <span className="font-display font-bold">{role.name}</span>
+                <span className="font-display font-bold">{tDynamic(`${role.id}.name`, 'roles')}</span>
                 {taken && <span className="ml-auto text-xs text-fg-muted">{t('role.taken')}</span>}
                 {selected && <span className="ml-auto text-pitch-400">✓</span>}
               </div>
-              <p className="text-sm text-fg-secondary">{role.description}</p>
+              <p className="text-sm text-fg-secondary">{tDynamic(`${role.id}.description`, 'roles')}</p>
             </SelectableOption>
           )
         })}
