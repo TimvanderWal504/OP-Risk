@@ -4,6 +4,8 @@ import { validation } from './validation'
 import { home } from './home'
 import { createGame } from './createGame'
 import { join } from './join'
+import { lobby } from './lobby'
+import { orderRoll } from './orderRoll'
 
 export const trees = {
   common,
@@ -12,4 +14,6 @@ export const trees = {
   home,
   createGame,
   join,
+  lobby,
+  orderRoll,
 } as const

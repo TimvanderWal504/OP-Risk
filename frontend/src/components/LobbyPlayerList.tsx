@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { PlayerAvatar } from './ui/PlayerAvatar'
@@ -11,12 +12,13 @@ export interface LobbyPlayerListProps {
 
 /** Spelerskaarten + wacht-slots (TV, FO §2.1). */
 export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPlayerListProps) {
+  const { t } = useTranslation('lobby')
   const emptySlots = Math.max(0, maxPlayers - players.length)
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="twc-eyebrow">Spelers</span>
+        <span className="twc-eyebrow">{t('players.title')}</span>
         <span className="font-display text-h2 font-black text-pitch-400">
           {players.length} / {maxPlayers}
         </span>
@@ -35,7 +37,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
               <div className="min-w-0">
                 <div className="truncate font-display text-h2 font-bold">{player.name}</div>
                 <div className="truncate text-sm text-fg-muted">
-                  {color?.name ?? 'Nog geen kleur'}
+                  {color?.name ?? t('players.noColorYet')}
                   {role ? ` · ${role.name}` : ''}
                 </div>
               </div>
@@ -50,7 +52,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
             <div className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl border-2 border-dashed border-fg-muted text-2xl text-fg-muted">
               +
             </div>
-            <div className="text-fg-muted">Wachten op speler</div>
+            <div className="text-fg-muted">{t('players.waitingForPlayer')}</div>
           </div>
         ))}
       </div>

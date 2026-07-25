@@ -9,4 +9,15 @@ export const common = {
   badges: {
     comingSoon: { nl: 'binnenkort', en: 'coming soon' },
   },
+  tv: {
+    brand: { nl: 'OPERATIE ATLAS', en: 'OPERATION ATLAS' },
+    subtitle: { nl: 'CAMPAGNE-TERMINAL', en: 'CAMPAIGN TERMINAL' },
+  },
+  stepper: {
+    decrement: { nl: '{{label}} verlagen', en: 'Decrease {{label}}' },
+    increment: { nl: '{{label}} verhogen', en: 'Increase {{label}}' },
+  },
+  dice: {
+    ariaLabel: { nl: 'Dobbelsteen {{value}}', en: 'Die {{value}}' },
+  },
 } satisfies LocaleTree

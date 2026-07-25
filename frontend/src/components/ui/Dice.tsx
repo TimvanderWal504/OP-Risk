@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export type DiceValue = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface DiceProps {
@@ -32,12 +34,13 @@ const PIP_CLASS: Record<NonNullable<DiceProps['variant']>, string> = {
 /** Pure dobbelsteen-weergave. Toont een vaste worp (server-authoritative) —
  * bevat zelf geen worp- of kanslogica. */
 export function Dice({ value, size = 56, variant = 'neutral' }: DiceProps) {
+  const { t } = useTranslation('common')
   const pips = PIP_LAYOUT[value]
 
   return (
     <div
       role="img"
-      aria-label={`Dobbelsteen ${value}`}
+      aria-label={t('dice.ariaLabel', { value })}
       className={`grid grid-cols-3 grid-rows-3 gap-1 rounded-input p-2 ${FACE_CLASS[variant]}`}
       style={{ width: size, height: size }}
     >

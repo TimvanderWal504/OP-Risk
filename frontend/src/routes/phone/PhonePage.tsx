@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useGameState } from '../../hooks/useGameState'
 import { JoinNameStep } from '../../components/JoinNameStep'
 import { JoinColorStep } from '../../components/JoinColorStep'
@@ -11,6 +12,7 @@ import { RoleAssignmentModeDto } from '../../types/GameSettings'
 
 export function PhonePage() {
   const { gameId } = useParams<{ gameId: string }>()
+  const { t } = useTranslation('lobby')
   const {
     state,
     playerId,
@@ -58,7 +60,7 @@ export function PhonePage() {
     return (
       <PhoneShell>
         <div className="flex h-full items-center justify-center p-5 text-center text-fg-muted">
-          Spel is gestart — het spelbord volgt in een latere bouwplak.
+          {t('placeholder.phone')}
         </div>
       </PhoneShell>
     )

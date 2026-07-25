@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useTvGame } from '../../hooks/useTvGame'
 import { LobbyQrPanel } from '../../components/LobbyQrPanel'
 import { LobbyPlayerList } from '../../components/LobbyPlayerList'
@@ -9,20 +10,21 @@ import { GamePhaseDto } from '../../types/GameState'
 
 export function TvPage() {
   const { gameId } = useParams<{ gameId: string }>()
+  const { t } = useTranslation(['lobby', 'orderRoll'])
   const { state, error, orderRollThrows } = useTvGame(gameId!)
 
   if (error) {
-    return <div className="flex h-full items-center justify-center text-loss">Onbekend spel.</div>
+    return <div className="flex h-full items-center justify-center text-loss">{t('lobby:tv.unknownGame')}</div>
   }
 
   if (!state) {
-    return <div className="flex h-full items-center justify-center text-fg-muted">Verbinden…</div>
+    return <div className="flex h-full items-center justify-center text-fg-muted">{t('lobby:tv.connecting')}</div>
   }
 
   if (state.phase === GamePhaseDto.OrderRoll) {
     return (
       <div className="flex h-full flex-col p-14 bg-hero-pattern">
-        <TvPageHeader badge="Spelersvolgorde" />
+        <TvPageHeader badge={t('orderRoll:badge')} />
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-2xl">
             <OrderRollTvPanel players={state.players} colors={state.colors} throws={orderRollThrows} />
@@ -35,14 +37,14 @@ export function TvPage() {
   if (state.phase !== GamePhaseDto.Lobby) {
     return (
       <div className="flex h-full items-center justify-center text-fg-muted">
-        Spel is gestart — het bord volgt in een latere bouwplak.
+        {t('lobby:placeholder.tv')}
       </div>
     )
   }
 
   return (
     <div className="flex h-full flex-col p-14 bg-hero-pattern">
-      <TvPageHeader badge="Wachtkamer" />
+      <TvPageHeader badge={t('lobby:header.badge')} />
       <div className="flex flex-1 gap-9">
         <LobbyQrPanel gameId={state.gameId} />
         <div className="flex-1">

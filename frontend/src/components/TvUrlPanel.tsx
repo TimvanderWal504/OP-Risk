@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export interface TvUrlPanelProps {
   gameId: string
   origin?: string
@@ -9,11 +11,12 @@ export interface TvUrlPanelProps {
  * herstart van de laptop, zie plan-b-reisopstelling.md).
  */
 export function TvUrlPanel({ gameId, origin = window.location.origin }: TvUrlPanelProps) {
+  const { t } = useTranslation('lobby')
   const tvUrl = `${origin}/tv/${gameId}`
 
   return (
     <div className="rounded-card border border-border-strong bg-surface-2 p-4">
-      <p className="twc-eyebrow">Open op de TV</p>
+      <p className="twc-eyebrow">{t('tvUrlPanel.label')}</p>
       <p className="font-mono text-sm break-all text-fg-secondary">{tvUrl}</p>
     </div>
   )

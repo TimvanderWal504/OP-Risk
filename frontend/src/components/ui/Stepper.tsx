@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export interface StepperProps {
   label: string
   sub: string
@@ -20,6 +22,8 @@ export function Stepper({
   canDecrement = true,
   canIncrement = true,
 }: StepperProps) {
+  const { t } = useTranslation('common')
+
   return (
     <div className="flex items-center gap-3 rounded-card border border-border bg-white/3 px-3.5 py-3">
       <div className="min-w-0 flex-1">
@@ -28,7 +32,7 @@ export function Stepper({
       </div>
       <button
         type="button"
-        aria-label={`${label} verlagen`}
+        aria-label={t('stepper.decrement', { label })}
         disabled={!canDecrement}
         onClick={onDecrement}
         className="h-11 w-11 flex-none cursor-pointer rounded-input border border-border-strong bg-white/5 text-[22px] font-black disabled:cursor-not-allowed disabled:opacity-40"
@@ -40,7 +44,7 @@ export function Stepper({
       </span>
       <button
         type="button"
-        aria-label={`${label} verhogen`}
+        aria-label={t('stepper.increment', { label })}
         disabled={!canIncrement}
         onClick={onIncrement}
         className="h-11 w-11 flex-none cursor-pointer rounded-input border-none bg-pitch-500 text-[22px] font-black text-[#04060b] disabled:cursor-not-allowed disabled:opacity-40"
