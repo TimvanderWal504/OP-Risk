@@ -68,7 +68,7 @@ Let op: dit is de **geprojecteerde** state (het "nu"). De bron van waarheid is d
 
 ### 3.2 Statische speldata (read-only, geladen bij opstart)
 
-Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij het aanmaken van een spel ingelezen, niet in code gehardcodeerd. Ze staan **per kaartvariant** onder `data/maps/{mapId}/`, zodat de host straks in de lobby tussen varianten kan kiezen zonder dat er code verandert. De eerste variant is **`standaard-43`**:
+Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij het aanmaken van een spel ingelezen, niet in code gehardcodeerd. Ze staan **per kaartvariant** onder `data/maps/{mapId}/`, zodat de host straks in de lobby tussen varianten kan kiezen zonder dat er code verandert. Uitzondering: `colors.json` is **gedeeld over alle kaartvarianten** (de spelerskleuren-catalogus verschilt niet per kaart) en staat daarom in `data/colors.json`, één niveau boven `data/maps/`. De eerste variant is **`standaard-43`**:
 
 | Bestand | Rol in de engine |
 |---|---|
@@ -76,7 +76,7 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 | `territories.geo.json` | Polygon-geometrie per gebied (frontend-render + klik-detectie) — niet door de engine geladen |
 | `adjacency_validated.json` | 84 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
 | `continents.json` | Continentbonussen |
-| `colors.json` | 7 spelerskleuren + kleurenblind-symbolen |
+| `colors.json` (gedeeld, `data/colors.json`) | 7 spelerskleuren: `hex` (fill) + `onHex` (contrastkleur voor tekst/symbool erop) + kleurenblind-symbolen |
 | `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
 | `map-background-final.png` | Statische achtergrond voor de TV-kaart (hoort bij de projectie van deze variant) |
 | rollen / missies / events | JSON, nog te vullen (FO §13) — datamodel staat, content later |

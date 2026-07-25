@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { LobbyPlayerList } from './LobbyPlayerList'
 
-const colors = [{ id: 'red', name: 'Rood', hex: '#C0392B', symbol: 'circle' }]
+const colors = [{ id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' }]
 
 describe('LobbyPlayerList', () => {
   it('toont spelers en het aantal wacht-slots tot maxPlayers', () => {

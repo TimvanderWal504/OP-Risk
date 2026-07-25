@@ -25,7 +25,7 @@ public class ValidatieTests
         """;
 
     private const string GeldigeColors = """
-        { "colors": [ { "id": "red", "name": "Rood", "hex": "#C0392B", "symbol": "circle" } ] }
+        { "colors": [ { "id": "red", "name": "Rood", "hex": "#C0392B", "onHex": "#FFFFFF", "symbol": "circle" } ] }
         """;
 
     private const string GeldigeCards = """
@@ -247,13 +247,27 @@ public class ValidatieTests
         const string colors = """
             {
               "colors": [
-                { "id": "red", "name": "Rood", "hex": "#C0392B", "symbol": "circle" },
-                { "id": "red", "name": "Ook rood", "hex": "#FF0000", "symbol": "square" }
+                { "id": "red", "name": "Rood", "hex": "#C0392B", "onHex": "#FFFFFF", "symbol": "circle" },
+                { "id": "red", "name": "Ook rood", "hex": "#FF0000", "onHex": "#FFFFFF", "symbol": "square" }
               ]
             }
             """;
 
         Parse(colors: colors).AssertFailure("kleur-id 'red' komt meer dan één keer voor");
+    }
+
+    [Fact]
+    public void KleurZonderOnHex_IsOngeldig()
+    {
+        const string colors = """
+            {
+              "colors": [
+                { "id": "red", "name": "Rood", "hex": "#C0392B", "symbol": "circle" }
+              ]
+            }
+            """;
+
+        Parse(colors: colors).AssertFailure("heeft geen 'onHex'-waarde");
     }
 
     [Fact]
@@ -383,8 +397,8 @@ public class ValidatieTests
         const string colors = """
             {
               "colors": [
-                { "id": "red", "name": "Rood", "hex": "#C0392B", "symbol": "circle" },
-                { "id": "blue", "name": "Blauw", "hex": "#215C9C", "symbol": "square" }
+                { "id": "red", "name": "Rood", "hex": "#C0392B", "onHex": "#FFFFFF", "symbol": "circle" },
+                { "id": "blue", "name": "Blauw", "hex": "#215C9C", "onHex": "#FFFFFF", "symbol": "square" }
               ]
             }
             """;

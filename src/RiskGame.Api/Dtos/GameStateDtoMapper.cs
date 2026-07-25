@@ -38,7 +38,7 @@ public static class GameStateDtoMapper
                 ToDto(state.TurnState.PendingCombat));
 
         var colors = state.Map.Colors
-            .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.Symbol))
+            .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))
             .ToArray();
 
         var roles = state.Map.Roles

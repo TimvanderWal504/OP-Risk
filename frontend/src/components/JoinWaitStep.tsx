@@ -34,7 +34,13 @@ export function JoinWaitStep({
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 p-5 text-center">
-      <PlayerAvatar colorHex={color?.hex} colorSymbol={color?.symbol} isHost={me.isHost} size="lg" />
+      <PlayerAvatar
+        colorHex={color?.hex}
+        colorOnHex={color?.onHex}
+        colorSymbol={color?.symbol}
+        isHost={me.isHost}
+        size="lg"
+      />
       <div>
         <p className="font-display text-h1 font-black">{t('wait.title')}</p>
         <p className="text-fg-muted">

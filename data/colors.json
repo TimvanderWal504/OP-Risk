@@ -1,0 +1,12 @@
+{
+  "_comment": "Spelerskleuren zoals gegenereerd in het Claude Design-ontwerp. Het 'symbol'-veld is het kleurenblind-vriendelijke onderscheidingsteken dat naast de kleur op de kaart getoond wordt.",
+  "colors": [
+    { "id": "red",    "name": "Rood",   "hex": "#ca3c25", "onHex": "#fffbbd", "symbol": "circle" },
+    { "id": "blue",   "name": "Blauw",  "hex": "#0057ff", "onHex": "#f8f7f4", "symbol": "square" },
+    { "id": "green",  "name": "Groen",  "hex": "#cfff74", "onHex": "#2f3a1d", "symbol": "triangle" },
+    { "id": "yellow", "name": "Geel",   "hex": "#fcdb32", "onHex": "#141d38", "symbol": "diamond" },
+    { "id": "purple", "name": "Paars",  "hex": "#6a00f4", "onHex": "#ffd6a5", "symbol": "star" },
+    { "id": "orange", "name": "Oranje", "hex": "#fc6c26", "onHex": "#fff4dc", "symbol": "hexagon" },
+    { "id": "turquoise", "name": "Turquoise", "hex": "#34e0a1", "onHex": "#000000", "symbol": "cross" }
+  ]
+}

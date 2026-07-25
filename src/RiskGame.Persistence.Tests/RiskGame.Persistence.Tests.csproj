@@ -27,6 +27,8 @@
   -->
   <ItemGroup>
     <Content Include="..\..\data\maps\standaard-43\*.json" Link="data\maps\standaard-43\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- colors.json is gedeeld over kaartvarianten en staat in data/, niet data/maps/{mapId}/. -->
+    <Content Include="..\..\data\colors.json" Link="data\colors.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

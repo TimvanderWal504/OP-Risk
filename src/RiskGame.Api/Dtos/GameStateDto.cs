@@ -33,7 +33,7 @@ public sealed record OrderRollStateDto(IReadOnlyList<string> PlayersStillToRoll)
 /// (src/CLAUDE.md, DRY), dus de volledige catalogus (incl. hex/symbol) gaat mee met de
 /// state. <see cref="GameStateDto.AvailableColorIds"/> blijft de lijst van nog vrije id's.
 /// </summary>
-public sealed record PlayerColorDto(string Id, string Name, string Hex, string Symbol);
+public sealed record PlayerColorDto(string Id, string Name, string Hex, string OnHex, string Symbol);
 
 /// <summary>
 /// Draad-representatie van de rolcatalogus voor de rolkeuzestap (FO §8/§10, alleen

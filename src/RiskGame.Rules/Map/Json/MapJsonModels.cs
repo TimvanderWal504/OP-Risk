@@ -58,6 +58,8 @@ internal sealed class ColorJson
 
     public string? Hex { get; init; }
 
+    public string? OnHex { get; init; }
+
     public string? Symbol { get; init; }
 }
 

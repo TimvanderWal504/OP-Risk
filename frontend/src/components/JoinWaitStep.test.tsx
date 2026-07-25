@@ -11,7 +11,7 @@ describe('JoinWaitStep', () => {
       <JoinWaitStep
         gameId="ABC123"
         me={me}
-        color={{ id: 'red', name: 'Rood', hex: '#C0392B', symbol: 'circle' }}
+        color={{ id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' }}
         role={null}
         joinedCount={1}
         isHost

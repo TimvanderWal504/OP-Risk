@@ -23,4 +23,9 @@ describe('PlayerAvatar', () => {
     expect(screen.getByText('★')).toBeInTheDocument()
     expect(screen.queryByText('■')).not.toBeInTheDocument()
   })
+
+  it('past colorOnHex toe als tekstkleur van het symbool', () => {
+    render(<PlayerAvatar colorHex="#215C9C" colorOnHex="#FFFFFF" colorSymbol="square" isHost={false} />)
+    expect(screen.getByText('■').parentElement).toHaveStyle({ color: '#FFFFFF' })
+  })
 })

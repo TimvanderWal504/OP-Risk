@@ -29,7 +29,12 @@ export function OrderRollTvPanel({ players, colors, throws }: OrderRollTvPanelPr
               key={player.id}
               className="flex items-center gap-4 rounded-card border border-border bg-white/3 p-4"
             >
-              <PlayerAvatar colorHex={color?.hex} colorSymbol={color?.symbol} isHost={player.isHost} />
+              <PlayerAvatar
+                colorHex={color?.hex}
+                colorOnHex={color?.onHex}
+                colorSymbol={color?.symbol}
+                isHost={player.isHost}
+              />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-display text-h3 font-bold">{player.name}</div>
                 {dice ? (

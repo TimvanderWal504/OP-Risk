@@ -28,6 +28,7 @@ export interface PlayerColorDto {
   id: string
   name: string
   hex: string
+  onHex: string
   symbol: string
 }
 

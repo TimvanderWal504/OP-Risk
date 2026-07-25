@@ -272,8 +272,14 @@ public static class MapDefinitionParser
                 continue;
             }
 
+            if (string.IsNullOrWhiteSpace(model.OnHex))
+            {
+                errors.Add($"colors.json: kleur '{model.Id}' heeft geen 'onHex'-waarde.");
+                continue;
+            }
+
             colors.Add(new PlayerColor(
-                model.Id, model.Name ?? model.Id, model.Hex, model.Symbol ?? string.Empty));
+                model.Id, model.Name ?? model.Id, model.Hex, model.OnHex, model.Symbol ?? string.Empty));
         }
 
         // Missies verwijzen naar spelers via kleur-id (FO §6.1); een dubbel id is stil kapot.

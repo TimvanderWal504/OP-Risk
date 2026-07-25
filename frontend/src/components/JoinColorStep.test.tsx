@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { JoinColorStep } from './JoinColorStep'
 
 const colors = [
-  { id: 'red', name: 'Rood', hex: '#C0392B', symbol: 'circle' },
-  { id: 'blue', name: 'Blauw', hex: '#215C9C', symbol: 'square' },
+  { id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' },
+  { id: 'blue', name: 'Blauw', hex: '#215C9C', onHex: '#FFFFFF', symbol: 'square' },
 ]
 
 describe('JoinColorStep', () => {
