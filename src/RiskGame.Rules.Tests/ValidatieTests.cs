@@ -115,7 +115,9 @@ public class ValidatieTests
             events ?? GeldigeEvents,
             roles ?? GeldigeRoles));
 
-        return new Result(result.IsSuccess, result.Errors);
+        return new Result(
+            result.IsSuccess,
+            result.Errors.Select(error => error.Params!["detail"]).ToList());
     }
 
     private sealed record Result(bool IsSuccess, IReadOnlyList<string> Errors)

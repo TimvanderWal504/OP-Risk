@@ -38,7 +38,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         if (state is null)
         {
-            return Result<JoinGameResult>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<JoinGameResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(
@@ -68,7 +68,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(
@@ -97,7 +97,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validations = new List<ValidationResult>
@@ -176,7 +176,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(

@@ -97,13 +97,13 @@
      Symbols (colorblind-safe) are documented, not CSS: ▲ ● ■ ★ ✚ ⬡ ◆
      Single source of truth — mirrored by COLORS[] in both DC files.
      =========================================================================== */
-  --player-red:#c0392b;    --player-red-on:#ffffff;    /* ▲ Rood   */
-  --player-blue:#215c9c;   --player-blue-on:#ffffff;   /* ● Blauw  */
-  --player-green:#4f7a2e;  --player-green-on:#ffffff;  /* ■ Groen  */
-  --player-yellow:#e0a81c; --player-yellow-on:#1a1206; /* ★ Geel   */
-  --player-purple:#8e4585; --player-purple-on:#ffffff; /* ✚ Paars  */
-  --player-cyan:#158f8a;   --player-cyan-on:#ffffff;   /* ⬡ Cyaan  */
-  --player-orange:#d9822b; --player-orange-on:#1a1206; /* ◆ Oranje */
+  --player-red:#ca3c25;    --player-red-on:#fffbbd;    /* ▲ Rood   */
+  --player-blue:#0057ff;   --player-blue-on:#f8f7f4;   /* ● Blauw  */
+  --player-green:#cfff74;  --player-green-on:#2f3a1d;  /* ■ Groen  */
+  --player-yellow:#fcdb32; --player-yellow-on:#141d38; /* ★ Geel   */
+  --player-purple:#6a00f4; --player-purple-on:#ffd6a5; /* ✚ Paars  */
+  --player-cyan:#34e0a1;   --player-cyan-on:#000000;   /* ⬡ Turquoise  */
+  --player-orange:#fc6c26; --player-orange-on:#fff4dc; /* ◆ Oranje */
 }
 
 /* ===========================================================================

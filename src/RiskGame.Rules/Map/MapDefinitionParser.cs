@@ -4,6 +4,7 @@ using RiskGame.Rules.Map.Json;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.Roles;
+using RiskGame.Rules.Validation;
 
 namespace RiskGame.Rules.Map;
 
@@ -51,7 +52,7 @@ public static class MapDefinitionParser
         // Zonder leesbare bestanden heeft verder valideren geen zin.
         if (errors.Count > 0)
         {
-            return Result<MapDefinition>.Failure(errors);
+            return Result<MapDefinition>.Failure(ToValidationErrors(errors));
         }
 
         var territories = ReadTerritories(territoryModels!, errors);
@@ -71,7 +72,7 @@ public static class MapDefinitionParser
 
         if (errors.Count > 0)
         {
-            return Result<MapDefinition>.Failure(errors);
+            return Result<MapDefinition>.Failure(ToValidationErrors(errors));
         }
 
         var deck = CardDeckBuilder.Build(territories, deckRules.Symbols, deckRules.JokerCount);
@@ -80,6 +81,14 @@ public static class MapDefinitionParser
             mapId, territories, continents, colors, borders, deck, deckRules.SetRules, deckRules.Themes,
             missions, events, roles));
     }
+
+    /// <summary>
+    /// Opstart-tijd datafouten bij het inlezen van <c>data/*.json</c> bereiken nooit een
+    /// speler (i18n-inventory §1, buiten scope voor errorCode-vertaling); één vaste code
+    /// met de rauwe diagnose als param volstaat hier, i.p.v. losse codes per controle.
+    /// </summary>
+    private static IReadOnlyList<ValidationError> ToValidationErrors(List<string> errors) =>
+        errors.Select(error => new ValidationError("mapData.invalid", new Dictionary<string, string> { ["detail"] = error })).ToList();
 
     private static T? Deserialize<T>(string json, string fileName, List<string> errors)
         where T : class

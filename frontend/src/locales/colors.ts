@@ -13,5 +13,5 @@ export const colors = {
   yellow: { nl: 'Geel', en: 'Yellow' },
   purple: { nl: 'Paars', en: 'Purple' },
   orange: { nl: 'Oranje', en: 'Orange' },
-  cyan: { nl: 'Cyaan', en: 'Cyan' },
+  turquoise: { nl: 'Turquoise', en: 'Turquoise' },
 } satisfies LocaleTree

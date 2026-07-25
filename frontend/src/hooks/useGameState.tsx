@@ -3,6 +3,7 @@ import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import type { GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage, JoinGameResponse, OrderRollResponse } from '../types/HubResponses'
+import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
 
@@ -84,7 +85,8 @@ export function useGameState(gameId: string) {
       })
       .catch((rejoinError: unknown) => {
         if (!cancelled) {
-          setError(rejoinError instanceof Error ? rejoinError.message : String(rejoinError))
+          const message = rejoinError instanceof Error ? rejoinError.message : String(rejoinError)
+          setError(translateValidationErrors(parseHubError(message)))
         }
       })
 
@@ -102,7 +104,8 @@ export function useGameState(gameId: string) {
 
         return await connection.invoke<T>(methodName, ...args)
       } catch (invokeError) {
-        setError(invokeError instanceof Error ? invokeError.message : String(invokeError))
+        const message = invokeError instanceof Error ? invokeError.message : String(invokeError)
+        setError(translateValidationErrors(parseHubError(message)))
 
         return undefined
       }

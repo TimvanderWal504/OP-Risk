@@ -26,7 +26,7 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
 
         if (state is null)
         {
-            return Result<OrderRollResult>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<OrderRollResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(

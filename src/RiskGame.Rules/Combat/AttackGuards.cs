@@ -42,8 +42,7 @@ public static class AttackGuards
 
         if (state.TurnState!.PendingCombat is not null)
         {
-            return ValidationResult.Failure(
-                "Er loopt al een gevecht; wacht tot dat is afgehandeld.");
+            return ValidationResult.Failure("attack.combatInProgress");
         }
 
         var fromArmyCount = state.Territory(fromTerritoryId).ArmyCount;
@@ -53,26 +52,31 @@ public static class AttackGuards
             fromArmyCount >= 2
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Aanvallen kan alleen vanuit een gebied met minimaal 2 legers " +
-                    $"(gebied '{fromTerritoryId}' heeft er {fromArmyCount})."),
+                    "attack.notEnoughArmiesToAttack",
+                    new Dictionary<string, string>
+                    {
+                        ["territoryId"] = fromTerritoryId,
+                        ["armyCount"] = fromArmyCount.ToString(),
+                    }),
 
             state.Map.Adjacency.IsAdjacent(fromTerritoryId, toTerritoryId)
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Gebied '{toTerritoryId}' grenst niet aan '{fromTerritoryId}'."),
+                    "attack.notAdjacent",
+                    new Dictionary<string, string> { ["fromTerritoryId"] = fromTerritoryId, ["toTerritoryId"] = toTerritoryId }),
 
             IsRouteBlocked(state, fromTerritoryId, toTerritoryId)
                 ? ValidationResult.Failure(
-                    $"De route tussen '{fromTerritoryId}' en '{toTerritoryId}' is deze " +
-                    "ronde geblokkeerd.")
+                    "attack.routeBlocked",
+                    new Dictionary<string, string> { ["fromTerritoryId"] = fromTerritoryId, ["toTerritoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
             IsTerritoryLocked(state, fromTerritoryId)
-                ? ValidationResult.Failure($"Gebied '{fromTerritoryId}' is deze ronde afgesloten.")
+                ? ValidationResult.Failure("attack.territoryLocked", new Dictionary<string, string> { ["territoryId"] = fromTerritoryId })
                 : ValidationResult.Success(),
 
             IsTerritoryLocked(state, toTerritoryId)
-                ? ValidationResult.Failure($"Gebied '{toTerritoryId}' is deze ronde afgesloten.")
+                ? ValidationResult.Failure("attack.territoryLocked", new Dictionary<string, string> { ["territoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
             IsEnemyOwned(state, playerId, toTerritoryId),
@@ -80,14 +84,19 @@ public static class AttackGuards
             attackDice is >= MinAttackDice and <= MaxAttackDice
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Aantal aanvalsdobbelstenen moet tussen {MinAttackDice} en " +
-                    $"{MaxAttackDice} liggen."),
+                    "attack.invalidAttackDiceCount",
+                    new Dictionary<string, string> { ["min"] = MinAttackDice.ToString(), ["max"] = MaxAttackDice.ToString() }),
 
             attackDice <= fromArmyCount - 1
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Aantal aanvalsdobbelstenen ({attackDice}) mag niet groter zijn dan " +
-                    $"de legers in '{fromTerritoryId}' min 1 ({fromArmyCount - 1})."),
+                    "attack.tooManyAttackDice",
+                    new Dictionary<string, string>
+                    {
+                        ["attackDice"] = attackDice.ToString(),
+                        ["territoryId"] = fromTerritoryId,
+                        ["maxAllowed"] = (fromArmyCount - 1).ToString(),
+                    }),
         };
 
         return ValidationResult.Combine([.. checks]);
@@ -121,13 +130,18 @@ public static class AttackGuards
             armiesToMove >= attackDiceUsed
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Minimaal {attackDiceUsed} leger(s) moeten mee (zoveel " +
-                    $"aanvalsdobbelstenen zijn gebruikt bij de verovering)."),
+                    "attack.notEnoughArmiesMoved",
+                    new Dictionary<string, string> { ["minimum"] = attackDiceUsed.ToString() }),
             armiesToMove <= fromArmyCount - 1
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Er moet minimaal 1 leger achterblijven in '{fromTerritoryId}' " +
-                    $"({fromArmyCount} beschikbaar, {armiesToMove} opgegeven)."));
+                    "attack.mustLeaveOneArmyBehind",
+                    new Dictionary<string, string>
+                    {
+                        ["territoryId"] = fromTerritoryId,
+                        ["available"] = fromArmyCount.ToString(),
+                        ["requested"] = armiesToMove.ToString(),
+                    }));
     }
 
     /// <summary>
@@ -153,13 +167,12 @@ public static class AttackGuards
 
         if (pendingCombat is null)
         {
-            return ValidationResult.Failure("Er is geen gevecht om te verdedigen.");
+            return ValidationResult.Failure("attack.noCombatToDefend");
         }
 
         if (state.Territory(pendingCombat.ToTerritoryId).OwnerPlayerId != playerId)
         {
-            return ValidationResult.Failure(
-                $"Speler '{playerId}' is niet de verdediger van dit gevecht.");
+            return ValidationResult.Failure("attack.notTheDefender", new Dictionary<string, string> { ["playerId"] = playerId });
         }
 
         var defenderArmyCount = state.Territory(pendingCombat.ToTerritoryId).ArmyCount;
@@ -169,14 +182,15 @@ public static class AttackGuards
             return defenseDice == 1
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Gebied '{pendingCombat.ToTerritoryId}' heeft nog maar 1 leger; " +
-                    "verdedigen kan dan alleen met 1 dobbelsteen.");
+                    "attack.mustDefendWithOneDie",
+                    new Dictionary<string, string> { ["territoryId"] = pendingCombat.ToTerritoryId });
         }
 
         return defenseDice is MinDefenseDice or MaxDefenseDice
             ? ValidationResult.Success()
             : ValidationResult.Failure(
-                $"Aantal verdedigingsdobbelstenen moet {MinDefenseDice} of {MaxDefenseDice} zijn.");
+                "attack.invalidDefenseDiceCount",
+                new Dictionary<string, string> { ["min"] = MinDefenseDice.ToString(), ["max"] = MaxDefenseDice.ToString() });
     }
 
     private static ValidationResult IsEnemyOwned(
@@ -186,8 +200,7 @@ public static class AttackGuards
 
         return owner is not null && owner != playerId
             ? ValidationResult.Success()
-            : ValidationResult.Failure(
-                $"Gebied '{territoryId}' is geen vijandelijk gebied.");
+            : ValidationResult.Failure("attack.notEnemyTerritory", new Dictionary<string, string> { ["territoryId"] = territoryId });
     }
 
     /// <summary>

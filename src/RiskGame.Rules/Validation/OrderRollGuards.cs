@@ -25,6 +25,6 @@ public static class OrderRollGuards
 
         return progress.StillToRoll.Contains(playerId)
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Speler '{playerId}' hoeft nu niet te werpen voor de spelersvolgorde.");
+            : ValidationResult.Failure("orderRoll.notYourTurnToRoll", new Dictionary<string, string> { ["playerId"] = playerId });
     }
 }

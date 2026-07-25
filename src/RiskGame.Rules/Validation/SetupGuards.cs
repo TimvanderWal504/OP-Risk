@@ -26,7 +26,7 @@ public static class SetupGuards
 
         return playerId == SetupTurnCalculator.ActiveClaimerId(state)
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Speler '{playerId}' is niet aan de beurt om te claimen.");
+            : ValidationResult.Failure("setup.notYourTurnToClaim", new Dictionary<string, string> { ["playerId"] = playerId });
     }
 
     public static ValidationResult TerritoryIsFree(GameState state, string territoryId)
@@ -40,7 +40,7 @@ public static class SetupGuards
 
         return state.Territory(territoryId).OwnerPlayerId is null
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Gebied '{territoryId}' is al geclaimd.");
+            : ValidationResult.Failure("setup.territoryAlreadyClaimed", new Dictionary<string, string> { ["territoryId"] = territoryId });
     }
 
     /// <summary>
@@ -69,7 +69,8 @@ public static class SetupGuards
 
         return role.OriginTerritory == territoryId
             ? ValidationResult.Failure(
-                $"Speler '{playerId}' mag zijn eigen rol-herkomstland '{territoryId}' niet claimen.")
+                "setup.cannotClaimOwnRoleOrigin",
+                new Dictionary<string, string> { ["playerId"] = playerId, ["territoryId"] = territoryId })
             : ValidationResult.Success();
     }
 
@@ -88,6 +89,6 @@ public static class SetupGuards
 
         return playerId == SetupTurnCalculator.ActivePlacerId(state)
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Speler '{playerId}' is niet aan de beurt om bij te plaatsen.");
+            : ValidationResult.Failure("setup.notYourTurnToPlace", new Dictionary<string, string> { ["playerId"] = playerId });
     }
 }

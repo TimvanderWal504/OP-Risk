@@ -227,7 +227,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 1));
 
-        Assert.Contains("minimaal 2 legers", exception.Message);
+        Assert.Contains("attack.notEnoughArmiesToAttack", exception.Message);
     }
 
     [Fact]
@@ -243,7 +243,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p1", 2));
 
-        Assert.Contains("niet de verdediger", exception.Message);
+        Assert.Contains("attack.notTheDefender", exception.Message);
     }
 
     [Fact]
@@ -259,6 +259,6 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2));
 
-        Assert.Contains("alleen met 1 dobbelsteen", exception.Message);
+        Assert.Contains("attack.mustDefendWithOneDie", exception.Message);
     }
 }

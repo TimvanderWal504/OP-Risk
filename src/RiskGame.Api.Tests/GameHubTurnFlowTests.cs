@@ -152,7 +152,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("Fortify", gameId, "p1", "alaska", "alberta", 3));
 
-        Assert.Contains("niet van speler", exception.Message);
+        Assert.Contains("common.territoryNotOwned", exception.Message);
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1"));
 
-        Assert.Contains("loopt nog een gevecht", exception.Message);
+        Assert.Contains("turnFlow.combatInProgress", exception.Message);
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1"));
 
-        Assert.Contains("gebruik EndTurn", exception.Message);
+        Assert.Contains("turnFlow.useEndTurnInFortify", exception.Message);
     }
 
     [Fact]
@@ -243,6 +243,6 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1"));
 
-        Assert.Contains("Dit kan alleen tijdens Fortify", exception.Message);
+        Assert.Contains("common.wrongTurnPhase", exception.Message);
     }
 }

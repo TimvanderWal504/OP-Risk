@@ -124,7 +124,7 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("StartGame", gameId, bobId));
 
-        Assert.Contains("geen host", exception.Message);
+        Assert.Contains("lobby.notHost", exception.Message);
     }
 
     [Fact]
@@ -225,7 +225,7 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
         // Ronde 1 is compleet en gelijk: Carol hoeft/mag niet nog eens gooien.
         var carolException = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, carolId));
-        Assert.Contains("hoeft nu niet te werpen", carolException.Message);
+        Assert.Contains("orderRoll.notYourTurnToRoll", carolException.Message);
 
         var aliceReroll = await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, aliceId);
         Assert.Equal(GamePhaseDto.OrderRoll, aliceReroll.State.Phase);

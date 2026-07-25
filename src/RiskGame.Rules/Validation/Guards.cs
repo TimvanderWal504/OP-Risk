@@ -12,7 +12,7 @@ public static class Guards
     public static ValidationResult PlayerExists(GameState state, string playerId) =>
         state.HasPlayer(playerId)
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Onbekende speler '{playerId}'.");
+            : ValidationResult.Failure("common.unknownPlayer", new Dictionary<string, string> { ["playerId"] = playerId });
 
     /// <summary>
     /// Of het deze spelers beurt is. Een uitgeschakelde of afwezige speler is dat nooit,
@@ -30,7 +30,7 @@ public static class Guards
 
         return state.StatusOf(playerId) == PlayerStatus.Active
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Speler '{playerId}' is niet aan de beurt.");
+            : ValidationResult.Failure("common.playerNotActive", new Dictionary<string, string> { ["playerId"] = playerId });
     }
 
     public static ValidationResult IsNotEliminated(GameState state, string playerId)
@@ -43,7 +43,7 @@ public static class Guards
         }
 
         return state.Player(playerId).IsEliminated
-            ? ValidationResult.Failure($"Speler '{playerId}' is uitgeschakeld.")
+            ? ValidationResult.Failure("common.playerEliminated", new Dictionary<string, string> { ["playerId"] = playerId })
             : ValidationResult.Success();
     }
 
@@ -51,7 +51,8 @@ public static class Guards
         state.Phase == phase
             ? ValidationResult.Success()
             : ValidationResult.Failure(
-                $"Dit kan alleen in fase {phase}; het spel staat in {state.Phase}.");
+                "common.wrongPhase",
+                new Dictionary<string, string> { ["expected"] = phase.ToString(), ["actual"] = state.Phase.ToString() });
 
     /// <summary>Of de lopende beurt in de verwachte fase staat. Faalt ook als er geen beurt loopt.</summary>
     public static ValidationResult IsInTurnPhase(GameState state, TurnPhase turnPhase)
@@ -59,19 +60,25 @@ public static class Guards
         if (state.TurnState is null)
         {
             return ValidationResult.Failure(
-                $"Dit kan alleen tijdens {turnPhase}; er loopt geen beurt.");
+                "common.noTurnInProgress",
+                new Dictionary<string, string> { ["expected"] = turnPhase.ToString() });
         }
 
         return state.TurnState.TurnPhase == turnPhase
             ? ValidationResult.Success()
             : ValidationResult.Failure(
-                $"Dit kan alleen tijdens {turnPhase}; de beurt staat in {state.TurnState.TurnPhase}.");
+                "common.wrongTurnPhase",
+                new Dictionary<string, string>
+                {
+                    ["expected"] = turnPhase.ToString(),
+                    ["actual"] = state.TurnState.TurnPhase.ToString(),
+                });
     }
 
     public static ValidationResult TerritoryExists(GameState state, string territoryId) =>
         state.HasTerritory(territoryId)
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Onbekend gebied '{territoryId}'.");
+            : ValidationResult.Failure("common.unknownTerritory", new Dictionary<string, string> { ["territoryId"] = territoryId });
 
     public static ValidationResult OwnsTerritory(
         GameState state, string playerId, string territoryId)
@@ -85,6 +92,8 @@ public static class Guards
 
         return state.Territory(territoryId).OwnerPlayerId == playerId
             ? ValidationResult.Success()
-            : ValidationResult.Failure($"Gebied '{territoryId}' is niet van speler '{playerId}'.");
+            : ValidationResult.Failure(
+                "common.territoryNotOwned",
+                new Dictionary<string, string> { ["territoryId"] = territoryId, ["playerId"] = playerId });
     }
 }

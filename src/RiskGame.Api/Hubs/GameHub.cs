@@ -4,6 +4,7 @@ using RiskGame.Api.Commands;
 using RiskGame.Api.Dtos;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
+using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Hubs;
 
@@ -64,7 +65,8 @@ public sealed class GameHub(
 
         if (state is null)
         {
-            throw new HubException($"Onbekend spel '{gameId}'.");
+            throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
         }
 
         return GameStateDtoMapper.ToDto(state) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
@@ -91,12 +93,14 @@ public sealed class GameHub(
 
         if (state is null)
         {
-            throw new HubException($"Onbekend spel '{gameId}'.");
+            throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
         }
 
         if (!state.HasPlayer(playerId))
         {
-            throw new HubException($"Onbekende speler '{playerId}' voor spel '{gameId}'.");
+            throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.unknownPlayer", new Dictionary<string, string> { ["playerId"] = playerId })));
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
@@ -276,7 +280,7 @@ public sealed class GameHub(
     {
         if (!result.IsSuccess)
         {
-            throw new HubException(string.Join(" | ", result.Errors));
+            throw new HubException(HubErrorSerializer.Serialize(result.Errors));
         }
 
         var response = onSuccess(result.Value);

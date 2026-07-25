@@ -22,7 +22,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(
@@ -60,7 +60,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(

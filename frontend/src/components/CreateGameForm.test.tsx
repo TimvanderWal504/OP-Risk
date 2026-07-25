@@ -26,16 +26,16 @@ describe('CreateGameForm', () => {
     )
   })
 
-  it('toont een foutmelding als de server het verzoek weigert', async () => {
+  it('toont een vertaalde foutmelding als de server het verzoek weigert', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
     fetchMock.mockResolvedValueOnce({
       ok: false,
-      json: async () => ['Ongeldige instellingen.'],
+      json: async () => [{ code: 'lobby.gameFull' }],
     })
 
     render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
-    expect(await screen.findByText('Ongeldige instellingen.')).toBeInTheDocument()
+    expect(await screen.findByText('Dit spel zit vol.')).toBeInTheDocument()
   })
 })

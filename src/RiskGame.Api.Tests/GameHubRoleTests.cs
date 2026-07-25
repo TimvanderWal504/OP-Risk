@@ -112,7 +112,7 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("SelectRole", gameId, bobId, "president"));
 
-        Assert.Contains("al gekozen", exception.Message);
+        Assert.Contains("lobby.roleTaken", exception.Message);
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("StartGame", gameId, aliceId));
 
-        Assert.Contains("rol gekozen", exception.Message);
+        Assert.Contains("lobby.notAllRolesChosen", exception.Message);
     }
 
     [Fact]
@@ -180,6 +180,6 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
             connection.InvokeAsync<GameStateDto>(
                 "ClaimTerritory", gameId, aliceId, "eastern-united-states"));
 
-        Assert.Contains("rol-herkomstland", exception.Message);
+        Assert.Contains("setup.cannotClaimOwnRoleOrigin", exception.Message);
     }
 }

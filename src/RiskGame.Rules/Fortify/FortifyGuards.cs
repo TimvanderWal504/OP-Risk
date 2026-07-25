@@ -34,7 +34,7 @@ public static class FortifyGuards
 
         if (fromTerritoryId == toTerritoryId)
         {
-            return ValidationResult.Failure("Bron- en doelgebied moeten verschillend zijn.");
+            return ValidationResult.Failure("fortify.sourceAndTargetMustDiffer");
         }
 
         var fromArmyCount = state.Territory(fromTerritoryId).ArmyCount;
@@ -43,27 +43,32 @@ public static class FortifyGuards
         {
             armiesToMove >= 1
                 ? ValidationResult.Success()
-                : ValidationResult.Failure("Er moet minimaal 1 leger verplaatst worden."),
+                : ValidationResult.Failure("fortify.mustMoveAtLeastOneArmy"),
 
             armiesToMove <= fromArmyCount - 1
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Er moet minimaal 1 leger achterblijven in '{fromTerritoryId}' " +
-                    $"({fromArmyCount} beschikbaar, {armiesToMove} opgegeven)."),
+                    "fortify.mustLeaveOneArmyBehind",
+                    new Dictionary<string, string>
+                    {
+                        ["territoryId"] = fromTerritoryId,
+                        ["available"] = fromArmyCount.ToString(),
+                        ["requested"] = armiesToMove.ToString(),
+                    }),
 
             IsTerritoryLocked(state, fromTerritoryId)
-                ? ValidationResult.Failure($"Gebied '{fromTerritoryId}' is deze ronde afgesloten.")
+                ? ValidationResult.Failure("fortify.territoryLocked", new Dictionary<string, string> { ["territoryId"] = fromTerritoryId })
                 : ValidationResult.Success(),
 
             IsTerritoryLocked(state, toTerritoryId)
-                ? ValidationResult.Failure($"Gebied '{toTerritoryId}' is deze ronde afgesloten.")
+                ? ValidationResult.Failure("fortify.territoryLocked", new Dictionary<string, string> { ["territoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
             HasFortifyPath(state, playerId, fromTerritoryId, toTerritoryId)
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(
-                    $"Er is geen aaneengesloten pad van eigen gebieden tussen " +
-                    $"'{fromTerritoryId}' en '{toTerritoryId}'."),
+                    "fortify.noPathBetweenTerritories",
+                    new Dictionary<string, string> { ["fromTerritoryId"] = fromTerritoryId, ["toTerritoryId"] = toTerritoryId }),
         };
 
         return ValidationResult.Combine([.. checks]);

@@ -36,7 +36,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         if (state is null)
         {
-            return Result<DeclareAttackResult>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<DeclareAttackResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(
@@ -75,7 +75,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         if (state is null)
         {
-            return Result<ChooseDefenseDiceResult>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<ChooseDefenseDiceResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = AttackGuards.CanChooseDefenseDice(state, playerId, defenseDice);
@@ -152,7 +152,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var pendingCombat = state.TurnState?.PendingCombat;
@@ -161,7 +161,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             Guards.IsActivePlayer(state, playerId),
             Guards.IsInTurnPhase(state, TurnPhase.Attack),
             pendingCombat is null
-                ? ValidationResult.Failure("Er is geen verovering om legers naar te verplaatsen.")
+                ? ValidationResult.Failure("attack.noConquestToMoveInto")
                 : AttackGuards.CanMoveAfterConquest(
                     state, playerId, pendingCombat.FromTerritoryId, pendingCombat.AttackDice, armiesToMove));
 

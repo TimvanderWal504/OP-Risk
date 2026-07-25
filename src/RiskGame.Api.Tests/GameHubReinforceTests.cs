@@ -179,7 +179,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, aliceId, aliceTerritoryId, 8));
 
-        Assert.Contains("over om te plaatsen", exception.Message);
+        Assert.Contains("reinforce.notEnoughArmiesRemaining", exception.Message);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, aliceId, bobTerritoryId, 1));
 
-        Assert.Contains("niet van speler", exception.Message);
+        Assert.Contains("common.territoryNotOwned", exception.Message);
     }
 
     /// <summary>Haalt drie kaarten met hetzelfde symbool op uit het deck (three-of-a-kind).</summary>
@@ -311,6 +311,6 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
             connection.InvokeAsync<GameStateDto>(
                 "TradeInCards", gameId, "p1", invalidSet.Select(card => card.Id).ToArray()));
 
-        Assert.Contains("geen geldige set", exception.Message);
+        Assert.Contains("reinforce.invalidCardSet", exception.Message);
     }
 }

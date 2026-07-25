@@ -13,12 +13,12 @@
 const ATLAS = (() => {
 
   const PLAYERS = [
-    {cw:['Rood','Red'],     name:'Sanne', hex:'#c0392b', on:'#ffffff', sym:'▲', role:['President','President'],  origin:['Oost-VS','Eastern US'],       boost:false, terr:7, army:18, mission:['Schakel de groene speler uit','Eliminate the green player'], met:true,  voted:true},
-    {cw:['Blauw','Blue'],   name:'Tomas', hex:'#215c9c', on:'#ffffff', sym:'●', role:['Generaal','General'],     origin:['Scandinavië','Scandinavia'],  boost:true,  terr:7, army:22, mission:['Verover heel Europa en Zuid-Amerika','Conquer all of Europe and South America'], met:false, voted:true},
-    {cw:['Groen','Green'],  name:'Iris',  hex:'#4f7a2e', on:'#ffffff', sym:'■', role:['Ingenieur','Engineer'],   origin:['Congo','Congo'],              boost:true,  terr:6, army:17, mission:['Bezit 18 gebieden met elk ≥ 2 legers','Hold 18 territories with ≥ 2 armies each'], met:false, voted:false},
-    {cw:['Geel','Yellow'],  name:'Diego', hex:'#e0a81c', on:'#1a1206', sym:'★', role:['Diplomaat','Diplomat'],   origin:['Brazilië','Brazil'],          boost:true,  terr:9, army:30, mission:['Verover Noord-Amerika en Oceanië','Conquer North America and Oceania'], met:false, voted:true},
-    {cw:['Paars','Purple'], name:'Noor',  hex:'#8e4585', on:'#ffffff', sym:'✚', role:['Smokkelaar','Smuggler'],  origin:['Noord-Afrika','North Africa'],boost:true,  terr:6, army:19, mission:['Bezit 24 gebieden','Hold 24 territories'], met:false, voted:false},
-    {cw:['Cyaan','Cyan'],   name:'Vera',  hex:'#158f8a', on:'#ffffff', sym:'⬡', role:['Admiraal','Admiral'],     origin:['Oeral','Ural'],               boost:true,  terr:7, army:26, mission:['Verover heel Azië','Conquer all of Asia'], met:false, voted:true},
+    {cw:['Rood','Red'],     name:'Sanne', hex:'#ca3c25', on:'#fffbbd', sym:'▲', role:['President','President'],  origin:['Oost-VS','Eastern US'],       boost:false, terr:7, army:18, mission:['Schakel de groene speler uit','Eliminate the green player'], met:true,  voted:true},
+    {cw:['Blauw','Blue'],   name:'Tomas', hex:'#0057ff', on:'#f8f7f4', sym:'●', role:['Generaal','General'],     origin:['Scandinavië','Scandinavia'],  boost:true,  terr:7, army:22, mission:['Verover heel Europa en Zuid-Amerika','Conquer all of Europe and South America'], met:false, voted:true},
+    {cw:['Groen','Green'],  name:'Iris',  hex:'#cfff74', on:'#2f3a1d', sym:'■', role:['Ingenieur','Engineer'],   origin:['Congo','Congo'],              boost:true,  terr:6, army:17, mission:['Bezit 18 gebieden met elk ≥ 2 legers','Hold 18 territories with ≥ 2 armies each'], met:false, voted:false},
+    {cw:['Geel','Yellow'],  name:'Diego', hex:'#fcdb32', on:'#141d38', sym:'★', role:['Diplomaat','Diplomat'],   origin:['Brazilië','Brazil'],          boost:true,  terr:9, army:30, mission:['Verover Noord-Amerika en Oceanië','Conquer North America and Oceania'], met:false, voted:true},
+    {cw:['Paars','Purple'], name:'Noor',  hex:'#6a00f4', on:'#ffd6a5', sym:'✚', role:['Smokkelaar','Smuggler'],  origin:['Noord-Afrika','North Africa'],boost:true,  terr:6, army:19, mission:['Bezit 24 gebieden','Hold 24 territories'], met:false, voted:false},
+    {cw:['Turquoise','Turquoise'],   name:'Vera',  hex:'#34e0a1', on:'#000000', sym:'⬡', role:['Admiraal','Admiral'],     origin:['Oeral','Ural'],               boost:true,  terr:7, army:26, mission:['Verover heel Azië','Conquer all of Asia'], met:false, voted:true},
   ];
 
   // Role home territories -> player index (dashed ring on the map)

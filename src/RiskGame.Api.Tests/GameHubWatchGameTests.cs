@@ -100,7 +100,7 @@ public sealed class GameHubWatchGameTests(PostgresFixture postgres) : IAsyncLife
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("WatchGame", "ONBEKEND"));
 
-        Assert.Contains("Onbekend spel", exception.Message);
+        Assert.Contains("common.unknownGame", exception.Message);
     }
 
     [Fact]

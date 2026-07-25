@@ -13,19 +13,19 @@ public sealed class ValidationResult
 {
     private static readonly ValidationResult Ok = new([]);
 
-    private ValidationResult(IReadOnlyList<string> errors) => Errors = errors;
+    private ValidationResult(IReadOnlyList<ValidationError> errors) => Errors = errors;
 
-    public IReadOnlyList<string> Errors { get; }
+    public IReadOnlyList<ValidationError> Errors { get; }
 
     public bool IsSuccess => Errors.Count == 0;
 
     public static ValidationResult Success() => Ok;
 
-    public static ValidationResult Failure(string error)
+    public static ValidationResult Failure(string code, IReadOnlyDictionary<string, string>? @params = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(error);
+        ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
-        return new ValidationResult([error]);
+        return new ValidationResult([new ValidationError(code, @params)]);
     }
 
     /// <summary>

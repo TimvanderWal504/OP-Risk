@@ -44,7 +44,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "quebec", armiesToMove: 2);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen aaneengesloten pad", result.Errors.Single());
+        Assert.Equal("fortify.noPathBetweenTerritories", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "brazil", armiesToMove: 2);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen aaneengesloten pad", result.Errors.Single());
+        Assert.Equal("fortify.noPathBetweenTerritories", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 3);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("minimaal 1 leger achterblijven", result.Errors.Single());
+        Assert.Equal("fortify.mustLeaveOneArmyBehind", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alaska", armiesToMove: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("verschillend zijn", result.Errors.Single());
+        Assert.Equal("fortify.sourceAndTargetMustDiffer", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "kamchatka", armiesToMove: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen aaneengesloten pad", result.Errors.Single());
+        Assert.Equal("fortify.noPathBetweenTerritories", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("afgesloten", result.Errors.Single());
+        Assert.Equal("fortify.territoryLocked", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("afgesloten", result.Errors.Single());
+        Assert.Equal("fortify.territoryLocked", result.Errors.Single().Code);
     }
 
     [Fact]

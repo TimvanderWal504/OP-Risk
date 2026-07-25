@@ -103,7 +103,7 @@ public class ReinforceGuardsTests
         var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "onbekend"]);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("niet in bezit", result.Errors.Single());
+        Assert.Equal("reinforce.cardNotOwned", result.Errors.Single().Code);
     }
 
     [Fact]

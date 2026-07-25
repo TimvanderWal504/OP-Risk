@@ -3,6 +3,7 @@ import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import type { GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage } from '../types/HubResponses'
+import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 /**
  * TV-kant van de lobby-flow: roept eenmalig WatchGame(gameId) aan zodra de verbinding
@@ -65,7 +66,8 @@ export function useTvGame(gameId: string) {
       })
       .catch((watchError: unknown) => {
         if (!cancelled) {
-          setError(watchError instanceof Error ? watchError.message : String(watchError))
+          const message = watchError instanceof Error ? watchError.message : String(watchError)
+          setError(translateValidationErrors(parseHubError(message)))
         }
       })
 

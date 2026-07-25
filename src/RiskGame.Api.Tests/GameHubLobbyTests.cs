@@ -116,7 +116,7 @@ public sealed class GameHubLobbyTests(PostgresFixture postgres) : IAsyncLifetime
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("ChooseColor", gameId, bob.PlayerId, "red"));
 
-        Assert.Contains("al gekozen", exception.Message);
+        Assert.Contains("lobby.colorTaken", exception.Message);
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public sealed class GameHubLobbyTests(PostgresFixture postgres) : IAsyncLifetime
             entry.Category == typeof(HubExceptionLoggingFilter).FullName
             && entry.Level == LogLevel.Information
             && entry.Message.Contains("ChooseColor")
-            && entry.Message.Contains("al gekozen"));
+            && entry.Message.Contains("lobby.colorTaken"));
     }
 
     [Fact]
@@ -158,6 +158,6 @@ public sealed class GameHubLobbyTests(PostgresFixture postgres) : IAsyncLifetime
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Speler te veel"));
 
-        Assert.Contains("vol", exception.Message);
+        Assert.Contains("lobby.gameFull", exception.Message);
     }
 }

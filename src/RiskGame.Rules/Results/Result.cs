@@ -1,3 +1,5 @@
+using RiskGame.Rules.Validation;
+
 namespace RiskGame.Rules.Results;
 
 /// <summary>
@@ -16,13 +18,13 @@ public sealed class Result<T>
         Errors = [];
     }
 
-    private Result(IReadOnlyList<string> errors)
+    private Result(IReadOnlyList<ValidationError> errors)
     {
         _value = default;
         Errors = errors;
     }
 
-    public IReadOnlyList<string> Errors { get; }
+    public IReadOnlyList<ValidationError> Errors { get; }
 
     public bool IsSuccess => Errors.Count == 0;
 
@@ -34,7 +36,7 @@ public sealed class Result<T>
 
     public static Result<T> Success(T value) => new(value);
 
-    public static Result<T> Failure(IReadOnlyList<string> errors)
+    public static Result<T> Failure(IReadOnlyList<ValidationError> errors)
     {
         if (errors.Count == 0)
         {
@@ -45,5 +47,6 @@ public sealed class Result<T>
         return new Result<T>(errors);
     }
 
-    public static Result<T> Failure(string error) => Failure([error]);
+    public static Result<T> Failure(string code, IReadOnlyDictionary<string, string>? @params = null) =>
+        Failure([new ValidationError(code, @params)]);
 }

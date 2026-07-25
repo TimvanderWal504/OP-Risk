@@ -29,7 +29,7 @@ public static class ReinforceGuards
 
         return amount > 0
             ? ValidationResult.Success()
-            : ValidationResult.Failure("Er moet minimaal 1 leger geplaatst worden.");
+            : ValidationResult.Failure("reinforce.mustPlaceAtLeastOneArmy");
     }
 
     /// <summary>
@@ -68,7 +68,8 @@ public static class ReinforceGuards
             if (card is null)
             {
                 return ValidationResult.Failure(
-                    $"Speler '{playerId}' heeft kaart '{cardId}' niet in bezit.");
+                    "reinforce.cardNotOwned",
+                    new Dictionary<string, string> { ["playerId"] = playerId, ["cardId"] = cardId });
             }
 
             cards.Add(card);

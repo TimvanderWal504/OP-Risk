@@ -106,12 +106,12 @@
       "description": "Vernietig alle legers van de oranje speler."
     },
     {
-      "id": "eliminate-cyan",
+      "id": "eliminate-turquoise",
       "type": "EliminatePlayer",
-      "params": { "targetColor": "cyan" },
+      "params": { "targetColor": "turquoise" },
       "fallbackMissionId": "territory-18-min2",
-      "name": "Schakel de cyaan speler uit",
-      "description": "Vernietig alle legers van de cyaan speler."
+      "name": "Schakel de turquoise speler uit",
+      "description": "Vernietig alle legers van de turquoise speler."
     }
   ]
 }

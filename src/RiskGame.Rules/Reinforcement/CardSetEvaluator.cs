@@ -23,14 +23,15 @@ public static class CardSetEvaluator
         if (cards.Count != SetSize)
         {
             return ValidationResult.Failure(
-                $"Een kaartenset bestaat uit precies {SetSize} kaarten, niet {cards.Count}.");
+                "reinforce.invalidCardSetSize",
+                new Dictionary<string, string> { ["expected"] = SetSize.ToString(), ["actual"] = cards.Count.ToString() });
         }
 
         var jokerCount = cards.Count(card => card.IsJoker);
 
         if (jokerCount > 0 && !rules.JokerIsWild)
         {
-            return ValidationResult.Failure("Jokers zijn in dit spel niet inzetbaar in een set.");
+            return ValidationResult.Failure("reinforce.jokersNotAllowed");
         }
 
         var nonJokerSymbols = cards
@@ -45,8 +46,6 @@ public static class CardSetEvaluator
 
         return isThreeOfAKind || isOneOfEach
             ? ValidationResult.Success()
-            : ValidationResult.Failure(
-                "Deze kaarten vormen geen geldige set (drie gelijke of drie verschillende " +
-                "symbolen, jokers tellen als wildcard).");
+            : ValidationResult.Failure("reinforce.invalidCardSet");
     }
 }

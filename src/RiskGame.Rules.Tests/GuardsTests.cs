@@ -21,7 +21,7 @@ public class GuardsTests
         var result = Guards.IsActivePlayer(state, "p2");
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("niet aan de beurt", result.Errors.Single());
+        Assert.Equal("common.playerNotActive", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class GuardsTests
         var result = Guards.IsActivePlayer(state, "p9");
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("Onbekende speler", result.Errors.Single());
+        Assert.Equal("common.unknownPlayer", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class GuardsTests
         var result = Guards.IsInTurnPhase(state, TurnPhase.Reinforce);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen beurt", result.Errors.Single());
+        Assert.Equal("common.noTurnInProgress", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class GuardsTests
         var result = Guards.OwnsTerritory(state, "p1", "atlantis");
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("Onbekend gebied", result.Errors.Single());
+        Assert.Equal("common.unknownTerritory", result.Errors.Single().Code);
     }
 
     [Fact]

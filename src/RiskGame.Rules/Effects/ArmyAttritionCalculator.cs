@@ -61,13 +61,14 @@ public static class ArmyAttritionCalculator
             if (!state.HasTerritory(territoryId) || state.Territory(territoryId).OwnerPlayerId != playerId)
             {
                 return ValidationResult.Failure(
-                    $"Gebied '{territoryId}' is geen gebied van speler '{playerId}'.");
+                    "common.territoryNotOwned",
+                    new Dictionary<string, string> { ["territoryId"] = territoryId, ["playerId"] = playerId });
             }
 
             if (removed >= state.Territory(territoryId).ArmyCount)
             {
                 return ValidationResult.Failure(
-                    $"Gebied '{territoryId}' mag niet onder 1 leger komen.");
+                    "attrition.territoryMustKeepOneArmy", new Dictionary<string, string> { ["territoryId"] = territoryId });
             }
         }
 
@@ -77,6 +78,7 @@ public static class ArmyAttritionCalculator
         return total == expected
             ? ValidationResult.Success()
             : ValidationResult.Failure(
-                $"Er moeten in totaal {expected} legers verwijderd worden, niet {total}.");
+                "attrition.wrongTotalRemoved",
+                new Dictionary<string, string> { ["expected"] = expected.ToString(), ["actual"] = total.ToString() });
     }
 }

@@ -107,7 +107,7 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("ClaimTerritory", gameId, bobId, firstTerritoryId));
 
-        Assert.Contains("niet aan de beurt", exception.Message);
+        Assert.Contains("setup.notYourTurnToClaim", exception.Message);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("ClaimTerritory", gameId, bobId, firstTerritoryId));
 
-        Assert.Contains("al geclaimd", exception.Message);
+        Assert.Contains("setup.territoryAlreadyClaimed", exception.Message);
     }
 
     [Fact]
@@ -213,6 +213,6 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!));
 
-        Assert.Contains("niet aan de beurt", exception.Message);
+        Assert.Contains("setup.notYourTurnToPlace", exception.Message);
     }
 }

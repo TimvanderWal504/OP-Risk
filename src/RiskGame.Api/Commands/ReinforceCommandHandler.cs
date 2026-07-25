@@ -23,7 +23,7 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(
@@ -38,8 +38,13 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
         if (amount > state.TurnState!.ArmiesRemaining)
         {
             return Result<GameStateDto>.Failure(
-                $"Speler '{playerId}' heeft nog maar {state.TurnState.ArmiesRemaining} " +
-                $"leger(s) over om te plaatsen, niet {amount}.");
+                "reinforce.notEnoughArmiesRemaining",
+                new Dictionary<string, string>
+                {
+                    ["playerId"] = playerId,
+                    ["remaining"] = state.TurnState.ArmiesRemaining.ToString(),
+                    ["requested"] = amount.ToString(),
+                });
         }
 
         session.Events.Append(gameId, new ArmiesReinforced(gameId, playerId, territoryId, amount));
@@ -59,7 +64,7 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = ValidationResult.Combine(

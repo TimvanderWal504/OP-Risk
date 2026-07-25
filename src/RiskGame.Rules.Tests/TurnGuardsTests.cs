@@ -35,7 +35,7 @@ public class TurnGuardsTests
         var result = TurnGuards.CanEndPhase(state, "p1");
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("loopt nog een gevecht", result.Errors.Single());
+        Assert.Equal("turnFlow.combatInProgress", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class TurnGuardsTests
         var result = TurnGuards.CanEndPhase(state, "p1");
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("gebruik EndTurn", result.Errors.Single());
+        Assert.Equal("turnFlow.useEndTurnInFortify", result.Errors.Single().Code);
     }
 
     [Fact]

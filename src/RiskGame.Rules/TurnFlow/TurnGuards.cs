@@ -32,12 +32,9 @@ public static class TurnGuards
             TurnPhase.Reinforce => ValidationResult.Success(),
             TurnPhase.Attack => state.TurnState.PendingCombat is null
                 ? ValidationResult.Success()
-                : ValidationResult.Failure(
-                    "Er loopt nog een gevecht; wacht tot dat is afgehandeld."),
-            TurnPhase.Fortify => ValidationResult.Failure(
-                "Verplaatsen is de laatste fase van de beurt; gebruik EndTurn om de " +
-                "beurt te beëindigen."),
-            _ => ValidationResult.Failure("Onbekende fase."),
+                : ValidationResult.Failure("turnFlow.combatInProgress"),
+            TurnPhase.Fortify => ValidationResult.Failure("turnFlow.useEndTurnInFortify"),
+            _ => ValidationResult.Failure("turnFlow.unknownPhase"),
         };
     }
 

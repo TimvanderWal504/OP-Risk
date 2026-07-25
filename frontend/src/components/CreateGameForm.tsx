@@ -14,6 +14,8 @@ import { Stepper } from './ui/Stepper'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { Footer } from './ui/Footer'
 import { Button } from './ui/Button'
+import type { ValidationError } from '../types/ValidationError'
+import { translateValidationErrors } from '../i18n/hubError'
 
 /** FO §10-standaardwaarden. Startlegers blijft een vrij invulbaar getal — de
  * "klassieke tabel per spelersaantal" staat niet in data/*.json en het spelersaantal
@@ -67,8 +69,8 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
       })
 
       if (!response.ok) {
-        const errors = (await response.json().catch(() => null)) as string[] | null
-        setError(errors?.join(' | ') ?? t('errors.createFailed'))
+        const errors = (await response.json().catch(() => null)) as ValidationError[] | null
+        setError(errors && errors.length > 0 ? translateValidationErrors(errors) : t('errors.createFailed'))
 
         return
       }

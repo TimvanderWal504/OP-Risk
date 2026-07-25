@@ -27,7 +27,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = FortifyGuards.CanFortify(state, playerId, fromTerritoryId, toTerritoryId, armiesToMove);
@@ -53,7 +53,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = TurnGuards.CanEndPhase(state, playerId);
@@ -91,7 +91,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         if (state.TurnState is not { ActivePlayerId: var activePlayerId } turnState
@@ -100,8 +100,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
             || turnState.PendingCombat is not null)
         {
             return Result<GameStateDto>.Failure(
-                $"Kan de Versterken/Aanvallen-timer niet forceren voor speler '{playerId}': " +
-                "de beurt staat niet meer in de verwachte fase.");
+                "turnFlow.cannotForceAdvance", new Dictionary<string, string> { ["playerId"] = playerId });
         }
 
         var now = timeProvider.GetUtcNow();
@@ -123,7 +122,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure($"Onbekend spel '{gameId}'.");
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = TurnGuards.CanEndTurn(state, playerId);
@@ -137,8 +136,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         if (nextPlayerId is null)
         {
-            return Result<GameStateDto>.Failure(
-                "Kan de beurt niet doorschuiven: geen andere actieve speler gevonden.");
+            return Result<GameStateDto>.Failure("turnFlow.noNextPlayer");
         }
 
         var now = timeProvider.GetUtcNow();

@@ -1,6 +1,7 @@
 using Marten;
 using RiskGame.Api.Commands;
 using RiskGame.Rules.State;
+using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Services;
 
@@ -127,7 +128,7 @@ public sealed class TurnTimerBackgroundService(
     }
 
     private void LogRejectedThrottled(
-        string gameId, TurnState turnState, IReadOnlyList<string> errors, DateTimeOffset now)
+        string gameId, TurnState turnState, IReadOnlyList<ValidationError> errors, DateTimeOffset now)
     {
         if (_lastWarnedAtUtc.TryGetValue(gameId, out var lastWarnedAtUtc)
             && now - lastWarnedAtUtc < WarnThrottle)
@@ -139,6 +140,6 @@ public sealed class TurnTimerBackgroundService(
 
         logger.LogWarning(
             "Timeout-overstap voor spel {GameId}, speler {PlayerId}, fase {Phase} afgewezen: {Errors}",
-            gameId, turnState.ActivePlayerId, turnState.TurnPhase, string.Join(" | ", errors));
+            gameId, turnState.ActivePlayerId, turnState.TurnPhase, string.Join(" | ", errors.Select(error => error.Code)));
     }
 }

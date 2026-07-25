@@ -77,7 +77,7 @@ public class ArmyAttritionCalculatorTests
             state, "p1", new Dictionary<string, int> { ["alaska"] = 4 }, amount: 4);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("mag niet onder 1 leger komen", result.Errors.Single());
+        Assert.Equal("attrition.territoryMustKeepOneArmy", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class ArmyAttritionCalculatorTests
             state, "p1", new Dictionary<string, int> { ["alberta"] = 1 }, amount: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen gebied van speler", result.Errors.Single());
+        Assert.Equal("common.territoryNotOwned", result.Errors.Single().Code);
     }
 
     [Fact]

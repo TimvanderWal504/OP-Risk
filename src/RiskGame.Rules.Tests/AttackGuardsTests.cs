@@ -29,7 +29,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains(result.Errors, error => error.Contains("minimaal 2 legers"));
+        Assert.Contains(result.Errors, error => error.Code == "attack.notEnoughArmiesToAttack");
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "iceland", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("grenst niet aan", result.Errors.Single());
+        Assert.Equal("attack.notAdjacent", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen vijandelijk gebied", result.Errors.Single());
+        Assert.Equal("attack.notEnemyTerritory", result.Errors.Single().Code);
     }
 
     [Theory]
@@ -78,7 +78,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 3);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("mag niet groter zijn dan", result.Errors.Single());
+        Assert.Equal("attack.tooManyAttackDice", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("loopt al een gevecht", result.Errors.Single());
+        Assert.Equal("attack.combatInProgress", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class AttackGuardsTests
             state, "p1", "alaska", attackDiceUsed: 2, armiesToMove: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("Minimaal 2 leger(s)", result.Errors.Single());
+        Assert.Equal("attack.notEnoughArmiesMoved", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public class AttackGuardsTests
             state, "p1", "alaska", attackDiceUsed: 2, armiesToMove: 4);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("minimaal 1 leger achterblijven", result.Errors.Single());
+        Assert.Equal("attack.mustLeaveOneArmyBehind", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "kamchatka", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geblokkeerd", result.Errors.Single());
+        Assert.Equal("attack.routeBlocked", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("afgesloten", result.Errors.Single());
+        Assert.Equal("attack.territoryLocked", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("afgesloten", result.Errors.Single());
+        Assert.Equal("attack.territoryLocked", result.Errors.Single().Code);
     }
 
     private static GameState PendingAlaskaVsAlberta(int albertaArmies = 2) =>
@@ -217,7 +217,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("alleen met 1 dobbelsteen", result.Errors.Single());
+        Assert.Equal("attack.mustDefendWithOneDie", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 3);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("moet 1 of 2 zijn", result.Errors.Single());
+        Assert.Equal("attack.invalidDefenseDiceCount", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p1", defenseDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("niet de verdediger", result.Errors.Single());
+        Assert.Equal("attack.notTheDefender", result.Errors.Single().Code);
     }
 
     [Fact]
@@ -262,7 +262,7 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
 
         Assert.False(result.IsSuccess);
-        Assert.Contains("geen gevecht", result.Errors.Single());
+        Assert.Equal("attack.noCombatToDefend", result.Errors.Single().Code);
     }
 
     [Fact]
