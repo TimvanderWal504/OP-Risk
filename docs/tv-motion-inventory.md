@@ -107,9 +107,9 @@ Dit is één `GamePhaseDto`-waarde met meerdere zichtbare sub-toestanden, gedrev
 | Overlay verschijnt (kaart dimt, aanvaller/verdediger-paneel) | `pendingCombat` wordt niet-null (`AttackDeclared`) | niet geïmplementeerd | geen geïdentificeerd voor de overlay-container zelf | per `DeclareAttack` |
 | Aanvallersdobbelstenen vliegen van links in, 1 per aanvalsdobbelsteen | `DiceRolledMessage` (`context: "attack"`) | niet geïmplementeerd | `tvAnimations.attackerDie(idx)` (`atlasRollL` + `atlasSettle`, gestaggerd) | 1–3 dobbelstenen per `DeclareAttack` |
 | Verdedigersdobbelstenen vliegen van rechts in, ná aanvaller | `DiceRolledMessage` (`context: "defense"`) | niet geïmplementeerd | `tvAnimations.defenderDie(idx)` (`atlasRollR` + `atlasSettle`, gestaggerd, ingebouwde offset t.o.v. aanvaller) | 1–2 dobbelstenen per `ChooseDefenseDice` |
-| Reroll-chip-teller wijzigt (Reroll-roleffect, FO §8.1/§5.3) | aanvaller herwerpt vóór verdediger gooit | niet geïmplementeerd | — | **geen expliciet wire-event gevonden** voor een herworp los van een gewone `DiceRolledMessage`; resterend-aantal-chip heeft geen DTO-bron — bevinding |
-| Gevechtsresultaat-tekst ("X wint") | afgeleid, geen expliciet veld | niet geïmplementeerd | geen | per resolutie — client moet zelf diffen, zie §5 (`CombatResultResponse` gaat niet naar TV) |
-| "VEROVERD"-badge + meeverplaatst-aantal | `Conquered`-vlag (alleen in RPC-respons aan de aanvaller, niet gebroadcast) + latere `MoveAfterConquest` | niet geïmplementeerd | `tvAnimations.resultPop` (`atlasPop`, vertraagd) | per succesvolle verovering |
+| Reroll-chip-teller wijzigt (Reroll-roleffect, FO §8.1/§5.3) | aanvaller herwerpt vóór verdediger gooit | niet geïmplementeerd | — | de Reroll-rol zelf heeft nog geen hub-methode/command-handler (alleen `RerollEffect` als data, `RiskGame.Rules/Roles/RoleDefinition.cs`); `DiceRolledMessage`/`CombatNarratedMessage` dragen inmiddels wel een `CorrelationId` die een herworp aan hetzelfde gevecht zou koppelen zodra Reroll gebouwd wordt, maar het herworp-event zelf en de resterend-aantal-chip hebben nog geen DTO-bron — bevinding |
+| Gevechtsresultaat-tekst ("X wint") | `CombatNarratedMessage` (`AttackerLosses`/`DefenderLosses`), gebroadcast naar de hele groep sinds de combat-narratie-taak (`GameHub.ChooseDefenseDice`) | niet geïmplementeerd — er bestaat nog geen consumerend component/hook, zie §5 | geen | per resolutie |
+| "VEROVERD"-badge + meeverplaatst-aantal | `Conquered`-vlag op `CombatNarratedMessage` (nu gebroadcast, was voorheen alleen RPC-respons aan de aanvaller) + latere `MoveAfterConquest` (blijft ongenarreerd, zie §5) | niet geïmplementeerd | `tvAnimations.resultPop` (`atlasPop`, vertraagd) | per succesvolle verovering |
 | Overlay verdwijnt, kaart-dim verdwijnt | gevecht volledig afgehandeld inclusief bevestigde meeverplaatsing | niet geïmplementeerd | — | per gevecht |
 
 **Actief-effect-strip / event-overlay / attrition-overlay** — de export gebruikt dezelfde
@@ -132,7 +132,7 @@ die de demo bewust samenvouwt.
 | Change | Trigger | Rendered by | Existing motion | Frequency |
 |---|---|---|---|---|
 | Overlay verschijnt full-screen, speler-icoon + kop slaan in | `PlayerDto.isEliminated` kantelt naar `true` (`PlayerEliminated`) | niet geïmplementeerd | `tvAnimations.titleSlamShort`/`titleSlamLong` (`atlasSlam`) | per eliminatie |
-| "uitgeschakeld door"-onderschrift | zelfde event, vereist identiteit van de veroorzaker | niet geïmplementeerd | — | **geen DTO-veld draagt "door wie"** (`PlayerDto` heeft alleen de boolean) — bevinding |
+| "uitgeschakeld door"-onderschrift | zelfde event, vereist identiteit van de veroorzaker | niet geïmplementeerd | — | `CombatNarratedMessage` draagt dit inmiddels (`AttackerId` + `EliminatedPlayerId`, gebroadcast), maar alleen transiënt op het moment van het gevecht — `PlayerDto` zelf heeft nog steeds geen blijvend "door wie"-veld op de state-snapshot, dus een TV die pas ná de eliminatie `WatchGame`/`RejoinGame` doet, kan dit niet meer achterhalen — bevinding |
 | Overlay verdwijnt | onduidelijke duur/dismissal-conditie (auto-timeout? volgende actie?) | niet geïmplementeerd | — | vraag |
 
 **Rechterspelerspaneel (persistent tijdens InProgress)**
@@ -223,11 +223,17 @@ Gebaseerd op FO/TO, niet op speculatie; onbepaalde gevallen zijn als vraag gemar
    pauzeert exact op "Gooi" (`DeclareAttack`) en hervat pas na volledige
    gevechtsafhandeling inclusief meeverplaatsing — dus de timer-visuele-staat-wissel en
    het openen van de combat-overlay vallen per definitie samen.
-2. **Aanvallersdobbelstenen kunnen twee keer updaten vóór de verdediger ooit gooit.**
-   FO §5.3 punt 3: een aanvaller met een actieve Reroll-rol mag herwerpen vóórdat de
-   verdediger heeft gegooid — dus twee `DiceRolledMessage(context:"attack")`-events
-   kunnen na elkaar binnenkomen voordat er ook maar één
-   `DiceRolledMessage(context:"defense")` arriveert.
+2. **Aanvallersdobbelstenen kunnen twee keer updaten vóór de verdediger ooit gooit —
+   zodra Reroll bestaat.** FO §5.3 punt 3: een aanvaller met een actieve Reroll-rol mag
+   herwerpen vóórdat de verdediger heeft gegooid — dus twee
+   `DiceRolledMessage(context:"attack")`-events zouden na elkaar kunnen binnenkomen
+   voordat er ook maar één `DiceRolledMessage(context:"defense")` arriveert. Vandaag kan
+   dit nog niet gebeuren: `AttackGuards.CanDeclareAttack` staat sowieso geen tweede open
+   `PendingCombat` toe, en Reroll heeft geen hub-methode/command-handler (alleen
+   `RerollEffect` als rol-data). De combat-narratie-taak heeft hier al op
+   geanticipeerd: `PendingCombat`/`AttackDeclared`/`DiceRolledMessage`/
+   `CombatNarratedMessage` dragen een `CorrelationId` die precies dit soort
+   overlappende rolreeksen aan elkaar zou koppelen zodra Reroll gebouwd wordt.
 3. **Timeout-gedreven fasewissel tijdens een open gevecht kan niet.** FO §5.4 zegt
    expliciet dat de timer stilstaat tijdens gevechtsafhandeling — een timeout kan dus
    per definitie niet midden in een combat-overlay vallen. Dit is een uitgesloten
@@ -252,11 +258,19 @@ Gebaseerd op FO/TO, niet op speculatie; onbepaalde gevallen zijn als vraag gemar
 8. **`WatchGame`/`RejoinGame`-respons vs. een nieuwere live `GameStateUpdated`:** dit is
    een reële race en al opgelost in code — `useTvGame.applyState` (regel 22-24) negeert
    een respons met een `stateVersion` die niet hoger is dan de al bekende state.
-9. **`DiceRolled` vóór `GameStateUpdated` voor dezelfde actie:** `GameHub.cs` stuurt in
-   `RollForOrder`/`DeclareAttack`/`ChooseDefenseDice` steeds eerst `DiceRolled` en dán
-   (via `UnwrapAndBroadcastAsync`) `GameStateUpdated`, sequentieel `await`-ed naar
-   dezelfde group. Voor één client-verbinding is de aankomstvolgorde daarmee
-   betrouwbaar dobbelsteen-vóór-state — geen open vraag.
+9. **`DiceRolled`/`CombatNarrated` vóór `GameStateUpdated` voor dezelfde actie:**
+   `GameHub.cs` stuurt in `RollForOrder`/`DeclareAttack` steeds eerst `DiceRolled` en
+   dán (via `UnwrapAndBroadcastAsync`) `GameStateUpdated`; `ChooseDefenseDice` stuurt
+   `DiceRolled` → `CombatNarrated` → `GameStateUpdated`, alle drie sequentieel
+   `await`-ed naar dezelfde group. Voor één client-verbinding is de aankomstvolgorde
+   daarmee betrouwbaar narratie-vóór-state — maar bij een rejoin die tussen deze pushes
+   in valt, is aankomstvolgorde geen garantie meer dat een `CombatNarrated` bij de
+   *eerstvolgende* snapshot hoort. Daarom draagt `CombatNarratedMessage` een eigen
+   `StateVersion` (gelijk aan de `GameStateDto.StateVersion` die het gevecht oplevert),
+   zodat een consument dezelfde verdediging kan toepassen die `useTvGame.applyState` al
+   op het state-kanaal gebruikt (een niet-hogere versie negeren), in plaats van op
+   aankomstvolgorde te vertrouwen. Geen open vraag meer — het wire-contract levert het
+   correlatiemiddel, een toekomstige consument moet het alleen nog gebruiken.
 
 ---
 
@@ -328,16 +342,25 @@ nodig zijn om §1 volledig te kunnen implementeren:
 - Geen feed/log-veld — de hele "Gebeurtenissen"-strip (export L390-401) heeft geen
   wire-representatie.
 - Geen `isAutoPass`-veld op `PlayerDto` (wel genoemd in TO §3.1).
-- Geen "door wie geëlimineerd"-veld op `PlayerDto`.
-- `CombatResultResponse` (verliezen, `Conquered`-vlag) gaat alleen als RPC-retourwaarde
-  naar de aanroepende speler, **niet** naar de TV-groep — de TV krijgt alleen
-  `DiceRolled` (de worpen) en de resulterende `GameStateUpdated` (nieuwe
-  eigenaar/legerstand). De TV moet dus zelf de oude en nieuwe state vergelijken om af
-  te leiden wie verloor en of een gebied veroverd is; er komt geen expliciet
-  "dit-is-het-resultaat"-bericht binnen.
+- Geen blijvend "door wie geëlimineerd"-veld op `PlayerDto` (zie hieronder — inmiddels
+  wel transiënt beschikbaar via de narratieve broadcast).
+- **[Opgelost sinds de combat-narratie-taak]** `CombatResultResponse` ging alleen als
+  RPC-retourwaarde naar de aanroepende speler. `GameHub.ChooseDefenseDice` broadcast nu
+  óók `CombatNarratedMessage` naar de hele TV-groep (`AttackerId`, `DefenderId`,
+  `From-`/`ToTerritoryId`, verliezen, `Conquered`, `EliminatedPlayerId`, `StateVersion`,
+  `CorrelationId`) — de TV hoeft dus niet meer zelf oude/nieuwe state te diffen om af te
+  leiden wie won/verloor of een gebied veroverd is. Dit is puur wire-contract: er
+  bestaat nog géén frontend-consumptie (geen `HubResponses.ts`-type, geen
+  `useTvGame`-uitbreiding, geen component) — bewust uit scope gehouden tot er een
+  consumerend scherm is (Combat-overlay staat immers nog op "niet geïmplementeerd" in
+  §1). Blijft ongewijzigd: `MoveAfterConquest` levert geen eigen narratief event, en de
+  narratie is transiënt — een rejoin ná het gevecht ziet 'm niet meer terug, alleen het
+  eindresultaat in de snapshot.
 - Geen expliciet wire-signaal voor een Reroll-gebruik los van een gewone
   `DiceRolledMessage`, en dus geen bron voor de "resterend aantal herworpen"-chip uit
-  het design.
+  het design — de Reroll-rol zelf heeft nog geen hub-methode. Wel al aangelegd: een
+  `CorrelationId` op `PendingCombat`/`DiceRolledMessage`/`CombatNarratedMessage` die een
+  toekomstige herworp aan hetzelfde gevecht zou koppelen (zie §3, punt 2).
 
 ### Elementen die niet met alleen `transform`/`opacity` kunnen
 - `transitions.progressFillTv` (`'width .5s'`), gebruikt op de attrition-voortgangsbalk
