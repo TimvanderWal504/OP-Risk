@@ -60,7 +60,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new PhaseChanged(gameId, "p1", TurnPhase.Attack, Settings.TurnTimer, now.AddSeconds(1)),
             new AttackDeclared(
                 gameId, "p1", "alaska", "northwest-territory", AttackDice: 2,
-                Remaining: Settings.TurnTimer, OccurredAtUtc: now.AddSeconds(2)),
+                Remaining: Settings.TurnTimer, OccurredAtUtc: now.AddSeconds(2), CorrelationId: Guid.NewGuid()),
             new DiceRolled(gameId, "p1", [6, 4]),
             new DiceRolled(gameId, "p2", [3]),
             new CombatResolved(

@@ -9,7 +9,7 @@ using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Commands;
 
-public sealed record DeclareAttackResult(IReadOnlyList<int> AttackerRolls, GameStateDto State);
+public sealed record DeclareAttackResult(IReadOnlyList<int> AttackerRolls, Guid CorrelationId, GameStateDto State);
 
 public sealed record ChooseDefenseDiceResult(
     IReadOnlyList<int> AttackerRolls,
@@ -17,6 +17,12 @@ public sealed record ChooseDefenseDiceResult(
     int AttackerLosses,
     int DefenderLosses,
     bool Conquered,
+    string AttackerId,
+    string DefenderId,
+    string FromTerritoryId,
+    string ToTerritoryId,
+    string? EliminatedPlayerId,
+    Guid CorrelationId,
     GameStateDto State);
 
 /// <summary>
@@ -53,18 +59,20 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var now = timeProvider.GetUtcNow();
         var timer = state.TurnState!.Timer!;
         var remaining = timer.Tick(now - timer.LastUpdatedUtc).Remaining;
+        var correlationId = Guid.NewGuid();
 
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
         session.Events.Append(
             gameId,
-            new AttackDeclared(gameId, playerId, fromTerritoryId, toTerritoryId, attackDice, remaining, now));
+            new AttackDeclared(
+                gameId, playerId, fromTerritoryId, toTerritoryId, attackDice, remaining, now, correlationId));
 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
         return Result<DeclareAttackResult>.Success(
-            new DeclareAttackResult(attackerRolls, GameStateDtoMapper.ToDto(updated!)));
+            new DeclareAttackResult(attackerRolls, correlationId, GameStateDtoMapper.ToDto(updated!)));
     }
 
     public async Task<Result<ChooseDefenseDiceResult>> ChooseDefenseDiceAsync(
@@ -119,6 +127,8 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             outcome.DefenderLosses,
             resumedAtUtc));
 
+        string? eliminatedPlayerId = null;
+
         if (conquest.Conquered)
         {
             var defenderId = playerId;
@@ -128,6 +138,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             if (state.TerritoriesOf(defenderId).Count() == 1)
             {
                 session.Events.Append(gameId, new PlayerEliminated(gameId, defenderId, attackerId));
+                eliminatedPlayerId = defenderId;
             }
         }
 
@@ -141,6 +152,12 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             outcome.AttackerLosses,
             outcome.DefenderLosses,
             conquest.Conquered,
+            attackerId,
+            playerId,
+            pendingCombat.FromTerritoryId,
+            pendingCombat.ToTerritoryId,
+            eliminatedPlayerId,
+            pendingCombat.CorrelationId,
             GameStateDtoMapper.ToDto(updated!)));
     }
 

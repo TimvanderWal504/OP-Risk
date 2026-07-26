@@ -261,4 +261,132 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         Assert.Contains("attack.mustDefendWithOneDie", exception.Message);
     }
+
+    [Fact]
+    public async Task ChooseDefenseDice_ZonderVerovering_BroadcastCombatNarratedNaarToeschouwer()
+    {
+        // Zelfde worpen/opstelling als DeclareAttack_ZonderVerovering_TeltVerliezenAfEnLeegtGevecht.
+        await using var factory = CreateFactory(2, 3, 6, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var received = new TaskCompletionSource<CombatNarratedMessage>();
+        spectator.On<CombatNarratedMessage>("CombatNarrated", message => received.TrySetResult(message));
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+
+        var narrated = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal("p1", narrated.AttackerId);
+        Assert.Equal("p2", narrated.DefenderId);
+        Assert.Equal("alaska", narrated.FromTerritoryId);
+        Assert.Equal("alberta", narrated.ToTerritoryId);
+        Assert.False(narrated.Conquered);
+        Assert.Null(narrated.EliminatedPlayerId);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_VeroveringVanLaatsteGebied_CombatNarratedMeldtEliminatie()
+    {
+        // Zelfde worpen/opstelling als ChooseDefenseDice_VeroveringVanLaatsteGebied_SchakeltSpelerUit.
+        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 4, bobArmies: 2);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var received = new TaskCompletionSource<CombatNarratedMessage>();
+        spectator.On<CombatNarratedMessage>("CombatNarrated", message => received.TrySetResult(message));
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+
+        var narrated = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.True(narrated.Conquered);
+        Assert.Equal("p2", narrated.EliminatedPlayerId);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_CombatNarratedStateVersionKomtOvereenMetVolgendeGameStateUpdated()
+    {
+        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 4, bobArmies: 2);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var narratedReceived = new TaskCompletionSource<CombatNarratedMessage>();
+        var stateUpdatedReceived = new TaskCompletionSource<GameStateDto>();
+        var stateUpdateCount = 0;
+        spectator.On<CombatNarratedMessage>("CombatNarrated", message => narratedReceived.TrySetResult(message));
+        spectator.On<GameStateDto>("GameStateUpdated", state =>
+        {
+            // De eerste push komt van DeclareAttack, de tweede van ChooseDefenseDice — alleen
+            // die tweede hoort bij het combat-narratief-event van deze test. Verovering houdt
+            // PendingCombat open tot MoveAfterConquest, dus die kan niet als filter dienen.
+            stateUpdateCount++;
+
+            if (stateUpdateCount == 2)
+            {
+                stateUpdatedReceived.TrySetResult(state);
+            }
+        });
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+
+        var narrated = await narratedReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var stateUpdated = await stateUpdatedReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(stateUpdated.StateVersion, narrated.StateVersion);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_CorrelationIdKomtOvereenMetDiceRolledVanDezelfdeActie()
+    {
+        await using var factory = CreateFactory(2, 3, 6, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var attackRollReceived = new TaskCompletionSource<DiceRolledMessage>();
+        var defenseRollReceived = new TaskCompletionSource<DiceRolledMessage>();
+        var narratedReceived = new TaskCompletionSource<CombatNarratedMessage>();
+        spectator.On<DiceRolledMessage>("DiceRolled", message =>
+        {
+            if (message.Context == "attack")
+            {
+                attackRollReceived.TrySetResult(message);
+            }
+            else if (message.Context == "defense")
+            {
+                defenseRollReceived.TrySetResult(message);
+            }
+        });
+        spectator.On<CombatNarratedMessage>("CombatNarrated", message => narratedReceived.TrySetResult(message));
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+
+        var attackRoll = await attackRollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var defenseRoll = await defenseRollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var narrated = await narratedReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.NotNull(attackRoll.CorrelationId);
+        Assert.Equal(attackRoll.CorrelationId, defenseRoll.CorrelationId);
+        Assert.Equal(attackRoll.CorrelationId, narrated.CorrelationId);
+    }
 }

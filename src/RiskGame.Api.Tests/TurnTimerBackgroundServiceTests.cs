@@ -335,7 +335,7 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
                 "p1",
                 TurnPhase.Attack,
                 new PhaseTimer(TimeSpan.FromSeconds(1), timeProvider.GetUtcNow()),
-                PendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2)),
+                PendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, CorrelationId: Guid.NewGuid())),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 

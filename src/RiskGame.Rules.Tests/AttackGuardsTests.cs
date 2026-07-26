@@ -98,7 +98,7 @@ public class AttackGuardsTests
     {
         var state = TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1))
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()))
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
 
@@ -193,7 +193,7 @@ public class AttackGuardsTests
     private static GameState PendingAlaskaVsAlberta(int albertaArmies = 2) =>
         TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2))
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, CorrelationId: Guid.NewGuid()))
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("alberta", "p2", albertaArmies));
 

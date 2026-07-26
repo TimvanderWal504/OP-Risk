@@ -193,7 +193,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
         var gameId = await SetUpStateAsync(
             factory, TurnPhase.Attack, albertaOwnerId: "p2", albertaArmies: 1,
-            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2));
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, CorrelationId: Guid.NewGuid()));
 
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1"));

@@ -219,7 +219,8 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     public GameState Apply(GameState state, AttackDeclared @event) =>
         state.WithTurnState(state.TurnState! with
         {
-            PendingCombat = new PendingCombat(@event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice),
+            PendingCombat = new PendingCombat(
+                @event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice, @event.CorrelationId),
             Timer = state.TurnState!.Timer!.Pause(@event.Remaining, @event.OccurredAtUtc),
         });
 

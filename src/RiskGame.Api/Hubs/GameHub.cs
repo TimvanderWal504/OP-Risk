@@ -23,11 +23,46 @@ public sealed record CombatResultResponse(
     GameStateDto State);
 
 /// <summary>
+/// Narratieve-broadcast-familie (TO §6.1, "globale gebeurtenissen"): naast de pure
+/// state-snapshot in <see cref="GameStateDto"/> broadcast de hub transiënte
+/// audit/weergave-events (geen state) naar de hele spelgroep, zodat de TV kan tonen wát
+/// er gebeurde, niet alleen wat het eindresultaat is. Elke soort krijgt een eigen
+/// <c>sealed record ...Message</c> hier en een eigen <c>Task ...Narrated(...)</c>/
+/// <c>Task ...Rolled(...)</c> op <see cref="IGameClient"/> — geen gedeeld "fat message"-type
+/// met nullable velden per soort (src/CLAUDE.md, Open/Closed). <see cref="DiceRolledMessage"/>
+/// is het eerste lid van deze familie; <see cref="CombatNarratedMessage"/> hieronder is de
+/// referentie-implementatie voor een volledig narratief event (met <c>CorrelationId</c> en
+/// <c>StateVersion</c>) voor toekomstige toevoegingen (bv. event-kaart-narratie).
+/// </summary>
+/// <remarks>
 /// Transiënt audit/weergave-event (geen state) voor elke dobbelworp die op de TV zichtbaar
 /// moet zijn: order-roll (FO §2.1) en de aanvals-/verdedigingsworp tijdens gevechten (FO §5.3).
 /// <c>Context</c> is bewust een string, geen enum — puur een weergave-label, geen domeinbegrip.
+/// <c>CorrelationId</c> is <c>null</c> bij order-roll (geen gevecht om aan te correleren) en
+/// gelijk aan <see cref="Rules.State.PendingCombat.CorrelationId"/> bij attack/defense.
+/// </remarks>
+public sealed record DiceRolledMessage(string PlayerId, IReadOnlyList<int> Dice, string Context, Guid? CorrelationId);
+
+/// <summary>
+/// Combat-resolutie als narratief event (FO §5.3): wie viel wie aan, vanuit/naar welk
+/// gebied, met welke verliezen, en of het gebied viel of een speler uitgeschakeld raakte.
+/// <c>StateVersion</c> is de versie die dit gevecht oplevert — een consument gebruikt 'm om
+/// dit event te koppelen aan de bijbehorende <see cref="GameStateDto.StateVersion"/> (zelfde
+/// verdediging als <c>useTvGame.applyState</c> al toepast op het state-kanaal) in plaats van
+/// op aankomstvolgorde te vertrouwen. <c>CorrelationId</c> is gelijk aan die op de
+/// <see cref="DiceRolledMessage"/>-events van dezelfde actie.
 /// </summary>
-public sealed record DiceRolledMessage(string PlayerId, IReadOnlyList<int> Dice, string Context);
+public sealed record CombatNarratedMessage(
+    Guid CorrelationId,
+    string AttackerId,
+    string DefenderId,
+    string FromTerritoryId,
+    string ToTerritoryId,
+    int AttackerLosses,
+    int DefenderLosses,
+    bool Conquered,
+    string? EliminatedPlayerId,
+    int StateVersion);
 
 /// <summary>
 /// SignalR-hub voor alle spelcommando's (TO §4.1): lobby, order-roll, startopstelling,
@@ -136,7 +171,7 @@ public sealed class GameHub(
         if (result.IsSuccess)
         {
             await Clients.Group(GroupName(gameId)).DiceRolled(
-                new DiceRolledMessage(playerId, [result.Value.Die1, result.Value.Die2], "order-roll"));
+                new DiceRolledMessage(playerId, [result.Value.Die1, result.Value.Die2], "order-roll", null));
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -185,7 +220,7 @@ public sealed class GameHub(
         if (result.IsSuccess)
         {
             await Clients.Group(GroupName(gameId)).DiceRolled(
-                new DiceRolledMessage(playerId, result.Value.AttackerRolls, "attack"));
+                new DiceRolledMessage(playerId, result.Value.AttackerRolls, "attack", result.Value.CorrelationId));
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -203,7 +238,21 @@ public sealed class GameHub(
         if (result.IsSuccess)
         {
             await Clients.Group(GroupName(gameId)).DiceRolled(
-                new DiceRolledMessage(playerId, result.Value.DefenderRolls, "defense"));
+                new DiceRolledMessage(playerId, result.Value.DefenderRolls, "defense", result.Value.CorrelationId));
+
+            await using var versionSession = store.QuerySession();
+
+            await Clients.Group(GroupName(gameId)).CombatNarrated(new CombatNarratedMessage(
+                result.Value.CorrelationId,
+                result.Value.AttackerId,
+                result.Value.DefenderId,
+                result.Value.FromTerritoryId,
+                result.Value.ToTerritoryId,
+                result.Value.AttackerLosses,
+                result.Value.DefenderLosses,
+                result.Value.Conquered,
+                result.Value.EliminatedPlayerId,
+                await FetchStateVersionAsync(versionSession, gameId)));
         }
 
         return await UnwrapAndBroadcastAsync(

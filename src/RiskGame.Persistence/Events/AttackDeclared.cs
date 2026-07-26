@@ -13,6 +13,11 @@ namespace RiskGame.Persistence.Events;
 /// (zie <see cref="Rules.State.PhaseTimer"/>).
 /// </param>
 /// <param name="OccurredAtUtc">Tijdstip waarop <paramref name="Remaining"/> is vastgesteld.</param>
+/// <param name="CorrelationId">
+/// Zie <see cref="Rules.State.PendingCombat.CorrelationId"/> — gegenereerd door de command
+/// handler (geen speluitkomst, dus buiten de <c>IRandomSource</c>-determinismeplicht van
+/// <c>RiskGame.Rules</c>) en vanaf hier meegedragen tot en met het combat-narratief-event.
+/// </param>
 public sealed record AttackDeclared(
     string GameId,
     string PlayerId,
@@ -20,4 +25,5 @@ public sealed record AttackDeclared(
     string ToTerritoryId,
     int AttackDice,
     TimeSpan Remaining,
-    DateTimeOffset OccurredAtUtc);
+    DateTimeOffset OccurredAtUtc,
+    Guid CorrelationId);

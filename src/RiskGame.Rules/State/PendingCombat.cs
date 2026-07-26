@@ -20,4 +20,10 @@ namespace RiskGame.Rules.State;
 /// </para>
 /// </remarks>
 /// <param name="AttackDice">1 tot 3, en nooit meer dan de legers in het brongebied min 1.</param>
-public sealed record PendingCombat(string FromTerritoryId, string ToTerritoryId, int AttackDice);
+/// <param name="CorrelationId">
+/// Identificeert dit gevecht voor de duur van zijn levenscyclus (TO §6.1, narratieve
+/// broadcasts): koppelt de aanvals- en verdedigingsworp en het uiteindelijke
+/// combat-narratief-event aan elkaar, ook als er straks meerdere aanvalsworpen per gevecht
+/// mogelijk worden (FO §8, rol <c>Reroll</c>).
+/// </param>
+public sealed record PendingCombat(string FromTerritoryId, string ToTerritoryId, int AttackDice, Guid CorrelationId);
