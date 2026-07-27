@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto } from '../types/GameState'
@@ -24,17 +24,17 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
   /** Onthoudt de laatst getoonde worp per speler, zodat alleen een écht
    * gewijzigde worp (tie-break-herworp) `diceRerollOrder` krijgt i.p.v. de
    * mount-only `orderRollDie`-entrance (motion.ts A3, inventory §2). */
+  const [prevThrows, setPrevThrows] = useState(throws)
   const [lastDiceKeys, setLastDiceKeys] = useState<Record<string, string>>({})
-  useEffect(() => {
-    setLastDiceKeys((previous) => {
-      const next = { ...previous }
-      players.forEach((player) => {
-        const dice = throws[player.id]
-        if (dice) next[player.id] = `${dice[0]}-${dice[1]}`
-      })
-      return next
+  if (throws !== prevThrows) {
+    setPrevThrows(throws)
+    const next = { ...lastDiceKeys }
+    players.forEach((player) => {
+      const dice = prevThrows[player.id]
+      if (dice) next[player.id] = `${dice[0]}-${dice[1]}`
     })
-  }, [players, throws])
+    setLastDiceKeys(next)
+  }
 
   return (
     <div className="flex flex-col items-center text-center">
