@@ -15,17 +15,23 @@ const ORDER_ROLL_REVEAL_HOLD_MS = 8000
  */
 export function useHeldPhase(phase: GamePhaseDto | undefined): GamePhaseDto | undefined {
   const [displayPhase, setDisplayPhase] = useState(phase)
+  const [heldPhase, setHeldPhase] = useState(phase)
+
+  if (phase !== undefined && phase !== heldPhase) {
+    setHeldPhase(phase)
+
+    if (displayPhase !== GamePhaseDto.OrderRoll) {
+      setDisplayPhase(phase)
+    }
+  }
 
   useEffect(() => {
+    if (displayPhase !== GamePhaseDto.OrderRoll) return
     if (phase === undefined || phase === displayPhase) return
 
-    if (displayPhase === GamePhaseDto.OrderRoll) {
-      const timeout = setTimeout(() => setDisplayPhase(phase), ORDER_ROLL_REVEAL_HOLD_MS)
+    const timeout = setTimeout(() => setDisplayPhase(phase), ORDER_ROLL_REVEAL_HOLD_MS)
 
-      return () => clearTimeout(timeout)
-    }
-
-    setDisplayPhase(phase)
+    return () => clearTimeout(timeout)
   }, [phase, displayPhase])
 
   return displayPhase

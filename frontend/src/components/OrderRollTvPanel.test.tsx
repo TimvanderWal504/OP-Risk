@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { OrderRollTvPanel } from './OrderRollTvPanel'
+import { tvAnimations } from '../design-reference/shared/motion'
 
 const colors = [
   { id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' },
@@ -40,5 +41,19 @@ describe('OrderRollTvPanel', () => {
     expect(screen.getByText('Speelvolgorde')).toBeInTheDocument()
     expect(screen.getAllByText('Alice')).toHaveLength(2)
     expect(screen.getAllByText('Bob')).toHaveLength(2)
+  })
+
+  it('gebruikt de in-place herworp-animatie i.p.v. de mount-only entrance zodra een speler die al gooide nieuwe waarden krijgt (tie-break)', () => {
+    const { rerender } = render(<OrderRollTvPanel players={players} colors={colors} throws={{ '1': [6, 4], '2': [3, 2] }} />)
+
+    let dice = screen.getAllByRole('img', { name: /dobbelsteen/i })
+    expect(dice[0]).toHaveStyle({ animation: tvAnimations.orderRollDie(0) })
+
+    rerender(<OrderRollTvPanel players={players} colors={colors} throws={{ '1': [5, 5], '2': [3, 2] }} />)
+
+    dice = screen.getAllByRole('img', { name: /dobbelsteen/i })
+    expect(dice[0]).toHaveStyle({ animation: tvAnimations.diceRerollOrder })
+    expect(dice[1]).toHaveStyle({ animation: tvAnimations.diceRerollOrder })
+    expect(dice[2]).toHaveStyle({ animation: tvAnimations.orderRollDie(1) })
   })
 })

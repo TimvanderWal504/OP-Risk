@@ -21,14 +21,45 @@ export const tvKeyframes = {
   atlasBurst: `0%{transform:scale(0.2);opacity:0;}35%{opacity:.9;}100%{transform:scale(2.6);opacity:0;}`,
   atlasCard: `0%{transform:translateY(60px) scale(.9);opacity:0;}100%{transform:none;opacity:1;}`,
   atlasPop: `0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.08);}100%{transform:scale(1);opacity:1;}`,
-  /** Gedefinieerd in export (L26), maar nergens toegepast — geen enkele animation-declaratie
-   *  of {{ }}-binding refereert naar atlasFlip. Bovendien zou 'filter' toch al niet mogen
-   *  (alleen transform/opacity op TV, zie frontend/CLAUDE.md §Animatie). Bevinding: melden,
-   *  niet gebruiken en geen duur/context verzinnen. */
-  atlasFlip: `0%{filter:brightness(2.6) saturate(1.4);}100%{filter:none;}`,
+  /** DEFECT #2 (bevestigd in de bijgewerkte export, L26): gebruikt `filter` (verboden op TV,
+   *  zie frontend/CLAUDE.md §Animatie) en wordt nergens toegepast. De export heeft de
+   *  keyframe zelf inmiddels teruggebracht tot een stub (`{filter:none;}`, geen 0%/100%-
+   *  selectors meer) met een expliciete DEFECT-comment: bewust kapot gehouden zodat een
+   *  stale referentie niet per ongeluk weer iets zou renderen. Niet gebruiken, geen
+   *  bruikbare duur/context om te extraheren. */
+  atlasFlip: `{filter:none;}`,
   atlasSlam: `0%{transform:scale(2.4);opacity:0;letter-spacing:.4em;}60%{opacity:1;}100%{transform:scale(1);opacity:1;letter-spacing:.02em;}`,
   atlasDot: `0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.7);}`,
   atlasSheen: `0%{transform:translateX(-120%);}100%{transform:translateX(220%);}`,
+  /** A1 — in-place legertelling-tick op een cijfer dat al op de kaart staat (L31). */
+  atlasCountUp: `0%{transform:translateY(7px) scale(.9);opacity:0;}55%{transform:translateY(0) scale(1.06);opacity:1;}100%{transform:translateY(0) scale(1);opacity:1;}`,
+  atlasCountDown: `0%{transform:translateY(-7px) scale(.9);opacity:0;}55%{transform:translateY(0) scale(1.06);opacity:1;}100%{transform:translateY(0) scale(1);opacity:1;}`,
+  /** A2 — eigenaarswissel van een gebied: opacity-crossfade van de oude kleur (geen fill-transitie), plus badge-swap (L34-35). */
+  atlasOwnerWash: `0%{opacity:1;}100%{opacity:0;}`,
+  atlasBadgeSwap: `0%{opacity:.25;transform:scale(.9);}60%{opacity:1;transform:scale(1.05);}100%{opacity:1;transform:scale(1);}`,
+  /** A3 — dobbelsteen-herworp in-place (steen staat al in beeld, geen fly-in); rotatie zonder translate (L37). */
+  atlasReroll: `0%{transform:rotate(0) scale(1);}12%{transform:rotate(-84deg) scale(.86);}62%{transform:rotate(276deg) scale(1.08);}82%{transform:rotate(348deg) scale(.98);}100%{transform:rotate(360deg) scale(1);}`,
+  /** A4 — chip/rol/kleur die op een al bestaand element bijkomt (L39). */
+  atlasChipIn: `0%{opacity:0;transform:scale(.7);}70%{opacity:1;transform:scale(1.08);}100%{opacity:1;transform:scale(1);}`,
+  /** B5 — selectie-highlight: scrim dimt de kaart, ringen markeren bron/doelwit (L42-43). */
+  atlasScrimIn: `0%{opacity:0;}100%{opacity:.6;}`,
+  atlasSelIn: `0%{opacity:0;transform:scale(.9);}70%{opacity:1;transform:scale(1.04);}100%{opacity:1;transform:scale(1);}`,
+  atlasBannerUp: `0%{opacity:0;transform:translateY(24px);}100%{opacity:1;transform:translateY(0);}`,
+  /** B6 — topbalk: beurt-chip-wissel, fase-pil-pop, timer-staatwissel (L46-48). */
+  atlasTurnSwap: `0%{opacity:0;transform:translateX(-14px);}100%{opacity:1;transform:translateX(0);}`,
+  atlasPhasePop: `0%{opacity:0;transform:scale(.9);}70%{opacity:1;transform:scale(1.05);}100%{opacity:1;transform:scale(1);}`,
+  atlasTimerSwap: `0%{opacity:0;transform:scale(.92);}100%{opacity:1;transform:scale(1);}`,
+  /** B7 — spelerspaneel-rij: now-bar groeit, eliminatie-stempel (L50-51; effect-chip hergebruikt atlasChipIn). */
+  atlasNowBar: `0%{transform:scaleY(0);}100%{transform:scaleY(1);}`,
+  atlasStamp: `0%{opacity:0;transform:scale(1.4) rotate(-4deg);}60%{opacity:1;}100%{opacity:1;transform:scale(1) rotate(-4deg);}`,
+  /** B8 — feed-insertie: alleen de nieuwe kop schuift/faded in, de rest muteert stil (L53). */
+  atlasFeedIn: `0%{opacity:0;transform:translateX(-18px);}100%{opacity:1;transform:translateX(0);}`,
+  /** C9/C10/C11 — schermniveau-overlay in/uit (combat/event/attrition/eliminatie); stage licht op (L55-57). */
+  atlasOverlayIn: `0%{opacity:0;}100%{opacity:1;}`,
+  atlasOverlayOut: `0%{opacity:1;}100%{opacity:0;}`,
+  atlasStageIn: `0%{opacity:0;transform:translateY(30px) scale(.965);}100%{opacity:1;transform:translateY(0) scale(1);}`,
+  /** C12 — framing (paneel/feed) komt in terwijl het bord blijft staan; het bord-svg zelf animeert nooit (L59). */
+  atlasFrameIn: `0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}`,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -45,8 +76,6 @@ export const tvAnimations = {
   /** Verdediger-dobbelstenen, vliegen van rechts in, starten 0.5s later (L824). */
   defenderDie: (idx: number) =>
     `atlasRollR .9s cubic-bezier(.2,.8,.3,1) ${(0.5 + idx * 0.16).toFixed(2)}s both, atlasSettle .9s ${(0.5 + idx * 0.16).toFixed(2)}s both`,
-  /** Kritiek-lage beurttimer, pulserend (L239). */
-  timerLow: 'atlasLow .7s infinite',
   /** Vlaggen/flare-burst-ring om winnend territorium (L190, L279 — twee losse duraties in export). */
   burstShort: 'atlasBurst 1s ease-out infinite',
   burstLong: 'atlasBurst 1.1s ease-out infinite',
@@ -59,6 +88,52 @@ export const tvAnimations = {
   /** Titel-slam, twee losse instanties met verschillende duur (L433 / L447). */
   titleSlamShort: 'atlasSlam .7s cubic-bezier(.2,.7,.3,1) both',
   titleSlamLong: 'atlasSlam .8s cubic-bezier(.2,.7,.3,1) both',
+  /** A1 — legertelling-tick, gedeeld door gebiedsbadges, lobby-teller en claim-tellers (L876/L906, component-helper `fig()`).
+   *  dir<0 = omlaag (atlasCountDown), dir>0 = omhoog (atlasCountUp). Geen animatie bij dir===0 of reduced-motion. */
+  countTick: (dir: 1 | -1) => `atlas${dir < 0 ? 'CountDown' : 'CountUp'} .28s cubic-bezier(.2,.8,.3,1) both`,
+  /** A2 — eigenaarswissel van een gebied: uitgaande kleur faded weg, badge swapt (L914/L919). */
+  ownerWash: 'atlasOwnerWash .42s ease-out both',
+  ownerBadgeSwap: 'atlasBadgeSwap .3s cubic-bezier(.2,.7,.3,1) both',
+  /** A3 — dobbelsteen-herworp in-place. Volgordedobbelsteen los (L991); aanvaller-herworp
+   *  gecombineerd met de bestaande settle-schaduw-animatie, zelfde duur (L1011). */
+  diceRerollOrder: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
+  diceRerollAttacker: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both, atlasSettle .55s both',
+  /** A4 — nieuwe spelerskaart in lobby (L971) en rol die op een bestaande kaart bijkomt (L972) — zelfde keyframe, andere duur. */
+  lobbyCardIn: 'atlasChipIn .42s cubic-bezier(.2,.7,.3,1) both',
+  lobbyRoleIn: 'atlasChipIn .4s cubic-bezier(.2,.7,.3,1) both',
+  /** B7 — "AAN ZET"-tag en "boost uit"-chip op het spelerspaneel, zelfde duur als elders maar eigen instantie (L384/L392). */
+  chipIn: 'atlasChipIn .3s cubic-bezier(.2,.7,.3,1) both',
+  /** B5 — selectie-scrim over de kaart (L299) én de dim-overlay op een geëlimineerde rij (L400) — zelfde keyframe/duur, twee losse plekken. */
+  scrimIn: 'atlasScrimIn .3s ease-out both',
+  /** B5 — selectie-ring, bron start meteen, doelwit met vaste vertraging (L885, component-helper). kind='src' → 0s, kind='tgt' → .14s. */
+  selectionRing: (kind: 'src' | 'tgt') => `atlasSelIn .4s cubic-bezier(.2,.7,.3,1) ${kind === 'src' ? '0' : '.14'}s both`,
+  /** B5 — selectie-banner onderaan de kaart (L308). */
+  selectionBannerUp: 'atlasBannerUp .4s cubic-bezier(.2,.7,.3,1) both',
+  /** B6 — actieve fase-pil (L250). */
+  phasePillPop: 'atlasPhasePop .3s cubic-bezier(.2,.7,.3,1) both',
+  /** B6 — timer-staatwissel, alle drie modi (normaal/laag/gepauzeerd, L256-258). In de "laag"-toestand
+   *  loopt de puls (atlasLow) nu ná de swap, met een vaste vertraging van .3s — vervangt de losse
+   *  `atlasLow .7s infinite` uit de vorige export-versie. */
+  timerSwap: 'atlasTimerSwap .3s cubic-bezier(.2,.7,.3,1) both',
+  timerLow: 'atlasTimerSwap .3s cubic-bezier(.2,.7,.3,1) both, atlasLow .7s .3s infinite',
+  /** B7 — now-bar op de rij van de actieve speler (L379) en eliminatie-stempel (L400). */
+  nowBar: 'atlasNowBar .3s cubic-bezier(.2,.7,.3,1) both',
+  eliminatedStamp: 'atlasStamp .4s cubic-bezier(.2,.7,.3,1) both',
+  /** B8 — nieuw feed-item; alleen de kop (pos===0) animeert in, de rest muteert stil (L1065). */
+  feedIn: 'atlasFeedIn .34s ease-out both',
+  /** C9/C10/C11 — schermniveau-overlay (combat/event/attrition/eliminatie) in/uit, gedeeld via de
+   *  component-state `ovAnim` (L321/L414/L428/L446, waarde bepaald op L1049). "Herhaal overgang"-knop
+   *  drijft dezelfde state: 340ms uit, dan 140ms later weer in (component `replayTransition`, L823-826) —
+   *  geen keyframe-duur, maar de enige twee JS-timeout-waarden die deze overgang aansturen. */
+  overlayIn: 'atlasOverlayIn .3s ease-out both',
+  overlayOut: 'atlasOverlayOut .32s ease-out both',
+  overlayReplayHideMs: 340,
+  overlayReplayGapMs: 140,
+  /** C9 — combat-overlay-stage licht op ná de scrim (L322). */
+  combatStageIn: 'atlasStageIn .5s cubic-bezier(.2,.7,.3,1) both',
+  /** C12 — rechterspelerspaneel en feed-strip framen in terwijl het bord blijft staan; feed start .06s later (L371/L407). */
+  panelFrameIn: 'atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both',
+  feedFrameIn: 'atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -116,8 +191,14 @@ export const phoneAnimations = {
 // Overige transities (geen keyframe, wel expliciete duur in de export)
 // ---------------------------------------------------------------------------
 export const transitions = {
-  /** Voortgangsbalk-vulling (TV L421: .5s / phone L921: .4s — twee losse duraties). */
-  progressFillTv: 'width .5s',
+  /** Voortgangsbalk-vulling, attrition-overlay (TV L436). Was tot deze export-update
+   *  `width .5s` — een schending van de TV-regel "alleen transform/opacity" (zie
+   *  docs/tv-motion-inventory.md §5, "Elementen die niet met alleen transform/opacity
+   *  kunnen"). De export is aangepast: de balk staat nu vast op `width:100%` en vult via
+   *  `transform:scaleX()` vanuit een vaste `transform-origin:left`. */
+  progressFillTv: 'transform .5s cubic-bezier(.2,.8,.3,1)',
+  /** Voortgangsbalk-vulling (phone L921: .4s — ongewijzigd, animeert nog op `width`; de
+   *  telefoon heeft geen zwakke-GPU-eis, zie frontend/CLAUDE.md §Animatie). */
   progressFillPhone: 'width .4s',
   /** Switch-knop-verschuiving (phone L180/L218/L1067, identiek in alle drie instanties). */
   switchKnob: 'transform .15s',

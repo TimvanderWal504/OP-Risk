@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto } from '../types/GameState'
@@ -20,6 +21,16 @@ const DICE_BOX_SHADOW = '0 18px 40px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,2
  * eindvolgorde zodra de server die aanlevert. */
 export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTvPanelProps) {
   const { t } = useTranslation('orderRoll')
+  /** Onthoudt de laatst getoonde worp per speler, zodat alleen een écht
+   * gewijzigde worp (tie-break-herworp) `diceRerollOrder` krijgt i.p.v. de
+   * mount-only `orderRollDie`-entrance (motion.ts A3, inventory §2). */
+  const lastDiceKeyRef = useRef<Record<string, string>>({})
+  useEffect(() => {
+    players.forEach((player) => {
+      const dice = throws[player.id]
+      if (dice) lastDiceKeyRef.current[player.id] = `${dice[0]}-${dice[1]}`
+    })
+  }, [players, throws])
 
   return (
     <div className="flex flex-col items-center text-center">
@@ -34,11 +45,17 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
           const dice = throws[player.id]
           if (!color) return null
 
+          const diceKey = dice ? `${dice[0]}-${dice[1]}` : 'empty'
+          const previousDiceKey = lastDiceKeyRef.current[player.id]
+          const isReroll = dice !== undefined && previousDiceKey !== undefined && previousDiceKey !== diceKey
+          const dieAnimation = isReroll ? tvAnimations.diceRerollOrder : tvAnimations.orderRollDie(idx)
+
           return (
             <div key={player.id} className="flex flex-col items-center gap-3.5">
               {dice ? (
                 <>
                   <Dice
+                    key={`d0-${diceKey}`}
                     value={dice[0] as DiceValue}
                     colorHex={color.hex}
                     colorOnHex={color.onHex}
@@ -48,9 +65,10 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                     gap={6}
                     pipSize={20}
                     boxShadow={DICE_BOX_SHADOW}
-                    animation={tvAnimations.orderRollDie(idx)}
+                    animation={dieAnimation}
                   />
                   <Dice
+                    key={`d1-${diceKey}`}
                     value={dice[1] as DiceValue}
                     colorHex={color.hex}
                     colorOnHex={color.onHex}
@@ -60,7 +78,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                     gap={6}
                     pipSize={20}
                     boxShadow={DICE_BOX_SHADOW}
-                    animation={tvAnimations.orderRollDie(idx)}
+                    animation={dieAnimation}
                   />
                 </>
               ) : (

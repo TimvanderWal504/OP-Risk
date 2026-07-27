@@ -3,6 +3,7 @@ import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { PlayerAvatar } from './ui/PlayerAvatar'
 import { tDynamic } from '../i18n/useT'
+import { tvAnimations } from '../design-reference/shared/motion'
 
 export interface LobbyPlayerListProps {
   players: PlayerDto[]
@@ -33,6 +34,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
             <div
               key={player.id}
               className="flex items-center gap-4 rounded-card border border-border bg-white/3 p-4"
+              style={{ animation: tvAnimations.lobbyCardIn }}
             >
               <PlayerAvatar
                 colorHex={color?.hex}
@@ -43,7 +45,11 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
                 <div className="truncate font-display text-h2 font-bold">{player.name}</div>
                 <div className="truncate text-sm text-fg-muted">
                   {color ? tDynamic(color.id, 'colors') : t('players.noColorYet')}
-                  {role ? ` · ${tDynamic(`${role.id}.name`, 'roles')}` : ''}
+                  {role && (
+                    <span className="inline-block" style={{ animation: tvAnimations.lobbyRoleIn }}>
+                      {` · ${tDynamic(`${role.id}.name`, 'roles')}`}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
