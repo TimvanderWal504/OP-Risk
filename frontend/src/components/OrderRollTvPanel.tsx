@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto } from '../types/GameState'
@@ -24,11 +24,15 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
   /** Onthoudt de laatst getoonde worp per speler, zodat alleen een écht
    * gewijzigde worp (tie-break-herworp) `diceRerollOrder` krijgt i.p.v. de
    * mount-only `orderRollDie`-entrance (motion.ts A3, inventory §2). */
-  const lastDiceKeyRef = useRef<Record<string, string>>({})
+  const [lastDiceKeys, setLastDiceKeys] = useState<Record<string, string>>({})
   useEffect(() => {
-    players.forEach((player) => {
-      const dice = throws[player.id]
-      if (dice) lastDiceKeyRef.current[player.id] = `${dice[0]}-${dice[1]}`
+    setLastDiceKeys((previous) => {
+      const next = { ...previous }
+      players.forEach((player) => {
+        const dice = throws[player.id]
+        if (dice) next[player.id] = `${dice[0]}-${dice[1]}`
+      })
+      return next
     })
   }, [players, throws])
 
@@ -46,7 +50,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
           if (!color) return null
 
           const diceKey = dice ? `${dice[0]}-${dice[1]}` : 'empty'
-          const previousDiceKey = lastDiceKeyRef.current[player.id]
+          const previousDiceKey = lastDiceKeys[player.id]
           const isReroll = dice !== undefined && previousDiceKey !== undefined && previousDiceKey !== diceKey
           const dieAnimation = isReroll ? tvAnimations.diceRerollOrder : tvAnimations.orderRollDie(idx)
 
