@@ -41,7 +41,7 @@ export function LobbyQrPanel({ gameId, origin = window.location.origin }: LobbyQ
       <div
         role="img"
         aria-label={t('qr.ariaLabel', { url: joinUrl })}
-        className="w-[360px] rounded-[18px] bg-white p-6 shadow-[0_0_0_6px_rgba(132,173,40,0.25)] [&_svg]:h-full [&_svg]:w-full"
+        className="w-[360px] rounded-[18px] border-[3px] border-[var(--silver)] bg-white p-6 [&_svg]:h-full [&_svg]:w-full"
         dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
       />
       <p className="mt-[26px] font-display text-[30px] font-extrabold">{t('qr.scanToJoin')}</p>

@@ -17,7 +17,7 @@ export function Switch({ on, onToggle, disabled = false, label }: SwitchProps) {
       aria-pressed={on}
       aria-label={label}
       className={`relative h-[30px] w-[52px] flex-none rounded-chip ${
-        on ? 'bg-pitch-500' : 'bg-white/12'
+        on ? 'bg-pitch-500' : 'bg-[var(--atlas-t12)]'
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span

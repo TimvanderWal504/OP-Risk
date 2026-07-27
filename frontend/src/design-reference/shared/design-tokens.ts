@@ -106,6 +106,25 @@ export const palette = {
     400: '#8492a8', 500: '#5f6e86', 600: '#475468', 700: '#354054',
     800: '#222c3c', 850: '#1a2230', 900: '#121925', 950: '#0a0e17',
   },
+  silver: {
+    50: '#f3f6f8', 100: '#e4e9f0', 200: '#d2dbe5', 300: '#c2cddd',
+    400: '#9cb0ca', 500: '#7b93b3', 600: '#627798', 700: '#4f607d',
+    800: '#425068', 900: '#394457', 950: '#212733',
+  },
+} as const;
+
+// ---------------------------------------------------------------------------
+// Tekst-op-pitch-fill / glow-schaduw — colors_and_type.css :root en
+// [data-theme="light"] (--on-pitch, --shadow-glow-pitch)
+// ---------------------------------------------------------------------------
+export const onPitch = {
+  dark: '#04060b',
+  light: '#e4e9f0', // = palette.silver[100], licht-thema wijst pitch naar de blauwe ramp
+} as const;
+
+export const shadowGlowPitch = {
+  dark: '0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)', // pitch-500
+  light: '0 8px 22px color-mix(in srgb, #215990 35%, transparent)', // blue-500 (licht-thema)
 } as const;
 
 // ---------------------------------------------------------------------------

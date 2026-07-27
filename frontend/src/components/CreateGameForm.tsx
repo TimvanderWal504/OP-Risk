@@ -127,7 +127,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
               </div>
             </div>
 
-            <div className="rounded-card border border-border bg-white/3 px-3.5 py-1.5">
+            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-1.5">
               <div className="px-0 py-2 text-xs text-fg-muted">{t('winCondition.sectionHint')}</div>
               <div className="flex items-center gap-3 border-t border-border py-2.5">
                 <div className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
               </div>
             </div>
 
-            <div className="rounded-card border border-border bg-white/3 px-3.5 py-3">
+            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('setupMode.title')}</div>
               <div className="mb-2.5 text-[11.5px] text-fg-muted">{t('setupMode.description')}</div>
               <SegmentedControl

@@ -67,7 +67,7 @@ export function JoinHostWaitStep({
           return (
             <div
               key={player.id}
-              className="flex items-center gap-3 rounded-card border border-border bg-white/3 p-[11px_13px]"
+              className="flex items-center gap-3 rounded-card border border-border bg-[var(--atlas-t03)] p-[11px_13px]"
               style={{ animation: phoneAnimations.rowRise }}
             >
               <span

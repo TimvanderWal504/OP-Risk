@@ -29,7 +29,7 @@ export function SegmentedControl<T extends string | number>({
             className={`min-h-13 flex-1 rounded-[12px] border-2 font-display text-[15px] font-extrabold ${
               active
                 ? 'border-pitch-500 bg-pitch-500/14 text-fg'
-                : 'border-border bg-white/3 text-fg-muted'
+                : 'border-border bg-[var(--atlas-t03)] text-fg-muted'
             }`}
           >
             {option.label}

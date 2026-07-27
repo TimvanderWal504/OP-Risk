@@ -26,9 +26,9 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('gebruikt de gouden CTA-styling bij variant="gold"', () => {
-    render(<Button variant="gold">Gooien</Button>)
+  it('gebruikt de pitch-CTA-styling bij variant="primary"', () => {
+    render(<Button variant="primary">Gooien</Button>)
 
-    expect(screen.getByRole('button', { name: 'Gooien' })).toHaveClass('bg-gold-400')
+    expect(screen.getByRole('button', { name: 'Gooien' })).toHaveClass('bg-pitch-500')
   })
 })

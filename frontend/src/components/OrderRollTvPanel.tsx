@@ -43,7 +43,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
       </h1>
       <p className="mb-1.5 text-[22px] text-fg-muted">{t('sub')}</p>
 
-      <div className="mt-9 mb-2.5 flex flex-wrap justify-center gap-[26px]">
+      <div className="flex flex-wrap justify-center gap-8" style={{ margin: 'auto' }}>
         {players.map((player, idx) => {
           const color = colors.find((c) => c.id === player.colorId)
           const dice = throws[player.id]
@@ -120,7 +120,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                 <div
                   key={playerId}
                   className={`flex max-w-[220px] flex-1 items-center gap-4 rounded-[16px] border p-4 ${
-                    first ? 'border-gold-600 bg-gold-400/12' : 'border-border bg-white/3'
+                    first ? 'border-gold-600 bg-gold-400/12' : 'border-border bg-[var(--atlas-row)]'
                   }`}
                 >
                   <span

@@ -74,7 +74,7 @@ export function OrderRollWaitStep({ myDice, colorHex, colorOnHex, canRoll, onRol
       {error && <p className="text-loss">{error}</p>}
 
       {canRoll ? (
-        <Button variant="gold" onClick={onRoll}>
+        <Button variant="primary" onClick={onRoll}>
           {t('rollButton')}
         </Button>
       ) : (

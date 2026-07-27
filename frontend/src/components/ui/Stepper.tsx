@@ -31,7 +31,7 @@ export function Stepper({
   const { t } = useTranslation('common')
 
   return (
-    <div className="flex items-center gap-3 rounded-[14px] border border-border bg-white/3 px-3.5 py-3">
+    <div className="flex items-center gap-3 rounded-[14px] border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
       <div className="min-w-0 flex-1">
         <div className="font-display text-base font-extrabold">{label}</div>
         <div className="text-[11.5px] text-fg-muted">{sub}</div>
@@ -41,7 +41,7 @@ export function Stepper({
         aria-label={t('stepper.decrement', { label })}
         disabled={!canDecrement}
         onClick={onDecrement}
-        className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border border-border-strong bg-white/5 text-[22px] font-black disabled:cursor-not-allowed disabled:opacity-40"
+        className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border border-border-strong bg-[var(--atlas-t05)] text-[22px] font-black disabled:cursor-not-allowed disabled:opacity-40"
       >
         −
       </button>
@@ -56,7 +56,7 @@ export function Stepper({
         aria-label={t('stepper.increment', { label })}
         disabled={!canIncrement}
         onClick={onIncrement}
-        className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border-none bg-pitch-500 text-[22px] font-black text-[#04060b] disabled:cursor-not-allowed disabled:opacity-40"
+        className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border-none bg-pitch-500 text-[22px] font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         +
       </button>

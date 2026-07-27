@@ -50,13 +50,13 @@ export function PlayerHeader({
 }: PlayerHeaderProps) {
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-[11px] rounded-card border border-border bg-white/3 px-3 py-2.5">
+      <div className="flex items-center gap-[11px] rounded-card border border-border bg-[var(--atlas-t03)] px-3 py-2.5">
         <div className="relative flex-none">
           <PlayerAvatar colorHex={colorHex} colorOnHex={colorOnHex} colorSymbol={colorSymbol} />
           {isHost && (
             <span
               className="absolute -right-[5px] -bottom-[5px] flex h-5 w-5 items-center justify-center rounded-full bg-gold-400 text-[10px]"
-              style={{ border: '2px solid #0b1119' }}
+              style={{ border: '2px solid var(--bg)' }}
               aria-label="Host"
             >
               👑
@@ -102,7 +102,7 @@ export function PlayerHeader({
             className={`flex flex-1 flex-col items-center gap-1 rounded-[12px] border px-1 py-2 text-[11px] font-bold ${
               action.active
                 ? 'border-gold-600 bg-gold-400/12 text-gold-300'
-                : 'border-border bg-white/3 text-fg-secondary'
+                : 'border-border bg-[var(--atlas-t03)] text-fg-secondary'
             }`}
           >
             <span className="text-[17px]" aria-hidden>

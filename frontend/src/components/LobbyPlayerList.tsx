@@ -33,7 +33,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
           return (
             <div
               key={player.id}
-              className="flex items-center gap-4 rounded-card border border-border bg-white/3 p-4"
+              className="flex items-center gap-4 rounded-card border border-border bg-[var(--atlas-row)] p-4"
               style={{ animation: tvAnimations.lobbyCardIn }}
             >
               <PlayerAvatar
