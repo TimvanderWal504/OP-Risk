@@ -48,6 +48,7 @@
   --pitch-50:#f4f8e6; --pitch-100:#e6f0c6; --pitch-200:#d2e394; --pitch-300:#bbd45f;
   --pitch-400:#a1c23a; --pitch-500:#84ad28; --pitch-600:#6b8f1f; --pitch-700:#536f1b;
   --pitch-800:#41571a; --pitch-900:#36481a; --pitch-950:#1b2709;
+  --on-pitch:#04060b; /* tekstkleur op een pitch-fill (light: zie [data-theme="light"]) */
 
   /* Broadcast blue (secondary) */
   --blue-50:#eaf2fa; --blue-100:#cfe0f1; --blue-200:#a1c2e3; --blue-300:#6ba2d8;
@@ -58,6 +59,12 @@
   --gold-50:#fdf6e6; --gold-100:#fbe9be; --gold-200:#f7d683; --gold-300:#f2c14e;
   --gold-400:#f2a922; --gold-500:#d99008; --gold-600:#b5790a; --gold-700:#8f5e0f;
   --gold-800:#744c13; --gold-900:#623f14; --gold-950:#382107;
+
+    /* ---- Trophy Silver (accent) ---- */
+  --color-silver-50:  #f3f6f8; --color-silver-100: #e4e9f0; --color-silver-200: #d2dbe5;
+  --color-silver-300: #c2cddd; --color-silver-400: #9cb0ca; --color-silver-500: #7b93b3;
+  --color-silver-600: #627798; --color-silver-700: #4f607d; --color-silver-800: #425068;
+  --color-silver-900: #394457; --color-silver-950: #212733;
 
   /* Ink (cool neutral) */
   --ink-50:#f5f7fa; --ink-100:#e8ecf2; --ink-200:#d3dae5; --ink-300:#b0bbcc;
@@ -133,6 +140,20 @@
 
   --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
   --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
+
+  --shadow-glow-pitch: 0 8px 22px color-mix(in srgb, var(--pitch-500) 35%, transparent);
+}
+
+/* Explicit light override — makes [data-theme="light"] deterministic even on a
+   dark-OS (beats the prefers-color-scheme:dark block below). Mirrors :root. */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg:#eef1f6; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#e8edf4;
+  --border:#e1e7f0; --border-strong:#cdd6e3; --ring:#215990;
+  --fg1:#111826; --fg2:#475064; --fg3:#7a869c;
+  --primary:#6b8f1f; --primary-fill:#84ad28; --secondary:#215990; --secondary-fill:#215990; --accent:#b5790a; --accent-fill:#f2a922; --link:#1c4a78;
+  --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
+  --podium-gold:#d4a017; --podium-silver:#9aa7b8; --podium-bronze:#b06b2c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -220,4 +241,48 @@ code, .twc-code {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
   color: var(--fg2);
+}
+
+/* ===========================================================================
+   OPERATIE ATLAS — TV / groot-scherm surfaces (--atlas-*)
+   ---------------------------------------------------------------------------
+   App-specifieke oppervlakken voor de host-/TV-componenten (paneel-gradients,
+   kaart-achtergrond, stage-scrim, feed/bar/overlay, sheen/track). Los van de
+   semantische merk-tokens hierboven; alleen relevant voor componenten die deze
+   surfaces echt gebruiken. Beide thema's zodat de light-styling gedeeld is.
+   =========================================================================== */
+:root, [data-theme="light"] {
+  --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #eef1f6 55%, #e2e7f0 100%);
+  --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.08), rgba(255,255,255,0) 62%), repeating-linear-gradient(135deg, rgba(17,24,38,.02) 0 2px, transparent 2px 30px), linear-gradient(#f6f8fb,#eaeef5);
+  --atlas-panel:linear-gradient(#ffffff,#f4f6fa); --atlas-panel-2:linear-gradient(#ffffff,#f1f4f9);
+  --atlas-map-bg:#dbe3e6; --atlas-map-border:#c2cfd4; --atlas-map-scrim:rgba(238,241,246,.22);
+  --atlas-map-fade:linear-gradient(transparent,rgba(240,243,248,.92));
+  --atlas-row:rgba(17,24,38,.035); --atlas-row-2:rgba(17,24,38,.06);
+  --atlas-feed:rgba(255,255,255,.72); --atlas-bar:rgba(245,247,250,.96);
+  --atlas-overlay:rgba(226,231,240,.78); --atlas-card:linear-gradient(#ffffff,#f2f5fa);
+  --atlas-sheen:rgba(17,24,38,.05); --atlas-track:rgba(17,24,38,.08);
+  --atlas-t02:rgba(17,24,38,.025); --atlas-t03:rgba(17,24,38,.035); --atlas-t04:rgba(17,24,38,.05); --atlas-t05:rgba(17,24,38,.06); --atlas-t06:rgba(17,24,38,.07); --atlas-t10:rgba(17,24,38,.10); --atlas-t12:rgba(17,24,38,.12);
+}
+.dark, [data-theme="dark"] {
+  --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #0d1626 0%, #05070d 60%, #04060b 100%);
+  --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.14), rgba(4,6,11,0) 62%), repeating-linear-gradient(135deg, rgba(255,255,255,.016) 0 2px, transparent 2px 30px), linear-gradient(#070b13,#05080f);
+  --atlas-panel:linear-gradient(#0e1626,#0a111e); --atlas-panel-2:linear-gradient(#0c1421,#090f1a);
+  --atlas-map-bg:#0b1d22; --atlas-map-border:#2a3b34; --atlas-map-scrim:rgba(4,10,14,.35);
+  --atlas-map-fade:linear-gradient(transparent,rgba(4,10,14,.92));
+  --atlas-row:rgba(255,255,255,.035); --atlas-row-2:rgba(255,255,255,.06);
+  --atlas-feed:rgba(8,12,20,.7); --atlas-bar:rgba(8,11,18,.94);
+  --atlas-overlay:rgba(4,6,11,.72); --atlas-card:linear-gradient(#0f1826,#0b131f);
+  --atlas-sheen:rgba(255,255,255,.08); --atlas-track:rgba(255,255,255,.08);
+  --atlas-t02:rgba(255,255,255,.02); --atlas-t03:rgba(255,255,255,.03); --atlas-t04:rgba(255,255,255,.04); --atlas-t05:rgba(255,255,255,.05); --atlas-t06:rgba(255,255,255,.06); --atlas-t10:rgba(255,255,255,.10); --atlas-t12:rgba(255,255,255,.12);
+}
+
+/* Light thema: pitch-green ramp verwijst naar de broadcast-blue ramp.
+   Dark ([data-theme="dark"]/.dark) houdt de groene :root-waarden. */
+[data-theme="light"] {
+  --pitch-50:var(--blue-50);   --pitch-100:var(--blue-100); --pitch-200:var(--blue-200);
+  --pitch-300:var(--blue-300); --pitch-400:var(--blue-400); --pitch-500:var(--blue-500);
+  --pitch-600:var(--blue-600); --pitch-700:var(--blue-700); --pitch-800:var(--blue-800);
+  --pitch-900:var(--blue-900); --pitch-950:var(--blue-950);
+  --on-pitch:var(--color-silver-100);  
+  --shadow-glow-pitch: 0 8px 22px color-mix(in srgb, var(--blue-500) 35%, transparent); /* zilver ipv zwart op de nu-blauwe fills */
 }

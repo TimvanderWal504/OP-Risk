@@ -15,35 +15,8 @@
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;background:#04060b;overflow:hidden;}
   a{color:var(--link);text-decoration:none;} a:hover{color:var(--secondary);}
-  [data-theme="dark"], .dark{
-    --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #0d1626 0%, #05070d 60%, #04060b 100%);
-    --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.14), rgba(4,6,11,0) 62%), repeating-linear-gradient(135deg, rgba(255,255,255,.016) 0 2px, transparent 2px 30px), linear-gradient(#070b13,#05080f);
-    --atlas-panel:var(--atlas-panel); --atlas-panel-2:var(--atlas-panel-2);
-    --atlas-map-bg:#0b1d22; --atlas-map-border:#2a3b34; --atlas-map-scrim:rgba(4,10,14,.35);
-    --atlas-map-fade:var(--atlas-map-fade);
-    --atlas-row:var(--atlas-row); --atlas-row-2:var(--atlas-row-2);
-    --atlas-feed:rgba(8,12,20,.7); --atlas-bar:rgba(8,11,18,.94);
-    --atlas-overlay:rgba(4,6,11,.72); --atlas-card:var(--atlas-card);
-    --atlas-sheen:rgba(255,255,255,.08); --atlas-track:rgba(255,255,255,.08);
-  }
-  [data-theme="light"]{
-    color-scheme:light;
-    --bg:#eef1f6; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#e8edf4;
-    --border:#e1e7f0; --border-strong:#cdd6e3; --ring:#215990;
-    --fg1:#111826; --fg2:#475064; --fg3:#7a869c;
-    --primary:#6b8f1f; --primary-fill:#84ad28; --secondary:#215990; --secondary-fill:#215990;
-    --accent:#b5790a; --accent-fill:#f2a922; --link:#1c4a78;
-    --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
-    --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #eef1f6 55%, #e2e7f0 100%);
-    --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.08), rgba(255,255,255,0) 62%), repeating-linear-gradient(135deg, rgba(17,24,38,.02) 0 2px, transparent 2px 30px), linear-gradient(#f6f8fb,#eaeef5);
-    --atlas-panel:linear-gradient(#ffffff,#f4f6fa); --atlas-panel-2:linear-gradient(#ffffff,#f1f4f9);
-    --atlas-map-bg:#dbe3e6; --atlas-map-border:#c2cfd4; --atlas-map-scrim:rgba(238,241,246,.22);
-    --atlas-map-fade:linear-gradient(transparent,rgba(240,243,248,.92));
-    --atlas-row:rgba(17,24,38,.035); --atlas-row-2:rgba(17,24,38,.06);
-    --atlas-feed:rgba(255,255,255,.72); --atlas-bar:rgba(245,247,250,.96);
-    --atlas-overlay:rgba(226,231,240,.78); --atlas-card:linear-gradient(#ffffff,#f2f5fa);
-    --atlas-sheen:rgba(17,24,38,.05); --atlas-track:rgba(17,24,38,.08);
-  }
+  /* --atlas-* surfaces (dark + light) live in ds/colors_and_type.css.
+     Semantische tokens komen uit ds/colors_and_type.css + ds/twc-theme.css. */
   @keyframes atlasRollL{0%{transform:translate(-1500px,-260px) rotate(-1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(90px,30px) rotate(180deg) scale(1.08);}76%{transform:translate(-46px,-16px) rotate(72deg) scale(1);}88%{transform:translate(22px,8px) rotate(-20deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
   @keyframes atlasRollR{0%{transform:translate(1500px,-300px) rotate(1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(-90px,34px) rotate(-180deg) scale(1.08);}76%{transform:translate(50px,-18px) rotate(-72deg) scale(1);}88%{transform:translate(-24px,9px) rotate(24deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
   @keyframes atlasTumble{0%{transform:translate(-680px,-880px) rotate(-900deg) scale(.55);opacity:0;}10%{opacity:1;}58%{transform:translate(60px,40px) rotate(150deg) scale(1.1);}74%{transform:translate(-30px,-18px) rotate(60deg) scale(1);}88%{transform:translate(14px,7px) rotate(-16deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}}
@@ -89,7 +62,7 @@
   @keyframes atlasFrameIn{0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}}
 </style>
 </helmet>
-<div style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--atlas-app-bg);font-family:var(--font-body);" data-theme="{{ theme }}">
+<div style="position: fixed; inset: 0; display: flex; flex-direction: column; font-family: var(--font-body); background: var(--atlas-app-bg)" data-theme="{{ theme }}">
   <div style="flex:1;position:relative;overflow:hidden;">
     <div ref="{{ stageRef }}" class="{{ themeClass }}" data-theme="{{ theme }}" data-screen-label="{{ stateName }}" style="position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%);color:var(--fg1);background:var(--atlas-stage-bg);overflow:hidden;">
 
@@ -107,7 +80,7 @@
         <div style="flex:1;display:flex;gap:36px;min-height:0;">
           <!-- QR -->
           <div style="width:560px;flex:none;background:var(--atlas-panel);border:1px solid var(--border-strong);border-radius:24px;padding:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.5);">
-            <div style="background:#fff;border-radius:18px;padding:24px;box-shadow:0 0 0 6px rgba(132,173,40,.25);">
+            <div style="background: #fff; border-radius: 18px; padding: 24px; box-shadow: var; border: 3px solid var(--silver)">
               <svg viewBox="0 0 25 25" width="360" height="360" shape-rendering="crispEdges" style="display:block;">
                 <rect x="0" y="0" width="25" height="25" fill="#ffffff"></rect>
                 <sc-for list="{{ qrCells }}" as="c" hint-placeholder-count="180">
@@ -168,7 +141,7 @@
         <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.2em;font-size:18px;color:var(--gold-400);">{{ t.orderKicker }}</span>
         <h1 style="font-family:var(--font-display);font-weight:900;font-size:64px;margin:12px 0 6px;letter-spacing:-.02em;">{{ t.orderTitle }}</h1>
         <p style="font-family:var(--font-body);font-size:22px;color:var(--fg3);margin:0 0 6px;">{{ t.orderSub }}</p>
-        <div style="display:flex;gap:26px;margin:38px 0 10px;justify-content:center;flex-wrap:wrap;">
+        <div style="display: flex; gap: 32px; margin: auto; justify-content: center; flex-wrap: wrap">
           <sc-for list="{{ orderDice }}" as="d" hint-placeholder-count="6">
             <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
               {{ d.el1 }}{{ d.el2 }}
@@ -176,9 +149,9 @@
             </div>
           </sc-for>
         </div>
-        <div style="font-family:var(--font-body);font-size:17px;color:var(--gold-400);margin-bottom:26px;">{{ t.tie }}</div>
+        
         <div style="width:100%;max-width:1500px;">
-          <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:16px;color:var(--fg3);margin-bottom:14px;text-align:center;">{{ t.turnOrder }}</div>
+          <div style="font-family: var(--font-body); font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: 16px; color: var(--fg3); margin-bottom: 14px; text-align: center">{{ t.turnOrder }}</div>
           <div style="display:flex;gap:16px;justify-content:center;">
             <sc-for list="{{ orderList }}" as="o" hint-placeholder-count="6">
               <div style="flex:1;max-width:220px;display:flex;align-items:center;gap:16px;background:{{ o.bg }};border:1px solid {{ o.border }};border-radius:16px;padding:16px 18px;">
@@ -206,7 +179,7 @@
               <div style="font-family:var(--font-display);font-weight:900;font-size:34px;line-height:1;">{{ claimTurnName }} <span style="color:var(--fg3);font-size:24px;font-weight:700;">· {{ claimTurnCw }}</span></div>
             </div>
           </div>
-          <div style="padding:12px 26px;border-radius:12px;background:rgba(242,169,34,.12);border:1px solid var(--gold-700);color:var(--gold-300);font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:.02em;">{{ t.claimKicker }}</div>
+          <div style="padding: 12px 26px; border-radius: 12px; background: color-mix(in srgb, var(--pitch-400) 12%, transparent);; border: 1px solid var(--pitch-700); color: var(--pitch-300); font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: .02em">{{ t.claimKicker }}</div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;">
             <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:13px;color:var(--fg3);margin-bottom:4px;">{{ t.claimCounterLabel }}</span>
             <div style="font-family:var(--font-display);font-weight:900;font-size:56px;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg1);padding:4px 22px;border-radius:12px;border:2px solid var(--border-strong);">{{ claimCounterEl }}</div>
@@ -274,12 +247,12 @@
           <div style="display:flex;align-items:center;gap:18px;">{{ turnChipEl }}</div>
           <div style="display:flex;gap:12px;">
             <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="3">
-              <sc-if value="{{ ph.active }}"><div style="padding:12px 26px;border-radius:12px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:24px;letter-spacing:.01em;box-shadow:0 0 30px rgba(242,169,34,.55);animation:atlasPhasePop .3s cubic-bezier(.2,.7,.3,1) both;">{{ ph.label }}</div></sc-if>
-              <sc-if value="{{ ph.inactive }}"><div style="padding:12px 24px;border-radius:12px;background:var(--atlas-row);border:1px solid var(--border);color:var(--fg3);font-family:var(--font-display);font-weight:700;font-size:22px;">{{ ph.label }}</div></sc-if>
+              <sc-if value="{{ ph.active }}"><div style="padding: 12px 26px; border-radius: 12px; background: var(--pitch-400); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: .01em; box-shadow: 0 0 30px color-mix(in srgb, var(--pitch-400) 55%, transparent); animation: atlasPhasePop .3s cubic-bezier(.2,.7,.3,1) both">{{ ph.label }}</div></sc-if>
+              <sc-if value="{{ ph.inactive }}"><div style="padding: 12px 24px; border-radius: 12px; background: var(--atlas-row); border: 1px solid var(--border); color: var(--fg3); font-family: var(--font-display); font-weight: 700; font-size: 22px">{{ ph.label }}</div></sc-if>
             </sc-for>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;">
-            <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:13px;color:var(--fg3);margin-bottom:4px;">{{ timerLabel }}</span>
+          <div style="display: flex; flex-direction: Row; align-items: flex-end">
+            <span style="font-family: var(--font-body); font-weight: 800; text-transform: uppercase; letter-spacing: .16em; font-size: 13px; color: var(--fg3); align-self: center; margin-right: 4px">{{ timerLabel }}</span>
             <sc-if value="{{ timerNormal }}"><div style="font-family:var(--font-display);font-weight:900;font-size:56px;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg1);padding:4px 22px;border-radius:12px;border:2px solid var(--border-strong);animation:atlasTimerSwap .3s cubic-bezier(.2,.7,.3,1) both;">{{ timerText }}</div></sc-if>
             <sc-if value="{{ timerLow }}"><div style="font-family:var(--font-display);font-weight:900;font-size:56px;line-height:1;font-variant-numeric:tabular-nums;color:#ff4d52;padding:4px 22px;border-radius:12px;border:3px solid #ff4d52;box-shadow:0 0 34px rgba(255,77,82,.6);animation:atlasTimerSwap .3s cubic-bezier(.2,.7,.3,1) both, atlasLow .7s .3s infinite;">{{ timerText }}</div></sc-if>
             <sc-if value="{{ timerPaused }}"><div style="font-family:var(--font-display);font-weight:800;font-size:30px;line-height:1;color:var(--fg3);padding:12px 22px;border-radius:12px;border:2px dashed var(--border-strong);display:flex;align-items:center;gap:12px;animation:atlasTimerSwap .3s cubic-bezier(.2,.7,.3,1) both;"><span style="display:inline-flex;gap:5px;"><span style="width:7px;height:26px;background:var(--fg3);border-radius:2px;"></span><span style="width:7px;height:26px;background:var(--fg3);border-radius:2px;"></span></span>{{ timerText }}</div></sc-if>
@@ -288,7 +261,7 @@
 
         <!-- map + panel -->
         <div style="position:absolute;left:26px;top:112px;width:1440px;height:784px;background:var(--atlas-map-bg);border:1px solid var(--atlas-map-border);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 120px rgba(0,0,0,.75),inset 0 0 0 3px rgba(120,96,56,.18);">
-          <svg viewBox="0 0 1500 790" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;">
+          <svg preserveAspectRatio="xMidYMid slice" style="width: 100%; height: 100%; display: block" viewBox="0 0 1500 790">
             <defs>
               <filter id="atlasRough"><feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="7" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap></filter>
               <filter id="atlasGrain"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" stitchTiles="stitch" result="n"></feTurbulence><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.72  0 0 0 0 0.60  0 0 0 0 0.38  0 0 0 0.6 0"></feColorMatrix></filter>
@@ -344,10 +317,10 @@
               <div style="display:flex;align-items:center;gap:44px;">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
                   <div style="min-height:136px;display:flex;flex-direction:column;align-items:center;gap:12px;justify-content:flex-start;">
-                  <div style="display:flex;align-items:center;gap:10px;"><span style="width:30px;height:30px;border-radius:8px;background:{{ atk.hex }};display:flex;align-items:center;justify-content:center;color:{{ atk.on }};font-size:17px;">{{ atk.sym }}</span><span style="font-family:var(--font-display);font-weight:800;font-size:26px;">{{ atk.name }}</span></div><div style="display:flex;align-items:center;gap:10px;background:rgba(242,169,34,.14);border:1px solid var(--gold-700);border-radius:999px;padding:7px 16px;">
-                    <span style="font-size:18px;color:var(--gold-300);line-height:1;">{{ combatReroll.sym }}</span>
-                    <span style="font-family:var(--font-body);font-weight:700;font-size:16px;color:var(--fg2);">{{ combatReroll.label }}</span>
-                    <span style="font-family:var(--font-display);font-weight:900;font-size:16px;color:var(--gold-300);">{{ combatReroll.count }}</span>
+                  <div style="display:flex;align-items:center;gap:10px;"><span style="width:30px;height:30px;border-radius:8px;background:{{ atk.hex }};display:flex;align-items:center;justify-content:center;color:{{ atk.on }};font-size:17px;">{{ atk.sym }}</span><span style="font-family:var(--font-display);font-weight:800;font-size:26px;">{{ atk.name }}</span></div><div style="display: flex; align-items: center; gap: 10px; background: color-mix(in srgb, var(--pitch-400) 16%, transparent);; border: 1px solid var(--pitch-500); border-radius: 999px; padding: 7px 16px">
+                    <span style="font-size: 18px; color: var(--pitch-500); line-height: 1">{{ combatReroll.sym }}</span>
+                    <span style="font-family: var(--font-body); font-weight: 700; font-size: 16px; color: var(--fg1)">{{ combatReroll.label }}</span>
+                    <span style="font-family: var(--font-display); font-weight: 900; font-size: 16px; color: var(--pitch-500)">{{ combatReroll.count }}</span>
                   </div>
                   <span style="font-family:var(--font-body);font-size:15px;text-transform:uppercase;letter-spacing:.14em;color:var(--fg3);">{{ t.attackerL }}</span>
                   </div>
@@ -371,16 +344,16 @@
                 </div>
               </div>
               <div style="font-family:var(--font-display);font-weight:800;font-size:28px;color:var(--fg1);">{{ combatResult }}</div>
-              <div style="display:flex;align-items:center;gap:16px;background:rgba(132,173,40,.16);border:1px solid var(--pitch-600);border-radius:14px;padding:14px 26px;animation:atlasPop .5s .5s both;">
-                <span style="font-family:var(--font-display);font-weight:900;font-size:30px;letter-spacing:.08em;color:var(--pitch-300);">{{ t.captured }}</span>
-                <span style="font-family:var(--font-body);font-size:22px;color:var(--fg1);">{{ moveIn }}</span>
+              <div style="display: flex; align-items: center; gap: 16px; background: color-mix(in srgb, var(--pitch-400) 16%, transparent); border: 1px solid var(--pitch-600); border-radius: 14px; padding: 14px 26px; animation: atlasPop .5s .5s both">
+                <span style="font-family: var(--font-display); font-weight: 900; font-size: 30px; letter-spacing: .08em; color: var(--pitch-600)">{{ t.captured }}</span>
+                <span style="font-family: var(--font-body); font-size: 22px; color: var(--fg1)">{{ moveIn }}</span>
               </div>
               </div>
             </div>
           </sc-if>
           <!-- active effect strip (event) -->
           <sc-if value="{{ showEvent }}">
-            <div style="position:absolute;left:20px;top:20px;display:flex;align-items:center;gap:14px;background:rgba(24,18,6,.9);border:1px solid var(--gold-700);border-radius:14px;padding:14px 20px;box-shadow:0 10px 30px rgba(0,0,0,.5);">
+            <div style="position:absolute;left:20px;top:20px;display:flex;align-items:center;gap:14px;background:var(--warning-soft);border:1px solid var(--gold-700);border-radius:14px;padding:14px 20px;box-shadow:0 10px 30px rgba(0,0,0,.5);">
               <span style="font-size:26px;">⚓</span>
               <div>
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--gold-400);">{{ t.activeKicker }} · {{ activeDuration }}</div>
@@ -490,7 +463,7 @@
         <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:16px;color:var(--fg3);margin-bottom:14px;">{{ t.missionReveal }}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;max-width:1560px;">
           <sc-for list="{{ missionCards }}" as="m" hint-placeholder-count="6">
-            <div style="display:flex;flex-direction:column;gap:10px;background:{{ m.bg }};border:1px solid {{ m.border }};border-radius:16px;padding:18px 20px;">
+            <div style="display: flex; flex-direction: column; gap: 10px; background: {{ m.bg }}; border: 1px solid {{ m.border }}; border-radius: 16px; padding: 18px 20px">
               <div style="display:flex;align-items:center;gap:12px;">
                 <span style="width:44px;height:44px;flex:none;border-radius:11px;background:{{ m.hex }};display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ m.on }};">{{ m.sym }}</span>
                 <span style="font-family:var(--font-display);font-weight:800;font-size:24px;">{{ m.name }} <span style="color:var(--fg3);font-size:17px;font-weight:700;">· {{ m.cw }}</span></span>

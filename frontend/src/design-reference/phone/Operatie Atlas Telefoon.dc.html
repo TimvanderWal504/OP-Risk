@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="ds/twc-theme.css">
 <style>
   *{box-sizing:border-box;}
-  html,body{margin:0;height:100%;background:#04060b;overflow:hidden;}
+  html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;}
   a{color:var(--link);text-decoration:none;} a:hover{color:var(--secondary);}
   button{font-family:inherit;-webkit-tap-highlight-color:transparent;}
   @keyframes phDice{0%{transform:translateY(-420px) rotate(-540deg) scale(.6);opacity:0;}12%{opacity:1;}60%{transform:translateY(24px) rotate(150deg) scale(1.08);}78%{transform:translateY(-12px) rotate(48deg) scale(1);}90%{transform:translateY(6px) rotate(-14deg);}100%{transform:translateY(0) rotate(0) scale(1);opacity:1;}}
@@ -26,14 +26,11 @@
   @keyframes phShim{0%{background-position:-360px 0;}100%{background-position:360px 0;}}
 </style>
 </helmet>
-<div style="position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(130% 90% at 50% -10%, #0d1626 0%, #06090f 60%, #04060b 100%);font-family:var(--font-body);">
+<div data-theme="{{ theme }}" style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--atlas-app-bg);font-family:var(--font-body);">
   <div style="flex:1;position:relative;overflow:hidden;">
     <!-- PHONE -->
-    <div ref="{{ stageRef }}" class="dark" data-theme="dark" data-screen-label="{{ stateName }}" style="position:absolute;left:50%;top:50%;width:402px;height:858px;transform:translate(-50%,-50%);border-radius:52px;background:#0a0d13;padding:9px;box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 2px #1b2230, inset 0 0 0 2px #000;">
-      <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;background:
-          radial-gradient(90% 60% at 50% 0%, rgba(33,89,144,.14), rgba(4,6,11,0) 60%),
-          repeating-linear-gradient(135deg, rgba(255,255,255,.015) 0 2px, transparent 2px 26px),
-          linear-gradient(#0b1119,#070b12);color:var(--fg1);display:flex;flex-direction:column;">
+    <div ref="{{ stageRef }}" class="{{ themeClass }}" data-theme="{{ theme }}" data-screen-label="{{ stateName }}" style="position:absolute;left:50%;top:50%;width:402px;height:858px;transform:translate(-50%,-50%);border-radius:52px;background:#0a0d13;padding:9px;box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 2px #1b2230, inset 0 0 0 2px #000;">
+      <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;background:var(--atlas-stage-bg);color:var(--fg1);display:flex;flex-direction:column;">
         <!-- notch -->
         <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#000;border-radius:16px;z-index:40;"></div>
         <!-- status bar -->
@@ -45,8 +42,8 @@
         <!-- ============ HEADER (in-game states) ============ -->
         <sc-if value="{{ showHeader }}">
         <div style="flex:none;padding:6px 16px 10px;">
-          <div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:10px 12px;">
-            <div style="position:relative;width:44px;height:44px;flex:none;border-radius:12px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ me.on }};box-shadow:0 0 16px {{ me.glow }};">{{ me.sym }}<span style="position:absolute;right:-5px;bottom:-5px;width:20px;height:20px;border-radius:50%;background:var(--gold-400);border:2px solid #0b1119;display:flex;align-items:center;justify-content:center;font-size:10px;">👑</span></div>
+          <div style="display:flex;align-items:center;gap:11px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:10px 12px;">
+            <div style="position:relative;width:44px;height:44px;flex:none;border-radius:12px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ me.on }};box-shadow:0 0 16px {{ me.glow }};">{{ me.sym }}<span style="position:absolute;right:-5px;bottom:-5px;width:20px;height:20px;border-radius:50%;background:var(--gold-400);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:10px;">👑</span></div>
             <div style="min-width:0;flex:1;">
               <div style="font-family:var(--font-display);font-weight:800;font-size:19px;line-height:1;">{{ me.name }} <span style="color:var(--fg3);font-weight:700;font-size:14px;">· {{ me.cw }}</span></div>
               <div style="font-family:var(--font-body);font-size:12.5px;color:var(--fg3);margin-top:3px;">{{ headerSub }}</div>
@@ -91,8 +88,8 @@
                 <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:900;font-size:22px;">{{ t.startNew }}</div><div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-top:3px;">{{ t.startNewSub }}</div></div>
                 <span style="font-size:22px;color:var(--gold-300);">›</span>
               </button>
-              <button onClick="{{ startJoinFlow }}" style="display:flex;align-items:center;gap:16px;width:100%;padding:22px 20px;border-radius:20px;border:1px solid var(--border-strong);background:rgba(255,255,255,.04);color:var(--fg1);cursor:pointer;text-align:left;">
-                <span style="width:54px;height:54px;flex:none;border-radius:14px;background:var(--pitch-500);display:flex;align-items:center;justify-content:center;font-size:28px;color:#04060b;">⌂</span>
+              <button onClick="{{ startJoinFlow }}" style="display:flex;align-items:center;gap:16px;width:100%;padding:22px 20px;border-radius:20px;border:1px solid var(--border-strong);background:var(--atlas-t04);color:var(--fg1);cursor:pointer;text-align:left;">
+                <span style="width: 54px; height: 54px; flex: none; border-radius: 14px; background: var(--pitch-500); display: flex; align-items: center; justify-content: center; font-size: 28px; color: {{ createFg }}">⌂</span>
                 <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:900;font-size:22px;">{{ t.startJoin }}</div><div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-top:3px;">{{ t.startJoinSub }}</div></div>
                 <span style="font-size:22px;color:var(--fg3);">›</span>
               </button>
@@ -114,7 +111,7 @@
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--fg3);margin:2px 2px 8px;">{{ t.grpRules }}</div>
                 <div style="display:flex;flex-direction:column;gap:9px;">
                   <!-- MAP VARIANT -->
-                  <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+                  <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
                       <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ t.setMap }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ t.setMapSub }}</div></div>
                     </div>
@@ -130,10 +127,10 @@
                     <div aria-busy="true" aria-label="{{ t.mapLoading }}" style="display:flex;flex-direction:column;gap:9px;margin-top:8px;">
                       <sc-for list="{{ mapSkeleton }}" as="s" hint-placeholder-count="3">
                         <div style="display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:12px;padding:12px;">
-                          <div style="width:66px;height:44px;flex:none;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.12),rgba(255,255,255,.04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
+                          <div style="width:66px;height:44px;flex:none;border-radius:8px;background:linear-gradient(90deg,var(--atlas-t04),var(--atlas-t12),var(--atlas-t04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
                           <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
-                            <div style="height:15px;width:52%;border-radius:5px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.12),rgba(255,255,255,.04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
-                            <div style="height:11px;width:74%;border-radius:5px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.10),rgba(255,255,255,.04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
+                            <div style="height:15px;width:52%;border-radius:5px;background:linear-gradient(90deg,var(--atlas-t04),var(--atlas-t12),var(--atlas-t04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
+                            <div style="height:11px;width:74%;border-radius:5px;background:linear-gradient(90deg,var(--atlas-t04),var(--atlas-t10),var(--atlas-t04));background-size:360px 100%;animation:phShim 1.1s linear infinite;"></div>
                           </div>
                         </div>
                       </sc-for>
@@ -144,7 +141,7 @@
                     <div role="alert" style="margin-top:8px;background:rgba(220,60,50,.1);border:1px solid #7a2b28;border-radius:12px;padding:14px;">
                       <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:18px;">⚠️</span><span style="font-family:var(--font-display);font-weight:800;font-size:15px;color:#ff9a94;">{{ t.mapErrTitle }}</span></div>
                       <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);margin:5px 0 11px;">{{ t.mapErrSub }}</div>
-                      <button onClick="{{ retryMap }}" style="width:100%;min-height:46px;border-radius:11px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:14px;cursor:pointer;">↻ {{ t.mapRetry }}</button>
+                      <button onClick="{{ retryMap }}" style="width:100%;min-height:46px;border-radius:11px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:14px;cursor:pointer;">↻ {{ t.mapRetry }}</button>
                     </div>
                     </sc-if>
                     <!-- list -->
@@ -155,7 +152,7 @@
                           
                           <span style="flex:1;min-width:0;">
                             <span style="display:block;font-family:var(--font-display);font-weight:800;font-size:16px;">{{ r.name }}<sc-if value="{{ r.showSoon }}"><span style="font-family:var(--font-body);font-weight:700;font-size:10px;letter-spacing:.08em;color:var(--fg3);border:1px solid var(--border-strong);padding:2px 6px;border-radius:6px;margin-left:6px;">{{ t.mapSoon }}</span></sc-if></span>
-                            <span style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--pitch-300);margin:2px 0;">{{ r.numbers }}</span>
+                            <span style="display: block; font-family: var(--font-mono); font-size: 12px; color: var(--silver-300); margin: 2px 0">{{ r.numbers }}</span>
                             <span style="display:block;font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ r.desc }}</span>
                           </span>
                           <span style="width:26px;height:26px;flex:none;border-radius:50%;border:2px solid {{ r.border }};display:flex;align-items:center;justify-content:center;">
@@ -170,7 +167,7 @@
                     </sc-if>
                   </div>
                   <!-- win condition -->
-                  <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:6px 14px;">
+                  <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:6px 14px;">
                     <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);padding:8px 0 2px;">{{ t.setWinCond }}</div>
                     <sc-for list="{{ winRows }}" as="w" hint-placeholder-count="2">
                       <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border);">
@@ -180,7 +177,7 @@
                     </sc-for>
                   </div>
                   <!-- layout -->
-                  <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+                  <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
                     <div style="font-family:var(--font-display);font-weight:800;font-size:16px;margin-bottom:2px;">{{ t.setLayout }}</div>
                     <div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);margin-bottom:10px;">{{ t.setLayoutSub }}</div>
                     <div style="display:flex;gap:9px;">
@@ -190,18 +187,18 @@
                     </div>
                   </div>
                   <!-- start armies -->
-                  <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+                  <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
                     <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ t.setStartArmies }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ armiesSub }}</div></div>
-                    <button onClick="{{ armyDec }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
+                    <button onClick="{{ armyDec }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
                     <span style="font-family:var(--font-display);font-weight:900;font-size:24px;min-width:34px;text-align:center;font-variant-numeric:tabular-nums;">{{ startArmies }}</span>
-                    <button onClick="{{ armyInc }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:none;background:var(--pitch-500);color:#04060b;font-weight:900;font-size:22px;cursor:pointer;">+</button>
+                    <button onClick="{{ armyInc }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:none;background:var(--pitch-500);color:var(--on-pitch);font-weight:900;font-size:22px;cursor:pointer;">+</button>
                   </div>
                   <!-- timer -->
-                  <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+                  <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
                     <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ t.setTimer }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ t.setTimerSub }}</div></div>
-                    <button onClick="{{ timerDec }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
+                    <button onClick="{{ timerDec }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
                     <span style="font-family:var(--font-display);font-weight:900;font-size:22px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;">{{ timerVal }}</span>
-                    <button onClick="{{ timerInc }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:none;background:var(--pitch-500);color:#04060b;font-weight:900;font-size:22px;cursor:pointer;">+</button>
+                    <button onClick="{{ timerInc }}" style="width:44px;height:44px;flex:none;border-radius:11px;border:none;background:var(--pitch-500);color:var(--on-pitch);font-weight:900;font-size:22px;cursor:pointer;">+</button>
                   </div>
                 </div>
               </div>
@@ -220,11 +217,11 @@
               </div>
             </div>
             <!-- sticky CTA -->
-            <div style="flex:none;padding:12px 18px 16px;background:linear-gradient(transparent,#080c13 26%);">
+            <div style="flex:none;padding:12px 18px 16px;background:linear-gradient(transparent,var(--bg) 26%);">
               <sc-if value="{{ createBlocked }}">
                 <div role="alert" style="display:flex;align-items:center;gap:8px;margin-bottom:9px;font-family:var(--font-body);font-size:12px;color:#ff9a94;"><span style="font-size:14px;">⚠️</span>{{ t.mapErrCta }}</div>
               </sc-if>
-              <button onClick="{{ createGame }}" aria-disabled="{{ createBlocked }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:{{ createBg }};color:{{ createFg }};font-family:var(--font-display);font-weight:900;font-size:21px;cursor:{{ createCursor }};box-shadow:{{ createShadow }};">{{ t.createGame }}</button>
+              <button onClick="{{ createGame }}" aria-disabled="{{ createBlocked }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 66px; border: none; border-radius: 16px; background: {{ createBg }}; color: {{ createFg }}; font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: {{ createCursor }}; box-shadow: var(--shadow-glow-pitch)">{{ t.createGame }}</button>
             </div>
           </div>
           </sc-if>
@@ -244,7 +241,7 @@
             </div>
             <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
               <sc-for list="{{ waitList }}" as="p" hint-placeholder-count="4">
-                <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;animation:phRise .3s both;">
+                <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;animation:phRise .3s both;">
                   <span style="width:38px;height:38px;flex:none;border-radius:10px;background:{{ p.hex }};display:flex;align-items:center;justify-content:center;font-size:19px;color:{{ p.on }};">{{ p.sym }}</span>
                   <span style="flex:1;font-family:var(--font-display);font-weight:800;font-size:17px;">{{ p.name }}</span>
                   <span style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ p.cw }}</span>
@@ -256,7 +253,7 @@
               </sc-if>
             </div>
             <div style="flex:none;padding-top:12px;">
-              <button onClick="{{ startGame }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:{{ startGameBg }};color:{{ startGameFg }};font-family:var(--font-display);font-weight:900;font-size:21px;cursor:{{ startGameCursor }};box-shadow:{{ startGameShadow }};">{{ startGameLabel }}</button>
+              <button onClick="{{ startGame }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 66px; border: none; border-radius: 16px; background: {{ startGameBg }}; color: {{ startGameFg }}; font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: {{ startGameCursor }}; box-shadow: var(--shadow-glow-pitch)">{{ startGameLabel }}</button>
               <sc-if value="{{ needMore }}"><div style="text-align:center;font-family:var(--font-body);font-size:12px;color:var(--fg3);margin-top:8px;">{{ t.needPlayers }}</div></sc-if>
             </div>
           </div>
@@ -277,11 +274,11 @@
             <sc-if value="{{ joinName }}">
               <div style="font-family:var(--font-display);font-weight:800;font-size:26px;margin-bottom:6px;">{{ t.joinNameTitle }}</div>
               <div style="font-family:var(--font-body);font-size:15px;color:var(--fg3);margin-bottom:22px;">{{ t.joinNameSub }}</div>
-              <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid var(--gold-600);border-radius:16px;padding:16px 18px;">
+              <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t05);border:1px solid var(--gold-600);border-radius:16px;padding:16px 18px;">
                 <span style="font-family:var(--font-display);font-weight:800;font-size:24px;">{{ nameValue }}</span>
                 <span style="width:3px;height:26px;background:var(--gold-400);animation:phDot 1s infinite;"></span>
               </div>
-              <div style="margin-top:auto;"><button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.next }} ›</button></div>
+              <div style="margin-top:auto;"><button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.next }} ›</button></div>
             </sc-if>
             <!-- color -->
             <sc-if value="{{ joinColor }}">
@@ -297,7 +294,7 @@
                   </button>
                 </sc-for>
               </div>
-              <div style="margin-top:auto;padding-top:16px;"><button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmColor }}</button></div>
+              <div style="margin-top:auto;padding-top:16px;"><button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.confirmColor }}</button></div>
             </sc-if>
             <!-- role -->
             <sc-if value="{{ joinRole }}">
@@ -321,7 +318,7 @@
               </div>
               <div style="flex:none;padding-top:14px;">
                 <sc-if value="{{ roleSelected }}">
-                  <button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">✓ {{ t.confirmRole }}</button>
+                  <button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">✓ {{ t.confirmRole }}</button>
                 </sc-if>
                 <sc-if value="{{ roleSelectedNot }}">
                   <div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px dashed var(--border-strong);border-radius:16px;color:var(--fg3);font-family:var(--font-body);font-size:14px;">{{ t.pickRoleFirst }}</div>
@@ -368,7 +365,7 @@
                 <div style="width:104px;height:104px;border-radius:22px;border:2px dashed var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:44px;color:var(--fg3);">🎲</div>
               </sc-if>
             </div>
-            <sc-if value="{{ orderIdle }}"><button onClick="{{ rollOrder }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:22px;cursor:pointer;box-shadow:0 8px 22px rgba(242,169,34,.35);">{{ t.roll }}</button></sc-if>
+            <sc-if value="{{ orderIdle }}"><button onClick="{{ rollOrder }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 66px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 22px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.roll }}</button></sc-if>
             <sc-if value="{{ orderRolled }}"><div style="width:100%;font-family:var(--font-body);font-size:14px;color:var(--fg3);padding-top:6px;">{{ t.waitOthers }}</div></sc-if>
           </div>
           </sc-if>
@@ -400,7 +397,7 @@
               </sc-for>
             </div>
             <sc-if value="{{ claimHasSel }}">
-              <button onClick="{{ confirmClaim }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(242,169,34,.35);">{{ claimConfirmLabel }}</button>
+              <button onClick="{{ confirmClaim }}" style="margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ claimConfirmLabel }}</button>
             </sc-if>
             <sc-if value="{{ claimHasSelNot }}">
               <div style="margin-top:11px;display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px dashed var(--border-strong);border-radius:16px;color:var(--fg3);font-family:var(--font-body);font-size:14px;">{{ t.claimTitle }} ↑</div>
@@ -410,7 +407,7 @@
           <!-- not your turn -->
           <sc-if value="{{ claimMineNot }}">
           <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:2px 16px 16px;">
-            <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
+            <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
               <div style="width:46px;height:46px;flex:none;border-radius:12px;background:{{ claimActive.hex }};display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ claimActive.on }};">{{ claimActive.sym }}</div>
               <div style="flex:1;min-width:0;"><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.1em;">{{ t.nowPlaying }}</div><div style="font-family:var(--font-display);font-weight:800;font-size:20px;">{{ claimActive.name }} <span style="color:{{ claimActive.hex }};">· {{ t.claimConfirm }}</span></div></div>
               <div style="text-align:right;flex:none;"><div style="font-family:var(--font-display);font-weight:900;font-size:26px;line-height:1;color:var(--gold-300);">{{ claimFree }}</div><div style="font-family:var(--font-body);font-size:10px;color:var(--fg3);">{{ t.claimLeft }}</div></div>
@@ -427,7 +424,7 @@
               </sc-for>
             </div>
             <div style="text-align:center;font-family:var(--font-body);font-size:12.5px;color:var(--fg3);margin:10px 0 12px;">{{ t.claimYourTurnSoon }}</div>
-            <button onClick="{{ claimSimRound }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">▸ {{ t.claimNext }}</button>
+            <button onClick="{{ claimSimRound }}" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:1px solid var(--border-strong);border-radius:16px;background:var(--atlas-t05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">▸ {{ t.claimNext }}</button>
           </div>
           </sc-if>
           </sc-if>
@@ -442,11 +439,11 @@
             <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin:12px 2px 8px;">{{ t.setupHint }}</div>
             <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
               <sc-for list="{{ setupList }}" as="r" hint-placeholder-count="6">
-                <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:9px 12px;">
+                <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:14px;padding:9px 12px;">
                   <span style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:16px;color:{{ me.on }};">{{ me.sym }}</span>
                   <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ r.name }}</div></div>
                   <span style="font-family:var(--font-display);font-weight:900;font-size:22px;font-variant-numeric:tabular-nums;min-width:30px;text-align:right;">{{ r.armies }}</span>
-                  <button onClick="{{ r.add }}" style="width:46px;height:46px;flex:none;border-radius:12px;border:none;background:{{ setupAddBg }};color:#04060b;font-family:var(--font-display);font-weight:900;font-size:24px;cursor:{{ setupCursor }};">+</button>
+                  <button onClick="{{ r.add }}" style="width:46px;height:46px;flex:none;border-radius:12px;border:none;background:{{ setupAddBg }};color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:24px;cursor:{{ setupCursor }};">+</button>
                 </div>
               </sc-for>
             </div>
@@ -456,14 +453,14 @@
           <!-- 3 NOT YOUR TURN -->
           <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
           <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:2px 16px 16px;">
-            <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
+            <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
               <div style="width:46px;height:46px;flex:none;border-radius:12px;background:{{ active.hex }};display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ active.on }};">{{ active.sym }}</div>
               <div style="flex:1;min-width:0;"><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.1em;">{{ t.nowPlaying }}</div><div style="font-family:var(--font-display);font-weight:800;font-size:20px;">{{ active.name }} <span style="color:{{ active.hex }};">· {{ active.phase }}</span></div></div>
             </div>
             <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--fg3);margin:16px 2px 8px;">{{ t.recent }}</div>
             <div style="display:flex;flex-direction:column;gap:8px;">
               <sc-for list="{{ idleFeed }}" as="f" hint-placeholder-count="3">
-                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
+                <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:12px;padding:10px 12px;">
                   <span style="width:26px;height:26px;flex:none;border-radius:7px;background:{{ f.hex }};display:flex;align-items:center;justify-content:center;font-size:13px;color:{{ f.on }};">{{ f.sym }}</span>
                   <span style="font-family:var(--font-body);font-size:13.5px;line-height:1.25;"><b style="color:{{ f.hex }};">{{ f.cw }}</b> {{ f.text }}</span>
                 </div>
@@ -472,7 +469,7 @@
             <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--fg3);margin:18px 2px 8px;">{{ t.whileYouWait }}</div>
             <div style="display:flex;flex-direction:column;gap:9px;">
               <sc-for list="{{ tabCards }}" as="tc" hint-placeholder-count="3">
-                <button onClick="{{ tc.open }}" style="display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:0 15px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
+                <button onClick="{{ tc.open }}" style="display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:0 15px;border-radius:16px;background:var(--atlas-t04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
                   <span style="font-size:24px;">{{ tc.icon }}</span>
                   <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ tc.label }}</div><div style="font-family:var(--font-body);font-size:12.5px;color:var(--fg3);">{{ tc.hint }}</div></div>
                   <span style="color:var(--fg3);font-size:22px;">›</span>
@@ -492,7 +489,7 @@
             </div>
             <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-top:11px;">
               <!-- breakdown -->
-              <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;">
+              <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;">
                 <div style="font-family:var(--font-body);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg3);margin-bottom:8px;">{{ t.reinfBuildup }}</div>
                 <sc-for list="{{ reinfRows }}" as="rr" hint-placeholder-count="4">
                   <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
@@ -511,16 +508,16 @@
               </div>
               <!-- distribute -->
               <sc-for list="{{ reinfList }}" as="r" hint-placeholder-count="5">
-                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:8px 10px;">
+                <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:14px;padding:8px 10px;">
                   <span style="width:32px;height:32px;flex:none;border-radius:9px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:15px;color:{{ me.on }};">{{ me.sym }}</span>
                   <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:15px;">{{ r.name }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ r.base }} → <b style="color:var(--pitch-300);">{{ r.total }}</b></div></div>
-                  <button onClick="{{ r.dec }}" style="width:42px;height:42px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
+                  <button onClick="{{ r.dec }}" style="width:42px;height:42px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-weight:900;font-size:22px;cursor:pointer;">−</button>
                   <span style="font-family:var(--font-display);font-weight:900;font-size:20px;min-width:24px;text-align:center;">{{ r.add }}</span>
-                  <button onClick="{{ r.inc }}" style="width:42px;height:42px;flex:none;border-radius:11px;border:none;background:{{ reinfAddBg }};color:#04060b;font-weight:900;font-size:22px;cursor:{{ reinfCursor }};">+</button>
+                  <button onClick="{{ r.inc }}" style="width:42px;height:42px;flex:none;border-radius:11px;border:none;background:{{ reinfAddBg }};color:var(--on-pitch);font-weight:900;font-size:22px;cursor:{{ reinfCursor }};">+</button>
                 </div>
               </sc-for>
             </div>
-            <button onClick="{{ next }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:62px;border:none;border-radius:16px;background:{{ reinfDoneBg }};color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;">{{ reinfDoneLabel }}</button>
+            <button onClick="{{ next }}" style="margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 62px; border: none; border-radius: 16px; background: {{ reinfDoneBg }}; color: var(--on-pitch); font-family: var(--font-display); font-size: 20px; cursor: pointer; box-shadow: 0 8px 22px color-mix(in srgb, {{ reinfDoneBg }} 35%, transparent);font-weight: 900">{{ reinfDoneLabel }}</button>
           </div>
           </sc-if>
 
@@ -541,7 +538,7 @@
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:12px;">{{ t.atkFromSub }}</div>
               <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
                 <sc-for list="{{ atkSources }}" as="s" hint-placeholder-count="3">
-                  <button onClick="{{ s.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
+                  <button onClick="{{ s.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:var(--atlas-t04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
                     <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ me.on }};">{{ me.sym }}</span>
                     <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ s.name }}</div><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ s.armies }} {{ t.armiesWord }} · {{ s.targets }} {{ t.targetsWord }}</div></div>
                     <span style="color:var(--fg3);font-size:22px;">›</span>
@@ -555,7 +552,7 @@
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:12px;">{{ t.atkFromLabel }} <b style="color:var(--fg1);">{{ srcName }}</b></div>
               <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
                 <sc-for list="{{ atkTargets }}" as="tg" hint-placeholder-count="3">
-                  <button onClick="{{ tg.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
+                  <button onClick="{{ tg.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:var(--atlas-t04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
                     <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ tg.hex }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ tg.on }};">{{ tg.sym }}</span>
                     <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ tg.name }}</div><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ tg.ownerCw }} · {{ tg.armies }} {{ t.armiesWord }}</div></div>
                     <span style="color:#ff7a3d;font-size:20px;">⚔</span>
@@ -583,7 +580,7 @@
             </sc-if>
 
             <sc-if value="{{ atkPreRoll }}">
-              <button onClick="{{ endAttackPhase }}" style="flex:none;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.endAtkPhase }} ›</button>
+              <button onClick="{{ endAttackPhase }}" style="margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.endAtkPhase }} ›</button>
             </sc-if>
 
             <sc-if value="{{ atkRolled }}">
@@ -613,16 +610,16 @@
                 </div>
               </sc-if>
               <sc-if value="{{ reroll.used }}">
-                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px;opacity:.75;">
-                  <span style="width:34px;height:34px;flex:none;border-radius:10px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">✓</span>
+                <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px;opacity:.75;">
+                  <span style="width:34px;height:34px;flex:none;border-radius:10px;background:var(--atlas-t05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">✓</span>
                   <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--fg2);">{{ reroll.usedLabel }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--pitch-300);">{{ reroll.wonNote }}</div></div>
                 </div>
               </sc-if>
               <div style="display:flex;flex-direction:column;gap:9px;">
                 <button onClick="{{ attackAgain }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;border:none;border-radius:16px;background:#c0392b;color:#fff;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;">{{ t.attackAgain }}</button>
                 <div style="display:flex;gap:9px;">
-                  <button onClick="{{ atkNewFight }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--border-strong);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.otherFight }}</button>
-                  <button onClick="{{ toFortify }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:16px;background:var(--gold-400);border:none;color:#0a0e17;font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.toFortify }} ›</button>
+                  <button onClick="{{ atkNewFight }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:16px;background:var(--atlas-t05);border:1px solid var(--border-strong);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.otherFight }}</button>
+                  <button onClick="{{ toFortify }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:16px;background:var(--pitch-500);border:none;color:var(--on-pitch);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.toFortify }} ›</button>
                 </div>
               </div>
             </sc-if>
@@ -644,13 +641,13 @@
               </div>
               <div style="font-family:var(--font-body);font-size:14px;color:var(--fg3);text-align:center;">{{ t.moveHowMany }}</div>
               <div style="display:flex;align-items:center;gap:18px;">
-                <button onClick="{{ moveDec }}" style="width:60px;height:60px;border-radius:16px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-weight:900;font-size:30px;cursor:{{ moveDecCursor }};">−</button>
+                <button onClick="{{ moveDec }}" style="width:60px;height:60px;border-radius:16px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-weight:900;font-size:30px;cursor:{{ moveDecCursor }};">−</button>
                 <div style="text-align:center;min-width:70px;"><div style="font-family:var(--font-display);font-weight:900;font-size:52px;line-height:1;">{{ moveN }}</div><div style="font-family:var(--font-body);font-size:11px;color:var(--fg3);">{{ t.armiesWord }}</div></div>
-                <button onClick="{{ moveInc }}" style="width:60px;height:60px;border-radius:16px;border:none;background:var(--pitch-500);color:#04060b;font-weight:900;font-size:30px;cursor:{{ moveIncCursor }};">+</button>
+                <button onClick="{{ moveInc }}" style="width:60px;height:60px;border-radius:16px;border:none;background:var(--pitch-500);color:var(--on-pitch);font-weight:900;font-size:30px;cursor:{{ moveIncCursor }};">+</button>
               </div>
               <div style="font-family:var(--font-body);font-size:12px;color:var(--gold-400);">{{ moveMinNote }}</div>
             </div>
-            <button onClick="{{ confirmConquest }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirm }}</button>
+            <button onClick="{{ confirmConquest }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; box-shadow: var(--shadow-glow-pitch); margin-top: 11px">{{ t.confirm }}</button>
           </div>
           </sc-if>
 
@@ -667,7 +664,7 @@
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:12px;">{{ t.fortFromSub }}</div>
               <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
                 <sc-for list="{{ fortSources }}" as="s" hint-placeholder-count="3">
-                  <button onClick="{{ s.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
+                  <button onClick="{{ s.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:var(--atlas-t04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
                     <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ me.on }};">{{ me.sym }}</span>
                     <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ s.name }}</div><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ s.armies }} {{ t.armiesWord }}</div></div>
                     <span style="color:var(--fg3);font-size:22px;">›</span>
@@ -680,7 +677,7 @@
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:12px;">{{ t.fortPathSub }}</div>
               <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
                 <sc-for list="{{ fortDests }}" as="dd" hint-placeholder-count="3">
-                  <button onClick="{{ dd.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
+                  <button onClick="{{ dd.pick }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:0 14px;border-radius:16px;background:var(--atlas-t04);border:1px solid var(--border);color:var(--fg1);cursor:pointer;text-align:left;">
                     <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ me.on }};">{{ me.sym }}</span>
                     <div style="flex:1;"><div style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ dd.name }}</div><div style="font-family:var(--font-body);font-size:11.5px;color:var(--fg3);">{{ dd.path }}</div></div>
                     <span style="color:var(--fg3);font-size:22px;">›</span>
@@ -693,16 +690,16 @@
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:8px;"><b style="color:var(--fg1);">{{ fortSrcName }}</b> → <b style="color:var(--fg1);">{{ fortDestName }}</b></div>
               <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;">
                 <div style="display:flex;align-items:center;gap:18px;">
-                  <button onClick="{{ fortDec }}" style="width:60px;height:60px;border-radius:16px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-weight:900;font-size:30px;cursor:pointer;">−</button>
+                  <button onClick="{{ fortDec }}" style="width:60px;height:60px;border-radius:16px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-weight:900;font-size:30px;cursor:pointer;">−</button>
                   <div style="text-align:center;min-width:70px;"><div style="font-family:var(--font-display);font-weight:900;font-size:52px;line-height:1;">{{ fortN }}</div><div style="font-family:var(--font-body);font-size:11px;color:var(--fg3);">{{ t.armiesWord }}</div></div>
-                  <button onClick="{{ fortInc }}" style="width:60px;height:60px;border-radius:16px;border:none;background:var(--pitch-500);color:#04060b;font-weight:900;font-size:30px;cursor:pointer;">+</button>
+                  <button onClick="{{ fortInc }}" style="width:60px;height:60px;border-radius:16px;border:none;background:var(--pitch-500);color:var(--on-pitch);font-weight:900;font-size:30px;cursor:pointer;">+</button>
                 </div>
                 <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ fortLeaveNote }}</div>
               </div>
-              <button onClick="{{ confirmFortify }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmMove }}</button>
+              <button onClick="{{ confirmFortify }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:66px;border:none;border-radius:16px;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.confirmMove }}</button>
             </sc-if>
             <sc-if value="{{ fortPreConfirm }}">
-              <button onClick="{{ endFortifyPhase }}" style="flex:none;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ t.endFortPhase }} ›</button>
+              <button onClick="{{ endFortifyPhase }}" style="margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.endFortPhase }} ›</button>
             </sc-if>
           </div>
           </sc-if>
@@ -718,7 +715,7 @@
                 <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
               </div>
             </div>
-            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+            <div style="display:flex;gap:6px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
               <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
               <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
             </div>
@@ -727,14 +724,14 @@
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--fg3);margin:0 2px 7px;">{{ cardBonus.setLabel }}</div>
                 <div style="display:flex;gap:8px;">
                   <sc-for list="{{ cbCards }}" as="c" hint-placeholder-count="3">
-                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:12px 6px;">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:12px;padding:12px 6px;">
                       <span style="font-size:24px;">{{ c.icon }}</span>
                       <span style="font-family:var(--font-body);font-size:11px;color:var(--fg3);">{{ c.type }}</span>
                     </div>
                   </sc-for>
                 </div>
               </div>
-              <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:13px 15px;">
+              <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:13px 15px;">
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--fg3);margin-bottom:9px;">{{ cardBonus.breakLabel }}</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;">
                   <span style="font-family:var(--font-body);font-size:14.5px;color:var(--fg2);">{{ cardBonus.baseLabel }}</span>
@@ -752,7 +749,7 @@
               </div>
               <div style="font-family:var(--font-body);font-size:12.5px;line-height:1.4;color:{{ cardBonus.noteColor }};text-wrap:pretty;padding:0 2px;">{{ cardBonus.note }}</div>
             </div>
-            <button onClick="{{ next }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--gold-400);color:#0a0e17;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;box-shadow:0 8px 22px rgba(242,169,34,.35);">{{ cardBonus.cta }}</button>
+            <button onClick="{{ next }}" style="margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ cardBonus.cta }}</button>
           </div>
           </sc-if>
 
@@ -764,10 +761,10 @@
               <div style="flex:1;min-width:0;">
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:{{ scBanner.accent }};">{{ scBanner.role }}</div>
                 <div style="font-family:var(--font-display);font-weight:800;font-size:18px;line-height:1.1;">{{ scBanner.title }}</div>
-                <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
+                <div style="font-family: var(--font-body); font-size: 11.5px; color: var(--silver); margin-top: 1px">{{ scBanner.homeLine }}</div>
               </div>
             </div>
-            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+            <div style="display:flex;gap:6px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
               <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
               <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
             </div>
@@ -788,7 +785,7 @@
                 </button>
               </sc-for>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:9px;margin-top:11px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;gap:9px;margin-top:11px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">
               <span style="font-size:17px;color:{{ scBanner.accent }};line-height:1.2;">⚑</span>
               <span style="font-family:var(--font-body);font-size:12.5px;line-height:1.4;color:var(--fg2);text-wrap:pretty;">{{ feHint }}</span>
             </div>
@@ -806,7 +803,7 @@
                 <div style="font-family:var(--font-body);font-size:11.5px;color:var(--gold-300);margin-top:1px;">{{ scBanner.homeLine }}</div>
               </div>
             </div>
-            <div style="display:flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
+            <div style="display:flex;gap:6px;background:var(--atlas-t04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-top:10px;">
               <button onClick="{{ home.setHeld }}" style="flex:1;min-height:38px;border:none;border-radius:9px;background:{{ home.heldBg }};color:{{ home.heldFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.heldLabel }}</button>
               <button onClick="{{ home.setLost }}" style="flex:1;min-height:38px;border:1px solid {{ home.lostBorder }};border-radius:9px;background:{{ home.lostBg }};color:{{ home.lostFg }};font-family:var(--font-display);font-weight:800;font-size:13px;cursor:pointer;">{{ home.lostLabel }}</button>
             </div>
@@ -828,25 +825,25 @@
             </div>
             <sc-if value="{{ fortMoves.canSecond }}">
               <sc-if value="{{ fortMoves.atFirst }}">
-                <button onClick="{{ fortMoves.startSecond }}" style="display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;width:100%;padding:13px 16px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">
+                <button onClick="{{ fortMoves.startSecond }}" style="display: flex; align-items: center; width: 100%; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); cursor: pointer; box-shadow: var(--shadow-glow-pitch); flex-direction: column; margin-top: 11px; justify-content: center; min-height: 64px; font-family: var(--font-display); font-weight: 900; font-size: 19px">
                   <span style="font-family:var(--font-display);font-weight:900;font-size:18px;">＋ {{ fortMoves.secondCta }}</span>
                   <span style="font-family:var(--font-body);font-weight:600;font-size:11.5px;opacity:.85;">{{ fortMoves.secondSub }}</span>
                 </button>
-                <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ fortMoves.endCta }}</button>
+                <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:52px;border:1px solid var(--border-strong);border-radius:16px;background:var(--atlas-t05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">{{ fortMoves.endCta }}</button>
               </sc-if>
             </sc-if>
             <sc-if value="{{ fortMoves.locked }}">
-              <div style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;border:1px dashed var(--border-strong);border-radius:16px;background:rgba(255,255,255,.02);opacity:.7;">
-                <span style="width:34px;height:34px;flex:none;border-radius:9px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">🔒</span>
+              <div style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;border:1px dashed var(--border-strong);border-radius:16px;background:var(--atlas-t02);opacity:.7;">
+                <span style="width:34px;height:34px;flex:none;border-radius:9px;background:var(--atlas-t05);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--fg3);">🔒</span>
                 <div style="flex:1;min-width:0;">
                   <div style="font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--fg3);">{{ fortMoves.lockedCta }}</div>
                   <div style="font-family:var(--font-body);font-size:11.5px;color:#d07a7a;">{{ fortMoves.lockedSub }}</div>
                 </div>
               </div>
-              <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:56px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ fortMoves.endCta }}</button>
+              <button onClick="{{ fortMoves.end }}" style="margin-top:9px;width:100%;min-height:56px;border:none;border-radius:16px;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ fortMoves.endCta }}</button>
             </sc-if>
             <sc-if value="{{ fortMoves.atSecond }}">
-              <button onClick="{{ fortMoves.end }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ fortMoves.confirmCta }}</button>
+              <button onClick="{{ fortMoves.end }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; box-shadow: var(--shadow-glow-pitch); margin-top: 11px">{{ fortMoves.confirmCta }}</button>
             </sc-if>
           </div>
           </sc-if>
@@ -864,11 +861,11 @@
 
             <sc-if value="{{ attrSkip }}">
               <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:0 8px;">
-                <div style="width:72px;height:72px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:34px;">🛡</div>
+                <div style="width:72px;height:72px;border-radius:18px;background:var(--atlas-t05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:34px;">🛡</div>
                 <div style="font-family:var(--font-display);font-weight:900;font-size:22px;line-height:1.2;max-width:280px;">{{ t.attrSkipTitle }}</div>
                 <div style="font-family:var(--font-body);font-size:14px;color:var(--fg3);max-width:270px;">{{ t.attrSkipSub }}</div>
               </div>
-              <button onClick="{{ advanceAttr }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:62px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:18px;cursor:pointer;">{{ t.attrSkipCta }} ›</button>
+              <button onClick="{{ advanceAttr }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:62px;border:1px solid var(--border-strong);border-radius:16px;background:var(--atlas-t05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:18px;cursor:pointer;">{{ t.attrSkipCta }} ›</button>
             </sc-if>
 
             <sc-if value="{{ attrChoose }}">
@@ -885,17 +882,17 @@
               <div style="font-family:var(--font-body);font-size:12.5px;color:var(--fg3);margin:2px 2px 8px;">{{ t.attrRemoveHint }}</div>
               <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;">
                 <sc-for list="{{ attrRows }}" as="r" hint-placeholder-count="4">
-                  <div style="display:flex;align-items:center;gap:11px;background:{{ r.bg }};border:1px solid {{ r.border }};border-radius:14px;padding:9px 11px;">
+                  <div style="display: flex; align-items: center; gap: 10px; background: {{ r.bg }}; border: 1px solid {{ r.border }}; border-radius: 14px; padding: 9px 11px">
                     <span style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ attrWho.hex }};display:flex;align-items:center;justify-content:center;font-size:16px;color:{{ attrWho.on }};">{{ attrWho.sym }}</span>
                     <div style="flex:1;min-width:0;"><div style="font-family:var(--font-display);font-weight:800;font-size:15px;">{{ r.name }}</div><div style="font-family:var(--font-body);font-size:11px;color:{{ r.subc }};">{{ r.sub }}</div></div>
                     <span style="font-family:var(--font-display);font-weight:900;font-size:22px;font-variant-numeric:tabular-nums;min-width:26px;text-align:center;color:{{ r.numc }};">{{ r.armies }}</span>
-                    <button onClick="{{ r.undo }}" title="{{ t.attrUndo }}" style="width:42px;height:42px;flex:none;border-radius:11px;border:1px solid var(--border-strong);background:{{ r.undoBg }};color:{{ r.undoFg }};font-weight:700;font-size:18px;cursor:{{ r.undoCursor }};">↺</button>
+                    <button onClick="{{ r.undo }}" title="{{ t.attrUndo }}" style="width: 46px; height: 46px; flex: none; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--pitch-500); color: var(--on-pitch); font-weight: 900; font-size: 26px; cursor: {{ r.undoCursor }}">↺</button>
                     <button onClick="{{ r.remove }}" style="width:46px;height:46px;flex:none;border-radius:12px;border:none;background:{{ r.minusBg }};color:{{ r.minusFg }};font-family:var(--font-display);font-weight:900;font-size:26px;cursor:{{ r.minusCursor }};">−</button>
                   </div>
                 </sc-for>
               </div>
               <sc-if value="{{ attrReady }}">
-                <button onClick="{{ advanceAttr }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.attrConfirm }}</button>
+                <button onClick="{{ advanceAttr }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.attrConfirm }}</button>
               </sc-if>
               <sc-if value="{{ attrNotReady }}">
                 <div style="margin-top:11px;display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px dashed var(--border-strong);border-radius:16px;color:var(--fg3);font-family:var(--font-body);font-size:13.5px;text-align:center;padding:0 16px;">{{ attrRemainLabel }}</div>
@@ -909,18 +906,18 @@
           <!-- ATTRITION · WAITING FOR OTHERS -->
           <sc-if value="{{ isAttritionWait }}" hint-placeholder-val="{{ true }}">
           <div style="flex:1;display:flex;flex-direction:column;min-height:0;padding:2px 16px 16px;">
-            <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
+            <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:13px 14px;">
               <div style="width:46px;height:46px;flex:none;border-radius:12px;background:rgba(242,169,34,.14);border:1px solid var(--gold-700);display:flex;align-items:center;justify-content:center;font-size:22px;">☣</div>
               <div style="flex:1;min-width:0;"><div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.1em;">{{ t.attrWaitKicker }}</div><div style="font-family:var(--font-display);font-weight:800;font-size:20px;">{{ t.attrWaitTitle }}</div></div>
               <span style="width:11px;height:11px;flex:none;border-radius:50%;background:var(--pitch-400);animation:phDot 1.4s infinite;"></span>
             </div>
 
-            <div style="margin:14px 0 6px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:13px 15px;">
+            <div style="margin:14px 0 6px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:13px 15px;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
                 <span style="font-family:var(--font-body);font-size:13px;color:var(--fg2);">{{ attrWaitProgress }}</span>
                 <span style="font-family:var(--font-display);font-weight:900;font-size:16px;color:var(--pitch-300);">{{ attrWaitPct }}</span>
               </div>
-              <div style="height:10px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;"><div style="height:100%;width:{{ attrWaitPct }};background:linear-gradient(90deg,var(--pitch-500),var(--gold-400));border-radius:6px;transition:width .4s;"></div></div>
+              <div style="height:10px;border-radius:6px;background:var(--atlas-t06);overflow:hidden;"><div style="height:100%;width:{{ attrWaitPct }};background:linear-gradient(90deg,var(--pitch-500),var(--gold-400));border-radius:6px;transition:width .4s;"></div></div>
             </div>
 
             <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--fg3);margin:12px 2px 8px;">{{ t.attrWaitListLabel }}</div>
@@ -934,7 +931,7 @@
               </sc-for>
             </div>
             <sc-if value="{{ attrWaitMore }}">
-              <button onClick="{{ attrWaitNext }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:1px solid var(--border-strong);border-radius:16px;background:rgba(255,255,255,.05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">▸ {{ t.attrWaitNext }}</button>
+              <button onClick="{{ attrWaitNext }}" style="margin-top:11px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:1px solid var(--border-strong);border-radius:16px;background:var(--atlas-t05);color:var(--fg2);font-family:var(--font-display);font-weight:800;font-size:15px;cursor:pointer;">▸ {{ t.attrWaitNext }}</button>
             </sc-if>
             <sc-if value="{{ attrWaitDoneAll }}">
               <div style="margin-top:11px;text-align:center;font-family:var(--font-body);font-size:13px;color:var(--pitch-300);padding:14px;">✓ {{ t.attrWaitAllDone }}</div>
@@ -947,7 +944,8 @@
         <!-- ============ FULLSCREEN OVERLAYS ============ -->
         <!-- 7 DEFEND -->
         <sc-if value="{{ isDefend }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;inset:0;z-index:60;background:linear-gradient(#20080a,#0a0406);display:flex;flex-direction:column;padding:52px 22px 22px;">
+        <div style="position: absolute; inset: 0; z-index: 60; background: linear-gradient(var(--live-soft),var(--bg)); display: flex; flex-direction: column; padding: 52px 22px 22px">
+          
           <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;">
             <span style="font-family:var(--font-body);font-weight:900;text-transform:uppercase;letter-spacing:.24em;font-size:14px;color:#ff5257;animation:phLow 1s infinite;">⚔ {{ t.underAttack }}</span>
             <div style="display:flex;align-items:center;gap:12px;">
@@ -957,12 +955,13 @@
             </div>
             <div style="font-family:var(--font-display);font-weight:900;font-size:24px;line-height:1.25;max-width:300px;">{{ defendLine }}</div>
             <div style="font-family:var(--font-body);font-size:15px;color:var(--fg2);">{{ t.defendChoose }}</div>
-            <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-body);font-size:13px;color:var(--gold-400);background:rgba(242,169,34,.12);border:1px solid var(--gold-700);border-radius:999px;padding:7px 16px;">⏱ {{ t.noTimerDefend }}</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 13px; color: var(--pitch-400); background: color-mix(in srgb, var(--pitch-400) 12%, transparent); border: 1px solid var(--pitch-400); border-radius: 999px; padding: 7px 16px">⏱ {{ t.noTimerDefend }}</div>
           </div>
+          <div style="flex: none; display: flex; flex-direction: column; justify-content: flex-end; min-height: 210px">
           <sc-if value="{{ defendIdle }}">
             <div style="display:flex;gap:11px;">
-              <button onClick="{{ defendOne }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 0;border-radius:18px;border:2px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);cursor:pointer;"><span style="font-family:var(--font-display);font-weight:900;font-size:30px;">1</span><span style="font-family:var(--font-body);font-size:12px;">{{ t.defendWith1 }}</span></button>
-              <button onClick="{{ defendTwo }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 0;border-radius:18px;border:2px solid var(--pitch-600);background:rgba(132,173,40,.14);color:var(--fg1);cursor:pointer;"><span style="font-family:var(--font-display);font-weight:900;font-size:30px;color:var(--pitch-300);">2</span><span style="font-family:var(--font-body);font-size:12px;">{{ t.defendWith2 }}</span></button>
+              <button onClick="{{ defendOne }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 0;border-radius:18px;border:2px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);cursor:pointer;"><span style="font-family:var(--font-display);font-weight:900;font-size:30px;">1</span><span style="font-family:var(--font-body);font-size:12px;">{{ t.defendWith1 }}</span></button>
+              <button onClick="{{ defendTwo }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 0; border-radius: 18px; border: 2px solid var(--pitch-400); background: rgba(107,162,216,.14); color: var(--fg1); cursor: pointer"><span style="font-family: var(--font-display); font-weight: 900; font-size: 30px; color: var(--pitch-400)">2</span><span style="font-family:var(--font-body);font-size:12px;">{{ t.defendWith2 }}</span></button>
             </div>
             <div style="text-align:center;font-family:var(--font-body);font-size:11.5px;color:var(--fg3);margin-top:10px;">{{ t.defendTip }}</div>
           </sc-if>
@@ -977,15 +976,16 @@
               </div>
               <div style="font-family:var(--font-display);font-weight:900;font-size:20px;color:var(--pitch-300);animation:phPop .4s .4s both;">{{ defendResult }}</div>
               <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-top:6px;">{{ t.detailsOnTv }}</div>
-              <button onClick="{{ next }}" style="margin-top:18px;display:flex;align-items:center;justify-content:center;width:100%;min-height:60px;border-radius:16px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:17px;cursor:pointer;">{{ t.backToWait }}</button>
+              <button onClick="{{ next }}" style="margin-top:18px;display:flex;align-items:center;justify-content:center;width:100%;min-height:60px;border-radius:16px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:17px;cursor:pointer;">{{ t.backToWait }}</button>
             </div>
           </sc-if>
+          </div>
         </div>
         </sc-if>
 
         <!-- 9 ELIMINATED -->
         <sc-if value="{{ isElim }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;inset:0;z-index:60;background:radial-gradient(90% 60% at 50% 30%, #16181d, #08090c);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 26px;gap:20px;">
+        <div style="position: absolute; inset: 0; z-index: 60; background: radial-gradient(90% 60% at 50% 30%, var(--silver), var(--bg)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 26px; gap: 20px">
           <div style="width:96px;height:96px;border-radius:24px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:52px;color:{{ me.on }};opacity:.5;filter:grayscale(.5);">{{ me.sym }}</div>
           <div>
             <div style="font-family:var(--font-display);font-weight:900;font-size:34px;letter-spacing:.02em;animation:phSlam .7s both;">{{ t.elimTitle }}</div>
@@ -997,30 +997,30 @@
 
         <!-- 10 RECONNECT -->
         <sc-if value="{{ isReconnect }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;inset:0;z-index:60;background:linear-gradient(#0b1119,#070b12);display:flex;flex-direction:column;padding:60px 24px 26px;">
+        <div style="position:absolute;inset:0;z-index:60;background:linear-gradient(var(--bg),var(--bg));display:flex;flex-direction:column;padding:60px 24px 26px;">
           <sc-if value="{{ recAuto }}">
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;">
               <div style="width:64px;height:64px;border:5px solid var(--border-strong);border-top-color:var(--pitch-400);border-radius:50%;animation:phSpin 1s linear infinite;"></div>
               <div><div style="font-family:var(--font-display);font-weight:900;font-size:24px;">{{ t.recTitle }}</div><div style="font-family:var(--font-body);font-size:15px;color:var(--fg3);margin-top:8px;max-width:280px;">{{ t.recSub }}</div></div>
-              <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:12px 16px;"><span style="width:36px;height:36px;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:18px;color:{{ me.on }};">{{ me.sym }}</span><span style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ me.name }} · {{ me.cw }}</span></div>
+              <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:12px 16px;"><span style="width:36px;height:36px;border-radius:10px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:18px;color:{{ me.on }};">{{ me.sym }}</span><span style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ me.name }} · {{ me.cw }}</span></div>
             </div>
-            <button onClick="{{ recSwitch }}" style="width:100%;min-height:60px;border-radius:16px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:16px;cursor:pointer;">{{ t.recNewDevice }}</button>
+            <button onClick="{{ recSwitch }}" style="width:100%;min-height:60px;border-radius:16px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-family:var(--font-display);font-weight:800;font-size:16px;cursor:pointer;">{{ t.recNewDevice }}</button>
           </sc-if>
           <sc-if value="{{ recManual }}">
             <div style="font-family:var(--font-display);font-weight:900;font-size:24px;margin-top:6px;">{{ t.recManualTitle }}</div>
             <div style="font-family:var(--font-body);font-size:15px;color:var(--fg3);margin:8px 0 22px;">{{ t.recManualSub }}</div>
-            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid var(--gold-600);border-radius:16px;padding:16px 18px;">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t05);border:1px solid var(--gold-600);border-radius:16px;padding:16px 18px;">
               <span style="font-family:var(--font-display);font-weight:800;font-size:22px;">{{ nameValue }}</span><span style="width:3px;height:24px;background:var(--gold-400);animation:phDot 1s infinite;"></span>
             </div>
             <div style="font-family:var(--font-body);font-size:12.5px;color:var(--fg3);margin-top:12px;">{{ t.recReclaim }}</div>
-            <div style="margin-top:auto;"><button onClick="{{ recReconnect }}" style="width:100%;min-height:64px;border-radius:16px;border:none;background:var(--pitch-500);color:#04060b;font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.recReconnectBtn }}</button></div>
+            <div style="margin-top:auto;"><button onClick="{{ recReconnect }}" style="width:100%;min-height:64px;border-radius:16px;border:none;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:20px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">{{ t.recReconnectBtn }}</button></div>
           </sc-if>
         </div>
         </sc-if>
 
         <!-- WINNER (host extension) -->
         <sc-if value="{{ isWinner }}" hint-placeholder-val="{{ true }}">
-        <div style="position:absolute;inset:0;z-index:60;background:radial-gradient(95% 60% at 50% 22%, #1d1708, #0a0805 70%);display:flex;flex-direction:column;align-items:center;padding:52px 24px 24px;">
+        <div style="position: absolute; inset: 0; z-index: 60; background: radial-gradient(90% 60% at 50% 30%, var(--silver), var(--bg)); display: flex; flex-direction: column; align-items: center; padding: 52px 24px 24px">
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;">
             <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.24em;font-size:13px;color:var(--gold-400);">{{ t.winReveal }}</span>
             <div style="font-size:60px;animation:phPop .6s both;">🏆</div>
@@ -1031,13 +1031,13 @@
             <div style="font-family:var(--font-body);font-size:14px;color:var(--fg3);">{{ winSub }}</div>
           </div>
           <div style="flex:none;width:100%;display:flex;flex-direction:column;gap:12px;">
-            <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:14px 16px;">
-              <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--fg3);margin-bottom:10px;">{{ t.everyoneSees }}</div>
-              <button onClick="{{ castVote }}" style="width:100%;min-height:60px;border-radius:14px;border:none;background:{{ voteBg }};color:{{ voteFg }};font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;">{{ voteLabel }}</button>
+            <div style="background:var(--atlas-t03);border:1px solid var(--border);border-radius:16px;padding:14px 16px;">
+              
+              <button onClick="{{ castVote }}" style="width: 100%; min-height: 64px; border-radius: 16px; border: none; background: {{ reinfAddBg }}; color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 19px; cursor: pointer; margin-top: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: var(--shadow-glow-pitch)">{{ voteLabel }}</button>
               <div style="font-family:var(--font-mono);font-size:13px;color:var(--fg3);text-align:center;margin-top:8px;">{{ voteCount }}</div>
             </div>
             <div style="border:1px dashed var(--gold-600);border-radius:16px;padding:14px 16px;background:rgba(242,169,34,.06);">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--gold-400);">{{ t.hostOnly }}</span><span style="font-size:12px;">👑</span></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"></div>
               <button onClick="{{ gotoSettings }}" style="width:100%;min-height:64px;border-radius:14px;border:2px solid var(--gold-400);background:transparent;color:var(--gold-300);font-family:var(--font-display);font-weight:900;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">⚙ {{ t.setupNewGame }}</button>
               <div style="font-family:var(--font-body);font-size:12px;color:var(--fg3);text-align:center;margin-top:8px;">{{ t.setupNewGameSub }}</div>
             </div>
@@ -1048,10 +1048,10 @@
         <!-- HOST · MANAGE PANEL -->
         <sc-if value="{{ manageOpen }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0;z-index:80;background:rgba(4,6,11,.6);" onClick="{{ closeManage }}"></div>
-        <div style="position:absolute;left:0;right:0;bottom:0;z-index:81;max-height:88%;background:linear-gradient(#131a26,#0c121c);border-top:1px solid var(--gold-700);border-radius:24px 24px 0 0;box-shadow:0 -20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;animation:phSheet .3s cubic-bezier(.2,.8,.3,1) both;">
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 81; max-height: 88%; background: var(--atlas-panel); border-top: 1px solid var(--gold-700); border-radius: 24px 24px 0 0; box-shadow: 0 -20px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; animation: phSheet .3s cubic-bezier(.2,.8,.3,1) both">
           <div style="flex:none;padding:14px 20px 8px;display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:20px;">⚙</span><span style="font-family:var(--font-display);font-weight:900;font-size:20px;">{{ t.manageTitle }}</span><span style="font-family:var(--font-body);font-weight:800;font-size:10px;letter-spacing:.08em;color:#0a0e17;background:var(--gold-400);padding:2px 8px;border-radius:6px;">{{ t.hostBadge }}</span></div>
-            <button onClick="{{ closeManage }}" style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-size:20px;cursor:pointer;">✕</button>
+            <button onClick="{{ closeManage }}" style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-size:20px;cursor:pointer;">✕</button>
           </div>
           <div style="flex:1;min-height:0;overflow-y:auto;padding:2px 20px 26px;">
             <div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-bottom:14px;">{{ t.manageSub }}</div>
@@ -1065,7 +1065,7 @@
                   </div>
                   <sc-if value="{{ p.absent }}">
                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                      <span style="font-family:var(--font-body);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:{{ p.apLabelc }};">{{ t.autoPass }}</span>
+                      <span style="font-family: var(--font-body); font-weight: 700; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg3)">{{ t.autoPass }}</span>
                       <button onClick="{{ p.toggleAP }}" style="position:relative;width:52px;height:30px;flex:none;border-radius:999px;border:none;padding:0;background:{{ p.apTrackBg }};cursor:pointer;"><span style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .15s;transform:translateX({{ p.apKnobX }});"></span></button>
                     </div>
                   </sc-if>
@@ -1081,11 +1081,11 @@
 
         <!-- ============ TAB SHEET ============ -->
         <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-        <div style="position:absolute;inset:0;z-index:70;background:rgba(4,6,11,.6);" onClick="{{ closeSheet }}"></div>
-        <div style="position:absolute;left:0;right:0;bottom:0;z-index:71;max-height:82%;background:linear-gradient(#131a26,#0c121c);border-top:1px solid var(--border-strong);border-radius:24px 24px 0 0;box-shadow:0 -20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;animation:phSheet .3s cubic-bezier(.2,.8,.3,1) both;">
+        <div style="position: absolute; inset: 0; z-index: 70; background: rgba(4,6,11,.6)" onClick="{{ closeSheet }}"></div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 71; max-height: 82%; background: var(--atlas-panel); border-top: 1px solid var(--border-strong); border-radius: 24px 24px 0 0; box-shadow: 0 -20px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; animation: phSheet .3s cubic-bezier(.2,.8,.3,1) both">
           <div style="flex:none;padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;">
             <span style="font-family:var(--font-display);font-weight:900;font-size:20px;">{{ sheetTitle }}</span>
-            <button onClick="{{ closeSheet }}" style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border-strong);background:rgba(255,255,255,.05);color:var(--fg1);font-size:20px;cursor:pointer;">✕</button>
+            <button onClick="{{ closeSheet }}" style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border-strong);background:var(--atlas-t05);color:var(--fg1);font-size:20px;cursor:pointer;">✕</button>
           </div>
           <div style="flex:1;min-height:0;overflow-y:auto;padding:4px 20px 26px;">
             <!-- cards -->
@@ -1103,14 +1103,14 @@
             <!-- mission -->
             <sc-if value="{{ sheetMission }}">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><span style="font-size:15px;color:var(--gold-400);">🔒</span><span style="font-family:var(--font-body);font-size:13px;color:var(--fg3);">{{ t.missionPrivate }}</span></div>
-              <div style="background:linear-gradient(#1b2333,#141b28);border:1px solid var(--gold-700);border-radius:18px;padding:22px 20px;">
+              <div style="background: var(--atlas-card); border: 1px solid var(--gold-700); border-radius: 18px; padding: 22px 20px">
                 <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--gold-400);">{{ t.yourMission }}</div>
                 <div style="font-family:var(--font-display);font-weight:900;font-size:24px;line-height:1.2;margin:10px 0 12px;">{{ missionName }}</div>
                 <div style="font-family:var(--font-body);font-size:15px;color:var(--fg2);line-height:1.4;">{{ missionDesc }}</div>
               </div>
-              <div style="margin-top:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span style="font-family:var(--font-body);font-size:13px;color:var(--fg3);">{{ t.progress }}</span><span style="font-family:var(--font-display);font-weight:800;font-size:14px;color:var(--gold-300);">{{ missionProgress }}</span></div>
-                <div style="height:10px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;"><div style="height:100%;width:{{ missionPct }};background:linear-gradient(90deg,var(--pitch-500),var(--gold-400));border-radius:6px;"></div></div>
+              <div style="margin-top:14px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span style="font-family:var(--font-body);font-size:13px;color:var(--fg3);">{{ t.progress }}</span><span style="font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--gold-700)">{{ missionProgress }}</span></div>
+                <div style="height:10px;border-radius:6px;background:var(--atlas-t06);overflow:hidden;"><div style="height:100%;width:{{ missionPct }};background:linear-gradient(90deg,var(--pitch-500),var(--gold-400));border-radius:6px;"></div></div>
               </div>
             </sc-if>
             <!-- info -->
@@ -1138,22 +1138,27 @@
   <!-- ============ DEMO CONTROL BAR ============ -->
   <sc-if value="{{ showBar }}" hint-placeholder-val="{{ true }}">
   <div style="flex:none;height:74px;background:rgba(8,11,18,.94);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:var(--font-body);">
-    <div style="display:flex;align-items:center;gap:12px;min-width:300px;">
-      <button onClick="{{ prev }}" style="cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--border-strong);color:var(--fg1);font-family:var(--font-display);font-weight:700;font-size:15px;padding:10px 16px;border-radius:10px;">‹ {{ t.prev }}</button>
-      <button onClick="{{ next }}" style="cursor:pointer;background:var(--pitch-500);border:none;color:#04060b;font-family:var(--font-display);font-weight:800;font-size:15px;padding:10px 18px;border-radius:10px;">{{ t.next }} ›</button>
+    <div style="display:flex;align-items:center;gap:12px;flex:none;">
+      <button onClick="{{ prev }}" style="cursor:pointer;background:var(--atlas-t05);border:1px solid var(--border-strong);color:var(--fg1);font-family:var(--font-display);font-weight:700;font-size:15px;padding:10px 16px;border-radius:10px;">‹ {{ t.prev }}</button>
+      <button onClick="{{ next }}" style="cursor:pointer;background:var(--pitch-500);border:none;color:var(--on-pitch);font-family:var(--font-display);font-weight:800;font-size:15px;padding:10px 18px;border-radius:10px;">{{ t.next }} ›</button>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;">
+    <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0;justify-content:center;">
       <span style="font-family:var(--font-mono);font-size:14px;color:var(--fg3);white-space:nowrap;">{{ stateNum }} / {{ total }}</span>
       <div style="display:flex;gap:7px;">
         <sc-for list="{{ dots }}" as="d" hint-placeholder-count="15">
           <button onClick="{{ d.go }}" title="{{ d.name }}" style="cursor:pointer;width:11px;height:11px;padding:0;border-radius:50%;border:none;background:{{ d.color }};"></button>
         </sc-for>
       </div>
-      <span style="font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--fg1);min-width:220px;">{{ stateName }}</span>
+      <span style="font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--fg1);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ stateName }}</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;min-width:300px;justify-content:flex-end;">
+    <div style="display:flex;align-items:center;gap:14px;flex:none;justify-content:flex-end;">
+      <button onClick="{{ toggleTheme }}" title="{{ t.themeLabel }}" style="cursor:pointer;position:relative;width:82px;height:38px;border-radius:999px;border:1px solid var(--border-strong);background:var(--atlas-t04);padding:0;">
+        <span style="position:absolute;top:3px;left:{{ themeKnobLeft }};width:38px;height:30px;border-radius:999px;background:var(--pitch-500);transition:left .18s ease;"></span>
+        <span style="position:absolute;top:0;left:0;width:41px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px;color:{{ themeSunColor }};">☀</span>
+        <span style="position:absolute;top:0;left:41px;width:41px;height:38px;display:flex;align-items:center;justify-content:center;font-size:15px;color:{{ themeMoonColor }};">☾</span>
+      </button>
       <span style="font-family:var(--font-body);font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.1em;">{{ t.langLabel }}</span>
-      <button onClick="{{ toggleLang }}" style="cursor:pointer;position:relative;width:112px;height:38px;border-radius:999px;border:1px solid var(--border-strong);background:rgba(255,255,255,.04);padding:0;">
+      <button onClick="{{ toggleLang }}" style="cursor:pointer;position:relative;width:112px;height:38px;border-radius:999px;border:1px solid var(--border-strong);background:var(--atlas-t04);padding:0;">
         <sc-if value="{{ isNL }}"><span style="position:absolute;top:3px;left:3px;width:53px;height:30px;border-radius:999px;background:var(--pitch-500);"></span></sc-if>
         <sc-if value="{{ isEN }}"><span style="position:absolute;top:3px;left:56px;width:53px;height:30px;border-radius:999px;background:var(--secondary-fill);"></span></sc-if>
         <span style="position:absolute;top:0;left:0;width:56px;height:38px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:14px;color:{{ nlColor }};">NL</span>
@@ -1164,12 +1169,12 @@
   </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:940},&quot;language&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nl&quot;,&quot;en&quot;],&quot;default&quot;:&quot;nl&quot;,&quot;tsType&quot;:&quot;'nl'|'en'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;roleAssign&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;choose&quot;,&quot;random&quot;],&quot;default&quot;:&quot;choose&quot;,&quot;tsType&quot;:&quot;'choose'|'random'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;showControlBar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:940},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;language&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nl&quot;,&quot;en&quot;],&quot;default&quot;:&quot;nl&quot;,&quot;tsType&quot;:&quot;'nl'|'en'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;roleAssign&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;choose&quot;,&quot;random&quot;],&quot;default&quot;:&quot;choose&quot;,&quot;tsType&quot;:&quot;'choose'|'random'&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;showControlBar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
   constructor(props){
     super(props);
     this.state = {
-      i: 0, lang: (props && props.language) || 'nl',
+      i: 0, lang: (props && props.language) || 'nl', theme: (props && props.theme) || 'dark',
       join: 0, colorPick: 1, rolePick: null, tab: null,
       orderRolled: false,
       claimSel: null, claimedIds: {}, claimCounts: [6,5,6,6,5,5], claimMine: true,
@@ -1304,7 +1309,7 @@ class Component extends DCLogic {
   get ABSENT(){ return {2:true, 4:true}; }
 
   get STR(){ return {
-    nl:{ next:'Volgende', prev:'Vorige', roll:'Gooi', confirm:'Bevestig', langLabel:'Taal', taken:'bezet', you:'jij', hostBadge:'HOST',
+    nl:{ next:'Volgende', prev:'Vorige', roll:'Gooi', confirm:'Bevestig', langLabel:'Taal', themeLabel:'Licht / donker', taken:'bezet', you:'jij', hostBadge:'HOST',
       appTagline:'Verover de wereld — één telefoon per veldheer.', startNew:'Nieuw spel starten', startNewSub:'Jij wordt de host en stelt het spel in.', startJoin:'Deelnemen aan een spel', startJoinSub:'Scan de QR-code op de TV.', startFoot:'2 t/m 7 spelers · lokaal netwerk',
       setKicker:'Nieuw spel', setTitle:'Instellingen', grpRules:'Spelregels', grpExtras:'Extra spelelementen',
       setMap:'Kaart', setMapSub:'Bepaalt het aantal gebieden en de continentbonussen — kies daarom als eerste.', mapTerr:'gebieden', mapCont:'continenten', mapSoon:'binnenkort', mapUnavailable:'niet beschikbaar', mapSelected:'geselecteerd', mapPicker:'Kaartvariant kiezen', mapLockedNote:'De kaart ligt vast zodra het spel is gestart.', mapLoading:'Kaartvarianten laden…', mapErrTitle:'Kaartvarianten niet geladen', mapErrSub:'De server kon geen kaartvarianten aanleveren.', mapErrCta:'Geen kaart beschikbaar — spel kan niet worden aangemaakt.', mapRetry:'Opnieuw proberen', mapDemoLabel:'Demo-toestand', mapDemoDefault:'Standaard', mapDemoMulti:'Meerdere', mapDemoLoading:'Laden', mapDemoError:'Fout', mapDemoLocked:'Vergrendeld',
@@ -1342,7 +1347,7 @@ class Component extends DCLogic {
       attrWaitKicker:'Gebeurtenis wordt verwerkt', attrWaitTitle:'Wachten op anderen', attrWaitListLabel:'Spelers die nog moeten kiezen', attrWaitChosen:'Klaar', attrWaitStillChoosing:'Nog aan het kiezen', attrWaitNext:'Volgende speler bevestigt (demo)', attrWaitAllDone:'Iedereen heeft gekozen — het spel gaat verder.',
       timerTurn:'Beurttijd', timerFortify:'Verplaatsen', paused:'Gepauzeerd',
       states:['Start','Instellingen','Wachten op spelers','Joinen','Volgorde dobbelen','Gebied claimen','Startopstelling','Niet aan de beurt','Versterken','Kaartenset inleveren','Aanvallen','Verovering','Verdedigen','Legers verwijderen','Wachten op anderen','Verplaatsen','Roleffect · door vijand','Roleffect · 2× verplaatsen','Uitgeschakeld','Opnieuw verbinden','Winnaar'] },
-    en:{ next:'Next', prev:'Back', roll:'Roll', confirm:'Confirm', langLabel:'Lang', taken:'taken', you:'you', hostBadge:'HOST',
+    en:{ next:'Next', prev:'Back', roll:'Roll', confirm:'Confirm', langLabel:'Lang', themeLabel:'Light / dark', taken:'taken', you:'you', hostBadge:'HOST',
       appTagline:'Conquer the world — one phone per commander.', startNew:'Start a new game', startNewSub:'You become the host and set it up.', startJoin:'Join a game', startJoinSub:'Scan the QR code on the TV.', startFoot:'2–7 players · local network',
       setKicker:'New game', setTitle:'Settings', grpRules:'Game rules', grpExtras:'Extra game elements',
       setMap:'Map', setMapSub:'Sets the number of territories and continent bonuses — so pick it first.', mapTerr:'territories', mapCont:'continents', mapSoon:'coming soon', mapUnavailable:'unavailable', mapSelected:'selected', mapPicker:'Choose map variant', mapLockedNote:'The map is locked once the game has started.', mapLoading:'Loading map variants…', mapErrTitle:'Map variants failed to load', mapErrSub:'The server could not supply any map variants.', mapErrCta:'No map available — game cannot be created.', mapRetry:'Try again', mapDemoLabel:'Demo state', mapDemoDefault:'Default', mapDemoMulti:'Multiple', mapDemoLoading:'Loading', mapDemoError:'Error', mapDemoLocked:'Locked',
@@ -1473,6 +1478,7 @@ class Component extends DCLogic {
   closeSheet = () => this.setState({ tab:null });
 
   fmtTime(sec){ return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
 
   renderVals(){
     const i=this.state.i, lang=this.state.lang, L=lang==='nl'?0:1, t=this.STR[lang];
@@ -1521,7 +1527,7 @@ class Component extends DCLogic {
 
     // ---------- settings ----------
     const S=this.state.settings;
-    const sw=(on)=>({ trackBg: on?'var(--pitch-500)':'rgba(255,255,255,.12)', knobX: on?'22px':'0px' });
+    const sw=(on)=>({ trackBg: on?'var(--pitch-500)':'var(--atlas-t12)', knobX: on?'22px':'0px' });
 
     // ---- map variant ----
     const md=this.state.mapDemo;
@@ -1536,7 +1542,7 @@ class Component extends DCLogic {
         cursor: (available && !mapLockedView) ? 'pointer' : (available?'default':'not-allowed'),
         op: available?1:0.5,
         border: selected ? 'var(--pitch-500)' : 'var(--border)',
-        bg: selected ? 'rgba(132,173,40,.12)' : (available?'rgba(255,255,255,.03)':'rgba(255,255,255,.02)'),
+        bg: selected ? 'rgba(132,173,40,.12)' : (available?'var(--atlas-t03)':'var(--atlas-t02)'),
         silFill: selected ? 'var(--pitch-400)' : 'var(--fg3)',
         showCheck: selected, showSoon: !available,
         ariaChecked: selected ? 'true':'false',
@@ -1546,10 +1552,10 @@ class Component extends DCLogic {
     const mapRowsShown = mapLockedView ? mapRows.filter(r=>r.selected) : mapRows;
     const mapSkeleton=[0,1,2];
     const mapDemoOpts=[['default',t.mapDemoDefault],['multi',t.mapDemoMulti],['loading',t.mapDemoLoading],['error',t.mapDemoError],['locked',t.mapDemoLocked]].map(([v,label])=>({ label, pick:()=>this.setMapDemo(v),
-      bg: md===v?'var(--gold-400)':'rgba(255,255,255,.04)', color: md===v?'#0a0e17':'var(--fg3)', border: md===v?'var(--gold-400)':'var(--border-strong)' }));
+      bg: md===v?'var(--gold-400)':'var(--atlas-t04)', color: md===v?'#0a0e17':'var(--fg3)', border: md===v?'var(--gold-400)':'var(--border-strong)' }));
     const createBlocked=mapError;
     const createBg = createBlocked?'var(--border-strong)':'var(--pitch-500)';
-    const createFg = createBlocked?'var(--fg3)':'#04060b';
+    const createFg = createBlocked?'var(--fg3)':'var(--on-pitch)';
     const createCursor = createBlocked?'not-allowed':'pointer';
     const createShadow = createBlocked?'none':'0 8px 22px rgba(132,173,40,.3)';
 
@@ -1558,14 +1564,14 @@ class Component extends DCLogic {
       Object.assign({ key:'winMis', label:t.setMissions, sub:t.setMissionsSub, toggle:()=>this.toggleSetting('winMis') }, sw(S.winMis)),
     ];
     const layoutOpts=[['random',t.layoutRandom],['claim',t.layoutClaim]].map(([v,label])=>{ const selo=S.layout===v; return { label, pick:()=>this.setLayout(v),
-      border: selo?'var(--pitch-500)':'var(--border)', bg: selo?'rgba(132,173,40,.14)':'rgba(255,255,255,.03)', color: selo?'var(--fg1)':'var(--fg3)' }; });
+      border: selo?'var(--pitch-500)':'var(--border)', bg: selo?'rgba(132,173,40,.14)':'var(--atlas-t03)', color: selo?'var(--fg1)':'var(--fg3)' }; });
     const startArmies=S.startArmies;
     const armiesSub = lang==='nl'?`Per speler · 6 spelers aan tafel`:`Per player · 6 players at the table`;
     const timerVal=this.fmtTime(S.timerSec);
     const extraRows=[
-      Object.assign({ key:'roles', icon:'🎖', label:t.setRoles, sub:t.setRolesSub, soon:false, op:1, cursor:'pointer', rowbg:'rgba(255,255,255,.03)', rowborder:'var(--border)', toggle:()=>this.toggleSetting('roles') }, sw(S.roles)),
-      Object.assign({ key:'events', icon:'🎴', label:t.setEvents, sub:t.setEventsSub, soon:false, op:1, cursor:'pointer', rowbg:'rgba(255,255,255,.03)', rowborder:'var(--border)', toggle:()=>this.toggleSetting('events') }, sw(S.events)),
-      { key:'future', icon:'🤝', label:t.setFuture, sub:t.setFutureSub, soon:true, op:0.5, cursor:'not-allowed', rowbg:'rgba(255,255,255,.02)', rowborder:'var(--border)', toggle:()=>{}, trackBg:'rgba(255,255,255,.06)', knobX:'0px' },
+      Object.assign({ key:'roles', icon:'🎖', label:t.setRoles, sub:t.setRolesSub, soon:false, op:1, cursor:'pointer', rowbg:'var(--atlas-t03)', rowborder:'var(--border)', toggle:()=>this.toggleSetting('roles') }, sw(S.roles)),
+      Object.assign({ key:'events', icon:'🎴', label:t.setEvents, sub:t.setEventsSub, soon:false, op:1, cursor:'pointer', rowbg:'var(--atlas-t03)', rowborder:'var(--border)', toggle:()=>this.toggleSetting('events') }, sw(S.events)),
+      { key:'future', icon:'🤝', label:t.setFuture, sub:t.setFutureSub, soon:true, op:0.5, cursor:'not-allowed', rowbg:'var(--atlas-t02)', rowborder:'var(--border)', toggle:()=>{}, trackBg:'var(--atlas-t06)', knobX:'0px' },
     ];
 
     // ---------- waiting ----------
@@ -1574,7 +1580,7 @@ class Component extends DCLogic {
     const canAddWait=waitCount<6;
     const ready=waitCount>=2;
     const startGameBg = ready?'var(--pitch-500)':'var(--border-strong)';
-    const startGameFg = ready?'#04060b':'var(--fg3)';
+    const startGameFg = ready?'var(--on-pitch)':'var(--fg3)';
     const startGameCursor = ready?'pointer':'not-allowed';
     const startGameShadow = ready?'0 8px 22px rgba(132,173,40,.3)':'none';
     const startGameLabel = ready?t.startGameReady:t.startGameWait;
@@ -1584,9 +1590,9 @@ class Component extends DCLogic {
     const managePlayers=P.map((p,idx)=>{ const c=C[p.c]; const absent=!!this.ABSENT[idx]; const ap=!!this.state.autoPass[idx];
       return { hex:c.hex, on:c.on, sym:c.sym, name:p.name, isHost: idx===this.ME, absent, present:!absent,
         status: absent? t.statusAbsent : t.statusPresent, statusc: absent?'#ff9a4d':'var(--pitch-300)', statusDot: absent?'#ff9a4d':'var(--pitch-400)',
-        rowbg: absent?'rgba(255,154,77,.06)':'rgba(255,255,255,.03)', rowborder: absent?'var(--gold-700)':'var(--border)',
+        rowbg: absent?'rgba(255,154,77,.06)':'var(--atlas-t03)', rowborder: absent?'var(--gold-700)':'var(--border)',
         toggleAP:()=>this.toggleAutoPass(idx), apLabelc: ap?'var(--pitch-300)':'var(--fg3)',
-        apTrackBg: ap?'var(--pitch-500)':'rgba(255,255,255,.12)', apKnobX: ap?'22px':'0px' }; });
+        apTrackBg: ap?'var(--pitch-500)':'var(--atlas-t12)', apKnobX: ap?'22px':'0px' }; });
 
     // ---------- join ----------
     const roleChoose=(this.state.settings.roles!==false)&&((this.props.roleAssign??'choose')==='choose');
@@ -1601,7 +1607,7 @@ class Component extends DCLogic {
     const roleChips=R.map((r,idx)=>{ const taken=!!roleTakenSet[idx]; const sel=this.state.rolePick===idx&&!taken;
       return { name:r.name[L], origin:r.origin[L], desc:r.desc[L], sym:r.sym, taken, sel,
         border: sel?'var(--pitch-500)':(taken?'var(--border)':'var(--border-strong)'),
-        bg: sel?'rgba(33,92,15,.16)':(taken?'rgba(255,255,255,.02)':'rgba(255,255,255,.04)'),
+        bg: sel?'rgba(33,92,15,.16)':(taken?'var(--atlas-t02)':'var(--atlas-t04)'),
         op: taken?0.42:1, cursor: taken?'not-allowed':'pointer',
         pick: taken?(()=>{}):(()=>this.pickRole(idx)) }; });
     const mySelRole=(roleChoose && !roleTakenSet[this.state.rolePick] && this.state.rolePick!=null && this.state.rolePick!==-1) ? R[this.state.rolePick] : null;
@@ -1612,7 +1618,7 @@ class Component extends DCLogic {
       return { label:c.cw[L], hex:c.hex, on:c.on, sym:c.sym, taken, sel,
         pick: taken?(()=>{}):(()=>this.pickColor(idx)),
         cursor: taken?'not-allowed':'pointer', op: taken?0.4:1,
-        border: sel?'var(--pitch-500)':'var(--border)', bg: sel?'rgba(132,173,40,.12)':'rgba(255,255,255,.04)' }; });
+        border: sel?'var(--pitch-500)':'var(--border)', bg: sel?'rgba(132,173,40,.12)':'var(--atlas-t04)' }; });
 
     // ---------- order ----------
     const orderRolled=this.state.orderRolled, orderIdle=!orderRolled;
@@ -1620,18 +1626,18 @@ class Component extends DCLogic {
 
     // ---------- claim ----------
     const claimMine=this.state.claimMine;
-    const claimGroups=this.CLAIMPOOL.map(g=>({ cont:g.cont[L], terrs:g.t.filter(x=>!this.state.claimedIds[x.id]).map(x=>{ const sel=this.state.claimSel===x.id; return { id:x.id, name:x[lang], sel, pick:()=>this.selectClaim(x.id), selBg: sel?'rgba(242,169,34,.14)':'rgba(255,255,255,.04)', selBorder: sel?'var(--gold-400)':'var(--border)' }; }) })).filter(g=>g.terrs.length>0);
+    const claimGroups=this.CLAIMPOOL.map(g=>({ cont:g.cont[L], terrs:g.t.filter(x=>!this.state.claimedIds[x.id]).map(x=>{ const sel=this.state.claimSel===x.id; return { id:x.id, name:x[lang], sel, pick:()=>this.selectClaim(x.id), selBg: sel?'rgba(242,169,34,.14)':'var(--atlas-t04)', selBorder: sel?'var(--gold-400)':'var(--border)' }; }) })).filter(g=>g.terrs.length>0);
     const claimFree=this.claimFreeCount();
     const claimSelName=(()=>{ if(!this.state.claimSel) return ''; for(const g of this.CLAIMPOOL){ for(const x of g.t){ if(x.id===this.state.claimSel) return x[lang]; } } return ''; })();
     const claimConfirmLabel=claimSelName?`${t.claimConfirm} ${claimSelName}`:t.claimConfirm;
     const claimHasSel=!!this.state.claimSel;
     const claimActive=Object.assign(pc(3), {});
-    const claimBoard=P.map((p,idx)=>{ const c=C[p.c]; const isMe=idx===this.ME; return { hex:c.hex, on:c.on, sym:c.sym, name:p.name, count:this.state.claimCounts[idx], isMe, rowbg: isMe?'rgba(33,92,156,.16)':'rgba(255,255,255,.03)', rowborder: isMe?'var(--secondary)':'var(--border)' }; });
+    const claimBoard=P.map((p,idx)=>{ const c=C[p.c]; const isMe=idx===this.ME; return { hex:c.hex, on:c.on, sym:c.sym, name:p.name, count:this.state.claimCounts[idx], isMe, rowbg: isMe?'rgba(33,92,156,.16)':'var(--atlas-t03)', rowborder: isMe?'var(--secondary)':'var(--border)' }; });
 
     // ---------- setup ----------
     const setupPool=this.state.setupPool;
     const setupList = MINE.slice(0,6).map(m=>({ name:tn(m.id), armies:m.a+(this.state.setupPlaced[m.id]||0), add:()=>this.addSetup(m.id) }));
-    const setupAddBg = setupPool>0?'var(--gold-400)':'var(--border-strong)';
+    const setupAddBg = setupPool>0?'var(--pitch-500)':'var(--border-strong)';
     const setupCursor = setupPool>0?'pointer':'not-allowed';
 
     // ---------- reinforce ----------
@@ -1667,7 +1673,7 @@ class Component extends DCLogic {
     const maxDice=Math.min(3, srcArmies-1);
     const diceOptions=[1,2,3].map(n=>{ const dis=n>maxDice; const selD=this.state.diceN===n&&!dis;
       return { n, word: n===1?t.defendWith1:t.defendWith2, pick: dis?(()=>{}):(()=>this.setDice(n)),
-        border: selD?'var(--gold-400)':'var(--border)', bg: selD?'rgba(242,169,34,.14)':(dis?'rgba(255,255,255,.02)':'rgba(255,255,255,.04)'),
+        border: selD?'var(--gold-400)':'var(--border)', bg: selD?'rgba(242,169,34,.14)':(dis?'var(--atlas-t02)':'var(--atlas-t04)'),
         numc: dis?'var(--fg3)':(selD?'var(--gold-300)':'var(--fg1)'), labelc: dis?'var(--fg3)':'var(--fg2)' }; });
     const diceHint = lang==='nl'?`Max ${maxDice} — je hebt ${srcArmies} legers in ${srcName} (1 blijft altijd staan).`:`Max ${maxDice} — you have ${srcArmies} armies in ${srcName} (1 always stays).`;
     const rerollUsed = this.state.reroll===1;
@@ -1765,7 +1771,7 @@ class Component extends DCLogic {
       {name:lang==='nl'?'Oost-Afrika':'East Africa', path:lang==='nl'?'via Congo (vijandelijk)':'via Congo (enemy)', special:true, enabled:homeHeld},
     ].map(d=>({ name:d.name, path:d.path, special:d.special, enabled:d.enabled,
       border: d.special ? (d.enabled?scAccent:'var(--border)') : 'var(--border)',
-      bg: d.special ? (d.enabled?scAccent+'22':'rgba(255,255,255,.02)') : 'rgba(255,255,255,.04)',
+      bg: d.special ? (d.enabled?scAccent+'22':'var(--atlas-t02)') : 'var(--atlas-t04)',
       op: d.enabled?1:0.55, cursor: d.enabled?'pointer':'not-allowed',
       icon: d.special?'⚑':'›', iconColor: d.special?(d.enabled?scAccent:'var(--fg3)'):'var(--fg3)',
       showTag: d.special, tag: d.enabled ? (lang==='nl'?'Smokkelaar':'Smuggler') : (lang==='nl'?'Vereist herkomstland':'Needs home country'),
@@ -1802,7 +1808,7 @@ class Component extends DCLogic {
     const voted=this.state.voted;
     const voteLabel = voted ? (lang==='nl'?'✓ Je stem is uitgebracht':'✓ Your vote is in') : (lang==='nl'?'Opnieuw spelen':'Play again');
     const voteBg = voted?'rgba(132,173,40,.16)':'var(--pitch-500)';
-    const voteFg = voted?'var(--pitch-300)':'#04060b';
+    const voteFg = voted?'var(--pitch-300)':'var(--on-pitch)';
     const voteCount = (voted? (lang==='nl'?'4 van 6 willen opnieuw':'4 of 6 want a rematch') : (lang==='nl'?'3 van 6 willen opnieuw':'3 of 6 want a rematch'));
 
     // ---------- reconnect ----------
@@ -1815,14 +1821,14 @@ class Component extends DCLogic {
     const tabDefs=[ {k:'cards',icon:'🃏',label:t.tabCards,hint: lang==='nl'?'5 kaarten · inleg verplicht':'5 cards · trade required'},
                     {k:'mission',icon:'🎯',label:t.tabMission,hint: lang==='nl'?'Geheim — alleen jij':'Secret — you only'},
                     {k:'info',icon:'📊',label:t.tabInfo,hint: lang==='nl'?'Ranglijst & continenten':'Standings & continents'} ];
-    const tabStrip=tabDefs.map(d=>({ icon:d.icon, label:d.label, open:()=>this.openTab(d.k), border: tab===d.k?'var(--gold-600)':'var(--border)', bg: tab===d.k?'rgba(242,169,34,.12)':'rgba(255,255,255,.03)', color: tab===d.k?'var(--gold-300)':'var(--fg2)' }));
+    const tabStrip=tabDefs.map(d=>({ icon:d.icon, label:d.label, open:()=>this.openTab(d.k), border: tab===d.k?'var(--gold-600)':'var(--border)', bg: tab===d.k?'rgba(242,169,34,.12)':'var(--atlas-t03)', color: tab===d.k?'var(--gold-300)':'var(--fg2)' }));
     const tabCards=tabDefs.map(d=>({ icon:d.icon, label:d.label, hint:d.hint, open:()=>this.openTab(d.k) }));
 
     // card data
     const cardTypes = { inf:['Infanterie','Infantry','♟'], cav:['Cavalerie','Cavalry','♞'], art:['Artillerie','Artillery','♜'], wild:['Joker','Wild','★'] };
     const cardData=[ {terr:'oekraine',ty:'inf',own:false},{terr:'scandinavie',ty:'cav',own:true},{terr:'brazilie',ty:'art',own:true},{terr:'egypte',ty:'inf',own:false},{terr:'india',ty:'cav',own:false} ];
     const myCards=cardData.map(c=>{ const ty=cardTypes[c.ty]; return { terr: (TN[c.terr]?TN[c.terr][L]:(c.terr[0].toUpperCase()+c.terr.slice(1))), type:ty[L], icon:ty[2], owned:c.own,
-      border: c.own?'var(--pitch-600)':'var(--border)', bg: c.own?'rgba(132,173,40,.08)':'rgba(255,255,255,.03)', typec: c.own?'var(--pitch-300)':'var(--fg3)' }; });
+      border: c.own?'var(--pitch-600)':'var(--border)', bg: c.own?'rgba(132,173,40,.08)':'var(--atlas-t03)', typec: c.own?'var(--pitch-300)':'var(--fg3)' }; });
 
     // mission
     const missionName = lang==='nl'?'Verover Europa en Zuid-Amerika':'Conquer Europe and South America';
@@ -1834,7 +1840,7 @@ class Component extends DCLogic {
     const ranked=[...P].map((p,idx)=>({idx,p,c:C[p.c]})).sort((a,b)=>b.p.terr-a.p.terr);
     const infoRows=ranked.map((r,rk)=>({ rank:rk+1, hex:r.c.hex, on:r.c.on, sym:r.c.sym, name:r.p.name, terr:r.p.terr, army:r.p.army,
       conts: r.p.conts[L]==='—'?(lang==='nl'?'geen continent':'no continent'):r.p.conts[L],
-      isMe:r.idx===this.ME, bg: r.idx===this.ME?'rgba(33,92,156,.16)':(rk===0?'rgba(242,169,34,.08)':'rgba(255,255,255,.03)'),
+      isMe:r.idx===this.ME, bg: r.idx===this.ME?'rgba(33,92,156,.16)':(rk===0?'rgba(242,169,34,.08)':'var(--atlas-t03)'),
       border: r.idx===this.ME?'var(--secondary)':(rk===0?'var(--gold-700)':'var(--border)') }));
 
     // ---------- attrition ----------
@@ -1853,11 +1859,11 @@ class Component extends DCLogic {
       return { name:x[lang], armies, removed,
         sub: removed>0 ? (lang==='nl'?`−${removed} weggehaald · start ${x.a}`:`−${removed} removed · was ${x.a}`) : (lang==='nl'?`${x.a} legers`:`${x.a} armies`),
         subc: removed>0?'#ff7a3d':'var(--fg3)', numc: removed>0?'#ff9a6a':'var(--fg1)',
-        bg: removed>0?'rgba(220,80,60,.08)':'rgba(255,255,255,.04)', border: removed>0?'#7a3b30':'var(--border)',
+        bg: removed>0?'rgba(220,80,60,.08)':'var(--atlas-t04)', border: removed>0?'#7a3b30':'var(--border)',
         remove: canRemove?(()=>this.attrRemove(x.id)):(()=>{}),
         undo: removed>0?(()=>this.attrUndo(x.id)):(()=>{}),
-        minusBg: canRemove?'#c0392b':'rgba(255,255,255,.06)', minusFg: canRemove?'#fff':'var(--fg3)', minusCursor: canRemove?'pointer':'not-allowed',
-        undoBg: removed>0?'rgba(255,255,255,.05)':'transparent', undoFg: removed>0?'var(--fg1)':'var(--fg3)', undoCursor: removed>0?'pointer':'not-allowed' }; });
+        minusBg: canRemove?'#c0392b':'var(--atlas-t06)', minusFg: canRemove?'#fff':'var(--fg3)', minusCursor: canRemove?'pointer':'not-allowed',
+        undoBg: removed>0?'var(--atlas-t05)':'transparent', undoFg: removed>0?'var(--fg1)':'var(--fg3)', undoCursor: removed>0?'pointer':'not-allowed' }; });
     const attrRemainLabel = lang==='nl' ? `Verwijder nog ${attrLeft} ${attrLeft===1?'leger':'legers'}` : `Remove ${attrLeft} more ${attrLeft===1?'army':'armies'}`;
     const attrEffect=this.ATTR.effect[L];
     const attrDemoLabel = lang==='nl' ? `Demo · speler ${Math.min(this.state.attrIdx+1, attrReactors.length)} van ${attrReactors.length} — bevestig om de volgende te bekijken` : `Demo · player ${Math.min(this.state.attrIdx+1, attrReactors.length)} of ${attrReactors.length} — confirm to see the next`;
@@ -1866,7 +1872,7 @@ class Component extends DCLogic {
     const attrWaitList=this.ATTR.waitOrder.map((pi,k)=>{ const cc=pc(pi); const done=k<attrWaitDone;
       return { hex:cc.hex, on:cc.on, sym:cc.sym, name:cc.name, isMe:pi===this.ME,
         status: done?t.attrWaitChosen:t.attrWaitStillChoosing, statusc: done?'var(--pitch-300)':'var(--fg3)', dot: done?'var(--pitch-400)':'var(--fg3)',
-        rowbg: done?'rgba(132,173,40,.08)':'rgba(255,255,255,.03)', rowborder: done?'var(--pitch-700)':'var(--border)' }; });
+        rowbg: done?'rgba(132,173,40,.08)':'var(--atlas-t03)', rowborder: done?'var(--pitch-700)':'var(--border)' }; });
     const attrWaitProgress = lang==='nl' ? `${attrWaitDone} van de ${attrWaitTotal} spelers hebben gekozen` : `${attrWaitDone} of ${attrWaitTotal} players have chosen`;
     const attrWaitPct = Math.round(attrWaitDone/attrWaitTotal*100)+'%';
     const attrWaitMore = attrWaitDone<attrWaitTotal;
@@ -1877,8 +1883,13 @@ class Component extends DCLogic {
     return {
       showBar:(this.props.showControlBar ?? true)!==false,
       stageRef:this.stageRef, t, lang, isNL:lang==='nl', isEN:lang==='en',
-      nlColor:lang==='nl'?'#04060b':'var(--fg3)', enColor:lang==='en'?'#ffffff':'var(--fg3)',
+      nlColor:lang==='nl'?'var(--on-pitch)':'var(--fg3)', enColor:lang==='en'?'#ffffff':'var(--fg3)',
       toggleLang:this.toggleLang, next:this.next, prev:this.prev,
+      theme:this.state.theme, themeClass:(this.state.theme==='dark'?'dark':''), toggleTheme:this.toggleTheme,
+      isDark:this.state.theme==='dark', isLight:this.state.theme==='light',
+      themeKnobLeft:this.state.theme==='light'?'3px':'41px',
+      themeSunColor:this.state.theme==='light'?'var(--on-pitch)':'var(--fg3)',
+      themeMoonColor:this.state.theme==='dark'?'var(--on-pitch)':'var(--fg3)',
       stateNum:i+1, total:this.KEYS.length, stateName:t.states[i], dots,
       clock:'20:47', me, joinedCount:'6',
       isStart,isSettings,isWaiting,isJoin,isOrder,isClaim,isSetup,isIdle,isReinf,isAttack,isConquest,isDefend,isFortify,isElim,isReconnect,isWinner,isAttrition,isAttritionWait,

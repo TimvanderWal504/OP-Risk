@@ -168,6 +168,19 @@
   --bronze: #cf8a4f;
 }
 
+/* Explicit light override — makes [data-theme="light"] deterministic even on a
+   dark-OS (beats the prefers-color-scheme:dark block below). Mirrors :root. */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg:#eef1f6; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#e8edf4;
+  --overlay:rgba(10, 14, 23, 0.45);
+  --border:#e1e7f0; --border-strong:#cdd6e3; --ring:#215990;
+  --fg:#111826; --fg-secondary:#475064; --fg-muted:#7a869c; --fg-onbrand:#0c1208; --fg-onblue:#ffffff; --fg-ongold:#2a1c00;
+  --primary:#6b8f1f; --primary-fill:#84ad28; --primary-hover:#6b8f1f; --secondary:#215990; --secondary-fill:#215990; --link:#1c4a78; --accent:#b5790a; --accent-fill:#f2a922;
+  --live:#d8262b; --live-soft:#fdeaea; --win:#2f8f3e; --win-soft:#e7f4e9; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a; --warning-soft:#fbf0d8; --locked:#7a869c; --offline:#f2a922;
+  --gold:#d4a017; --silver:#9aa7b8; --bronze:#b06b2c;
+}
+
 /* ----------------------------------------------------------------------------
    2. @theme  —  exposes tokens to Tailwind v4 utilities
    ---------------------------------------------------------------------------- */
@@ -215,6 +228,19 @@
   --color-gold-800: #744c13;
   --color-gold-900: #623f14;
   --color-gold-950: #382107;
+
+  /* ---- Trophy Silver (accent) ---- */
+  --color-silver-50:  #f3f6f8;
+  --color-silver-100: #e4e9f0;
+  --color-silver-200: #d2dbe5;
+  --color-silver-300: #c2cddd;
+  --color-silver-400: #9cb0ca;
+  --color-silver-500: #7b93b3;
+  --color-silver-600: #627798;
+  --color-silver-700: #4f607d;
+  --color-silver-800: #425068;
+  --color-silver-900: #394457;
+  --color-silver-950: #212733;
 
   /* ---- Ink (cool neutral) ---- */
   --color-ink-50:  #f5f7fa;
