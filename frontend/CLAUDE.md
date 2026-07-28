@@ -61,6 +61,20 @@ lijst van afwijkingen t.o.v. de export, met reden. Lege lijst is het doel en een
 prima antwoord. "Geen afwijkingen" zonder dat je de export erbij hebt gehad is
 geen geldig antwoord.
 
+#### Afwijkingen gevonden
+Mochten er afwijkingen bij een component van het design gevonden zijn, moet je deze
+altijd melden. Het kan voorkomen dat de gebruiker zelf styling heeft toegepast binnen
+het project om het meer te laten lijken op het design. of om andere redenen. 
+Meldt wat er anders is, wat je verwacht had, waar dit van toepassing is en wat dit 
+voor impact heeft op de applicatie, zodat de gebruiker een keuze kan maken of dit een
+uitzondering betreft en doorgezet mag worden. Uitzonderingen worden hieronder bewaard
+en worden niet meer gemeld als afwijking.
+
+#### Uitzonderingen
+
+|Waar is het op van toepassing| Wat is er anders|Wat was de verwachting|Impact op applicatie|
+| RemovablePlayerRow.tsx | Breedte van de knop is w-[19.5%] | Breedte van de knop is w-[22.5%] | minimaal |
+
 ## Animatie
 
 - Alle beweging komt uit het design en staat in `motion.ts`. Er wordt geen timing,

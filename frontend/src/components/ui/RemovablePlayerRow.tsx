@@ -72,7 +72,7 @@ export function RemovablePlayerRow({ children, onRemove, removable }: RemovableP
         <button
           type="button"
           onClick={() => full && onRemove()}
-          className="absolute inset-y-0 right-0 flex w-[22.5%] flex-col items-center justify-center rounded-card border-none text-white"
+          className="absolute inset-y-0 right-0 flex w-[19.5%] flex-col items-center justify-center rounded-card border-none text-white"
           style={{ background: 'var(--loss)', cursor: full ? 'pointer' : 'default', opacity: revealOpacity }}
         >
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
