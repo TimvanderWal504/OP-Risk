@@ -1,101 +1,114 @@
 # Project-overzicht — Digitaal Risk
 
-**Doel van dit document:** één plek die samenvat wat er tot nu toe is uitgewerkt, en — belangrijker — wat er nog moet gebeuren vóórdat je met bouwen kunt beginnen.
+**Doel van dit document:** één plek die samenvat wat er tot nu toe is uitgewerkt en gebouwd, en wat er nog moet gebeuren.
 
 ---
 
 ## 1. Wat er klaar is
 
-### 1.1 Functioneel ontwerp
-**Bestand:** `functioneel-ontwerp-risk.md`
+### 1.1 Ontwerp & speeldata
 
-Het volledige spelconcept staat hierin vast: host-op-TV + spelers-op-telefoon (Jackbox-stijl), gebiedsselectie via hybride highlight+knoppenlijst, aanval/verdediging met zelf te kiezen dobbelstenen, harde beurttimer van 3 minuten die pauzeert tijdens een gevecht, moderne fortify-regel, klassieke kaartenset-waardering, 7 spelers met 18 startlegers, geheime missies + werelddominantie als winconditie, en een kaart-datamodel (§4) met atomaire regio's + groeperingsconfiguratie zodat de kaart uitbreidbaar is. Rollensysteem, missieset en gebeurteniskaarten staan als datamodel + regels vast (§7–9), maar de **inhoud** (welke rollen, welke missies, welke events) is bewust nog leeg — dat vul je later in via JSON, zonder codewijziging.
+- **Functioneel ontwerp** (`functioneel-ontwerp-risk.md`) staat vast: host-op-TV + spelers-op-telefoon, gebiedsselectie via hybride highlight+knoppenlijst, aanval/verdediging met zelf te kiezen dobbelstenen, harde beurttimer die pauzeert tijdens een gevecht, moderne fortify-regel, klassieke kaartenset-waardering, 7 spelers met 18 startlegers, geheime missies + werelddominantie als winconditie, en het kaart-datamodel (§4). Rollen, missies en gebeurteniskaarten zijn inmiddels ook **inhoudelijk ingevuld** (zie §1.4).
+- **Design** (`claude-design-prompts-risk.md`) is uitgevoerd in Claude Design; de TV- en telefoonschermen in `frontend/src/components/` volgen dat ontwerp (incl. een "pitch/silver"-restyle op basis van een bijgewerkte Host-scherm-export).
+- **Hosting-plan** (`plan-b-reisopstelling.md`): backend thuis op Proxmox via Tailscale Funnel, laptop als TV-scherm. Nog niet in praktijk uitgevoerd/getest, zie §2.
 
-### 1.2 Design (Claude Design)
-**Bestand:** `claude-design-prompts-risk.md`
+### 1.2 `RiskGame.Rules` — pure rules engine ✅ gebouwd
 
-Drie kant-en-klare prompts (TV-bord, host-opzet/herstart, spelerstelefoon) met alle schermstaten uitgeschreven, klaar om in Claude Design te plakken. Aanbevolen model: **Opus 4.8** (complexe/samenhangende taak, niet Sonnet 5).
+`src/RiskGame.Rules/` bevat de volledige pure C#-implementatie, zonder ASP.NET/SignalR/Marten/I/O-afhankelijkheden: state (`GameState`, `TurnState`, `PhaseTimer`, `TerritoryOwnership`, `Player`), kaartdomein (`MapDefinition`, `MapDefinitionParser`, `AdjacencyGraph`, `Territory`, `Continent`, `Card`, `CardDeckBuilder`), gevechtslogica (`CombatResolver`, `AttackGuards`, `ConquestResolution`), fortify (`FortifyGuards`), versterken/kaarten (`ReinforcementCalculator`, `CardTradeCalculator`, `CardSetEvaluator`), missies (`IMission`, `MissionAssignmentCalculator`, `WinConditionEvaluator`), rollen (`RoleAssignmentCalculator`, `RoleDefinition`, `RoleEffects`), gebeurtenis-effecten (`IEffect`, `ActiveEffect`, `ArmyAttritionCalculator`, `EventDefinition`) en beurtverloop (`OrderRollCalculator`, `SetupTurnCalculator`, `TurnOrderCalculator`, `TurnPhaseTransitions`, `PhaseTimerFactory`). Elk van deze onderdelen dekt het bijbehorende FO-hoofdstuk (versterken/aanvallen/verplaatsen §5, missies §6, rollen §8, gebeurtenisronde §9, timer §5.4).
 
-### 1.3 Hosting & infrastructuur
-**Bestand:** `plan-b-reisopstelling.md`
+`RiskGame.Rules.Tests` bevat 34 testbestanden met circa 575 test-cases, inclusief kaart-specifieke dekking (`Standaard43Tests`/`Standaard43Data`), geo/adjacency-pariteit (`GeoPariteitTests`, `KaartDekkingTests`), winconditie- en roleffect-tests en per-guard testbestanden.
 
-Gekozen aanpak: backend blijft thuis op Proxmox draaien, bereikbaar via **Tailscale Funnel** (publieke HTTPS-URL, geen installatie nodig bij medespelers); een meegenomen laptop is het TV-scherm. Geen nieuw kiosk-apparaat nodig (Raspberry Pi-aanpak "Plan A" staat als alternatief genoteerd, mocht er ooit een geschikt tweedehands apparaat binnen budget komen). Beveiligingschecklist (rate limiting, Funnel alleen tijdens speelmomenten) en betrouwbaarheids-mitigaties (auto-restart, UPS-advies, noodtoegang via Tailscale) staan uitgewerkt.
+### 1.3 `RiskGame.Api` + `RiskGame.Persistence` — API, SignalR en event sourcing ✅ gebouwd
 
-### 1.4 Kaart-geodata (de 43 gebieden)
-**Bestanden:** `territories.json`, `territories.geo.json`, `build_map.py`, `territories_extended.json` + `.geo.json`
+`src/RiskGame.Api/` bevat Minimal API-endpoints (`GameEndpoints`, `HubEndpoints`), een SignalR-hub (`GameHub`, `IGameClient`, foutafhandeling via `HubErrorSerializer`/`HubExceptionLoggingFilter`), commandohandlers per fase (Lobby, OrderRoll, Setup, Reinforce, Attack, TurnFlow), DTO's + mapper, en een hosted `TurnTimerBackgroundService` die de serverzijdige beurttimer verzorgt (FO §5.4/TO §5.3) — inclusief regressietests met een `FakeTimeProvider`.
 
-De volledige, geografisch correcte kaart is opgebouwd uit publiek-domein Natural Earth-data: elk gebied is een groep van "atomaire regio's" (meestal hele landen; voor Rusland/VS/Canada/Australië — en alvast China/Brazilië/India/Indonesië/Zuid-Afrika — op provincie-/deelstaatniveau). Dit is bewezen uitbreidbaar door Nieuw-Zeeland en een losgekoppeld Chili toe te voegen zonder nieuwe data te hoeven ophalen (`territories_extended.*`, 44 gebieden). Dit is de **brondata die je in de applicatie gebruikt** — onafhankelijk van hoe de kaart er straks uitziet.
+`src/RiskGame.Persistence/` (nieuw t.o.v. het oorspronkelijke ontwerp als apart project) bevat de Marten-integratie: 27 event-klassen (`GameCreated`, `TerritoryClaimed`, `AttackDeclared`, `CombatResolved`, `TerritoryConquered`, `CardsTraded`, `MissionAssigned`, `RoleAssigned`, `PhaseChanged`, `TurnEnded`, e.a.), `Projections/GameProjection`, JSON-converters en `Store/GameStoreFactory`. Getest via `RiskGame.Api.Tests` (incl. `PostgresFixture` voor hub-integratietests) en `RiskGame.Persistence.Tests` (`GameProjectionRoundTripTests`, round-trip event → projectie).
 
-### 1.5 Kaart-visualisatie — geprobeerd, deels losse eindjes
-Een poging om jouw AI-gegenereerde referentieafbeelding als achtergrond te gebruiken met mijn correcte gebieden als onzichtbare/klikbare overlay (via beeldsegmentatie + warping) is **losgelaten** na herhaalde uitlijningsfouten (Groenland, Groot-Brittannië, Indonesië vielen buiten hun overlay; interne grenzen konden "golven"). Besluit: geen warping meer — de vormen uit §1.4 zijn altijd leidend. Twee vervolgroutes liggen klaar:
-- **Route 1** (ik bouw een procedurele textuur in jouw kleurenpalet/sfeer) — nog niet uitgevoerd.
-- **Route 2** (jij regenereert de kunst via Gemini image-to-image, met een silhouet van de correcte 42 gebieden als exacte basis) — silhouet is klaar: `territories_silhouette_nolabels.png` (+ prompt, zie §2.1).
+Dit dekt bouwstappen 1 en 2 uit §3 volledig, en het grootste deel van stap 3.
+
+### 1.4 Speeldata — inclusief rollen, missies en gebeurtenissen ✅ ingevuld
+
+Speeldata is gereorganiseerd naar `data/maps/{mapId}/`, met **`standaard-43`** als eerste (en tot nu toe enige) kaartvariant: `territories.json`, `territories.geo.json`, `adjacency_validated.json`, `continents.json`, `cards.json`, `map-background-final.png`. `colors.json` staat, zoals in TO §3.2 vastgelegd, gedeeld op `data/colors.json` (buiten de map-varianten om, want kleuren zijn niet kaart-specifiek).
+
+Anders dan in eerdere versies van dit overzicht is de content voor rollen, missies en gebeurtenissen **niet meer leeg**:
+- `roles.json` — 15 rollen (ruim boven het maximum van 7 spelers), elk met een uniek herkomstland en effect-type conform FO §8.
+- `missions.json` — missieset dekkend voor 7 kleuren: per kleur een `EliminatePlayer`-missie plus `ConquerContinents`/`TerritoryCount(MinArmies)`-missies die tevens als fallback dienen.
+- `events.json` — gebeurtenisronde-content conform FO §9.2, inclusief de nieuwe effect-types `TerritoryLocked` en `ArmyAttrition` (het oorspronkelijk voorgestelde `RevoltOnSingleArmy` is geschrapt).
+
+Dit was in de bouwvolgorde (§3) bewust als "kan na de eerste bouwfases" gemarkeerd, en is nu al gedaan.
+
+### 1.5 Frontend — schermen, i18n en motion; kaartlaag nog niet gestart
+
+`frontend/src/components/` bevat 12 schermcomponenten plus 15 UI-primitieven onder `components/ui/`, elk met een colokerende test. `frontend/src/routes/` bevat `phone/HomePage`, `phone/PhonePage` en `tv/TvPage`. `hooks/` bevat `useSignalR`, `useGameState`, `GameHubProvider`/`GameHubContext`, `useHeldPhase` en `useTvGame`. Vertalingen lopen via een key-first i18n-opzet (`i18n/`, `locales/` met 14 namespaces) conform TO §7.4.
+
+Recente ontwikkeling focust op de lobby- en order-roll-schermen (host-opzet, joinen, kleur-/rolkeuze, dobbelen om de beurtvolgorde) en op een visuele restyle van de TV-motion op basis van een bijgewerkte design-export ("pitch/silver-restyle", zie de laatste commits). Dit is stap 4 uit §3, nog in uitvoering: het gaat om de lobby/setup-flow, niet om een speelbaar bord.
+
+**`frontend/src/map/` bevat nog alleen een `.gitkeep`.** Er is nog geen placeholder-kaart en geen SVG-kaartlaag gebouwd — stap 4 (volledige flow, ook met placeholder-rechthoeken) en stap 5 (echte kaartlaag) uit §3 zijn dus nog niet gestart voor het speelbord zelf.
 
 ---
 
-## 2. Wat je nog moet doen vóór je gaat bouwen
+## 2. Wat er nog moet gebeuren
 
 Op volgorde van "blokkerend voor de kern" naar "kan later":
 
-### 2.1 ~~Beslissen: Route 1 of Route 2 voor de kaart-look~~ ✅ Afgerond
-Route 2 gekozen en uitgevoerd: `map-background-final.png` (definitieve, opgeschoonde versie zonder interne territoriumlijnen — 5e Gemini-iteratie, IoU 0.64 totaal / 0.75 Middellandse Zee). Gebruik als statische achtergrond-`<image>` in de TV-kaart, met de klikbare gebieden uit `territories.geo.json` als aparte laag erboven — **let op: de overlay moet dezelfde projectie gebruiken als het v4-silhouet** (lengtegraadbereik −180° tot 191° i.p.v. −180°/180°, vanwege de Kamchatka-fix). Bekende kleine afwijkingen (Indonesië, lichte Antarctica-schim) geaccepteerd.
+### 2.1 Speelbord in de frontend (blokkerend voor een speelbare demo)
+Nog te bouwen: het bord zelf (placeholder of echt) voor de fases na de lobby/order-roll — versterken, aanvallen, verplaatsen, kaarteninleg, gebeurtenisronde, missie-onthulling. Dit is het ontbrekende stuk van stap 4 uit §3.
 
-### 2.2 ~~Grenzen/zeeverbindingen (§4.2 FO) opnieuw doorlopen~~ ✅ Afgerond
-Gevalideerd tegen `territories.geo.json`: 7 verbindingen verwijderd (niet meer kloppend), 2 gepromoveerd van zee naar land (Turkije–Midden-Oosten, Indonesië–Siam via Maleisië/Borneo), 6 nieuwe landverbindingen toegevoegd. Onderweg ook een echte databug gefixt (overzeese Franse gebiedsdelen die per ongeluk Zuid-Amerika raakten). Resultaat: `adjacency_validated.json`, 82 verbindingen, alle 42 gebieden verbonden. Direct bruikbaar voor de rules engine.
+### 2.2 Echte kaartlaag (SVG-overlay + achtergrond)
+Zodra het bord er is: `map-background-final.png` (aanwezig in `data/maps/standaard-43/`) als achtergrond met `territories.geo.json` als klikbare/kleurbare SVG-laag erboven, met dezelfde projectie (lengtegraadbereik −180° tot 191°, zie TO §7.2). Dit is stap 5 uit §3 en volledig nog te doen — er bestaat nog geen `map/`-code.
 
-**Nadien uitgebreid naar 43 gebieden:** Nieuw-Zeeland toegevoegd aan Australië met de zeeroutes `new-zealand–eastern-australia` en `new-zealand–argentina` (84 verbindingen, nog steeds volledig verbonden). Zie FO §4.2/§4.4 voor de gevolgen: continentbonus Australië 2 → 3 en een 43e territoriumkaart.
+### 2.3 Hosting-plan in de praktijk beproeven
+`plan-b-reisopstelling.md` is uitgewerkt maar nog niet als daadwerkelijke deploy-/testronde doorlopen (Tailscale Funnel permanent vs. sessie-gebonden aanzetten, UPS-status Proxmox-host — zie het document §4/§5).
 
-### 2.2b Review-verwerking ✅ Afgerond (21 juli)
-Alle bevindingen uit `review-rapport-risk.md` zijn verwerkt: continentbonussen (`continents.json`), kaartendeck met twee thema's (`cards.json`), kleurenset (`colors.json`), Kaukasus/Yukon/Rusland-banden hergegroepeerd, 89 ontbrekende landen toegewezen (Korea's/Taiwan → china, Caribisch gebied → central-america, etc.), adjacency opnieuw gevalideerd (82 verbindingen, volledig consistent met de geometrie), regels D1–D6 in het FO opgenomen, silhouet hergenereerd en verouderde bestanden opgeruimd.
-
-### 2.3 Inhoud voor rollen, missies en gebeurtenissen
-Het datamodel staat (§7–9 FO), de inhoud niet. Concreet nog te maken:
-- Rollenset (namen, herkomstlanden, effect-type + parameters)
-- Missieset die dekkend is voor 7 kleuren (inclusief fallback-missies)
-- Startset gebeurteniskaarten
-Dit kan **na** de eerste bouwfases — de architectuur is er al op voorbereid (feature-toggles, JSON), dus dit blokkeert niets.
-
-### 2.4 Twee kleine openstaande keuzes uit het hosting-plan
-- Tailscale Funnel: permanent aan, of alleen aanzetten vlak vóór een speelsessie? (afweging: gemak vs. blootstellingsvenster, zie Plan B §4)
-- Heb je al een UPS op je Proxmox-host? Zo niet: goedkoopste manier om het grootste restrisico van Plan B te verkleinen (Plan B §5).
-
-### 2.5 ~~Claude Design-prompts daadwerkelijk uitvoeren~~ ✅ Afgerond
-Alle drie de prompts (TV, host-opzet, telefoon) zijn gedraaid in Claude Design. Het klikbare prototype van beide schermtypes staat er.
+### 2.4 Reconnect & randgevallen hardmaken in de UI
+De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules/API-laag; of dit end-to-end via de frontend werkt (ander apparaat, tabblad sluiten tijdens iemands beurt) is nog niet apart geverifieerd. Dit is stap 6 uit §3.
 
 ---
 
-## 3. Aanbevolen bouwvolgorde (ter herinnering)
+## 3. Bouwvolgorde (TO §11) — status
 
-1. **Rules engine als pure C#-library, met unit tests** — geen UI, geen SignalR. Hier heb je §2.2 (grenzen) wél voor nodig.
-2. **Minimal API + SignalR eromheen** — lobby, commands, events.
-3. **Frontend met placeholder-kaart** (rechthoeken) — hele flow end-to-end werkend krijgen. Kaart-look (§2.1) nog niet nodig.
-4. **Echte kaart + visuele polish** — hier komt de output van Route 1 of Route 2 in.
-5. **Reconnect-afhandeling** — expliciet vanaf het begin meenemen, niet achteraf.
+1. **Rules engine als pure C#-library, met unit tests** — ✅ gedaan (§1.2).
+2. **Event sourcing (Marten) eromheen** — ✅ gedaan (§1.3, `RiskGame.Persistence`).
+3. **Minimal API + SignalR eromheen** — ✅ gedaan (§1.3); lobby/commando's/events werken.
+4. **Frontend met placeholder-kaart** — 🔶 gedeeltelijk: lobby/joinen/kleurkeuze/order-roll staan, het speelbord (ook als placeholder) nog niet (§2.1).
+5. **Echte kaart + visuele polish** — ⬜ nog niet gestart (§2.2).
+6. **Reconnect-afhandeling** — 🔶 serverzijde aanwezig, end-to-end frontend-verificatie nog te doen (§2.4).
 
 ---
 
 ## 4. Bestandenoverzicht
 
-| Bestand | Inhoud |
+| Bestand/map | Inhoud |
 |---|---|
-| `functioneel-ontwerp-risk.md` | Volledig functioneel ontwerp, alle spelregels + datamodellen |
-| `technisch-ontwerp-risk.md` | Technisch ontwerp: architectuur, stack, event sourcing, teststrategie |
-| `claude-design-prompts-risk.md` | 3 design-prompts (TV, host-opzet, telefoon) |
-| `plan-b-reisopstelling.md` | Hosting-plan: Tailscale Funnel + laptop-als-TV |
-| `territories.json` | Groeperingsconfiguratie: 43 gebieden → atomaire regio's |
-| `territories.geo.json` | Diezelfde 43 gebieden met echte polygon-geometrie |
-| `territories_extended.json` / `.geo.json` | Bewijs van uitbreidbaarheid: +Chili, +Nieuw-Zeeland (44) |
-| `adjacency_validated.json` | Gevalideerde land/zee-grenzen (84), volledig consistent met de geometrie |
-| `continents.json` | Continentbonussen (klassiek, AU 3) + herberekeningsrichtlijn |
-| `colors.json` | De 7 spelerskleuren (Claude Design) incl. kleurenblind-symbolen |
-| `cards.json` | Territoriumkaarten-deck: 43+2, set-regels, twee thema's |
-| `build_map.py` | Script dat de kaart uit Natural Earth-data (her)genereert (incl. alle review-fixes) |
-| `review-rapport-risk.md` | Reviewbevindingen + genomen beslissingen (historie) |
-| `territories_silhouette_nolabels.png` | Basisafbeelding voor Route 2 (Gemini image-to-image) |
-| `route2-gemini-prompt.md` | Uitgebreide Gemini-prompt + gebruiksinstructies voor Route 2 |
+| `docs/functioneel-ontwerp-risk.md` | Volledig functioneel ontwerp, alle spelregels + datamodellen |
+| `docs/technisch-ontwerp-risk.md` | Technisch ontwerp: architectuur, stack, event sourcing, teststrategie |
+| `docs/claude-design-prompts-risk.md` | 3 design-prompts (TV, host-opzet, telefoon) — uitgevoerd |
+| `docs/plan-b-reisopstelling.md` | Hosting-plan: Tailscale Funnel + laptop-als-TV — nog te beproeven |
+| `data/colors.json` | De 7 spelerskleuren, gedeeld over alle kaartvarianten |
+| `data/maps/standaard-43/territories.json` | 43 gebieden → atomaire regio's (groeperingsconfiguratie) |
+| `data/maps/standaard-43/territories.geo.json` | Diezelfde 43 gebieden met echte polygon-geometrie |
+| `data/maps/standaard-43/adjacency_validated.json` | Gevalideerde land/zee-grenzen (84), consistent met de geometrie |
+| `data/maps/standaard-43/continents.json` | Continentbonussen (klassiek, AU 3) |
+| `data/maps/standaard-43/cards.json` | Territoriumkaarten-deckregels, twee thema's |
+| `data/maps/standaard-43/roles.json` | 15 ingevulde rollen (FO §8) |
+| `data/maps/standaard-43/missions.json` | Missieset dekkend voor 7 kleuren (FO §6.1) |
+| `data/maps/standaard-43/events.json` | Gebeurtenisronde-content (FO §9.2) |
+| `data/maps/standaard-43/map-background-final.png` | Kaart-achtergrondafbeelding voor de TV |
+| `files/build_map.py` | Script dat de kaart uit Natural Earth-data (her)genereert |
+| `src/RiskGame.Rules/` | Pure C# rules engine (§1.2) |
+| `src/RiskGame.Rules.Tests/` | Unit tests op de rules engine |
+| `src/RiskGame.Persistence/` | Marten-events + projectie (event sourcing, §1.3) |
+| `src/RiskGame.Persistence.Tests/` | Round-trip tests event → projectie |
+| `src/RiskGame.Api/` | Minimal API + SignalR-hub + timer-service (§1.3) |
+| `src/RiskGame.Api.Tests/` | Integratietests op de API/hub |
+| `frontend/src/components/` | Schermcomponenten + UI-primitieven, gebaseerd op `design-reference/` |
+| `frontend/src/routes/` | `phone/HomePage`, `phone/PhonePage`, `tv/TvPage` |
+| `frontend/src/hooks/` | `useSignalR`, `useGameState`, `GameHubProvider`, `useHeldPhase`, `useTvGame` |
+| `frontend/src/i18n/`, `frontend/src/locales/` | Key-first i18n-opzet, 14 namespaces (nl/en) |
+| `frontend/src/map/` | Nog leeg (alleen `.gitkeep`) — kaartlaag nog te bouwen |
 
 ---
 
 ## 5. Belangrijkste les uit dit traject
 
-De kaart-vorm (§1.4) en de kaart-look (§1.5) zijn bewust twee losse dingen geworden. Dat is geen omweg geweest maar het punt: de data waarop je klik-detectie en spellogica bouwt staat vast en is gegarandeerd correct, onafhankelijk van welke visuele stijl je er uiteindelijk voor kiest — en van eventuele volgende iteraties op die stijl.
+De kaart-vorm en de kaart-look zijn bewust twee losse dingen gebleven: de geodata (`territories.geo.json`, `adjacency_validated.json`) staat vast en is onafhankelijk van de uiteindelijke visuele stijl. Diezelfde scheiding is nu ook zichtbaar in de bouwvolgorde: de volledige spellogica (rules engine, event sourcing, API/SignalR) en zelfs de content (rollen, missies, events) zijn al klaar en getest, terwijl de visuele kaartlaag in de frontend nog moet beginnen. Dat is geen achterstand die iets anders blokkeert — de architectuur is er expliciet op ingericht (TO §7.2/§7.3) dat de kaartlaag als laatste, op zichzelf staande stap volgt.

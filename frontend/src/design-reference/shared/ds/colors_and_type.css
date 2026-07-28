@@ -180,7 +180,7 @@
   letter-spacing: var(--tracking-tight);
   color: var(--fg1);
 }
-h1, .twc-h1 {
+.twc-h1 {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   font-size: var(--text-h1);
@@ -188,21 +188,21 @@ h1, .twc-h1 {
   letter-spacing: var(--tracking-tight);
   color: var(--fg1);
 }
-h2, .twc-h2 {
+.twc-h2 {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   font-size: var(--text-h2);
   line-height: var(--leading-snug);
   color: var(--fg1);
 }
-h3, .twc-h3 {
+.twc-h3 {
   font-family: var(--font-body);
   font-weight: var(--weight-semi);
   font-size: var(--text-h3);
   line-height: var(--leading-snug);
   color: var(--fg1);
 }
-p, .twc-body {
+.twc-body {
   font-family: var(--font-body);
   font-weight: var(--weight-regular);
   font-size: var(--text-body);

@@ -1,6 +1,6 @@
 # Technisch Ontwerp — Digitaal Risk
 
-**Versie:** 1.0 · **Datum:** 21 juli 2026 · **Status:** Concept
+**Versie:** 1.1 · **Datum:** 27 juli 2026 · **Status:** Grotendeels geïmplementeerd (bouwstappen 1–3, zie §11); frontend-kaartlaag (stap 5) nog te bouwen
 **Verwant:** `functioneel-ontwerp-risk.md` (het *wat*); dit document beschrijft het *hoe*.
 
 ---
@@ -11,20 +11,22 @@ Server-authoritative client-server-model. De server is de enige bron van waarhei
 
 ```
 ┌──────────────┐   SignalR (WebSocket)   ┌────────────────────────────┐
-│  TV (host)   │◀───── state push ───────│                            │
-│  React SPA   │                         │   .NET Minimal API         │
-└──────────────┘                         │   + SignalR hub            │
-                                         │   + Rules engine (pure C#) │
-┌──────────────┐   commando's ──────────▶│   + Marten (event store)   │
-│  Telefoon(s) │◀───── state push ───────│                            │
-│  React SPA   │                         └─────────────┬──────────────┘
-└──────────────┘                                       │
+│  TV (host)   │◀───── state push ───────│  RiskGame.Api               │
+│  React SPA   │                         │  Minimal API + SignalR hub  │
+└──────────────┘                         │  + TurnTimerBackgroundService│
+                                         │                            │
+┌──────────────┐   commando's ──────────▶│  → RiskGame.Rules (pure C#)│
+│  Telefoon(s) │◀───── state push ───────│  → RiskGame.Persistence    │
+│  React SPA   │                         │    (Marten events+proj.)   │
+└──────────────┘                         └─────────────┬──────────────┘
                                               ┌────────▼────────┐
                                               │  PostgreSQL      │
                                               │  (Marten docs +  │
                                               │   event streams) │
                                               └──────────────────┘
 ```
+
+**Implementatiestatus:** deze laag staat — `RiskGame.Rules`, `RiskGame.Persistence` en `RiskGame.Api` (incl. hub, commandohandlers en `TurnTimerBackgroundService`) zijn gebouwd en getest (§11). Wat nog ontbreekt is de kaartlaag in de frontend (§7.2), niet de backend.
 
 **Kernprincipe:** de client toont alleen geldige opties (betere UX), maar de server **hervalideert elke inkomende actie onafhankelijk**. De client wordt nooit vertrouwd — niet voor geldigheid, niet voor dobbelworpen, niet voor volgorde.
 
@@ -39,6 +41,7 @@ Server-authoritative client-server-model. De server is de enige bron van waarhei
 | Realtime | SignalR (WebSockets) | Bidirectionele push naar TV + telefoons; ingebouwde reconnect/groepen |
 | Persistentie | Marten (event sourcing + document store) op PostgreSQL | Event sourcing past natuurlijk bij een beurt-gebaseerd spel; volledige replay/herstel "gratis" |
 | Rules engine | Pure C#-library, geen framework-afhankelijkheden | Unit-testbaar in isolatie; deterministisch; herbruikbaar los van transport/persistentie |
+| Event sourcing | Los project `RiskGame.Persistence` (Marten-events + `GameProjection`, `ProjectionLifecycle.Inline`) | Scheidt event-/projectiecode van zowel de pure rules engine als de API-laag; inline-projectie gekozen (zie §10.1, niet langer open) |
 | Frontend | React 19 + TypeScript + Vite + Tailwind | Consistent met de Claude Design-prototypes; snelle dev-loop |
 | Kaartweergave | SVG-overlay (`territories.geo.json`) bovenop de statische achtergrond (`map-background-final.png`) | Klikbare, per-eigenaar-kleurbare gebieden los van de artwork-laag |
 | Hosting | Proxmox (Plan B) via Tailscale Funnel; later optioneel Azure | Zie `plan-b-reisopstelling.md` |
@@ -79,7 +82,7 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 | `colors.json` (gedeeld, `data/colors.json`) | 7 spelerskleuren: `hex` (fill) + `onHex` (contrastkleur voor tekst/symbool erop) + kleurenblind-symbolen |
 | `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
 | `map-background-final.png` | Statische achtergrond voor de TV-kaart (hoort bij de projectie van deze variant) |
-| rollen / missies / events | JSON, nog te vullen (FO §13) — datamodel staat, content later |
+| `roles.json` / `missions.json` / `events.json` | Rollen, missies en gebeurteniskaarten — datamodel én content ingevuld (FO §13) |
 
 De engine bevat **geen** kaart-, kleur- of kaartkennis in code; alles komt uit deze bestanden. Dat is de kern van "data-driven" uit het FO: een nieuwe kaart of extra gebied = andere data, geen codewijziging.
 
@@ -266,24 +269,28 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 
 ---
 
-## 10. Openstaande technische beslissingen
+## 10. Technische beslissingen
 
-Deze staan bewust nog open en horen bij de uitwerking, niet bij dit ontwerp:
+### 10.1 Inmiddels besloten (geïmplementeerd)
 
-1. **Marten-projectie: inline vs. async.** Inline is eenvoudiger en voor één-huiskamer-schaal ruim voldoende; async schaalt beter maar is hier waarschijnlijk overkill. Voorstel: begin inline.
-2. **Delta- vs. full-state-push.** Full-state is simpeler en voor 43 gebieden + ≤7 spelers klein genoeg om elke keer volledig te pushen. Voorstel: begin met full-state, optimaliseer naar delta's alleen als het nodig blijkt.
-3. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat "server handhaaft, client toont benadering".
-4. **Rollen/missies/events-content** — datamodel staat (FO §8/§9/§6.1), inhoud nog te vullen; dat is contentwerk, geen architectuur.
-5. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
+1. ~~**Marten-projectie: inline vs. async.**~~ **Besloten: inline** (`ProjectionLifecycle.Inline` in `GameStoreFactory`). Past bij één-huiskamer-schaal; async is hier niet nodig gebleken.
+2. ~~**Delta- vs. full-state-push.**~~ **Besloten: full-state.** `IGameClient.GameStateUpdated(GameStateDto state)` pusht de volledige projectie na elk commando; `DiceRolled`/`CombatNarrated` zijn losse, gerichte pushes voor animatie-timing (TV-narratie). Nog geen delta's — voor 43 gebieden + ≤7 spelers blijkt dit in de praktijk klein genoeg.
+3. ~~**Rollen/missies/events-content**~~ **Ingevuld**, zie FO §13: `roles.json` (15 rollen), `missions.json` (dekkend voor 7 kleuren), `events.json` (incl. `TerritoryLocked`/`ArmyAttrition`).
+4. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
+
+### 10.2 Nog open
+
+1. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat vermoedelijk "server handhaaft, client toont benadering" — nog niet apart getest tegen een trage/instabiele verbinding (relevant voor Plan B/Tailscale, zie project-overzicht §2.3).
+2. **Delta-push alsnog nodig?** Blijft full-state-push (§10.1.2) presterend genoeg zodra de echte kaartlaag (§7.2) met SVG-animaties erbij komt? Pas heroverwegen als dat in de praktijk hapert.
 
 ---
 
-## 11. Aanbevolen bouwvolgorde (uit `project-overzicht-risk.md`, hier technisch geduid)
+## 11. Bouwvolgorde (uit `project-overzicht-risk.md`, hier technisch geduid) — status
 
-1. **Rules engine** (pure C#-library + unit tests) — geen transport, geen persistentie. Fundament.
-2. **Event sourcing eromheen** (Marten): commando's → events → projectie, met round-trip-test.
-3. **Minimal API + SignalR-hub**: commando's ontvangen, state pushen, groepen/privacy.
-4. **Frontend met placeholder-kaart** (rechthoeken): volledige flow end-to-end werkend.
-5. **Echte kaartlaag**: `map-background-final.png` + SVG-overlay met de v4-projectie.
-6. **Reconnect & randgevallen**: expliciet vanaf het begin meenemen, hier hardmaken.
+1. **Rules engine** (pure C#-library + unit tests) — ✅ gedaan. `RiskGame.Rules` + `RiskGame.Rules.Tests` (34 testbestanden, ~575 cases), geen transport, geen persistentie.
+2. **Event sourcing eromheen** (Marten) — ✅ gedaan. `RiskGame.Persistence`: commando's → events → inline `GameProjection`, met round-trip-tests in `RiskGame.Persistence.Tests`.
+3. **Minimal API + SignalR-hub** — ✅ gedaan. `RiskGame.Api`: `GameEndpoints`/`HubEndpoints`, `GameHub` + `IGameClient`, commandohandlers per fase, `TurnTimerBackgroundService`; getest incl. `PostgresFixture`.
+4. **Frontend met placeholder-kaart** (rechthoeken) — 🔶 gedeeltelijk. Lobby, joinen, kleur-/rolkeuze en order-roll staan (met i18n en TV-motion); het speelbord zelf (versterken/aanvallen/verplaatsen, ook als placeholder) is nog niet gebouwd.
+5. **Echte kaartlaag**: `map-background-final.png` + SVG-overlay met de v4-projectie — ⬜ nog niet gestart. `frontend/src/map/` bevat alleen een `.gitkeep`.
+6. **Reconnect & randgevallen** — 🔶 serverzijde aanwezig (sessietoken, groepen, auto-pass in de rules/API-laag), end-to-end-verificatie via de frontend nog te doen.
 

@@ -1,16 +1,19 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useGameState } from '../../hooks/useGameState'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
-import { JoinNameStep } from '../../components/JoinNameStep'
-import { JoinColorStep } from '../../components/JoinColorStep'
+import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { JoinRoleStep } from '../../components/JoinRoleStep'
 import { JoinWaitStep } from '../../components/JoinWaitStep'
 import { JoinHostWaitStep } from '../../components/JoinHostWaitStep'
 import { OrderRollWaitStep } from '../../components/OrderRollWaitStep'
 import { PhoneShell } from '../../components/ui/PhoneShell'
-import { GamePhaseDto } from '../../types/GameState'
+import { GamePhaseDto, type GameStateDto } from '../../types/GameState'
 import { RoleAssignmentModeDto } from '../../types/GameSettings'
+
+const takenColorIds = (state: GameStateDto) =>
+  state.colors.map((c) => c.id).filter((id) => !state.availableColorIds.includes(id))
 
 export function PhonePage() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -20,18 +23,29 @@ export function PhonePage() {
     playerId,
     error,
     orderRollThrows,
-    joinGame,
+    joinGameWithColor,
     chooseColor,
+    removePlayer,
     selectRole,
     startGame,
     rollForOrder,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
+  // Terug-navigatie vanaf de rolstap: er is geen RenamePlayer-hub-methode, dus
+  // "terug" laat alleen een andere kleur kiezen (naam blijft vast op me.name).
+  const [revisitingColor, setRevisitingColor] = useState(false)
 
-  if (!state || !playerId) {
+  if (!playerId || !state) {
     return (
       <PhoneShell>
-        <JoinNameStep onSubmit={joinGame} stepIndex={0} stepCount={3} error={error} />
+        <JoinNameColorStep
+          onSubmit={joinGameWithColor}
+          colors={state?.colors ?? []}
+          takenColorIds={state ? takenColorIds(state) : []}
+          stepIndex={0}
+          stepCount={3}
+          error={error}
+        />
       </PhoneShell>
     )
   }
@@ -41,7 +55,14 @@ export function PhonePage() {
   if (!me) {
     return (
       <PhoneShell>
-        <JoinNameStep onSubmit={joinGame} stepIndex={0} stepCount={3} error={error} />
+        <JoinNameColorStep
+          onSubmit={joinGameWithColor}
+          colors={state.colors}
+          takenColorIds={takenColorIds(state)}
+          stepIndex={0}
+          stepCount={3}
+          error={error}
+        />
       </PhoneShell>
     )
   }
@@ -74,18 +95,23 @@ export function PhonePage() {
 
   const rolePickingRequired =
     state.settings.rolesEnabled && state.settings.roleAssignment === RoleAssignmentModeDto.Choose
-  const stepCount = rolePickingRequired ? 4 : 3
+  const stepCount = rolePickingRequired ? 3 : 2
+  const myTakenColorIds = takenColorIds(state)
+
+  const handleColorPick = async (colorId: string) => {
+    await chooseColor(colorId)
+    setRevisitingColor(false)
+  }
 
   if (!me.colorId) {
     return (
       <PhoneShell>
-        <JoinColorStep
+        <JoinNameColorStep
+          onSubmit={(_, colorId) => handleColorPick(colorId)}
           colors={state.colors}
-          takenColorIds={state.colors
-            .map((c) => c.id)
-            .filter((id) => !state.availableColorIds.includes(id))}
-          onPick={chooseColor}
-          stepIndex={1}
+          takenColorIds={myTakenColorIds}
+          fixedName={me.name}
+          stepIndex={0}
           stepCount={stepCount}
           error={error}
         />
@@ -94,13 +120,30 @@ export function PhonePage() {
   }
 
   if (rolePickingRequired && !me.roleId) {
+    if (revisitingColor) {
+      return (
+        <PhoneShell>
+          <JoinNameColorStep
+            onSubmit={(_, colorId) => handleColorPick(colorId)}
+            colors={state.colors}
+            takenColorIds={myTakenColorIds}
+            fixedName={me.name}
+            stepIndex={0}
+            stepCount={stepCount}
+            error={error}
+          />
+        </PhoneShell>
+      )
+    }
+
     return (
       <PhoneShell>
         <JoinRoleStep
           roles={state.roles}
           takenRoleIds={state.players.map((p) => p.roleId).filter((id): id is string => id !== null)}
           onPick={selectRole}
-          stepIndex={2}
+          onBack={() => setRevisitingColor(true)}
+          stepIndex={1}
           stepCount={stepCount}
           error={error}
         />
@@ -117,6 +160,7 @@ export function PhonePage() {
           maxPlayers={state.colors.length}
           canStart
           onStart={startGame}
+          onRemovePlayer={removePlayer}
           error={error}
         />
       </PhoneShell>

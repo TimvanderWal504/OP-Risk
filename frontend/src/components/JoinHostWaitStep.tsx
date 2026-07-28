@@ -4,7 +4,7 @@ import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { Button } from './ui/Button'
 import { Footer } from './ui/Footer'
-import { phoneAnimations } from '../design-reference/shared/motion'
+import { RemovablePlayerRow } from './ui/RemovablePlayerRow'
 import { tDynamic } from '../i18n/useT'
 
 export interface JoinHostWaitStepProps {
@@ -13,6 +13,7 @@ export interface JoinHostWaitStepProps {
   maxPlayers: number
   canStart: boolean
   onStart: () => void
+  onRemovePlayer: (playerId: string) => void
   error?: string | null
 }
 
@@ -30,6 +31,7 @@ export function JoinHostWaitStep({
   maxPlayers,
   canStart,
   onStart,
+  onRemovePlayer,
   error = null,
 }: JoinHostWaitStepProps) {
   const { t } = useTranslation('join')
@@ -65,23 +67,25 @@ export function JoinHostWaitStep({
           const color = colors.find((c) => c.id === player.colorId)
 
           return (
-            <div
+            <RemovablePlayerRow
               key={player.id}
-              className="flex items-center gap-3 rounded-card border border-border bg-[var(--atlas-t03)] p-[11px_13px]"
-              style={{ animation: phoneAnimations.rowRise }}
+              removable={!player.isHost}
+              onRemove={() => onRemovePlayer(player.id)}
             >
-              <span
-                className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-[19px]"
-                style={{ background: color?.hex ?? 'var(--surface-3)', color: color?.onHex }}
-              >
-                {color?.symbol && <ColorSymbol symbol={color.symbol} />}
-              </span>
-              <span className="flex-1 font-display text-[17px] font-extrabold">{player.name}</span>
-              <span className="text-xs text-fg-muted">
-                {color ? tDynamic(color.id, 'colors') : ''}
-              </span>
-              {player.isHost && <span className="text-sm">👑</span>}
-            </div>
+              <div className="flex items-center gap-3 rounded-card border border-border bg-[var(--atlas-t03)] p-[11px_13px]">
+                <span
+                  className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-[19px]"
+                  style={{ background: color?.hex ?? 'var(--surface-3)', color: color?.onHex }}
+                >
+                  {color?.symbol && <ColorSymbol symbol={color.symbol} />}
+                </span>
+                <span className="flex-1 font-display text-[17px] font-extrabold">{player.name}</span>
+                <span className="text-xs text-fg-muted">
+                  {color ? tDynamic(color.id, 'colors') : ''}
+                </span>
+                {player.isHost && <span className="text-sm">👑</span>}
+              </div>
+            </RemovablePlayerRow>
           )
         })}
       </div>

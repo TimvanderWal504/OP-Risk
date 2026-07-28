@@ -1,6 +1,6 @@
 # Functioneel Ontwerp — Digitaal Risk (Host + Telefoons)
 
-**Versie:** 1.2 · **Datum:** 21 juli 2026 · **Status:** Vastgesteld (incl. review-verwerking)
+**Versie:** 1.3 · **Datum:** 27 juli 2026 · **Status:** Vastgesteld; rollen/missies/events inmiddels ook inhoudelijk ingevuld (zie §13)
 
 ---
 
@@ -366,8 +366,12 @@ De server valideert elke actie (juiste speler, juiste fase, geldige gebieden, vo
 
 ---
 
-## 13. Latere toevoegingen (buiten v1-scope, architectuur houdt er rekening mee)
+## 13. Content-status rollen, missies en gebeurtenissen
 
-1. Definitieve rollenset (welke rollen, herkomstlanden, effect-parameters) — JSON, iteratief in te vullen.
-2. Definitieve missieset voor 7 kleuren — JSON.
-3. Startset gebeurteniskaarten — JSON.
+Deze content was oorspronkelijk als "later in te vullen" gemarkeerd; inmiddels staat ze in `data/maps/standaard-43/` en is ze onderdeel van de gevalideerde speeldata:
+
+1. **Rollenset** (`roles.json`) — 15 rollen ingevuld, ruim boven het maximum van 7 spelers, elk met een uniek herkomstland (validatie-eis §8) en een effect-type uit de vaste set (§8.1). Let op één kaart-specifieke restrictie: de rol `maori` heeft `new-zealand` als herkomstland, een gebied dat alleen bestaat op kaartvarianten die Nieuw-Zeeland bevatten (de huidige 43-gebieden-set). Op een kaartvariant zonder Nieuw-Zeeland moet `maori` uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie.
+2. **Missieset** (`missions.json`) — dekkend voor 7 kleuren: per kleur een `EliminatePlayer`-missie, aangevuld met `ConquerContinents`- en `TerritoryCount(MinArmies)`-missies die tevens als `fallbackMissionId` dienen (§6.1).
+3. **Gebeurteniskaarten** (`events.json`) — gebeurtenisronde-content conform §9.2. Ten opzichte van de oorspronkelijke v1-effectlijst is `RevoltOnSingleArmy` geschrapt (niet gewenst); `TerritoryLocked` en `ArmyAttrition` zijn de effect-types die daarvoor in de plaats staan (al opgenomen in §9.2).
+
+Verdere uitbreiding of aanpassing van deze content (extra rollen, andere missies, nieuwe events) blijft mogelijk zonder codewijziging — dat was het hele punt van de data-driven opzet.

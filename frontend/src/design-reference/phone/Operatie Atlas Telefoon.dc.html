@@ -241,11 +241,19 @@
             </div>
             <div style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
               <sc-for list="{{ waitList }}" as="p" hint-placeholder-count="4">
-                <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;animation:phRise .3s both;">
-                  <span style="width:38px;height:38px;flex:none;border-radius:10px;background:{{ p.hex }};display:flex;align-items:center;justify-content:center;font-size:19px;color:{{ p.on }};">{{ p.sym }}</span>
-                  <span style="flex:1;font-family:var(--font-display);font-weight:800;font-size:17px;">{{ p.name }}</span>
-                  <span style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ p.cw }}</span>
-                  <sc-if value="{{ p.isHost }}"><span style="font-size:14px;">👑</span></sc-if>
+                <div style="position:relative;border-radius:14px;overflow:hidden;animation:phRise .3s both;">
+                  <sc-if value="{{ p.showDelete }}">
+                    <button onClick="{{ p.remove }}" style="position: absolute; top: 0; right: 0; bottom: 0; width: 22.5%; overflow: hidden; border: none; background: var(--loss); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: {{ p.revealCursor }}; opacity: {{ p.revealOp }}; border-radius: 14px">
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                    </button>
+                  </sc-if>
+                  <div onPointerDown="{{ p.onDown }}" onPointerMove="{{ p.onMove }}" onPointerUp="{{ p.onUp }}" style="position:relative;display:flex;align-items:center;gap:12px;background:var(--atlas-t03);border:1px solid var(--border);border-radius:14px;padding:11px 13px;transform:{{ p.tx }};transition:{{ p.trans }};touch-action:pan-y;user-select:none;">
+                    <span style="width:38px;height:38px;flex:none;border-radius:10px;background:{{ p.hex }};display:flex;align-items:center;justify-content:center;font-size:19px;color:{{ p.on }};">{{ p.sym }}</span>
+                    <span style="flex:1;font-family:var(--font-display);font-weight:800;font-size:17px;">{{ p.name }}</span>
+                    <span style="font-family:var(--font-body);font-size:12px;color:var(--fg3);">{{ p.cw }}</span>
+                    <sc-if value="{{ p.isHost }}"><span style="font-size:14px;">👑</span></sc-if>
+                    <sc-if value="{{ p.canRemove }}"><span style="font-size:13px;color:var(--fg3);opacity:.6;">‹</span></sc-if>
+                  </div>
                 </div>
               </sc-for>
               <sc-if value="{{ canAddWait }}">
@@ -261,7 +269,7 @@
 
           <!-- 0 JOIN -->
           <sc-if value="{{ isJoin }}" hint-placeholder-val="{{ true }}">
-          <div style="flex:1;display:flex;flex-direction:column;padding:18px 20px 22px;">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:18px 20px 22px;">
             <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
               <span style="font-family:var(--font-display);font-weight:900;font-size:22px;letter-spacing:.1em;">OPERATIE ATLAS</span>
             </div>
@@ -270,31 +278,29 @@
                 <span style="flex:1;height:5px;border-radius:3px;background:{{ js.c }};"></span>
               </sc-for>
             </div>
-            <!-- name -->
-            <sc-if value="{{ joinName }}">
-              <div style="font-family:var(--font-display);font-weight:800;font-size:26px;margin-bottom:6px;">{{ t.joinNameTitle }}</div>
-              <div style="font-family:var(--font-body);font-size:15px;color:var(--fg3);margin-bottom:22px;">{{ t.joinNameSub }}</div>
-              <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t05);border:1px solid var(--gold-600);border-radius:16px;padding:16px 18px;">
-                <span style="font-family:var(--font-display);font-weight:800;font-size:24px;">{{ nameValue }}</span>
-                <span style="width:3px;height:26px;background:var(--gold-400);animation:phDot 1s infinite;"></span>
+            <!-- name + color -->
+            <sc-if value="{{ joinNameColor }}">
+              <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding-right:2px;">
+                <div style="font-family:var(--font-display);font-weight:800;font-size:24px;margin-bottom:4px;">{{ t.joinNameTitle }}</div>
+                
+                <div style="display:flex;align-items:center;gap:10px;background:var(--atlas-t05);border:1px solid var(--gold-600);border-radius:16px;padding:14px 18px;">
+                  <span style="font-family:var(--font-display);font-weight:800;font-size:24px;">{{ nameValue }}</span>
+                  <span style="width:3px;height:26px;background:var(--gold-400);animation:phDot 1s infinite;"></span>
+                </div>
+                <div style="font-family: var(--font-display); font-weight: 800; font-size: 24px; margin: 28px 0 12px">{{ t.joinColorTitle }}</div>
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+                  <sc-for list="{{ colorChips }}" as="c" hint-placeholder-count="7">
+                    <button onClick="{{ c.pick }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:58px;padding:0 14px;border-radius:16px;border:2px solid {{ c.border }};background:{{ c.bg }};color:var(--fg1);cursor:{{ c.cursor }};opacity:{{ c.op }};">
+                      <span style="width:36px;height:36px;flex:none;border-radius:10px;background:{{ c.hex }};display:flex;align-items:center;justify-content:center;font-size:19px;color:{{ c.on }};">{{ c.sym }}</span>
+                      <span style="font-family:var(--font-display);font-weight:800;font-size:16px;">{{ c.label }}</span>
+                      <sc-if value="{{ c.taken }}"><span style="position:absolute;right:10px;font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--fg3);">{{ t.taken }}</span></sc-if>
+                      <sc-if value="{{ c.sel }}"><span style="position:absolute;right:10px;font-size:16px;color:var(--pitch-400);">✓</span></sc-if>
+                    </button>
+                  </sc-for>
+                </div>
               </div>
-              <div style="margin-top:auto;"><button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.next }} ›</button></div>
-            </sc-if>
-            <!-- color -->
-            <sc-if value="{{ joinColor }}">
-              <div style="font-family:var(--font-display);font-weight:800;font-size:26px;margin-bottom:6px;">{{ t.joinColorTitle }}</div>
-              <div style="font-family:var(--font-body);font-size:15px;color:var(--fg3);margin-bottom:18px;">{{ t.joinColorSub }}</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
-                <sc-for list="{{ colorChips }}" as="c" hint-placeholder-count="7">
-                  <button onClick="{{ c.pick }}" style="position:relative;display:flex;align-items:center;gap:12px;min-height:62px;padding:0 14px;border-radius:16px;border:2px solid {{ c.border }};background:{{ c.bg }};color:var(--fg1);cursor:{{ c.cursor }};opacity:{{ c.op }};">
-                    <span style="width:38px;height:38px;flex:none;border-radius:10px;background:{{ c.hex }};display:flex;align-items:center;justify-content:center;font-size:20px;color:{{ c.on }};">{{ c.sym }}</span>
-                    <span style="font-family:var(--font-display);font-weight:800;font-size:17px;">{{ c.label }}</span>
-                    <sc-if value="{{ c.taken }}"><span style="position:absolute;right:10px;font-family:var(--font-body);font-size:11px;font-weight:700;color:var(--fg3);">{{ t.taken }}</span></sc-if>
-                    <sc-if value="{{ c.sel }}"><span style="position:absolute;right:10px;font-size:16px;color:var(--pitch-400);">✓</span></sc-if>
-                  </button>
-                </sc-for>
-              </div>
-              <div style="margin-top:auto;padding-top:16px;"><button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.confirmColor }}</button></div>
+              <div style="flex:none;padding-top:14px;"><button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch)">{{ t.next }} ›</button></div>
             </sc-if>
             <!-- role -->
             <sc-if value="{{ joinRole }}">
@@ -316,26 +322,38 @@
                   </button>
                 </sc-for>
               </div>
-              <div style="flex:none;padding-top:14px;">
-                <sc-if value="{{ roleSelected }}">
-                  <button onClick="{{ joinNext }}" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;border:none;border-radius:16px;background:var(--pitch-500);color:var(--on-pitch);font-family:var(--font-display);font-weight:900;font-size:21px;cursor:pointer;box-shadow:0 8px 22px rgba(132,173,40,.3);">✓ {{ t.confirmRole }}</button>
+              <div style="flex: none; padding-top: 14px; display: flex; flex-direction: row; gap: 10px">
+                <button onClick="{{ joinPrev }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; border: 1px solid var(--border-strong); border-radius: 14px; background: transparent; color: var(--fg2); font-family: var(--font-body); font-weight: 700; font-size: 14px; cursor: pointer; flex: 1">{{ t.joinBack }}</button><sc-if value="{{ roleSelected }}">
+                  <button onClick="{{ joinNext }}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 64px; border: none; border-radius: 16px; background: var(--pitch-500); color: var(--on-pitch); font-family: var(--font-display); font-weight: 900; font-size: 21px; cursor: pointer; box-shadow: var(--shadow-glow-pitch); flex: 2">{{ t.joinConfirm }}</button>
                 </sc-if>
                 <sc-if value="{{ roleSelectedNot }}">
-                  <div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:64px;border:1px dashed var(--border-strong);border-radius:16px;color:var(--fg3);font-family:var(--font-body);font-size:14px;">{{ t.pickRoleFirst }}</div>
+                  <div style="display: flex; justify-content: center; width: 100%; min-height: 64px; border: 1px dashed var(--border-strong); border-radius: 16px; color: var(--fg3); font-family: var(--font-body); font-size: 14px; align-items: center; flex: 2">{{ t.pickRoleFirst }}</div>
                 </sc-if>
+                
               </div>
             </sc-if>
             <!-- waiting -->
             <sc-if value="{{ joinWait }}">
-              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px;">
-                <div style="width:78px;height:78px;border-radius:20px;background:{{ me.hex }};display:flex;align-items:center;justify-content:center;font-size:42px;color:{{ me.on }};box-shadow:0 0 30px {{ me.glow }};animation:phPop .5s both;">{{ me.sym }}</div>
-                <div>
+              <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:10px;">
+                
+                
+                
+                <div style="flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; display: flex">
+                  <div style="flex: 1">
                   <div style="font-family:var(--font-display);font-weight:900;font-size:26px;">{{ t.joinedTitle }}</div>
                   <div style="font-family:var(--font-body);font-size:16px;color:var(--fg3);margin-top:6px;">{{ me.name }} · {{ me.cw }}</div>
-                  <sc-if value="{{ myRoleLine }}"><div style="font-family:var(--font-body);font-size:13px;color:var(--gold-300);margin-top:4px;">{{ myRoleLine }}</div></sc-if>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;font-family:var(--font-body);font-size:15px;color:var(--fg3);"><span style="width:11px;height:11px;border-radius:50%;background:var(--pitch-400);animation:phDot 1.4s infinite;"></span>{{ t.waitHost }}</div>
-                <div style="font-family:var(--font-mono);font-size:14px;color:var(--fg3);">{{ joinedCount }} {{ t.playersIn }}</div>
+                  <sc-if value="{{ myRoleLine }}"><div style="font-family: var(--font-body); font-size: 13px; color: var(--pitch-400); margin-top: 4px">{{ myRoleLine }}</div></sc-if>
+                </div><div style="flex: 11; justify-content: center; display: flex; flex-direction: column; align-items: center">
+                    
+                    
+                    
+                    
+                  <div style="background: var(--atlas-t04); border: 1px solid var(--gold-700); border-radius: 20px; padding: 22px 22px 20px; position: relative; overflow: hidden">
+                  
+                  
+                  
+                <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--gold-400);margin-bottom:14px;">{{ t.waitQuoteKicker }}</div><div style="font-family:var(--font-display);font-weight:900;font-size:52px;line-height:.6;color:var(--gold-600);height:24px;">“</div><div style="font-family:var(--font-display);font-weight:800;font-size:20px;line-height:1.32;color:var(--fg1);text-wrap:pretty;animation:phPop .5s both;">{{ currentQuote.q }}</div><div style="font-family:var(--font-body);font-size:13px;color:var(--fg3);margin-top:14px;">— {{ currentQuote.w }}</div></div></div><div style="align-items: center; gap: 10px; font-family: var(--font-body); font-size: 15px; color: var(--fg3); display: flex; flex: 1"><span style="width: 11px; height: 11px; border-radius: 50%; background: var(--pitch-400); animation: phDot 1.4s infinite"></span>{{ t.waitHost }}</div>
+                </div><div style="font-family: var(--font-mono); font-size: 14px; color: var(--fg3); padding-top: 6px">{{ joinedCount }} {{ t.playersIn }}</div>
               </div>
             </sc-if>
           </div>
@@ -1175,7 +1193,7 @@ class Component extends DCLogic {
     super(props);
     this.state = {
       i: 0, lang: (props && props.language) || 'nl', theme: (props && props.theme) || 'dark',
-      join: 0, colorPick: 1, rolePick: null, tab: null,
+      join: 0, colorPick: 1, rolePick: null, tab: null, quoteIdx: 0,
       orderRolled: false,
       claimSel: null, claimedIds: {}, claimCounts: [6,5,6,6,5,5], claimMine: true,
       setupPlaced: {}, setupPool: 5,
@@ -1192,6 +1210,7 @@ class Component extends DCLogic {
       mapDemo: 'default',
       settings: { mapId: 'standard', winDom: true, winMis: true, layout: 'claim', startArmies: 20, timerSec: 180, roles: true, events: true, future: false },
       waitCount: 2,
+      removedWait: [], dragIdx: null, dragX: 0, openIdx: null,
       manageOpen: false,
       autoPass: { 2: true, 4: false },
     };
@@ -1228,13 +1247,34 @@ class Component extends DCLogic {
     };
     window.addEventListener('resize', this._fit);
     this._fit(); requestAnimationFrame(this._fit); setTimeout(this._fit,120); setTimeout(this._fit,400);
+    this._quoteTimer = setInterval(() => this.setState(s => ({ quoteIdx: s.quoteIdx + 1 })), 5000);
   }
   componentDidUpdate(){ if(this._fit) this._fit(); }
-  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); }
+  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); if(this._quoteTimer) clearInterval(this._quoteTimer); }
 
   pips(v){ const m={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}; const on=m[v]||[]; return Array.from({length:9},(_,k)=>({on:on.indexOf(k)>=0})); }
 
   get KEYS(){ return ['start','settings','waiting','join','order','claim','setup','idle','reinf','cardBonus','attack','conquest','defend','attrition','attritionWait','fortify','fortifyEnemy','fortifyMoves','elim','reconnect','winner']; }
+
+  // Fun Risk-flavoured lines shown on the "waiting for host" lobby screen.
+  get QUOTES(){ return {
+    nl:[
+      {q:'Wie Australië beheerst, beheerst de wereld.', w:'Oude veldheerswijsheid'},
+      {q:'De dobbelstenen kennen geen genade — alleen kansen.', w:'Generaal aan het front'},
+      {q:'Één continent per keer, veldheer.', w:'Strategisch handboek'},
+      {q:'Vrede is de adempauze tussen twee aanvallen.', w:'Een anonieme diplomaat'},
+      {q:'Verover Azië en de wereld volgt vanzelf.', w:'De kaartenkamer'},
+      {q:'Grenzen zijn slechts suggesties op de kaart.', w:'Een ambitieuze admiraal'},
+    ],
+    en:[
+      {q:'Hold Australia, and you hold the world.', w:"Old commander's wisdom"},
+      {q:'The dice show no mercy — only odds.', w:'A general at the front'},
+      {q:'One continent at a time, commander.', w:'The field manual'},
+      {q:'Peace is the pause between two attacks.', w:'An anonymous diplomat'},
+      {q:'Take Asia and the world will follow.', w:'The war room'},
+      {q:'Borders are merely suggestions on the map.', w:'An ambitious admiral'},
+    ]
+  }; }
 
   // ArmyAttrition event: several players react at once, off-turn
   get ATTR(){ return {
@@ -1319,13 +1359,13 @@ class Component extends DCLogic {
       setRoles:'Rollen', setRolesSub:'Openbare rol + herkomstland-bonus.', setEvents:'Gebeurtenisronde', setEventsSub:'Gebeurteniskaart na elke ronde.', setFuture:'Teamspel', setFutureSub:'Bondgenootschappen — binnenkort.', soon:'binnenkort',
       createGame:'Spel aanmaken',
       waitKicker:'Spel aangemaakt', waitTitle:'Wachten op spelers', qrOnTv:'De QR-code om mee te doen staat op de TV.', playersJoinedLbl:'Aangesloten', simPlayer:'Speler sluit aan (demo)', needPlayers:'Minimaal 2 spelers nodig om te starten.',
-      startGameReady:'Start spel', startGameWait:'Wachten op spelers…',
+      startGameReady:'Start spel', startGameWait:'Wachten op spelers…', removePlayer:'Verwijder',
       manageTitle:'Spelbeheer', manageSub:'Zet auto-pass aan voor spelers die (tijdelijk) weg zijn. Hun beurt wordt dan automatisch overgeslagen.', autoPass:'Auto-pass', presentNoAction:'aanwezig', statusPresent:'Aanwezig', statusAbsent:'Afwezig', hostTools:'Spelbeheer',
       winReveal:'Overwinning', everyoneSees:'Iedereen ziet dit', hostOnly:'Alleen de host', setupNewGame:'Nieuw spel instellen', setupNewGameSub:'Direct opnieuw met dezelfde spelers — zonder op de stemming te wachten.', winSub:'De campagne is beslist.',
       joinNameTitle:'Voer je naam in', joinNameSub:'Zo herkennen de anderen je aan tafel.', confirmColor:'Kies deze kleur',
       joinColorTitle:'Kies je kleur', joinColorSub:'Bezette kleuren zijn geblokkeerd. Wie het eerst komt…',
-      joinRoleTitle:'Kies je rol', joinRoleSub:'Elke rol geeft een openbare bonus zolang je het herkomstland bezit. Al gekozen rollen zijn geblokkeerd.', confirmRole:'Kies deze rol', roleOriginLbl:'Herkomst',
-      joinedTitle:'Je zit in de lobby', waitHost:'Wachten tot de host start…', playersIn:'spelers aangesloten',
+      joinRoleTitle:'Kies je rol', joinRoleSub:'Elke rol geeft een openbare bonus zolang je het herkomstland bezit. Al gekozen rollen zijn geblokkeerd.', confirmRole:'Kies deze rol', joinConfirm:'Bevestigen', joinBack:'Naam & kleur aanpassen', roleOriginLbl:'Herkomst',
+      joinedTitle:'Je zit in de lobby', waitHost:'Wachten tot de host start…', playersIn:'spelers aangesloten', waitQuoteKicker:'Terwijl je wacht',
       orderKicker:'Startvolgorde', orderTitle:'Bepaal de volgorde', orderSub:'Gooi één keer. De hoogste worp begint het spel.',
       youRolled:'Jij gooide', orderPos:'3e — na Diego', waitOthers:'Wachten tot iedereen heeft gegooid…',
       setupKicker:'Startopstelling', setupTitle:'Plaats je legers', armiesLeft:'te plaatsen', setupHint:'Tik + om 1 leger op een van je gebieden te zetten. Om beurten, 1 per keer.',
@@ -1357,13 +1397,13 @@ class Component extends DCLogic {
       setRoles:'Roles', setRolesSub:'Public role + home-country bonus.', setEvents:'Event round', setEventsSub:'An event card after each round.', setFuture:'Team play', setFutureSub:'Alliances — coming soon.', soon:'soon',
       createGame:'Create game',
       waitKicker:'Game created', waitTitle:'Waiting for players', qrOnTv:'The QR code to join is shown on the TV.', playersJoinedLbl:'Joined', simPlayer:'A player joins (demo)', needPlayers:'At least 2 players needed to start.',
-      startGameReady:'Start game', startGameWait:'Waiting for players…',
+      startGameReady:'Start game', startGameWait:'Waiting for players…', removePlayer:'Remove',
       manageTitle:'Game management', manageSub:'Turn on auto-pass for players who stepped away. Their turn is then skipped automatically.', autoPass:'Auto-pass', presentNoAction:'present', statusPresent:'Present', statusAbsent:'Away', hostTools:'Game management',
       winReveal:'Victory', everyoneSees:'Everyone sees this', hostOnly:'Host only', setupNewGame:'Set up a new game', setupNewGameSub:'Restart with the same players right away — no need to wait for the vote.', winSub:'The campaign is decided.',
       joinNameTitle:'Enter your name', joinNameSub:'This is how the others recognise you.', confirmColor:'Pick this colour',
       joinColorTitle:'Choose your colour', joinColorSub:'Taken colours are blocked. First come, first served.',
-      joinRoleTitle:'Choose your role', joinRoleSub:'Each role grants a public bonus while you hold its home country. Roles already taken are blocked.', confirmRole:'Pick this role', roleOriginLbl:'Home',
-      joinedTitle:"You're in the lobby", waitHost:'Waiting for the host to start…', playersIn:'players joined',
+      joinRoleTitle:'Choose your role', joinRoleSub:'Each role grants a public bonus while you hold its home country. Roles already taken are blocked.', confirmRole:'Pick this role', joinConfirm:'Confirm', joinBack:'Edit name & colour', roleOriginLbl:'Home',
+      joinedTitle:"You're in the lobby", waitHost:'Waiting for the host to start…', playersIn:'players joined', waitQuoteKicker:'While you wait',
       orderKicker:'Turn order', orderTitle:'Set the order', orderSub:'Roll once. Highest roll starts the game.',
       youRolled:'You rolled', orderPos:'3rd — after Diego', waitOthers:'Waiting for everyone to roll…',
       setupKicker:'Setup', setupTitle:'Place your armies', armiesLeft:'to place', setupHint:'Tap + to place 1 army on one of your territories. Taking turns, one at a time.',
@@ -1410,8 +1450,14 @@ class Component extends DCLogic {
   setMapDemo = (m) => this.setState({ mapDemo: m });
   createGame = () => { if(this.state.mapDemo==='error') return; this.goKey('waiting'); };
   // waiting
-  addWait = () => this.setState(s=>({ waitCount: Math.min(6, s.waitCount+1) }));
-  startGame = () => { if(this.state.waitCount>=2) this.goKey('order'); };
+  SWIPE_W = 84;
+  effWait(){ return this.state.waitCount - this.state.removedWait.filter(x=>x<this.state.waitCount).length; }
+  addWait = () => this.setState(s=>{ const nc=Math.min(6,s.waitCount+1); return { waitCount:nc, removedWait:s.removedWait.filter(x=>x!==nc-1) }; });
+  removeWait = (pi) => this.setState(s=>({ removedWait:[...s.removedWait, pi], openIdx:null, dragIdx:null, dragX:0 }));
+  rowDown = (idx,e)=>{ try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){} this._sx=e.clientX; this._base=this.state.openIdx===idx?-this.SWIPE_W:0; this.setState({dragIdx:idx, dragX:this._base}); };
+  rowMove = (idx,e)=>{ if(this.state.dragIdx!==idx) return; let dx=this._base+(e.clientX-this._sx); dx=Math.max(-this.SWIPE_W, Math.min(0,dx)); this.setState({dragX:dx}); };
+  rowUp = (idx,e)=>{ if(this.state.dragIdx!==idx) return; const open=this.state.dragX < -this.SWIPE_W/2; this.setState({dragIdx:null, dragX:0, openIdx: open?idx:null}); };
+  startGame = () => { if(this.effWait()>=2) this.goKey('order'); };
   // winner
   gotoSettings = () => this.goKey('settings');
   // manage
@@ -1419,8 +1465,9 @@ class Component extends DCLogic {
   closeManage = () => this.setState({ manageOpen:false });
   toggleAutoPass = (idx) => this.setState(s=>({ autoPass: Object.assign({}, s.autoPass, { [idx]: !s.autoPass[idx] }) }));
   // join
-  joinFlowLen = () => { const roleChoose=(this.state.settings.roles!==false)&&((this.props.roleAssign??'choose')==='choose'); return roleChoose?4:3; };
+  joinFlowLen = () => { const roleChoose=(this.state.settings.roles!==false)&&((this.props.roleAssign??'choose')==='choose'); return roleChoose?3:2; };
   joinNext = () => this.setState(s=>({ join: Math.min(this.joinFlowLen()-1, s.join+1) }));
+  joinPrev = () => this.setState(s=>({ join: Math.max(0, s.join-1) }));
   pickColor = (idx) => this.setState({ colorPick: idx });
   pickRole = (idx) => this.setState({ rolePick: idx });
   // order
@@ -1575,9 +1622,22 @@ class Component extends DCLogic {
     ];
 
     // ---------- waiting ----------
-    const waitCount=this.state.waitCount;
-    const waitList=P.slice(0,waitCount).map((p,idx)=>{ const c=C[p.c]; return { hex:c.hex, on:c.on, sym:c.sym, name:p.name, cw:c.cw[L], isHost: idx===this.ME }; });
-    const canAddWait=waitCount<6;
+    const rawWait=this.state.waitCount, removed=this.state.removedWait;
+    const waitList=P.slice(0,rawWait).map((p,idx)=>({p,idx})).filter(o=>!removed.includes(o.idx)).map(({p,idx})=>{
+      const c=C[p.c], isHost=idx===this.ME, canRemove=!isHost;
+      const tx = this.state.dragIdx===idx ? this.state.dragX : (this.state.openIdx===idx ? -this.SWIPE_W : 0);
+      const reveal = canRemove ? -tx : 0;
+      const full = reveal >= this.SWIPE_W - 1;
+      return { hex:c.hex, on:c.on, sym:c.sym, name:p.name, cw:c.cw[L], isHost, canRemove,
+        showDelete: reveal > 0,
+        revealW: `${reveal}px`, revealOp: Math.min(1, reveal/this.SWIPE_W).toFixed(2), revealCursor: full?'pointer':'default',
+        tx:`translateX(${canRemove?tx:0}px)`,
+        trans: this.state.dragIdx===idx ? 'none' : 'transform .22s cubic-bezier(.2,.8,.2,1)',
+        onDown: canRemove?(e=>this.rowDown(idx,e)):(()=>{}), onMove: canRemove?(e=>this.rowMove(idx,e)):(()=>{}), onUp: canRemove?(e=>this.rowUp(idx,e)):(()=>{}),
+        remove: ()=> full && this.removeWait(idx) };
+    });
+    const waitCount=waitList.length;
+    const canAddWait=rawWait<6;
     const ready=waitCount>=2;
     const startGameBg = ready?'var(--pitch-500)':'var(--border-strong)';
     const startGameFg = ready?'var(--on-pitch)':'var(--fg3)';
@@ -1596,9 +1656,9 @@ class Component extends DCLogic {
 
     // ---------- join ----------
     const roleChoose=(this.state.settings.roles!==false)&&((this.props.roleAssign??'choose')==='choose');
-    const joinFlow=roleChoose?['name','color','role','wait']:['name','color','wait'];
+    const joinFlow=roleChoose?['nameColor','role','wait']:['nameColor','wait'];
     const jstep=joinFlow[Math.min(this.state.join, joinFlow.length-1)];
-    const joinName=isJoin&&jstep==='name', joinColor=isJoin&&jstep==='color', joinRole=isJoin&&jstep==='role', joinWait=isJoin&&jstep==='wait';
+    const joinNameColor=isJoin&&jstep==='nameColor', joinRole=isJoin&&jstep==='role', joinWait=isJoin&&jstep==='wait';
     const joinSteps=joinFlow.map((k,idx)=>({ c: idx<=this.state.join?'var(--pitch-500)':'var(--border-strong)' }));
     const nameValue='Tomas';
     const takenSet={0:true,2:true,3:true,4:true,5:true};
@@ -1614,6 +1674,7 @@ class Component extends DCLogic {
     const roleSelected=joinRole && !!mySelRole;
     const roleSelectedNot=joinRole && !mySelRole;
     const myRoleLine=mySelRole?(mySelRole.name[L]+' · '+mySelRole.origin[L]):null;
+    const _qs=this.QUOTES[lang]; const currentQuote=_qs[this.state.quoteIdx % _qs.length];
     const colorChips = C.map((c,idx)=>{ const taken=!!takenSet[idx]; const sel=this.state.colorPick===idx&&!taken;
       return { label:c.cw[L], hex:c.hex, on:c.on, sym:c.sym, taken, sel,
         pick: taken?(()=>{}):(()=>this.pickColor(idx)),
@@ -1913,7 +1974,7 @@ class Component extends DCLogic {
       // manage
       openManage:this.openManage, closeManage:this.closeManage, manageOpen:this.state.manageOpen, managePlayers,
       // join
-      joinName,joinColor,joinRole,joinWait,joinSteps,nameValue,colorChips,roleChips,myRoleLine,roleSelected,roleSelectedNot, joinNext:this.joinNext,
+      joinNameColor,joinRole,joinWait,joinSteps,nameValue,colorChips,roleChips,myRoleLine,roleSelected,roleSelectedNot, joinNext:this.joinNext, joinPrev:this.joinPrev, currentQuote,
       // order
       orderRolled,orderIdle,orderPips, rollOrder:this.rollOrder,
       // claim

@@ -169,9 +169,9 @@
 
       <!-- ============ CLAIM (TV, state 2) ============ -->
       <sc-if value="{{ isClaim }}" hint-placeholder-val="{{ true }}">
-      <div style="position:absolute;inset:0;padding:24px 26px;">
+      <div style="position:absolute;inset:0;padding:24px 26px;display:grid;grid-template-columns:1fr 402px;grid-template-rows:96px 1fr;gap:16px 26px;">
         <!-- top bar -->
-        <div style="height:96px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;">
+        <div style="grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding:0 14px;">
           <div style="display:flex;align-items:center;gap:18px;">
             <div style="width:64px;height:64px;border-radius:16px;background:{{ claimTurnHex }};display:flex;align-items:center;justify-content:center;font-size:34px;color:{{ claimTurnOn }};box-shadow:0 0 24px {{ claimTurnGlow }};">{{ claimTurnSym }}</div>
             <div>
@@ -187,7 +187,7 @@
         </div>
 
         <!-- map -->
-        <div style="position:absolute;left:26px;top:112px;width:1440px;height:784px;background:var(--atlas-map-bg);border:1px solid var(--atlas-map-border);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 120px rgba(0,0,0,.75),inset 0 0 0 3px rgba(120,96,56,.18);">
+        <div style="grid-column:1;grid-row:2;position:relative;min-width:0;background:var(--atlas-map-bg);border:1px solid var(--atlas-map-border);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 120px rgba(0,0,0,.75),inset 0 0 0 3px rgba(120,96,56,.18);">
           <svg viewBox="0 0 1500 790" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;">
             <defs>
               <filter id="atlasRoughC"><feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="7" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap></filter>
@@ -220,7 +220,7 @@
         </div>
 
         <!-- right panel: claimed per player -->
-        <div style="position:absolute;left:1492px;top:112px;width:402px;height:784px;display:flex;flex-direction:column;">
+        <div style="grid-column:2;grid-row:2;min-height:0;display:flex;flex-direction:column;">
           <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:15px;color:var(--fg3);margin-bottom:12px;">{{ t.claimPanelTitle }}</div>
           <div style="display:flex;flex-direction:column;gap:12px;">
             <sc-for list="{{ claimPanel }}" as="p" hint-placeholder-count="6">
@@ -241,9 +241,9 @@
 
       <!-- ============ BOARD (states 3-7) ============ -->
       <sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
-      <div style="position:absolute;inset:0;padding:24px 26px;">
+      <div style="position:absolute;inset:0;padding:24px 26px;display:grid;grid-template-columns:1fr 402px;grid-template-rows:96px 1fr 146px;gap:16px 26px;">
         <!-- top bar -->
-        <div style="height:96px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;">
+        <div style="grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding:0 14px;">
           <div style="display:flex;align-items:center;gap:18px;">{{ turnChipEl }}</div>
           <div style="display:flex;gap:12px;">
             <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="3">
@@ -260,7 +260,7 @@
         </div>
 
         <!-- map + panel -->
-        <div style="position:absolute;left:26px;top:112px;width:1440px;height:784px;background:var(--atlas-map-bg);border:1px solid var(--atlas-map-border);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 120px rgba(0,0,0,.75),inset 0 0 0 3px rgba(120,96,56,.18);">
+        <div style="grid-column:1;grid-row:2;position:relative;min-width:0;background:var(--atlas-map-bg);border:1px solid var(--atlas-map-border);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 120px rgba(0,0,0,.75),inset 0 0 0 3px rgba(120,96,56,.18);">
           <svg preserveAspectRatio="xMidYMid slice" style="width: 100%; height: 100%; display: block" viewBox="0 0 1500 790">
             <defs>
               <filter id="atlasRough"><feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="7" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap></filter>
@@ -364,12 +364,12 @@
         </div>
 
         <!-- right player panel (C12: framing enters, board persists) -->
-        <div style="position:absolute;left:1492px;top:112px;width:402px;height:784px;display:flex;flex-direction:column;animation:atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both;" ref="{{ panelRef }}">
+        <div style="grid-column: 2; grid-row: 2; min-height: 0; display: flex; flex-direction: column; animation: atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both; grid-row-end: span 2" ref="{{ panelRef }}">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:15px;color:var(--fg3);">{{ t.panelTitle }}</span>
             <span style="font-family:var(--font-mono);font-size:14px;color:var(--fg3);">{{ t.colTerr }} · {{ t.colArmy }}</span>
           </div>
-          <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+          <div style="display:flex;flex-direction:column;gap:10px;flex:none;">
             <sc-for list="{{ panelPlayers }}" as="p" hint-placeholder-count="6">
               <div style="position:relative;display:flex;align-items:center;gap:14px;background:{{ p.rowbg }};border:1px solid {{ p.rowborder }};border-radius:14px;padding:12px 14px;overflow:hidden;">
                 <sc-if value="{{ p.isCurrent }}"><div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gold-400);transform-origin:top;animation:atlasNowBar .3s cubic-bezier(.2,.7,.3,1) both;"></div></sc-if>
@@ -397,10 +397,18 @@
               </div>
             </sc-for>
           </div>
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; margin-top: 16px">
+            <div style="background: var(--atlas-row); border: 1px solid var(--gold-700); border-radius: 18px; position: relative; overflow: hidden; height: 100%; align-content: center">
+              <div style="font-family: var(--font-body); font-weight: 800; text-transform: uppercase; letter-spacing: .16em; font-size: 13px; color: var(--gold-400); text-align: center; margin-bottom: 14px; margin-top: 14px">{{ t.quoteKicker }}</div>
+              <div style="font-family: var(--font-display); font-weight: 900; font-size: 56px; line-height: .5; color: var(--gold-600); height: 26px; text-align: center">“</div>
+              <div style="font-family: var(--font-display); font-weight: 800; font-size: 26px; line-height: 1.3; color: var(--fg1); text-wrap: pretty; animation: atlasChipIn .5s cubic-bezier(.2,.7,.3,1) both; text-align: center; margin-left: 12px; margin-left: 12px; margin-right: 12px">{{ currentQuote.q }}</div>
+              <div style="font-family: var(--font-body); font-size: 16px; color: var(--fg3); margin-top: 16px; margin-top: 16px; text-align: center; margin-bottom: 16px; margin-left: 12px; margin-right: 12px">— {{ currentQuote.w }}</div>
+            </div>
+          </div>
         </div>
 
         <!-- feed (C12: framing enters, board persists) -->
-        <div style="position:absolute;left:26px;top:908px;width:1440px;height:146px;background:var(--atlas-feed);border:1px solid var(--border);border-radius:16px;padding:12px 18px;animation:atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both;" ref="{{ feedRef }}">
+        <div style="grid-column: 1; grid-row: 3; min-width: 0; background: var(--atlas-feed); border: 1px solid var(--border); border-radius: 16px; padding: 12px 18px; animation: atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both" ref="{{ feedRef }}">
           <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--fg3);margin-bottom:8px;">{{ t.feedTitle }}</div>
           <div style="display:flex;gap:12px;overflow:hidden;">{{ feedEls }}</div>
         </div>
@@ -536,7 +544,7 @@
 class Component extends DCLogic {
   constructor(props){
     super(props);
-    this.state = { i: 0, lang: (props && props.language) || 'nl', claimStep: 0, attrDone: 0, armyDelta: {}, ownerDelta: {}, diceReroll: {order:{},atk:{}}, lobbyN: 2, lobbyRoleN: 0, tbTurn: 1, tbPhase: 1, tbMode: 'normal', feedIds: [4,3,2,1,0], ovState: 'shown', theme: (props && props.theme) || 'dark' };
+    this.state = { i: 0, lang: (props && props.language) || 'nl', quoteIdx: 0, claimStep: 0, attrDone: 0, armyDelta: {}, ownerDelta: {}, diceReroll: {order:{},atk:{}}, lobbyN: 2, lobbyRoleN: 0, tbTurn: 1, tbPhase: 1, tbMode: 'normal', feedIds: [4,3,2,1,0], ovState: 'shown', theme: (props && props.theme) || 'dark' };
     this._feedCtr = 5;
     this._prevArmy = {};
     this._prevOwner = {};
@@ -565,6 +573,7 @@ class Component extends DCLogic {
     this.maybeTick();
     this.maybeDice();
     this.maybeLobby();
+    this._quoteTimer = setInterval(() => this.setState(s => ({ quoteIdx: s.quoteIdx + 1 })), 5000);
   }
   componentDidUpdate(){ if(this._fit) this._fit(); this.maybeClaim(); this.maybeAttr(); this.maybeTick(); this.maybeDice(); this.maybeLobby();
     // C12 frame-in re-trigger: the panel + feed persist across board->board nav (mount-only keyframe),
@@ -580,7 +589,7 @@ class Component extends DCLogic {
       el.style.animation = 'none'; void el.offsetWidth; el.style.animation = a;
     });
   }
-  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); this.stopClaim(); this.stopAttr(); this.stopTick(); this.stopDice(); this.stopLobby(); }
+  componentWillUnmount(){ if(this._fit) window.removeEventListener('resize', this._fit); this.stopClaim(); this.stopAttr(); this.stopTick(); this.stopDice(); this.stopLobby(); if(this._quoteTimer) clearInterval(this._quoteTimer); }
   stopTick(){ if(this._tickTimer){ clearInterval(this._tickTimer); this._tickTimer=null; } }
   stopDice(){ if(this._diceTimer){ clearInterval(this._diceTimer); this._diceTimer=null; } }
   stopLobby(){ if(this._lobbyTimer){ clearInterval(this._lobbyTimer); this._lobbyTimer=null; } }
@@ -782,15 +791,33 @@ class Component extends DCLogic {
     {nl:'OCEANIË',en:'OCEANIA',x:1300,y:506},
   ]; }
 
-  get STR(){ return {
-    nl:{ lobbyKicker:'Wachtkamer', join:'Scan om mee te doen', waitSlot:'Wacht op speler', waiting:'Wachten tot de host het spel start…',
+  // Fun Risk-flavoured lines, mirrored from the player phone's lobby screen.
+  get QUOTES(){ return {
+    nl:[
+      {q:'Wie Australië beheerst, beheerst de wereld.', w:'Oude veldheerswijsheid'},
+      {q:'De dobbelstenen kennen geen genade — alleen kansen.', w:'Generaal aan het front'},
+      {q:'Één continent per keer, veldheer.', w:'Strategisch handboek'},
+      {q:'Vrede is de adempauze tussen twee aanvallen.', w:'Een anonieme diplomaat'},
+      {q:'Verover Azië en de wereld volgt vanzelf.', w:'De kaartenkamer'},
+      {q:'Grenzen zijn slechts suggesties op de kaart.', w:'Een ambitieuze admiraal'},
+    ],
+    en:[
+      {q:'Hold Australia, and you hold the world.', w:"Old commander's wisdom"},
+      {q:'The dice show no mercy — only odds.', w:'A general at the front'},
+      {q:'One continent at a time, commander.', w:'The field manual'},
+      {q:'Peace is the pause between two attacks.', w:'An anonymous diplomat'},
+      {q:'Take Asia and the world will follow.', w:'The war room'},
+      {q:'Borders are merely suggestions on the map.', w:'An ambitious admiral'},
+    ]
+  }; }
+  get STR(){ return {    nl:{ lobbyKicker:'Wachtkamer', join:'Scan om mee te doen', waitSlot:'Wacht op speler', waiting:'Wachten tot de host het spel start…',
       playersJoined:'Spelers aangesloten', settings:'Instellingen',
       setMap:'Kaart', mapVal:'Standaard · 43 gebieden',
       setWin:'Winconditie', valMissions:'Geheime missies', setLayout:'Startopstelling', valRandom:'Random', setRoles:'Rollen', on:'Aan', off:'Uit',
       setEvents:'Gebeurtenisronde', setTimer:'Beurttimer', setArmies:'Startlegers', armiesVal:'18 (7 spelers)',
       orderKicker:'Startvolgorde', orderTitle:'Wie mag beginnen?', orderSub:'Elke speler gooit twéé dobbelstenen. Hoogste worp begint.', tie:'Blauw en Geel gooiden 12 — opnieuw gegooid, Blauw wint', turnOrder:'Speelvolgorde',
       phases:['Versterken','Aanvallen','Verplaatsen'], turnOf:'Aan de beurt', timerLabel:'Beurttijd', paused:'Gepauzeerd',
-      feedTitle:'Gebeurtenissen', panelTitle:'Spelers', colTerr:'GEB', colArmy:'LEG', nowTag:'AAN ZET', autoPass:'Auto-pass', eliminated:'Uitgeschakeld',
+      feedTitle:'Gebeurtenissen', panelTitle:'Spelers', colTerr:'GEB', colArmy:'LEG', nowTag:'AAN ZET', autoPass:'Auto-pass', eliminated:'Uitgeschakeld', quoteKicker:'Veldheerswijsheid',
       selTitle:'Doelwit kiezen', legendSource:'Bron', legendTarget:'Geldig doelwit',
       combatKicker:'Gevecht', vs:'vs', attackerL:'Aanvaller', defenderL:'Verdediger', captured:'VEROVERD',
       eventKicker:'Gebeurteniskaart', activeKicker:'Actief effect',
@@ -806,7 +833,7 @@ class Component extends DCLogic {
       setEvents:'Event round', setTimer:'Turn timer', setArmies:'Starting armies', armiesVal:'18 (7 players)',
       orderKicker:'Turn order', orderTitle:'Who goes first?', orderSub:'Everyone rolls one die. Highest roll starts.', tie:'Blue and Yellow rolled 6 — re-rolled, Blue wins', turnOrder:'Play order',
       phases:['Reinforce','Attack','Fortify'], turnOf:'Now playing', timerLabel:'Turn time', paused:'Paused',
-      feedTitle:'Feed', panelTitle:'Players', colTerr:'REG', colArmy:'ARM', nowTag:'ON TURN', autoPass:'Auto-pass', eliminated:'Eliminated',
+      feedTitle:'Feed', panelTitle:'Players', colTerr:'REG', colArmy:'ARM', nowTag:'ON TURN', autoPass:'Auto-pass', eliminated:'Eliminated', quoteKicker:"Commander's wisdom",
       selTitle:'Choose target', legendSource:'Source', legendTarget:'Valid target',
       combatKicker:'Combat', vs:'vs', attackerL:'Attacker', defenderL:'Defender', captured:'CAPTURED',
       eventKicker:'Event card', activeKicker:'Active effect',
@@ -863,6 +890,7 @@ class Component extends DCLogic {
   renderVals(){
     const i = this.state.i, lang = this.state.lang, L = lang === 'nl' ? 0 : 1;
     const t = this.STR[lang];
+    const _qs = this.QUOTES[lang]; const currentQuote = _qs[this.state.quoteIdx % _qs.length];
     const P = this.PLAYERS;
     const chip = (idx)=>({ hex:P[idx].hex, on:P[idx].on, sym:P[idx].sym, cw:P[idx].cw[L], name:P[idx].name });
 
@@ -1167,7 +1195,7 @@ class Component extends DCLogic {
       turnHex:turnP.hex, turnOn:turnP.on, turnSym:turnP.sym, turnName:turnP.name, turnCw:turnP.cw[L], turnGlow:turnP.hex+'99',
       phases, timerText:cfg.timer, timerLabel:t.timerLabel,
       timerNormal:cfg.mode==='normal', timerLow:cfg.mode==='low', timerPaused:cfg.mode==='paused',
-      terr, conts, panelPlayers, feed, selRings, turnChipEl, feedEls,
+      terr, conts, panelPlayers, feed, selRings, turnChipEl, feedEls, currentQuote,
       // selection
       selBody: lang==='nl' ? (turnP.cw[0] + ' kiest een doelwit vanuit Scandinavië') : (turnP.cw[1] + ' is choosing a target from Scandinavia'),
       // lobby

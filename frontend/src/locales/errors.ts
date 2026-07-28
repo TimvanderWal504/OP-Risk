@@ -73,6 +73,10 @@ export const errors = {
       nl: 'Onvoldoende missies beschikbaar voor het aantal spelers.',
       en: 'Not enough missions available for the number of players.',
     },
+    cannotRemoveHost: {
+      nl: 'De host kan niet verwijderd worden.',
+      en: 'The host cannot be removed.',
+    },
   },
   setup: {
     notYourTurnToClaim: {

@@ -5,6 +5,7 @@ import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { Dice, type DiceValue } from './ui/Dice'
 import { tvAnimations } from '../design-reference/shared/motion'
+import { Badge } from './ui/Badge'
 
 export interface OrderRollTvPanelProps {
   players: PlayerDto[]
@@ -38,6 +39,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
 
   return (
     <div className="flex flex-col items-center text-center">
+      <Badge>{t('badge')}</Badge>
       <h1 className="mt-3 mb-1.5 font-display text-[64px] font-black leading-none tracking-[-.02em]">
         {t('title')}
       </h1>
@@ -55,7 +57,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
           const dieAnimation = isReroll ? tvAnimations.diceRerollOrder : tvAnimations.orderRollDie(idx)
 
           return (
-            <div key={player.id} className="flex flex-col items-center gap-3.5">
+            <div key={player.id} className="flex flex-col items-center gap-3.5 mt-4">
               {dice ? (
                 <>
                   <Dice
@@ -86,7 +88,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                   />
                 </>
               ) : (
-                <div className="flex h-[118px] w-[118px] items-center justify-center text-sm text-fg-muted">
+                <div className="flex h-full w-[118px] items-center justify-center text-sm text-fg-muted">
                   {t('waitingForRoll')}
                 </div>
               )}

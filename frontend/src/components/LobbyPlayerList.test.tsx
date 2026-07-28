@@ -4,7 +4,7 @@ import { LobbyPlayerList } from './LobbyPlayerList'
 import { tvAnimations } from '../design-reference/shared/motion'
 
 const colors = [{ id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' }]
-const roles = [{ id: 'president', name: 'President', description: '' }]
+const roles = [{ id: 'president', name: 'President', description: '', originTerritory: 'eastern-united-states' }]
 
 describe('LobbyPlayerList', () => {
   it('toont spelers en het aantal wacht-slots tot maxPlayers', () => {

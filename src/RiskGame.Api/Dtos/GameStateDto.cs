@@ -39,8 +39,10 @@ public sealed record PlayerColorDto(string Id, string Name, string Hex, string O
 /// Draad-representatie van de rolcatalogus voor de rolkeuzestap (FO §8/§10, alleen
 /// relevant bij RoleAssignment = Kiezen) — zonder het effect-detail; dat is spellogica die
 /// de server toepast, niet iets dat de client zelf hoeft te tonen om te kunnen kiezen.
+/// <paramref name="OriginTerritory"/> is het herkomstland (territory-id) waar de rolbonus
+/// aan gekoppeld is; de client toont dat naast de rolnaam (join-flow, design Telefoon L316/L345).
 /// </summary>
-public sealed record RoleSummaryDto(string Id, string Name, string Description);
+public sealed record RoleSummaryDto(string Id, string Name, string Description, string OriginTerritory);
 
 public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int ArmyCount);
 

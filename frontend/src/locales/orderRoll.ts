@@ -3,9 +3,9 @@ import type { LocaleTree } from '../i18n/types'
 /** Order-roll-fase op TV en telefoon (FO §2.1): spelersvolgorde bepalen via dobbelworp. */
 export const orderRoll = {
   badge: { nl: 'Spelersvolgorde', en: 'Turn order' },
-  title: { nl: 'Spelersvolgorde bepalen', en: 'Determine turn order' },
+  title: { nl: 'Wie mag beginnen?', en: 'Who may start?' },
   sub: {
-    nl: 'Elke speler gooit twee dobbelstenen. Hoogste totaal begint.',
+    nl: 'Elke speler gooit twéé dobbelstenen. Hoogste totaal begint.',
     en: 'Everyone rolls two dice. Highest total starts.',
   },
   turnOrder: { nl: 'Speelvolgorde', en: 'Play order' },

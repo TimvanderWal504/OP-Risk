@@ -13,6 +13,7 @@ import { continents } from './continents'
 import { missions } from './missions'
 import { events } from './events'
 import { cards } from './cards'
+import { quotes } from './quotes'
 
 export const trees = {
   common,
@@ -30,4 +31,5 @@ export const trees = {
   missions,
   events,
   cards,
+  quotes,
 } as const

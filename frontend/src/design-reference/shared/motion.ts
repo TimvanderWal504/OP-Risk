@@ -202,4 +202,8 @@ export const transitions = {
   progressFillPhone: 'width .4s',
   /** Switch-knop-verschuiving (phone L180/L218/L1067, identiek in alle drie instanties). */
   switchKnob: 'transform .15s',
+  /** Swipe-to-delete-rij op het host-wachtscherm settelt terug naar open/dicht zodra de
+   *  pointer loslaat (phone-export, `rowUp`-handler); tijdens het actieve drag-gebaar zelf
+   *  staat de transition uit (`'none'`, geen token — dynamisch, zie component). */
+  swipeRowSettle: 'transform .22s cubic-bezier(.2,.8,.2,1)',
 } as const;

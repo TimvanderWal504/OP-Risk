@@ -160,4 +160,51 @@ public sealed class GameHubLobbyTests(PostgresFixture postgres) : IAsyncLifetime
 
         Assert.Contains("lobby.gameFull", exception.Message);
     }
+
+    [Fact]
+    public async Task RemovePlayer_DoorDeHost_VerwijdertDeSpelerEnMaaktZijnKleurWeerVrij()
+    {
+        var gameId = await CreateGameAsync();
+        await using var connection = await ConnectAsync();
+
+        var alice = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+        var bob = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Bob");
+        await connection.InvokeAsync<GameStateDto>("ChooseColor", gameId, bob.PlayerId, "blue");
+
+        var afterRemoval = await connection.InvokeAsync<GameStateDto>(
+            "RemovePlayer", gameId, alice.PlayerId, bob.PlayerId);
+
+        Assert.DoesNotContain(afterRemoval.Players, player => player.Id == bob.PlayerId);
+        Assert.Contains("blue", afterRemoval.AvailableColorIds);
+    }
+
+    [Fact]
+    public async Task RemovePlayer_DoorEenNietHost_WordtGeweigerd()
+    {
+        var gameId = await CreateGameAsync();
+        await using var connection = await ConnectAsync();
+
+        var alice = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+        var bob = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Bob");
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("RemovePlayer", gameId, bob.PlayerId, alice.PlayerId));
+
+        Assert.Contains("lobby.notHost", exception.Message);
+    }
+
+    [Fact]
+    public async Task RemovePlayer_OpDeHostZelf_WordtGeweigerd()
+    {
+        var gameId = await CreateGameAsync();
+        await using var connection = await ConnectAsync();
+
+        var alice = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+        await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Bob");
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("RemovePlayer", gameId, alice.PlayerId, alice.PlayerId));
+
+        Assert.Contains("lobby.cannotRemoveHost", exception.Message);
+    }
 }

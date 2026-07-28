@@ -183,6 +183,10 @@ public sealed class GameState
         return With(players: players);
     }
 
+    /// <summary>Verwijdert een speler uit de lobby; de overige spelers blijven ongewijzigd.</summary>
+    public GameState WithoutPlayer(string playerId) =>
+        With(players: [.. Players.Where(player => player.Id != playerId)]);
+
     /// <summary>Vervangt het bezit van één gebied; de overige gebieden blijven ongewijzigd.</summary>
     public GameState WithTerritory(TerritoryOwnership territory)
     {

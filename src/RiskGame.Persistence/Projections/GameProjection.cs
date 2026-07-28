@@ -84,6 +84,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     public GameState Apply(GameState state, ColorChosen @event) =>
         state.WithPlayer(state.Player(@event.PlayerId) with { ColorId = @event.ColorId });
 
+    /// <summary>De host heeft een wachtende speler verwijderd (FO/TO: geen sectie —
+    /// nieuwe lobby-mutatie); de vouwregel filtert alleen de genoemde speler weg.</summary>
+    public GameState Apply(GameState state, PlayerRemoved @event) =>
+        state.WithoutPlayer(@event.PlayerId);
+
     /// <summary>
     /// Legt de spelersvolgorde vast en stapt naar de startopstelling-fase die bij
     /// <see cref="GameSettings.SetupMode"/> hoort (FO §5.1): <see cref="GamePhase.Claiming"/>

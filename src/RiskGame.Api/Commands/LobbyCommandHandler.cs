@@ -169,6 +169,35 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
         return Result<GameStateDto>.Success(dto);
     }
 
+    public async Task<Result<GameStateDto>> RemovePlayerAsync(string gameId, string callerId, string targetPlayerId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+        }
+
+        var validation = ValidationResult.Combine(
+            LobbyGuards.GameIsInLobby(state),
+            Guards.PlayerExists(state, callerId),
+            LobbyGuards.CallerIsHost(state, callerId),
+            LobbyGuards.TargetIsRemovable(state, targetPlayerId));
+
+        if (!validation.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(validation.Errors);
+        }
+
+        session.Events.Append(gameId, new PlayerRemoved(gameId, targetPlayerId));
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+    }
+
     public async Task<Result<GameStateDto>> SelectRoleAsync(string gameId, string playerId, string roleId)
     {
         await using var session = store.LightweightSession();

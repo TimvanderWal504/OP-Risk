@@ -29,6 +29,26 @@ public static class LobbyGuards
             : ValidationResult.Failure("lobby.notHost", new Dictionary<string, string> { ["playerId"] = playerId });
     }
 
+    /// <summary>
+    /// Of <paramref name="targetPlayerId"/> verwijderd mag worden: moet bestaan en mag
+    /// geen host zijn — de host verwijdert zichzelf nooit (er is geen ander mechanisme
+    /// om het hostschap over te dragen).
+    /// </summary>
+    public static ValidationResult TargetIsRemovable(GameState state, string targetPlayerId)
+    {
+        var exists = Guards.PlayerExists(state, targetPlayerId);
+
+        if (!exists.IsSuccess)
+        {
+            return exists;
+        }
+
+        return state.Player(targetPlayerId).IsHost
+            ? ValidationResult.Failure(
+                "lobby.cannotRemoveHost", new Dictionary<string, string> { ["playerId"] = targetPlayerId })
+            : ValidationResult.Success();
+    }
+
     public static ValidationResult HasMinimumPlayers(GameState state) =>
         state.Players.Count >= MinimumPlayers
             ? ValidationResult.Success()

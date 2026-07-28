@@ -11,19 +11,22 @@ export interface JoinRoleStepProps {
   roles: RoleSummaryDto[]
   takenRoleIds: string[]
   onPick: (roleId: string) => void
+  onBack: () => void
   stepIndex: number
   stepCount: number
   error?: string | null
 }
 
-/** Derde join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen.
- * Select-dan-bevestig (Telefoon.dc.html L303-330): een klik zet alleen de
- * lokale keuze; zonder keuze toont de knopplek een placeholder-tekst i.p.v.
- * een knop, met keuze verschijnt de bevestigingsknop die `onPick` aanroept. */
+/** Tweede join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen.
+ * Select-dan-bevestig (Telefoon.dc.html L303-332 na de export-update): een klik
+ * zet alleen de lokale keuze; zonder keuze toont de knopplek een placeholder-tekst
+ * i.p.v. een knop. De footer is een rij van twee knoppen: `onBack` (naar de
+ * naam+kleur-stap) en de bevestigknop die `onPick` aanroept. */
 export function JoinRoleStep({
   roles,
   takenRoleIds,
   onPick,
+  onBack,
   stepIndex,
   stepCount,
   error = null,
@@ -70,13 +73,20 @@ export function JoinRoleStep({
         })}
       </div>
       <Footer error={error}>
-        {pendingRoleId ? (
-          <Button onClick={() => onPick(pendingRoleId)}>{t('role.confirm')}</Button>
-        ) : (
-          <div className="flex min-h-16 w-full items-center justify-center rounded-card border border-dashed border-border-strong text-sm text-fg-muted">
-            {t('role.pickFirst')}
-          </div>
-        )}
+        <div className="flex flex-row gap-2.5">
+          <Button variant="secondary" onClick={onBack} className="min-h-[46px] flex-1 text-sm">
+            {t('role.back')}
+          </Button>
+          {pendingRoleId ? (
+            <Button onClick={() => onPick(pendingRoleId)} className="flex-[2]">
+              {t('role.confirm')}
+            </Button>
+          ) : (
+            <div className="flex min-h-16 flex-[2] items-center justify-center rounded-card border border-dashed border-border-strong text-sm text-fg-muted">
+              {t('role.pickFirst')}
+            </div>
+          )}
+        </div>
       </Footer>
     </div>
   )

@@ -122,4 +122,28 @@ public sealed class LobbyGuardsTests
 
         Assert.False(LobbyGuards.AllPlayersHaveChosenColor(state).IsSuccess);
     }
+
+    [Fact]
+    public void TargetIsRemovable_VoorNietHostSpeler_IsGeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red", isHost: true), TestGame.Player("p2", "blue")]);
+
+        Assert.True(LobbyGuards.TargetIsRemovable(state, "p2").IsSuccess);
+    }
+
+    [Fact]
+    public void TargetIsRemovable_VoorDeHost_IsOngeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red", isHost: true), TestGame.Player("p2", "blue")]);
+
+        Assert.False(LobbyGuards.TargetIsRemovable(state, "p1").IsSuccess);
+    }
+
+    [Fact]
+    public void TargetIsRemovable_VoorOnbekendeSpeler_IsOngeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red", isHost: true)]);
+
+        Assert.False(LobbyGuards.TargetIsRemovable(state, "onbekend").IsSuccess);
+    }
 }

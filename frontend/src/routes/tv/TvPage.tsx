@@ -12,7 +12,7 @@ import { GamePhaseDto } from '../../types/GameState'
 
 /** Host-scherm.dc.html L34: de stage draait altijd in het donkere thema, ongeacht OS-voorkeur. */
 function TvShell({ children }: { children: ReactNode }) {
-  return <div className="dark h-full">{children}</div>
+  return <div className="dark h-full bg-hero-pattern">{children}</div>
 }
 
 export function TvPage() {
@@ -40,16 +40,13 @@ export function TvPage() {
   if (displayPhase === GamePhaseDto.OrderRoll) {
     return (
       <TvShell>
-        <div className="flex h-full flex-col p-14 bg-hero-pattern">
-          <TvPageHeader badge={t('orderRoll:badge')} />
-          <div className="flex flex-1 items-center justify-center">
+        <div className="flex h-full flex-col mx-auto max-w-[1550px] p-14 items-center justify-center">
             <OrderRollTvPanel
               players={state.players}
               colors={state.colors}
               throws={orderRollThrows}
               order={state.turnOrder}
             />
-          </div>
         </div>
       </TvShell>
     )
@@ -58,7 +55,7 @@ export function TvPage() {
   if (displayPhase !== GamePhaseDto.Lobby) {
     return (
       <TvShell>
-        <div className="flex h-full items-center justify-center text-fg-muted">
+        <div className="flex h-full mx-auto max-w-[1550px] items-center justify-center text-fg-muted">
           {t('lobby:placeholder.tv')}
         </div>
       </TvShell>
@@ -67,18 +64,16 @@ export function TvPage() {
 
   return (
     <TvShell>
-      <div className="flex h-full flex-col p-14 bg-hero-pattern">
+      <div className="flex h-full flex-col p-14 mx-auto max-w-[1550px]">
         <TvPageHeader badge={t('lobby:header.badge')} />
-        <div className="flex flex-1 gap-9">
-          <LobbyQrPanel gameId={state.gameId} />
-          <div className="flex-1">
-            <LobbyPlayerList
-              players={state.players}
-              colors={state.colors}
-              roles={state.roles}
-              maxPlayers={state.colors.length}
-            />
-          </div>
+        <div className="flex gap-9 min-w-0 flex-1">
+          <LobbyQrPanel gameId={state.gameId} />          
+          <LobbyPlayerList
+            players={state.players}
+            colors={state.colors}
+            roles={state.roles}
+            maxPlayers={state.colors.length}
+          />
           <LobbySettingsSummary settings={state.settings} />
         </div>
       </div>

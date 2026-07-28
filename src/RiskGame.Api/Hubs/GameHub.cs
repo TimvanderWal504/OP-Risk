@@ -164,6 +164,13 @@ public sealed class GameHub(
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
     }
 
+    public async Task<GameStateDto> RemovePlayer(string gameId, string playerId, string targetPlayerId)
+    {
+        var result = await lobbyCommands.RemovePlayerAsync(gameId, playerId, targetPlayerId);
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+    }
+
     public async Task<OrderRollResponse> RollForOrder(string gameId, string playerId)
     {
         var result = await orderRollCommands.RollForOrderAsync(gameId, playerId);

@@ -5,17 +5,11 @@ export const join = {
   appTitle: { nl: 'OPERATIE ATLAS', en: 'OPERATION ATLAS' },
   name: {
     title: { nl: 'Hoe heet je?', en: 'What is your name?' },
-    sub: { nl: 'Zo herkennen de anderen je aan tafel.', en: 'This is how the others recognise you.' },
     placeholder: { nl: 'Jouw naam', en: 'Your name' },
   },
   color: {
     title: { nl: 'Kies je kleur', en: 'Choose your color' },
-    sub: {
-      nl: 'Bezette kleuren zijn geblokkeerd. Wie het eerst komt…',
-      en: 'Taken colours are blocked. First come, first served.',
-    },
     taken: { nl: 'Bezet', en: 'Taken' },
-    confirm: { nl: 'Kies deze kleur', en: 'Pick this colour' },
   },
   role: {
     title: { nl: 'Kies je rol', en: 'Choose your role' },
@@ -25,15 +19,17 @@ export const join = {
       en: 'Each role grants a public bonus while you hold its home country. Roles already taken are blocked.',
     },
     taken: { nl: 'Bezet', en: 'Taken' },
-    confirm: { nl: 'Kies deze rol', en: 'Pick this role' },
+    confirm: { nl: 'Bevestigen', en: 'Confirm' },
+    back: { nl: 'Naam & kleur aanpassen', en: 'Edit name & colour' },
     pickFirst: { nl: 'Kies eerst een rol', en: 'Pick a role first' },
   },
   wait: {
-    title: { nl: 'Je bent aangemeld', en: "You're signed up" },
+    title: { nl: 'Je zit in de lobby', en: "You're in the lobby" },
     noColor: { nl: 'geen kleur', en: 'no color' },
-    playersPresent_one: { nl: '{{count}} speler aanwezig', en: '{{count}} player present' },
-    playersPresent_other: { nl: '{{count}} spelers aanwezig', en: '{{count}} players present' },
-    waitingForHost: { nl: 'Wachten tot de host het spel start…', en: 'Waiting for the host to start the game…' },
+    playersPresent_one: { nl: '{{count}} speler aangesloten', en: '{{count}} player joined' },
+    playersPresent_other: { nl: '{{count}} spelers aangesloten', en: '{{count}} players joined' },
+    waitingForHost: { nl: 'Wachten tot de host start…', en: 'Waiting for the host to start…' },
+    quoteKicker: { nl: 'Terwijl je wacht', en: 'While you wait' },
   },
   hostWait: {
     kicker: { nl: 'Spel aangemaakt', en: 'Game created' },

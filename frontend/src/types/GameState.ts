@@ -37,6 +37,8 @@ export interface RoleSummaryDto {
   id: string
   name: string
   description: string
+  /** Herkomstland (territoryId); gelokaliseerd via `tDynamic(originTerritory, 'territories')`. */
+  originTerritory: string
 }
 
 export interface TerritoryDto {

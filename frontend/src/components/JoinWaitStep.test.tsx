@@ -18,21 +18,21 @@ describe('JoinWaitStep', () => {
     )
 
     expect(screen.getByText(/Alice/)).toBeInTheDocument()
-    expect(screen.getByText(/3 spelers aanwezig/)).toBeInTheDocument()
+    expect(screen.getByText(/3 spelers aangesloten/)).toBeInTheDocument()
   })
 
-  it('toont de rol als er een gekozen is', () => {
+  it('toont de rol met herkomstland als er een gekozen is', () => {
     render(
       <JoinWaitStep
         me={{ ...me, roleId: 'generaal' }}
         color={null}
-        role={{ id: 'generaal', name: 'Generaal', description: 'Extra legers per beurt.' }}
+        role={{ id: 'generaal', name: 'Generaal', description: 'Extra legers per beurt.', originTerritory: 'china' }}
         joinedCount={1}
         stepIndex={2}
         stepCount={3}
       />,
     )
 
-    expect(screen.getByText('Generaal')).toBeInTheDocument()
+    expect(screen.getByText(/Generaal/)).toBeInTheDocument()
   })
 })

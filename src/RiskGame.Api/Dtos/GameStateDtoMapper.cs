@@ -42,7 +42,7 @@ public static class GameStateDtoMapper
             .ToArray();
 
         var roles = state.Map.Roles
-            .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description))
+            .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description, role.OriginTerritory))
             .ToArray();
 
         return new GameStateDto(

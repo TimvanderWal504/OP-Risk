@@ -71,6 +71,31 @@ export function useGameState(gameId: string) {
     }
   }, [connection, gameId])
 
+  // Haalt de read-only state al op vóórdat er is gejoind, zodra er nog geen bekende
+  // playerId is — nodig omdat de samengevoegde naam+kleur-stap (JoinNameColorStep) de
+  // echte kleurenpalet uit state.colors toont op het allereerste scherm, dus vóór
+  // JoinGame is aangeroepen. WatchGame is dezelfde niet-joinende call als de TV gebruikt
+  // (TO §6): voegt de connectie toe aan de spelgroep zonder een speler aan te maken.
+  useEffect(() => {
+    if (!connection || connectionState !== HubConnectionState.Connected || playerId) return
+
+    let cancelled = false
+
+    connection
+      .invoke<GameStateDto>('WatchGame', gameId)
+      .then((fresh) => {
+        if (!cancelled) applyState(fresh)
+      })
+      .catch(() => {
+        // Onbekend spel o.i.d. — de join-stap toont zijn eigen foutmelding zodra de
+        // speler daadwerkelijk JoinGame aanroept, hier niets tonen.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [connection, connectionState, gameId, playerId])
+
   // Herstelt group-membership na elke (re)connect zodra er een bekende playerId is —
   // dekt zowel automatic-reconnect als een page refresh met sessionStorage-hit.
   useEffect(() => {
@@ -116,23 +141,43 @@ export function useGameState(gameId: string) {
     [connection],
   )
 
-  const joinGame = useCallback(
-    async (playerName: string) => {
-      const response = await invoke<JoinGameResponse>('JoinGame', gameId, playerName)
-
-      if (response) {
-        persistPlayerId(response.playerId)
-        applyState(response.state)
-      }
-    },
-    [invoke, gameId, persistPlayerId],
-  )
-
   const chooseColor = useCallback(
     async (colorId: string) => {
       if (!playerId) return
 
       const updated = await invoke<GameStateDto>('ChooseColor', gameId, playerId, colorId)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  // Eén gebruikersactie (de samengevoegde naam+kleur-stap) die twee hub-calls na
+  // elkaar doet. Gebruikt de playerId uit de JoinGame-respons rechtstreeks voor
+  // ChooseColor — playerId-state uit persistPlayerId is op dat moment nog niet
+  // doorgevoerd (React-state-update ligt na deze await), dus lezen uit closure-
+  // state zou hier een stale null opleveren.
+  const joinGameWithColor = useCallback(
+    async (playerName: string, colorId: string) => {
+      const joined = await invoke<JoinGameResponse>('JoinGame', gameId, playerName)
+
+      if (!joined) return
+
+      persistPlayerId(joined.playerId)
+      applyState(joined.state)
+
+      const updated = await invoke<GameStateDto>('ChooseColor', gameId, joined.playerId, colorId)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, persistPlayerId],
+  )
+
+  const removePlayer = useCallback(
+    async (targetPlayerId: string) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('RemovePlayer', gameId, playerId, targetPlayerId)
 
       if (updated) applyState(updated)
     },
@@ -172,8 +217,9 @@ export function useGameState(gameId: string) {
     connectionState,
     error,
     orderRollThrows,
-    joinGame,
+    joinGameWithColor,
     chooseColor,
+    removePlayer,
     selectRole,
     startGame,
     rollForOrder,

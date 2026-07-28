@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { JoinHostWaitStep } from './JoinHostWaitStep'
@@ -19,6 +19,7 @@ describe('JoinHostWaitStep', () => {
         maxPlayers={7}
         canStart={false}
         onStart={vi.fn()}
+        onRemovePlayer={vi.fn()}
       />,
     )
 
@@ -37,10 +38,37 @@ describe('JoinHostWaitStep', () => {
         maxPlayers={7}
         canStart
         onStart={onStart}
+        onRemovePlayer={vi.fn()}
       />,
     )
 
     await userEvent.click(screen.getByRole('button', { name: /start spel/i }))
     expect(onStart).toHaveBeenCalled()
+  })
+
+  it('kan een niet-host speler verwijderen via swipe, maar niet de host', () => {
+    const onRemovePlayer = vi.fn()
+    render(
+      <JoinHostWaitStep
+        players={players}
+        colors={colors}
+        maxPlayers={7}
+        canStart
+        onStart={vi.fn()}
+        onRemovePlayer={onRemovePlayer}
+      />,
+    )
+
+    // Host-rij (Alice) heeft geen swipe-knop.
+    const aliceRow = screen.getByText('Alice').closest('[style]')!
+    expect(aliceRow.querySelector('button')).toBeNull()
+
+    const bobDraggable = screen.getByText('Bob').closest('div[style*="touch-action"]')! as HTMLElement
+    fireEvent.pointerDown(bobDraggable, { clientX: 100 })
+    fireEvent.pointerMove(bobDraggable, { clientX: 16 })
+
+    const deleteButton = bobDraggable.parentElement!.querySelector('button')!
+    fireEvent.click(deleteButton)
+    expect(onRemovePlayer).toHaveBeenCalledWith('2')
   })
 })
