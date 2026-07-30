@@ -3,6 +3,7 @@ import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage, JoinGameResponse, OrderRollResponse } from '../types/HubResponses'
+import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
@@ -24,6 +25,7 @@ export function useGameState(gameId: string) {
   )
   const [error, setError] = useState<string | null>(null)
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
+  const [territoryCatalog, setTerritoryCatalog] = useState<TerritoryCatalogDto[]>([])
 
   const persistPlayerId = useCallback(
     (id: string) => {
@@ -95,6 +97,27 @@ export function useGameState(gameId: string) {
       cancelled = true
     }
   }, [connection, connectionState, gameId, playerId])
+
+  // Statische territoriumcatalogus (continent per gebied) — eenmalig per gameId, los van de
+  // realtime state-stroom: verandert nooit tijdens een spel, dus geen reden om 'm via SignalR
+  // mee te laten lopen (RiskGame.Api/Endpoints/GameEndpoints.cs).
+  useEffect(() => {
+    let cancelled = false
+
+    fetch(`/games/${gameId}/territories`)
+      .then((response) => (response.ok ? (response.json() as Promise<TerritoryCatalogDto[]>) : []))
+      .then((catalog) => {
+        if (!cancelled) setTerritoryCatalog(catalog)
+      })
+      .catch(() => {
+        // Kaartlaag toont zelf geen fout op basis hiervan; de claim-/plaatsingsstap blijft dan
+        // gewoon leeg totdat het endpoint weer bereikbaar is.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [gameId])
 
   // Herstelt group-membership na elke (re)connect zodra er een bekende playerId is —
   // dekt zowel automatic-reconnect als een page refresh met sessionStorage-hit.
@@ -211,17 +234,42 @@ export function useGameState(gameId: string) {
     if (response) applyState(response.state)
   }, [invoke, gameId, playerId])
 
+  const claimTerritory = useCallback(
+    async (territoryId: string) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('ClaimTerritory', gameId, playerId, territoryId)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  const placeInitialArmy = useCallback(
+    async (territoryId: string) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('PlaceInitialArmy', gameId, playerId, territoryId)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
   return {
     state,
     playerId,
     connectionState,
     error,
     orderRollThrows,
+    territoryCatalog,
     joinGameWithColor,
     chooseColor,
     removePlayer,
     selectRole,
     startGame,
     rollForOrder,
+    claimTerritory,
+    placeInitialArmy,
   }
 }

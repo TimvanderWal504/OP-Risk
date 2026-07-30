@@ -5,6 +5,7 @@ import { home } from './home'
 import { createGame } from './createGame'
 import { join } from './join'
 import { lobby } from './lobby'
+import { setup } from './setup'
 import { orderRoll } from './orderRoll'
 import { colors } from './colors'
 import { roles } from './roles'
@@ -23,6 +24,7 @@ export const trees = {
   createGame,
   join,
   lobby,
+  setup,
   orderRoll,
   colors,
   roles,

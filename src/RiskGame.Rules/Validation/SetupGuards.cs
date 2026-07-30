@@ -1,3 +1,4 @@
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
 
@@ -58,16 +59,9 @@ public static class SetupGuards
             return exists;
         }
 
-        var roleId = state.Player(playerId).RoleId;
+        var originTerritoryId = RoleOriginLookup.OriginTerritoryIdOf(state.Player(playerId).RoleId, state.Map.Roles);
 
-        if (roleId is null)
-        {
-            return ValidationResult.Success();
-        }
-
-        var role = state.Map.Roles.First(role => role.Id == roleId);
-
-        return role.OriginTerritory == territoryId
+        return originTerritoryId == territoryId
             ? ValidationResult.Failure(
                 "setup.cannotClaimOwnRoleOrigin",
                 new Dictionary<string, string> { ["playerId"] = playerId, ["territoryId"] = territoryId })

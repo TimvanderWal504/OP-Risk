@@ -9,7 +9,7 @@ describe('ColorSymbol', () => {
     ['triangle', '▲'],
     ['diamond', '◆'],
     ['star', '★'],
-    ['hexagon', '⬡'],
+    ['line', '▬'],
     ['cross', '✚'],
   ])('toont het teken voor %s', (symbol, glyph) => {
     render(<ColorSymbol symbol={symbol} />)

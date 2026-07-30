@@ -74,6 +74,7 @@ en worden niet meer gemeld als afwijking.
 
 |Waar is het op van toepassing| Wat is er anders|Wat was de verwachting|Impact op applicatie|
 | RemovablePlayerRow.tsx | Breedte van de knop is w-[19.5%] | Breedte van de knop is w-[22.5%] | minimaal |
+| ClaimTerritoryStep.tsx | Geen `claimSimRound`-knop ("Volgende ronde (demo)") | Telefoon.dc.html L445 toont die knop in de "niet jouw beurt"-substaat van Claim | geen — de knop was een designdemo-simulatie zonder server-tegenhanger; server drijft de voortgang echt |
 
 ## Animatie
 

@@ -161,7 +161,7 @@ export const semantic = {
 // naam (niet betwist, alleen de kleur→naam-koppeling was dat).
 // ---------------------------------------------------------------------------
 export type PlayerColorId = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'turquoise';
-export type PlayerSymbolId = 'circle' | 'square' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'cross';
+export type PlayerSymbolId = 'circle' | 'square' | 'triangle' | 'diamond' | 'star' | 'line' | 'cross';
 
 export const symbolGlyph: Record<PlayerSymbolId, string> = {
   circle: '●',
@@ -169,16 +169,16 @@ export const symbolGlyph: Record<PlayerSymbolId, string> = {
   triangle: '▲',
   diamond: '◆',
   star: '★',
-  hexagon: '⬡',
+  line: '▬',
   cross: '✚',
 };
 
 export const playerColors: Record<PlayerColorId, { hex: string; onHex: string; symbol: PlayerSymbolId; name: string }> = {
-  red: { hex: '#ca3c25', onHex: '#fffbbd', symbol: 'circle', name: 'Rood' },
-  blue: { hex: '#0057ff', onHex: '#f8f7f4', symbol: 'square', name: 'Blauw' },
-  green: { hex: '#cfff74', onHex: '#2f3a1d', symbol: 'triangle', name: 'Groen' },
+  red: { hex: '#800020', onHex: '#f9a8a8', symbol: 'circle', name: 'Rood' },
+  blue: { hex: '#1d5da8', onHex: '#e6f0fa', symbol: 'square', name: 'Blauw' },
+  green: { hex: '#1e3b1e', onHex: '#e8f2e3', symbol: 'triangle', name: 'Groen' },
   yellow: { hex: '#fcdb32', onHex: '#141d38', symbol: 'diamond', name: 'Geel' },
-  purple: { hex: '#6a00f4', onHex: '#ffd6a5', symbol: 'star', name: 'Paars' },
-  orange: { hex: '#fc6c26', onHex: '#fff4dc', symbol: 'hexagon', name: 'Oranje' },
+  purple: { hex: '#7900b0', onHex: '#e6e6fa', symbol: 'star', name: 'Paars' },
+  orange: { hex: '#e58423', onHex: '#1b1716', symbol: 'line', name: 'Oranje' },
   turquoise: { hex: '#34e0a1', onHex: '#000000', symbol: 'cross', name: 'Turquoise' },
 };

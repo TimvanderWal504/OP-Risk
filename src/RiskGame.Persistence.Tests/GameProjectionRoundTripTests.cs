@@ -87,6 +87,51 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// Dekt <see cref="TerritoryAssigned"/> (FO §5.1, <see cref="SetupMode.Random"/>): zelfde
+    /// vouwregel als <see cref="TerritoryClaimed"/> (bezit + 1 leger), en overleeft een
+    /// onafhankelijke replay net als de rest van de stream.
+    /// </summary>
+    [Fact]
+    public async Task TerritoryAssigned_VouwtBezitEnEenLegerEnOverleeftEenReplay()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var randomSettings = Settings with { SetupMode = SetupMode.Random };
+        var correlationId = Guid.NewGuid();
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using var session = store.LightweightSession();
+
+        session.Events.StartStream<GameState>(
+            gameId,
+            new GameCreated(gameId, "standaard-43", randomSettings),
+            new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
+            new ColorChosen(gameId, "p1", "red"),
+            new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
+            new ColorChosen(gameId, "p2", "blue"),
+            new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
+            new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),
+            new TurnOrderDetermined(gameId, ["p1", "p2"]),
+            new TerritoryAssigned(gameId, "p1", "alaska", correlationId),
+            new TerritoryAssigned(gameId, "p2", "northwest-territory", correlationId));
+
+        await session.SaveChangesAsync();
+
+        var live = await session.LoadAsync<GameState>(gameId);
+        var replayed = await ReplayFromRawEventsAsync(session, gameId, mapSource);
+
+        Assert.NotNull(live);
+        Assert.NotNull(replayed);
+        Assert.Equal(GamePhase.InitialPlacement, live!.Phase);
+        Assert.Equal("p1", live.Territory("alaska").OwnerPlayerId);
+        Assert.Equal(1, live.Territory("alaska").ArmyCount);
+        Assert.Equal("p2", live.Territory("northwest-territory").OwnerPlayerId);
+        Assert.Equal(1, live.Territory("northwest-territory").ArmyCount);
+
+        AssertIdenticalGameState(live, replayed!);
+    }
+
+    /// <summary>
     /// Nog geen event vult <see cref="GameState.ActiveEffects"/> (dat komt bij een latere
     /// plak), dus deze test bewijst de serialisatie van <see cref="ActiveEffect.Effect"/>
     /// (<see cref="RiskGame.Rules.Effects.IEffect"/>, hetzelfde polymorfe-type-probleem als
@@ -567,6 +612,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 OrderRolled => state!,
                 TurnOrderDetermined determined => projection.Apply(state!, determined),
                 TerritoryClaimed claimed => projection.Apply(state!, claimed),
+                TerritoryAssigned assigned => projection.Apply(state!, assigned),
                 InitialArmyPlaced placed => projection.Apply(state!, placed),
                 RoleAssigned roleAssigned => projection.Apply(state!, roleAssigned),
                 MissionAssigned missionAssigned => projection.Apply(state!, missionAssigned),

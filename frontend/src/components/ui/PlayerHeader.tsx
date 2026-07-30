@@ -49,7 +49,7 @@ export function PlayerHeader({
   actions = DEFAULT_ACTIONS,
 }: PlayerHeaderProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col mt-4">
       <div className="flex items-center gap-[11px] rounded-card border border-border bg-[var(--atlas-t03)] px-3 py-2.5">
         <div className="relative flex-none">
           <PlayerAvatar colorHex={colorHex} colorOnHex={colorOnHex} colorSymbol={colorSymbol} />

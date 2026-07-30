@@ -4,7 +4,7 @@ const GLYPHS: Record<string, string> = {
   triangle: '▲',
   diamond: '◆',
   star: '★',
-  hexagon: '⬡',
+  line: '▬',
   cross: '✚',
 }
 

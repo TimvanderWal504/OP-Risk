@@ -65,6 +65,14 @@ export interface OrderRollStateDto {
   playersStillToRoll: string[]
 }
 
+/**
+ * Spiegelt RiskGame.Api.Dtos.SetupStateDto — wie er nu aan zet is tijdens Claiming/
+ * InitialPlacement (turnState is dan nog null).
+ */
+export interface SetupStateDto {
+  activePlayerId: string
+}
+
 export interface GameStateDto {
   gameId: string
   phase: GamePhaseDto
@@ -77,5 +85,6 @@ export interface GameStateDto {
   roles: RoleSummaryDto[]
   settings: GameSettingsDto
   orderRollState: OrderRollStateDto | null,
+  setupState: SetupStateDto | null,
   stateVersion: number
 }

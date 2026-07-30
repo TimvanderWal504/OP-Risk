@@ -30,11 +30,11 @@ namespace RiskGame.Persistence.Projections;
 /// events.
 /// </remarks>
 /// <remarks>
-/// <see cref="TerritoryClaimed"/> en <see cref="InitialArmyPlaced"/> vouwen bewust alleen
-/// het bezit/legeraantal van het genoemde gebied — of de Claiming/InitialPlacement-fase
-/// daarmee klaar is, is een beslissing die bij de command-orchestratie van bouwstap 3
-/// hoort. Zodra die beslissing valt, komt hij binnen als het hier al gevouwen
-/// <see cref="PhaseChanged"/>-event.
+/// <see cref="TerritoryClaimed"/>, <see cref="TerritoryAssigned"/> en
+/// <see cref="InitialArmyPlaced"/> vouwen bewust alleen het bezit/legeraantal van het
+/// genoemde gebied — of de Claiming/InitialPlacement-fase daarmee klaar is, is een
+/// beslissing die bij de command-orchestratie van bouwstap 3 hoort. Zodra die beslissing
+/// valt, komt hij binnen als het hier al gevouwen <see cref="PhaseChanged"/>-event.
 /// </remarks>
 public sealed partial class GameProjection(IMapDefinitionSource mapSource) : SingleStreamProjection<GameState, string>
 {
@@ -111,6 +111,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// een startleger (zie doc-comment op <see cref="TerritoryClaimed"/>).
     /// </summary>
     public GameState Apply(GameState state, TerritoryClaimed @event) =>
+        state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
+
+    /// <summary>Zelfde vouwregel als <see cref="TerritoryClaimed"/>; <c>CorrelationId</c> is
+    /// alleen betekenisvol voor narratie-consumenten, niet voor de projectie.</summary>
+    public GameState Apply(GameState state, TerritoryAssigned @event) =>
         state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
 
     /// <summary>Maakt plaats voor het bijplaatsen van resterende startlegers (FO §5.1).</summary>

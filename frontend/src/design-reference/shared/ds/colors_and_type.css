@@ -12,10 +12,33 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
 
+/* ----------------------------------------------------------------------------
+   MERK-FONT (swapbaar) — brand-font.ttf is het referentiebestand.
+   Wil je een andere font proberen? Vervang assets/fonts/brand-font.ttf door een
+   ander .ttf-bestand (zelfde naam) en het wordt automatisch overal gebruikt.
+   Verwijder je dit bestand, dan valt alles terug op Archivo (zie --font-brand).
+   ---------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Brand Font";
+  src: url("../assets/fonts/brand-font.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+/* Body-/labelfont (swapbaar) — vervang assets/fonts/body-font.otf door een
+   ander .otf/.ttf (zelfde naam) om alle p / span / labels te wisselen. */
+@font-face {
+  font-family: "Body Font";
+  src: url("../assets/fonts/body-font.otf") format("opentype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
   /* ---- Type families ---- */
-  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif; /* headlines, scores, ranks */
-  --font-body:    "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose */
+  --font-brand:   "Brand Font", "Archivo", ui-sans-serif, system-ui, sans-serif; /* swapbare merk-font (zie @font-face) */
+  --font-display: var(--font-brand); /* headlines, scores, ranks — nu de merk-font */
+  --font-body:    "Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose — nu de swapbare body-font */
+  --font-sans:    "Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose — nu de swapbare body-font */
   --font-mono:    "Geist Mono", ui-monospace, monospace; /* FIFA codes, kickoff, tabular data */
 
   /* ---- Type scale (mobile-first; px in comments) ---- */
@@ -104,13 +127,13 @@
      Symbols (colorblind-safe) are documented, not CSS: ▲ ● ■ ★ ✚ ⬡ ◆
      Single source of truth — mirrored by COLORS[] in both DC files.
      =========================================================================== */
-  --player-red:#ca3c25;    --player-red-on:#fffbbd;    /* ▲ Rood   */
-  --player-blue:#0057ff;   --player-blue-on:#f8f7f4;   /* ● Blauw  */
-  --player-green:#cfff74;  --player-green-on:#2f3a1d;  /* ■ Groen  */
+  --player-red:#800020;    --player-red-on:#f9a8a8;    /* ▲ Rood   */
+  --player-blue:#1d5da8;   --player-blue-on:#e6f0fa;   /* ● Blauw  */
+  --player-green:#1e3b1e;  --player-green-on:#e8f2e3;  /* ■ Groen  */
   --player-yellow:#fcdb32; --player-yellow-on:#141d38; /* ★ Geel   */
-  --player-purple:#6a00f4; --player-purple-on:#ffd6a5; /* ✚ Paars  */
+  --player-purple:#7900b0; --player-purple-on:#e6e6fa; /* ✚ Paars  */
   --player-cyan:#34e0a1;   --player-cyan-on:#000000;   /* ⬡ Turquoise  */
-  --player-orange:#fc6c26; --player-orange-on:#fff4dc; /* ◆ Oranje */
+  --player-orange:#e58423; --player-orange-on:#1b1716; /* ◆ Oranje */
 }
 
 /* ===========================================================================
@@ -180,7 +203,7 @@
   letter-spacing: var(--tracking-tight);
   color: var(--fg1);
 }
-.twc-h1 {
+h1, .twc-h1 {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   font-size: var(--text-h1);
@@ -188,21 +211,21 @@
   letter-spacing: var(--tracking-tight);
   color: var(--fg1);
 }
-.twc-h2 {
+h2, .twc-h2 {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   font-size: var(--text-h2);
   line-height: var(--leading-snug);
   color: var(--fg1);
 }
-.twc-h3 {
+h3, .twc-h3 {
   font-family: var(--font-body);
   font-weight: var(--weight-semi);
   font-size: var(--text-h3);
   line-height: var(--leading-snug);
   color: var(--fg1);
 }
-.twc-body {
+p, .twc-body {
   font-family: var(--font-body);
   font-weight: var(--weight-regular);
   font-size: var(--text-body);

@@ -4,6 +4,7 @@ using RiskGame.Persistence.Events;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
+using RiskGame.Rules.Territories;
 using RiskGame.Rules.TurnFlow;
 using RiskGame.Rules.Validation;
 
@@ -66,6 +67,20 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
                 .Concat(allPlayerIds.Where(id => id != updatedProgress.Winner))
                 .ToArray();
             session.Events.Append(gameId, new TurnOrderDetermined(gameId, turnOrder));
+
+            if (state.Settings.SetupMode == SetupMode.Random)
+            {
+                var orderedPlayers = turnOrder.Select(id => state.Player(id)).ToArray();
+                var assignments = TerritoryAssignmentCalculator.Assign(
+                    orderedPlayers, state.Map.Territories, state.Map.Roles, random);
+                var correlationId = Guid.NewGuid();
+
+                foreach (var (territoryId, assignedPlayerId) in assignments)
+                {
+                    session.Events.Append(
+                        gameId, new TerritoryAssigned(gameId, assignedPlayerId, territoryId, correlationId));
+                }
+            }
         }
 
         await session.SaveChangesAsync();

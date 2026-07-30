@@ -16,7 +16,27 @@ public sealed record GameStateDto(
     IReadOnlyList<RoleSummaryDto> Roles,
     GameSettingsDto Settings,
     OrderRollStateDto? OrderRollState = null,
+    SetupStateDto? SetupState = null,
     int StateVersion = 0);
+
+/// <summary>
+/// Wie er nu aan zet is tijdens <see cref="GamePhaseDto.Claiming"/>/
+/// <see cref="GamePhaseDto.InitialPlacement"/> (FO §5.1). <see cref="GameStateDto.TurnState"/>
+/// is in deze fases nog <c>null</c> — de mapper leidt dit veld af via
+/// <see cref="RiskGame.Rules.TurnFlow.SetupTurnCalculator"/>, zelfde bron als de
+/// server-side guards al gebruiken.
+/// </summary>
+public sealed record SetupStateDto(string ActivePlayerId);
+
+/// <summary>
+/// Draad-representatie van de territoriumcatalogus van de kaartvariant
+/// (<see cref="RiskGame.Rules.Map.Territory"/>) — alleen het continent; de weergavenaam komt
+/// client-side via <c>tDynamic(id, 'territories')</c> (frontend/src/locales/territories.ts),
+/// nooit het <c>Name</c>-veld uit de brondata (zelfde patroon als <c>RoleSummaryDto</c>).
+/// Statische data, bewust los van <see cref="GameStateDto"/>: verandert nooit tijdens een
+/// spel, dus geen reden om 'm op elke state-push mee te sturen.
+/// </summary>
+public sealed record TerritoryCatalogDto(string Id, string Continent);
 
 /// <summary>
 /// Wie er nu nog mag gooien voor de spelersvolgorde (FO §2.1). Alleen gevuld door

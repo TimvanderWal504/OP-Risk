@@ -1,4 +1,5 @@
 using RiskGame.Rules.State;
+using RiskGame.Rules.TurnFlow;
 
 namespace RiskGame.Api.Dtos;
 
@@ -45,9 +46,18 @@ public static class GameStateDtoMapper
             .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description, role.OriginTerritory))
             .ToArray();
 
+        var setupState = state.Phase switch
+        {
+            GamePhase.Claiming => new SetupStateDto(SetupTurnCalculator.ActiveClaimerId(state)),
+            GamePhase.InitialPlacement => new SetupStateDto(SetupTurnCalculator.ActivePlacerId(state)!),
+            _ => null,
+        };
+
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
-            colors, roles, ToDto(state.Settings), state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null);
+            colors, roles, ToDto(state.Settings),
+            state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
+            setupState);
     }
 
     private static GameSettingsDto ToDto(GameSettings settings) => new(

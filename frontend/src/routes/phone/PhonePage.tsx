@@ -8,6 +8,9 @@ import { JoinRoleStep } from '../../components/JoinRoleStep'
 import { JoinWaitStep } from '../../components/JoinWaitStep'
 import { JoinHostWaitStep } from '../../components/JoinHostWaitStep'
 import { OrderRollWaitStep } from '../../components/OrderRollWaitStep'
+import { ClaimTerritoryStep } from '../../components/ClaimTerritoryStep'
+import { PlaceInitialArmyStep } from '../../components/PlaceInitialArmyStep'
+import { NotYourTurnStep } from '../../components/NotYourTurnStep'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto, type GameStateDto } from '../../types/GameState'
 import { RoleAssignmentModeDto } from '../../types/GameSettings'
@@ -18,17 +21,21 @@ const takenColorIds = (state: GameStateDto) =>
 export function PhonePage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { t } = useTranslation('lobby')
+  const { t: tSetup } = useTranslation('setup')
   const {
     state,
     playerId,
     error,
     orderRollThrows,
+    territoryCatalog,
     joinGameWithColor,
     chooseColor,
     removePlayer,
     selectRole,
     startGame,
     rollForOrder,
+    claimTerritory,
+    placeInitialArmy,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
   // Terug-navigatie vanaf de rolstap: er is geen RenamePlayer-hub-methode, dus
@@ -78,6 +85,55 @@ export function PhonePage() {
           canRoll={state.orderRollState !== null}
           onRoll={rollForOrder}
           error={error}
+        />
+      </PhoneShell>
+    )
+  }
+
+  if (displayPhase === GamePhaseDto.Claiming && state.setupState) {
+    return (
+      <PhoneShell>
+        <ClaimTerritoryStep
+          territories={state.territories}
+          territoryCatalog={territoryCatalog}
+          players={state.players}
+          colors={state.colors}
+          activePlayerId={state.setupState.activePlayerId}
+          playerId={playerId}
+          onClaim={claimTerritory}
+          error={error}
+        />
+      </PhoneShell>
+    )
+  }
+
+  if (displayPhase === GamePhaseDto.InitialPlacement && state.setupState) {
+    if (state.setupState.activePlayerId !== playerId) {
+      const activePlayer = state.players.find((player) => player.id === state.setupState!.activePlayerId)
+      const activeColor = state.colors.find((c) => c.id === activePlayer?.colorId) ?? null
+
+      return (
+        <PhoneShell>
+          <NotYourTurnStep
+            activePlayerName={activePlayer?.name ?? ''}
+            activeColor={activeColor}
+            subtitle={tSetup('place.title')}
+          />
+        </PhoneShell>
+      )
+    }
+
+    const myTerritories = state.territories.filter((territory) => territory.ownerPlayerId === playerId)
+    const myColor = state.colors.find((c) => c.id === me.colorId) ?? null
+    const armiesLeft = state.settings.startingArmies - myTerritories.reduce((sum, t) => sum + t.armyCount, 0)
+
+    return (
+      <PhoneShell>
+        <PlaceInitialArmyStep
+          myTerritories={myTerritories}
+          myColor={myColor}
+          armiesLeft={armiesLeft}
+          onPlace={placeInitialArmy}
         />
       </PhoneShell>
     )

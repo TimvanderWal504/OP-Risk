@@ -109,6 +109,12 @@ Meld altijd wanneer je één van de twee documenten hebt gelezen.
   (bij frontend-werk) `pnpm run build` groen, én — bij elk component dat een
   design-tegenhanger heeft — een afgeronde design-conformiteitscheck volgens
   frontend/CLAUDE.md, inclusief de ingevulde afwijkingenlijst.
+- **Het uitvoeren van unittests** wordt altijd gedaan door de gebruiker.
+  De unittests nemen meer tijd in beslag en dit wordt daardoor niet meer gedaan
+  door een AI bot, maar door de gebruiker zelf. Het resultaat wordt gedeeld en 
+  hierop moet op geacteerd worden. De AI bot geeft wel de commando's weer die 
+  deze wilt draaien, zodat de input samenhangt met het gewenste output. 
+  Dit geldt voor backend en voor frontend unittests.
 - **Geen nieuwe dependencies zonder overleg.** NuGet- of (p)npm-packages
   toevoegen alleen na expliciete goedkeuring, met motivatie waarom het niet
   zonder kan.
