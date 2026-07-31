@@ -1,5 +1,6 @@
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
+using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Dtos;
 
@@ -48,8 +49,10 @@ public static class GameStateDtoMapper
 
         var setupState = state.Phase switch
         {
-            GamePhase.Claiming => new SetupStateDto(SetupTurnCalculator.ActiveClaimerId(state)),
-            GamePhase.InitialPlacement => new SetupStateDto(SetupTurnCalculator.ActivePlacerId(state)!),
+            GamePhase.Claiming => ToSetupDto(state, SetupTurnCalculator.ActiveClaimerId(state)),
+            GamePhase.InitialPlacement => ToSetupDto(
+                state,
+                state.Settings.SetupMode == SetupMode.Random ? null : SetupTurnCalculator.ActivePlacerId(state)),
             _ => null,
         };
 
@@ -59,6 +62,20 @@ public static class GameStateDtoMapper
             state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
             setupState);
     }
+
+    /// <summary>
+    /// Vult de setup-afleidingen per speler, met dezelfde calculators en guards die de
+    /// commando's valideren — zo kan wat de client toont niet uit de pas lopen met wat de
+    /// server accepteert.
+    /// </summary>
+    private static SetupStateDto ToSetupDto(GameState state, string? activePlayerId) => new(
+        activePlayerId,
+        state.Players.ToDictionary(
+            player => player.Id,
+            player => SetupTurnCalculator.RemainingArmiesFor(state, player.Id)),
+        state.Players.ToDictionary(
+            player => player.Id,
+            player => SetupGuards.ClaimableTerritoryIdsFor(state, player.Id)));
 
     private static GameSettingsDto ToDto(GameSettings settings) => new(
         ToDto(settings.WinCondition),

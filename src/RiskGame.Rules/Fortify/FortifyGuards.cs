@@ -151,8 +151,8 @@ public static class FortifyGuards
     private static bool IsTerritoryLocked(GameState state, string territoryId) =>
         state.ActiveEffects
             .Select(active => active.Effect)
-            .OfType<TerritoryLockedEffect>()
-            .Any(locked => locked.TerritoryIds.Contains(territoryId));
+            .OfType<ITerritoryLockingEffect>()
+            .Any(locking => locking.IsLocked(territoryId));
 
     private static Func<Border, bool>? BuildBlockedBorderPredicate(GameState state)
     {

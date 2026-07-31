@@ -33,8 +33,10 @@ de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
 | [frontend/src/design-reference/](frontend/src/design-reference/) | Ruwe Design-MCP-export — **ONGEWIJZIGD laten**, alleen lezen |
 | [frontend/src/components/](frontend/src/components/) | "Echte" componenten, geïnspireerd op `design-reference/` |
 | [frontend/src/map/](frontend/src/map/) | Projectie-logica + SVG-overlay (§7.2 TO) |
+| `frontend/src/routes/<device>/screens/` | Eén scherm per spelfase + het fase→scherm-register; containers die props afleiden, geen presentational componenten |
 | [frontend/src/hooks/](frontend/src/hooks/) | `useSignalR`, `useGameState` |
 | [frontend/src/types/](frontend/src/types/) | Gedeelde TypeScript-types |
+| [host/](host/) | Standalone design-demo van het TV-scherm (plain HTML/JS, geen build). **Uitzondering op de DRY-regel:** bevat een eigen kopie van spelers-/kleurdata en synchroniseert bewust niet mee met `data/`. Niet gebruiken als bron van waarheid |
 
 ## Werkafspraken
 
@@ -72,6 +74,12 @@ de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
 6. Reconnect & randgevallen
 
 Niet vooruitwerken op een latere stap voordat de vorige stap tests heeft die slagen.
+
+**Interne structuur mag vooruitlopen, het wire-contract niet.** Een DTO-veld is waarneembaar
+voor elke client, moet gevuld en getest worden, en later toevoegen kost bijna niets — dus niet
+alvast bouwen voor een scherm dat er nog niet is. Een interne vorm (een resolver, een
+interface, een maplaag) is onzichtbaar van buiten, maar achteraf verbouwen raakt alles wat er
+inmiddels aan hangt; daar mag de structuur dus wél op een latere bouwstap vooruitlopen.
 
 ## NuGet
 

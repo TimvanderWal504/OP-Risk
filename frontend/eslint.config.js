@@ -19,6 +19,12 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Een parameter die bewust (nog) niet gebruikt wordt, blijft leesbaar als hij zijn naam
+      // houdt: `_state` documenteert waar een resolver op zal gaan sturen. De onderstreping is
+      // het signaal "met opzet ongebruikt".
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
   },
   {
     // Named exports, geen default exports (frontend/CLAUDE.md).

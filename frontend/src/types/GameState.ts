@@ -66,11 +66,19 @@ export interface OrderRollStateDto {
 }
 
 /**
- * Spiegelt RiskGame.Api.Dtos.SetupStateDto — wie er nu aan zet is tijdens Claiming/
- * InitialPlacement (turnState is dan nog null).
+ * Spiegelt RiskGame.Api.Dtos.SetupStateDto — alles wat de startopstelling nodig heeft, door
+ * de server afgeleid (turnState is in deze fases nog null).
+ *
+ * `activePlayerId` is `null` tijdens InitialPlacement bij SetupMode.Random: daar plaatst
+ * iedereen gelijktijdig, er is geen actieve speler. Dat onderscheid is hiermee volledig af te
+ * lezen — brancht dus niet op `settings.setupMode`, dat is alleen weergave.
  */
 export interface SetupStateDto {
-  activePlayerId: string
+  activePlayerId: string | null
+  /** Hoeveel startlegers elke speler nog moet plaatsen; niet zelf uitrekenen. */
+  remainingArmiesByPlayer: Record<string, number>
+  /** Welke gebieden elke speler mag claimen (vrij, en niet zijn eigen rol-herkomstland). */
+  claimableTerritoryIdsByPlayer: Record<string, string[]>
 }
 
 export interface GameStateDto {

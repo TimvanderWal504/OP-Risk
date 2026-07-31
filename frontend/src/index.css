@@ -115,9 +115,9 @@ body {
   }
 }
 
+/* De stage-achtergrond staat als token in de export (--atlas-stage-bg, colors_and_type.css
+   L279 licht / L291 donker). Hier de token gebruiken en niet de waarden overschrijven: anders
+   zit alleen de donkere variant vast en doet de lichte niets. */
 @utility bg-hero-pattern {
-  background: 
-    radial-gradient(90% 70% at 50% 22%, rgba(33, 89, 144, 0.14), rgba(4, 6, 11, 0) 62%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.016) 0 2px, transparent 2px 30px),
-    linear-gradient(#070b13, #05080f);
+  background: var(--atlas-stage-bg);
 }

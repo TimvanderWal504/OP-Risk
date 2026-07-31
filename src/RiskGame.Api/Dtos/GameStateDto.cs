@@ -20,13 +20,39 @@ public sealed record GameStateDto(
     int StateVersion = 0);
 
 /// <summary>
-/// Wie er nu aan zet is tijdens <see cref="GamePhaseDto.Claiming"/>/
-/// <see cref="GamePhaseDto.InitialPlacement"/> (FO §5.1). <see cref="GameStateDto.TurnState"/>
-/// is in deze fases nog <c>null</c> — de mapper leidt dit veld af via
-/// <see cref="RiskGame.Rules.TurnFlow.SetupTurnCalculator"/>, zelfde bron als de
-/// server-side guards al gebruiken.
+/// Alles wat een client tijdens <see cref="GamePhaseDto.Claiming"/>/
+/// <see cref="GamePhaseDto.InitialPlacement"/> nodig heeft om de startopstelling te tonen
+/// zónder zelf spelregels na te rekenen (FO §5.1). <see cref="GameStateDto.TurnState"/> is in
+/// deze fases nog <c>null</c>; de mapper leidt alles hier af via dezelfde calculators en guards
+/// die de server-side validatie gebruikt.
 /// </summary>
-public sealed record SetupStateDto(string ActivePlayerId);
+/// <param name="ActivePlayerId">
+/// Wie er aan zet is. <c>null</c> tijdens <see cref="GamePhaseDto.InitialPlacement"/> bij
+/// <see cref="RiskGame.Rules.State.SetupMode.Random"/>: daar plaatst iedereen gelijktijdig, er
+/// is geen "actieve" speler (FO §5.1). Dat onderscheid is hiermee volledig af te lezen — een
+/// client hoort er géén tweede veld of de opstelmodus voor nodig te hebben.
+/// </param>
+/// <param name="RemainingArmiesByPlayer">
+/// Hoeveel startlegers elke speler nog moet plaatsen
+/// (<see cref="RiskGame.Rules.TurnFlow.SetupTurnCalculator.RemainingArmiesFor"/>). Per speler en
+/// niet alleen voor de ontvanger: de state-push gaat naar de hele spelgroep, en legeraantallen
+/// zijn openbaar.
+/// </param>
+/// <param name="ClaimableTerritoryIdsByPlayer">
+/// Welke gebieden elke speler mag claimen
+/// (<see cref="RiskGame.Rules.Validation.SetupGuards.ClaimableTerritoryIdsFor"/>): vrije gebieden
+/// minus het eigen rol-herkomstland (FO §8.1). Per speler verschillend, en dat lekt niets: rollen
+/// zijn openbaar (FO §8) en het herkomstland is al af te leiden uit <see cref="PlayerDto.RoleId"/>
+/// plus <see cref="RoleSummaryDto.OriginTerritory"/>, die beide naar iedereen gaan. Wordt dat ooit
+/// verborgen informatie, dan moet dit veld mee naar de per-speler-push (TO §6.1).
+/// Let op bij groei: dit is het eerste veld dat kwadratisch meeschaalt (spelers × gebieden) en het
+/// gaat bij elke claim opnieuw naar iedereen. Op deze schaal verwaarloosbaar; knelt de payload
+/// ooit, dan is dit de plek — de lijsten zijn per speler bijna identiek.
+/// </param>
+public sealed record SetupStateDto(
+    string? ActivePlayerId,
+    IReadOnlyDictionary<string, int> RemainingArmiesByPlayer,
+    IReadOnlyDictionary<string, IReadOnlyList<string>> ClaimableTerritoryIdsByPlayer);
 
 /// <summary>
 /// Draad-representatie van de territoriumcatalogus van de kaartvariant

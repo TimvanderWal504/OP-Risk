@@ -210,8 +210,8 @@ public static class AttackGuards
     private static bool IsTerritoryLocked(GameState state, string territoryId) =>
         state.ActiveEffects
             .Select(active => active.Effect)
-            .OfType<TerritoryLockedEffect>()
-            .Any(locked => locked.TerritoryIds.Contains(territoryId));
+            .OfType<ITerritoryLockingEffect>()
+            .Any(locking => locking.IsLocked(territoryId));
 
     /// <summary>
     /// Of de grens tussen <paramref name="fromTerritoryId"/> en <paramref name="toTerritoryId"/>

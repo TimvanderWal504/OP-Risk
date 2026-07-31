@@ -21,5 +21,18 @@ namespace RiskGame.Persistence.Events;
 /// Tijdstip waarop <paramref name="Remaining"/> is vastgesteld, gestempeld met de
 /// applicatieklok (niet Martens databaseklok, zie <see cref="Rules.State.PhaseTimer"/>).
 /// </param>
+/// <param name="ArmiesGranted">
+/// De vrije versterkingspool die deze speler bij het ingaan van Versterken krijgt, bepaald
+/// door <see cref="Rules.Reinforcement.ReinforcementCalculator"/> vóórdat dit event ontstond.
+/// <c>null</c> bij een overgang naar Aanvallen of Verplaatsen: daar wordt niets toegekend, en
+/// dat is iets anders dan "nul legers". Bewust nullable en geen <c>0</c>-default, zodat een
+/// producent die vergeet te vullen luid faalt in de projectie in plaats van stilzwijgend een
+/// speler zonder versterkingen te laten beginnen.
+/// </param>
 public sealed record PhaseChanged(
-    string GameId, string PlayerId, TurnPhase TurnPhase, TimeSpan Remaining, DateTimeOffset OccurredAtUtc);
+    string GameId,
+    string PlayerId,
+    TurnPhase TurnPhase,
+    TimeSpan Remaining,
+    DateTimeOffset OccurredAtUtc,
+    int? ArmiesGranted);

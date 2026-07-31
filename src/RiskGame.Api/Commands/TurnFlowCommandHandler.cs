@@ -2,6 +2,7 @@ using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
 using RiskGame.Rules.Fortify;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
@@ -67,7 +68,11 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         var now = timeProvider.GetUtcNow();
         var timer = PhaseTimerFactory.ForPhase(nextPhase, state.Settings, state.TurnState.Timer, now);
 
-        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, nextPhase, timer.Remaining, now));
+        // Binnen een beurt gaat het altijd Versterken → Aanvallen → Verplaatsen
+        // (TurnPhaseTransitions.Next), dus hier wordt nooit een versterkingspool toegekend.
+        session.Events.Append(
+            gameId,
+            new PhaseChanged(gameId, playerId, nextPhase, timer.Remaining, now, ArmiesGranted: null));
 
         await session.SaveChangesAsync();
 
@@ -106,7 +111,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         var now = timeProvider.GetUtcNow();
         var timer = PhaseTimerFactory.ForPhase(TurnPhase.Fortify, state.Settings, turnState.Timer, now);
 
-        session.Events.Append(gameId, new PhaseChanged(gameId, playerId, TurnPhase.Fortify, timer.Remaining, now));
+        // Naar Verplaatsen: geen versterkingspool, zie EndPhaseAsync.
+        session.Events.Append(
+            gameId,
+            new PhaseChanged(gameId, playerId, TurnPhase.Fortify, timer.Remaining, now, ArmiesGranted: null));
 
         await session.SaveChangesAsync();
 
@@ -143,8 +151,19 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         var timer = PhaseTimerFactory.ForPhase(TurnPhase.Reinforce, state.Settings, currentTimer: null, now);
 
         session.Events.Append(gameId, new TurnEnded(gameId, playerId));
+
+        // Voor de ínkomende speler rekenen, niet voor de uitgaande: TurnEnded heeft bewust geen
+        // vouwregel (zie GameProjection), dus in `state` staat `playerId` nog als actieve speler.
+        // Dezelfde state die de projectie straks ziet, dus dezelfde uitkomst.
         session.Events.Append(
-            gameId, new PhaseChanged(gameId, nextPlayerId, TurnPhase.Reinforce, timer.Remaining, now));
+            gameId,
+            new PhaseChanged(
+                gameId,
+                nextPlayerId,
+                TurnPhase.Reinforce,
+                timer.Remaining,
+                now,
+                ReinforcementCalculator.CalculateArmies(state, nextPlayerId)));
 
         await session.SaveChangesAsync();
 

@@ -3,6 +3,7 @@ using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Store;
 using RiskGame.Rules.Effects;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Persistence.Tests;
@@ -55,9 +56,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new RoleAssigned(gameId, "p1", "diplomaat"),
             new MissionAssigned(gameId, "p1", "eliminate-blue"),
             new MissionAssigned(gameId, "p2", "territory-24"),
-            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, now),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, now, ArmiesGranted: 3),
             new ArmiesReinforced(gameId, "p1", "alaska", 3),
-            new PhaseChanged(gameId, "p1", TurnPhase.Attack, Settings.TurnTimer, now.AddSeconds(1)),
+            new PhaseChanged(
+                gameId, "p1", TurnPhase.Attack, Settings.TurnTimer, now.AddSeconds(1), ArmiesGranted: null),
             new AttackDeclared(
                 gameId, "p1", "alaska", "northwest-territory", AttackDice: 2,
                 Remaining: Settings.TurnTimer, OccurredAtUtc: now.AddSeconds(2), CorrelationId: Guid.NewGuid()),
@@ -70,10 +72,12 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new TerritoryConquered(gameId, "p1", "northwest-territory"),
             new ArmiesMovedAfterConquest(
                 gameId, "p1", "alaska", "northwest-territory", 2, now.AddSeconds(3)),
-            new PhaseChanged(gameId, "p1", TurnPhase.Fortify, Settings.FortifyTimer, now.AddSeconds(4)),
+            new PhaseChanged(
+                gameId, "p1", TurnPhase.Fortify, Settings.FortifyTimer, now.AddSeconds(4), ArmiesGranted: null),
             new Fortified(gameId, "p1", "northwest-territory", "alaska", 1),
             new TurnEnded(gameId, "p1"),
-            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce, Settings.TurnTimer, now.AddSeconds(5)));
+            new PhaseChanged(
+                gameId, "p2", TurnPhase.Reinforce, Settings.TurnTimer, now.AddSeconds(5), ArmiesGranted: 3));
 
         await session.SaveChangesAsync();
 
@@ -216,7 +220,13 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         var projection = new GameProjection(mapSource);
         var result = projection.Apply(
             initialState,
-            new CardsTraded(gameId, "p1", ["card-alaska", "card-siberia", "card-brazil"]));
+            new CardsTraded(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 4,
+                OwnedTerritoryBonuses: [new TerritoryBonus("alaska", map.SetRules.OwnedTerritoryBonus)],
+                NextTradeValue: 6));
 
         Assert.Empty(result.Player("p1").Hand);
         Assert.Equal([ownedCard, otherCard1, otherCard2], result.Deck.DiscardPile);
@@ -245,10 +255,14 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// <see cref="TurnState.ArmiesRemaining"/> wordt bij het ingaan van Versterken gezet op
-    /// <see cref="Rules.Reinforcement.ReinforcementCalculator.CalculateArmies"/> (hier: 1
-    /// gebied, dus het minimum van 3), daarna afgeteld door <see cref="ArmiesReinforced"/> en
-    /// opgehoogd door de setwaarde van <see cref="CardsTraded"/> (FO §5.2).
+    /// <see cref="TurnState.ArmiesRemaining"/> komt bij het ingaan van Versterken uit
+    /// <see cref="PhaseChanged.ArmiesGranted"/>, daarna afgeteld door
+    /// <see cref="ArmiesReinforced"/> en opgehoogd door <see cref="CardsTraded.SetValue"/>
+    /// (FO §5.2). De gebruikte bedragen wijken bewust af van wat
+    /// <see cref="Rules.Reinforcement.ReinforcementCalculator"/> en
+    /// <see cref="Rules.Reinforcement.CardTradeCalculator"/> voor deze state zouden opleveren
+    /// (7 i.p.v. het minimum van 3, en 9 i.p.v. 4): zou de projectie stiekem tóch zelf gaan
+    /// rekenen, dan valt deze test om in plaats van toevallig te blijven slagen.
     /// </summary>
     [Fact]
     public void ArmiesRemaining_WordtGezetBijPhaseChangedEnBijgewerktDoorReinforceEnCardsTraded()
@@ -288,15 +302,23 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var afterPhaseChanged = projection.Apply(
             initialState,
-            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, DateTimeOffset.UtcNow));
-        Assert.Equal(3, afterPhaseChanged.TurnState!.ArmiesRemaining);
+            new PhaseChanged(
+                gameId, "p1", TurnPhase.Reinforce, Settings.TurnTimer, DateTimeOffset.UtcNow, ArmiesGranted: 7));
+        Assert.Equal(7, afterPhaseChanged.TurnState!.ArmiesRemaining);
 
         var afterReinforce = projection.Apply(afterPhaseChanged, new ArmiesReinforced(gameId, "p1", "alaska", 2));
-        Assert.Equal(1, afterReinforce.TurnState!.ArmiesRemaining);
+        Assert.Equal(5, afterReinforce.TurnState!.ArmiesRemaining);
 
         var afterTrade = projection.Apply(
-            afterReinforce, new CardsTraded(gameId, "p1", ["card-alaska", "card-siberia", "card-brazil"]));
-        Assert.Equal(1 + 4, afterTrade.TurnState!.ArmiesRemaining);
+            afterReinforce,
+            new CardsTraded(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 9,
+                OwnedTerritoryBonuses: [],
+                NextTradeValue: 6));
+        Assert.Equal(5 + 9, afterTrade.TurnState!.ArmiesRemaining);
     }
 
     /// <summary>

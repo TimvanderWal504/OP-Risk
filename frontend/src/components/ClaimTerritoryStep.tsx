@@ -17,6 +17,12 @@ export interface ClaimTerritoryStepProps {
   colors: PlayerColorDto[]
   activePlayerId: string
   playerId: string
+  /**
+   * De gebieden die déze speler mag claimen, aangeleverd door de server (vrij én niet zijn
+   * eigen rol-herkomstland, FO §8.1). Bewust geen eigen filter op `territories`: welke keuzes
+   * geldig zijn is een spelregel, en die hoort niet in de client.
+   */
+  claimableTerritoryIds: string[]
   onClaim: (territoryId: string) => void
   error?: string | null
 }
@@ -38,6 +44,7 @@ export function ClaimTerritoryStep({
   colors,
   activePlayerId,
   playerId,
+  claimableTerritoryIds,
   onClaim,
   error = null,
 }: ClaimTerritoryStepProps) {
@@ -45,19 +52,20 @@ export function ClaimTerritoryStep({
   const [pendingTerritoryId, setPendingTerritoryId] = useState<string | null>(null)
   const isMyTurn = activePlayerId === playerId
 
-  const freeTerritoryIds = territories.filter((territory) => !territory.ownerPlayerId).map((t) => t.territoryId)
-  const claimFree = freeTerritoryIds.length
+  // Hoeveel er nog onverdeeld zijn is een feit uit de state (de teller in de kop); wélke daarvan
+  // deze speler mag kiezen komt van de server.
+  const claimFree = territories.filter((territory) => !territory.ownerPlayerId).length
 
   if (isMyTurn) {
     const continentOf = (territoryId: string) =>
       territoryCatalog.find((entry) => entry.id === territoryId)?.continent ?? null
 
-    const groups = Array.from(new Set(freeTerritoryIds.map(continentOf).filter((c): c is string => c !== null))).map(
-      (continent) => ({
-        continent,
-        territoryIds: freeTerritoryIds.filter((territoryId) => continentOf(territoryId) === continent),
-      }),
-    )
+    const groups = Array.from(
+      new Set(claimableTerritoryIds.map(continentOf).filter((c): c is string => c !== null)),
+    ).map((continent) => ({
+      continent,
+      territoryIds: claimableTerritoryIds.filter((territoryId) => continentOf(territoryId) === continent),
+    }))
 
     return (
       <div className="flex flex-1 flex-col min-h-0 p-4">

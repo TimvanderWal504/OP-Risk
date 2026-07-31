@@ -69,8 +69,32 @@ public static class SetupGuards
     }
 
     /// <summary>
-    /// Faalt ook als het bijplaatsen al klaar is (<see cref="SetupTurnCalculator.ActivePlacerId"/>
-    /// is dan <c>null</c>, dus geen enkele speler is nog "aan de beurt").
+    /// De keerzijde van <see cref="TerritoryIsFree"/> en <see cref="TerritoryIsNotOwnRoleOrigin"/>:
+    /// welke gebieden hálen die controles voor deze speler. Bewust via de guards zelf en niet
+    /// met een eigen kopie van hun voorwaarden, zodat de aangeboden keuzes per constructie niet
+    /// kunnen afwijken van wat het commando accepteert. De client toont hiermee alleen wat mag,
+    /// in plaats van zelf te bepalen wat mag (frontend/CLAUDE.md, server-authoritative).
+    /// </summary>
+    public static IReadOnlyList<string> ClaimableTerritoryIdsFor(GameState state, string playerId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return
+        [
+            .. state.Territories
+                .Select(territory => territory.TerritoryId)
+                .Where(territoryId =>
+                    TerritoryIsFree(state, territoryId).IsSuccess
+                    && TerritoryIsNotOwnRoleOrigin(state, playerId, territoryId).IsSuccess),
+        ];
+    }
+
+    /// <summary>
+    /// FO §5.1: bij <see cref="SetupMode.Claiming"/> blijft bijplaatsen turn-based (faalt ook
+    /// als het al klaar is — <see cref="SetupTurnCalculator.ActivePlacerId"/> is dan
+    /// <c>null</c>, dus geen enkele speler is nog "aan de beurt"). Bij
+    /// <see cref="SetupMode.Random"/> is er geen beurt: elke speler mag plaatsen zolang hij
+    /// zelf nog restbudget heeft (<see cref="SetupTurnCalculator.RemainingArmiesFor"/>).
     /// </summary>
     public static ValidationResult IsPlayersTurnToPlace(GameState state, string playerId)
     {
@@ -79,6 +103,13 @@ public static class SetupGuards
         if (!exists.IsSuccess)
         {
             return exists;
+        }
+
+        if (state.Settings.SetupMode == SetupMode.Random)
+        {
+            return SetupTurnCalculator.RemainingArmiesFor(state, playerId) > 0
+                ? ValidationResult.Success()
+                : ValidationResult.Failure("setup.noArmiesLeftToPlace", new Dictionary<string, string> { ["playerId"] = playerId });
         }
 
         return playerId == SetupTurnCalculator.ActivePlacerId(state)

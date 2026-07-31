@@ -15,6 +15,12 @@ public static class CardTradeCalculator
     private static readonly int[] FixedSteps = [4, 6, 8, 10, 12, 15];
     private const int EscalationStep = 5;
 
+    /// <summary>
+    /// De waarde van de eerste inleg van een spel (FO §4.4). Hoort bij de reeks hierboven en
+    /// niet als los getal bij het opzetten van een spel — daar zou het een magic number zijn.
+    /// </summary>
+    public static int InitialTradeValue => FixedSteps[0];
+
     public static CardTradeOutcome Evaluate(GameState state, string playerId, IReadOnlyList<Card> cards)
     {
         ArgumentNullException.ThrowIfNull(state);

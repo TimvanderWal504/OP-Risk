@@ -1,6 +1,7 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
@@ -84,8 +85,20 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
             var now = timeProvider.GetUtcNow();
             var timer = PhaseTimerFactory.ForPhase(TurnPhase.Reinforce, state.Settings, currentTimer: null, now);
 
+            // De eerste beurt is van de eerste speler in de volgorde — niet van wie toevallig
+            // het laatste startleger plaatste (bij SetupMode.Random kan dat iedereen zijn).
+            // Zijn versterkingen horen dus ook voor hém berekend te worden.
+            var firstPlayerId = state.TurnOrder[0];
+
             session.Events.Append(
-                gameId, new PhaseChanged(gameId, state.TurnOrder[0], TurnPhase.Reinforce, timer.Remaining, now));
+                gameId,
+                new PhaseChanged(
+                    gameId,
+                    firstPlayerId,
+                    TurnPhase.Reinforce,
+                    timer.Remaining,
+                    now,
+                    ReinforcementCalculator.CalculateArmies(state, firstPlayerId)));
         }
 
         await session.SaveChangesAsync();

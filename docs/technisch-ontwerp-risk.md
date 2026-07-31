@@ -170,6 +170,10 @@ PhaseChanged, TurnEnded, MissionCompleted, GameWon
 
 De **geprojecteerde `GameState`** (§3.1) is een Marten-projectie (inline of async) over deze events. Clients krijgen nooit de ruwe events, alleen de projectie of deltas daarvan.
 
+**Events dragen hun eigen uitkomst.** Een event bevat niet alleen wat er gebeurde maar ook wat het opleverde, berekend door de rules engine vóórdat het event ontstond: `PhaseChanged` draagt de toegekende versterkingen, `CardsTraded` de setwaarde, de bezitsbonussen en de volgende inlegwaarde. De projectie rekent dus niets uit, ze vouwt alleen. Zou de opbrengst pas bij het vouwen berekend worden, dan zou een latere wijziging van bijvoorbeeld de versterkingsformule of de inlegtabel met terugwerkende kracht de uitkomst van al gespeelde partijen veranderen.
+
+**Streams van vóór die wijziging worden niet ondersteund.** Ze missen die velden en zouden bij een replay stilzwijgend naar `null`/`0` deserialiseren — een speler die zonder versterkingen begint, zonder foutmelding. `PhaseChanged` en `CardsTraded` zijn daarom hernoemd naar `phase_changed_v2` en `cards_traded_v2` (`GameStoreFactory`), zodat een oude stream bij een replay hard faalt in plaats van stil verkeerd te vouwen. De database wordt bij het uitrollen van deze wijziging leeggegooid; dit is pre-release-testdata, er is bewust geen upcast-pad gebouwd.
+
 ### 5.3 Timer-afhandeling
 
 De beurttimer (FO §5.4) is **server-side gezaghebbend**: de server handhaaft de timeout, zodat een client die zijn tabblad sluit de beurt niet kan ophangen. Clients tonen een afteller die met de server gesynchroniseerd wordt, maar de client-klok is puur cosmetisch.

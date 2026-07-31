@@ -71,7 +71,8 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         TurnPhase turnPhase,
         string albertaOwnerId,
         int albertaArmies,
-        PendingCombat? pendingCombat = null)
+        PendingCombat? pendingCombat = null,
+        IReadOnlyList<string>? extraTerritoriesForP2 = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -92,11 +93,15 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var bob = new Player(
             "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
 
+        var extraForP2 = extraTerritoriesForP2 ?? [];
+
         var territories = map.Territories
             .Select(territory => territory.Id switch
             {
                 "alaska" => new TerritoryOwnership(territory.Id, "p1", ArmyCount: 5),
                 "alberta" => new TerritoryOwnership(territory.Id, albertaOwnerId, albertaArmies),
+                _ when extraForP2.Contains(territory.Id) =>
+                    new TerritoryOwnership(territory.Id, "p2", ArmyCount: 1),
                 _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
             })
             .ToArray();
@@ -229,6 +234,55 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
         Assert.Equal("p2", updated.TurnState!.ActivePlayerId);
         Assert.Equal(TurnPhaseDto.Reinforce, updated.TurnState.TurnPhase);
+    }
+
+    /// <summary>
+    /// De versterkingen op de nieuwe beurt horen bij de speler die aan zet kómt, niet bij die
+    /// vertrekt. Dat onderscheid is stil te verprutsen: <c>TurnEnded</c> heeft bewust geen
+    /// vouwregel, dus op het moment van berekenen staat de uitgaande speler nog als actief in
+    /// de state. Daarom bezitten de twee spelers hier bewust een óngelijk aantal gebieden —
+    /// p2 heeft heel Australië (5 gebieden + continentbonus 3 = 6), p1 twee losse gebieden
+    /// (minimum 3). Bij een gelijke verdeling zouden beide 3 opleveren en zou de verkeerde
+    /// speler dezelfde uitkomst geven: de test zou dan groen blijven op een bug.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_KentDeVersterkingenVanDeInkomendeSpelerToe()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory,
+            TurnPhase.Fortify,
+            albertaOwnerId: "p1",
+            albertaArmies: 1,
+            extraTerritoriesForP2:
+                ["indonesia", "new-guinea", "western-australia", "eastern-australia", "new-zealand"]);
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        Assert.Equal("p2", updated.TurnState!.ActivePlayerId);
+        Assert.Equal(6, updated.TurnState.ArmiesRemaining);
+    }
+
+    /// <summary>
+    /// Een fase-overgang binnen de beurt kent niets toe: <c>ArmiesRemaining</c> hoort op 0 te
+    /// staan en niet op de pool van de vorige fase (FO §5.2).
+    /// </summary>
+    [Fact]
+    public async Task EndPhase_KentGeenVersterkingenToe()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(factory, TurnPhase.Reinforce, albertaOwnerId: "p2", albertaArmies: 1);
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1");
+
+        Assert.Equal(TurnPhaseDto.Attack, updated.TurnState!.TurnPhase);
+        Assert.Equal(0, updated.TurnState.ArmiesRemaining);
     }
 
     [Fact]

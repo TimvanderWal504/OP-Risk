@@ -36,19 +36,13 @@ public static class ReinforcementCalculator
         RoleEffects.Active<ExtraReinforcementEffect>(state, playerId)?.Amount ?? 0;
 
     /// <summary>
-    /// Actieve gebeurtenis-effecten (FO §9.2) gelden voor het hele spel, niet per rol:
-    /// <c>ContinentOwnerBonus</c> alleen bij compleet continentbezit, <c>FreeReinforcement</c>
-    /// onvoorwaardelijk voor iedereen.
+    /// Actieve gebeurtenis-effecten (FO §9.2) gelden voor het hele spel, niet per rol. Elk
+    /// effect bepaalt zelf of en hoeveel het bijdraagt (<see cref="IReinforcementBonusEffect"/>);
+    /// hier wordt alleen opgeteld, zodat een nieuw bonus-effect deze klasse niet raakt.
     /// </summary>
     private static int EventBonus(GameState state, string playerId) =>
         state.ActiveEffects
             .Select(active => active.Effect)
-            .Sum(effect => effect switch
-            {
-                ContinentOwnerBonusEffect bonus when state.Map.Continents
-                    .Any(continent => state.OwnsEntireContinent(playerId, continent.Id))
-                    => bonus.Amount,
-                FreeReinforcementEffect free => free.Amount,
-                _ => 0,
-            });
+            .OfType<IReinforcementBonusEffect>()
+            .Sum(effect => effect.BonusFor(state, playerId));
 }

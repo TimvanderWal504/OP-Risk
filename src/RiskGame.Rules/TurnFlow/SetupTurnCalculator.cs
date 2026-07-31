@@ -37,9 +37,7 @@ public static class SetupTurnCalculator
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var budgets = state.TurnOrder.ToDictionary(
-            playerId => playerId,
-            playerId => state.Settings.StartingArmies - state.TerritoriesOf(playerId).Sum(t => t.ArmyCount));
+        var budgets = state.TurnOrder.ToDictionary(playerId => playerId, playerId => RemainingArmiesFor(state, playerId));
 
         if (budgets.Values.All(remaining => remaining == 0))
         {
@@ -70,6 +68,15 @@ public static class SetupTurnCalculator
 
         return state.TurnOrder[index];
     }
+
+    /// <summary>
+    /// Hoeveel startlegers <paramref name="playerId"/> nog moet plaatsen tijdens
+    /// <see cref="GamePhase.InitialPlacement"/> — gebruikt door <see cref="ActivePlacerId"/>
+    /// (Claimen-pad) en door <c>SetupGuards.IsPlayersTurnToPlace</c> (Random-pad, waar er
+    /// geen beurt is, alleen een budget-check).
+    /// </summary>
+    public static int RemainingArmiesFor(GameState state, string playerId) =>
+        state.Settings.StartingArmies - state.TerritoriesOf(playerId).Sum(t => t.ArmyCount);
 
     private static int NextIndexWithBudget(
         IReadOnlyList<string> turnOrder, IReadOnlyDictionary<string, int> remainingBudgets, int startIndex)

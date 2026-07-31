@@ -1,6 +1,7 @@
 using JasperFx.Events;
 using JasperFx.Events.Projections;
 using Marten;
+using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Serialization;
@@ -35,6 +36,16 @@ public static class GameStoreFactory
             // omzeilt dat door Phase apart, doorzoekbaar op te slaan.
             options.Schema.For<GameState>()
                 .Duplicate(state => state.Phase, configure: index => index.Name = "idx_gamestate_phase");
+            // PhaseChanged en CardsTraded dragen sinds deze wijziging de berekende uitkomst
+            // (toegekende versterkingen resp. inlegopbrengst) in plaats van die bij het vouwen
+            // te laten uitrekenen. Events van vóór die wijziging missen die velden en zouden
+            // stilzwijgend naar null/0 deserialiseren — een speler die zonder versterkingen
+            // begint, zonder foutmelding. De hernoemde event-types zorgen ervoor dat zo'n oude
+            // stream bij een replay hard faalt in plaats van stil verkeerd te vouwen: streams
+            // van vóór deze wijziging worden niet ondersteund en horen weggegooid te worden.
+            options.Events.MapEventType<PhaseChanged>("phase_changed_v2");
+            options.Events.MapEventType<CardsTraded>("cards_traded_v2");
+
             options.Projections.Add(new GameProjection(mapSource), ProjectionLifecycle.Inline);
             options.UseSystemTextJsonForSerialization(
                 configure: json =>

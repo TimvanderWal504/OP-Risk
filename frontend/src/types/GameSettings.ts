@@ -23,6 +23,11 @@ export type RoleAssignmentModeDto = (typeof RoleAssignmentModeDto)[keyof typeof 
 
 export interface GameSettingsDto {
   winCondition: WinConditionDto
+  /**
+   * Alleen voor weergave ("Modus: Willekeurig" in het instellingenoverzicht). Nooit om gedrag
+   * op te branchen: wat de modus betekent voor beurten en keuzes leidt de server af en levert
+   * hij in `SetupStateDto`. Wie hier toch op brancht, bouwt een spelregel terug in de client.
+   */
   setupMode: SetupModeDto
   startingArmies: number
   turnTimerSeconds: number

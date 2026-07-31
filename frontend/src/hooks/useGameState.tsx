@@ -38,7 +38,6 @@ export function useGameState(gameId: string) {
   // Negeert stale snapshots/broadcasts: een respons die terugkomt ná een nieuwere
   // GameStateUpdated (of vice versa) mag de nieuwere state niet overschrijven.
   const applyState = (next: GameStateDto) => {
-    console.log(next.stateVersion, state?.stateVersion)
     setState((current) => (current && next.stateVersion <= current.stateVersion ? current : next))
   }
 

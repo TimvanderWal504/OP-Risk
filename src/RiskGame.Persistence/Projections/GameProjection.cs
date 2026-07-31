@@ -55,7 +55,8 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             territories,
             turnOrder: [],
             turnState: null,
-            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            deck: new DeckState(
+                DrawPile: [], DiscardPile: [], NextTradeValue: CardTradeCalculator.InitialTradeValue),
             activeEffects: []);
     }
 
@@ -145,17 +146,21 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     }
 
     /// <summary>
-    /// Puur vouwwerk: welke timerduur bij welke fase hoort is al bepaald door
-    /// <see cref="RiskGame.Rules.TurnFlow.PhaseTimerFactory"/> vóórdat dit event ontstond
-    /// (FO §5.4) — deze vouwregel neemt <see cref="PhaseChanged.Remaining"/> en
-    /// <see cref="PhaseChanged.OccurredAtUtc"/> alleen nog over.
+    /// Puur vouwwerk: zowel de timerduur (<see cref="RiskGame.Rules.TurnFlow.PhaseTimerFactory"/>,
+    /// FO §5.4) als de toegekende versterkingen
+    /// (<see cref="RiskGame.Rules.Reinforcement.ReinforcementCalculator"/>, FO §5.2) zijn al
+    /// bepaald vóórdat dit event ontstond; deze vouwregel neemt ze alleen over.
     /// </summary>
     public GameState Apply(GameState state, PhaseChanged @event)
     {
         var timer = new PhaseTimer(@event.Remaining, IsPaused: false, @event.OccurredAtUtc);
 
+        // Een Versterken-event zonder toegekende legers kan niet bestaan: de producent hoort
+        // het te vullen. Gebeurt dat toch, dan is dat een bug (of een event van vóór dit veld)
+        // en geen regeluitkomst — dus een exception, geen stille 0.
         var armiesRemaining = @event.TurnPhase == TurnPhase.Reinforce
-            ? ReinforcementCalculator.CalculateArmies(state, @event.PlayerId)
+            ? @event.ArmiesGranted ?? throw new InvalidOperationException(
+                $"PhaseChanged naar Versterken zonder ArmiesGranted (speler '{@event.PlayerId}').")
             : 0;
 
         return state
@@ -183,11 +188,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>
     /// De ingeleverde set verlaat de hand van de speler en gaat naar de aflegstapel; de
-    /// eerstvolgende inlegwaarde escaleert (<see cref="CardTradeCalculator.NextTradeValueAfter"/>,
-    /// FO §4.4). Eventuele bezitsbonussen (<see cref="CardTradeCalculator.Evaluate"/>) worden
+    /// eerstvolgende inlegwaarde komt uit het event (FO §4.4). Eventuele bezitsbonussen worden
     /// meteen op de genoemde gebieden geplaatst — die zijn niet vrij verdeelbaar, in
     /// tegenstelling tot de setwaarde zelf, die pas via een los <see cref="ArmiesReinforced"/>
-    /// verschijnt zodra de speler kiest waar hij die plaatst.
+    /// verschijnt zodra de speler kiest waar hij die plaatst. Beide bedragen zijn al door
+    /// <see cref="CardTradeCalculator"/> bepaald vóór het event; hier wordt niets meer berekend.
     /// </summary>
     public GameState Apply(GameState state, CardsTraded @event)
     {
@@ -195,8 +200,6 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var tradedCards = @event.CardIds
             .Select(cardId => player.Hand.First(card => card.Id == cardId))
             .ToArray();
-
-        var outcome = CardTradeCalculator.Evaluate(state, @event.PlayerId, tradedCards);
 
         state = state.WithPlayer(player with
         {
@@ -206,10 +209,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         state = state.WithDeck(state.Deck with
         {
             DiscardPile = [.. state.Deck.DiscardPile, .. tradedCards],
-            NextTradeValue = CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue),
+            NextTradeValue = @event.NextTradeValue,
         });
 
-        foreach (var bonus in outcome.OwnedTerritoryBonuses)
+        foreach (var bonus in @event.OwnedTerritoryBonuses)
         {
             var territory = state.Territory(bonus.TerritoryId);
             state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + bonus.Amount });
@@ -217,7 +220,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
         return state.WithTurnState(state.TurnState! with
         {
-            ArmiesRemaining = state.TurnState!.ArmiesRemaining + outcome.SetValue,
+            ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
         });
     }
 

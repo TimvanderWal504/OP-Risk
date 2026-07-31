@@ -1,3 +1,5 @@
+using RiskGame.Rules.State;
+
 namespace RiskGame.Rules.Effects;
 
 /// <summary>
@@ -13,11 +15,24 @@ public abstract record EventEffect(string Id, EffectDuration Duration) : IEffect
 
 /// <summary>Iedereen die een volledig continent bezit krijgt <paramref name="Amount"/> extra legers.</summary>
 public sealed record ContinentOwnerBonusEffect(string Id, EffectDuration Duration, int Amount)
-    : EventEffect(Id, Duration);
+    : EventEffect(Id, Duration), IReinforcementBonusEffect
+{
+    public int BonusFor(GameState state, string playerId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return state.Map.Continents.Any(continent => state.OwnsEntireContinent(playerId, continent.Id))
+            ? Amount
+            : 0;
+    }
+}
 
 /// <summary>Iedereen krijgt <paramref name="Amount"/> gratis versterkingen.</summary>
 public sealed record FreeReinforcementEffect(string Id, EffectDuration Duration, int Amount)
-    : EventEffect(Id, Duration);
+    : EventEffect(Id, Duration), IReinforcementBonusEffect
+{
+    public int BonusFor(GameState state, string playerId) => Amount;
+}
 
 /// <summary>Iedereen verliest <paramref name="Amount"/> legers, nooit onder 1 per gebied (altijd instant).</summary>
 public sealed record ArmyAttritionEffect(string Id, EffectDuration Duration, int Amount)
@@ -25,7 +40,10 @@ public sealed record ArmyAttritionEffect(string Id, EffectDuration Duration, int
 
 /// <summary>De genoemde gebieden zijn deze ronde volledig afgesloten (altijd oneRound).</summary>
 public sealed record TerritoryLockedEffect(string Id, EffectDuration Duration, IReadOnlyList<string> TerritoryIds)
-    : EventEffect(Id, Duration);
+    : EventEffect(Id, Duration), ITerritoryLockingEffect
+{
+    public bool IsLocked(string territoryId) => TerritoryIds.Contains(territoryId);
+}
 
 /// <summary>
 /// Zeeverbindingen zijn deze ronde geblokkeerd. Zonder <see cref="Routes"/> geldt het voor álle

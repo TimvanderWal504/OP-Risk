@@ -8,7 +8,8 @@ public sealed class SetupGuardsTests
     private static GameState State(
         GamePhase phase,
         IReadOnlyList<TerritoryOwnership>? territories = null,
-        int startingArmies = 10)
+        int startingArmies = 10,
+        SetupMode? setupMode = null)
     {
         var map = Standaard43Data.Load();
         var players = new[] { TestGame.Player("p1", "red"), TestGame.Player("p2", "blue") };
@@ -17,7 +18,7 @@ public sealed class SetupGuardsTests
             gameId: "test-game",
             map,
             phase,
-            TestGame.Settings() with { StartingArmies = startingArmies },
+            TestGame.Settings() with { StartingArmies = startingArmies, SetupMode = setupMode ?? SetupMode.Random },
             players,
             territories ?? [new TerritoryOwnership("t1", null, 0), new TerritoryOwnership("t2", null, 0)],
             turnOrder: ["p1", "p2"],
@@ -80,5 +81,56 @@ public sealed class SetupGuardsTests
 
         Assert.False(SetupGuards.IsPlayersTurnToPlace(state, "p1").IsSuccess);
         Assert.False(SetupGuards.IsPlayersTurnToPlace(state, "p2").IsSuccess);
+    }
+
+    /// <summary>
+    /// FO §5.1: bij Claimen blijft bijplaatsen turn-based. TurnOrder ["p1","p2"] met gelijke
+    /// budgetten maakt p1 de actieve plaatser (<see cref="SetupTurnCalculator.ActivePlacerId"/>);
+    /// p2 moet dan geweigerd worden, mét de "niet jouw beurt"-foutcode.
+    /// </summary>
+    [Fact]
+    public void IsPlayersTurnToPlace_BijClaimen_BlijftBeurtAfgedwongen()
+    {
+        var territories = new[] { new TerritoryOwnership("t1", "p1", 1), new TerritoryOwnership("t2", "p2", 1) };
+        var state = State(GamePhase.InitialPlacement, territories, startingArmies: 10, setupMode: SetupMode.Claiming);
+
+        Assert.True(SetupGuards.IsPlayersTurnToPlace(state, "p1").IsSuccess);
+
+        var result = SetupGuards.IsPlayersTurnToPlace(state, "p2");
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, error => error.Code == "setup.notYourTurnToPlace");
+    }
+
+    /// <summary>
+    /// FO §5.1: bij Random is er geen beurt. TurnOrder ["p1","p2"] zou bij Claimen p1 als
+    /// actieve plaatser aanwijzen (gelijke budgetten) — bij Random mag p2 net zo goed
+    /// plaatsen, puur op basis van eigen restbudget.
+    /// </summary>
+    [Fact]
+    public void IsPlayersTurnToPlace_BijRandom_SpelerNietVoorinBeurtvolgorde_MagTochPlaatsen()
+    {
+        var territories = new[] { new TerritoryOwnership("t1", "p1", 1), new TerritoryOwnership("t2", "p2", 1) };
+        var state = State(GamePhase.InitialPlacement, territories, startingArmies: 10, setupMode: SetupMode.Random);
+
+        Assert.True(SetupGuards.IsPlayersTurnToPlace(state, "p1").IsSuccess);
+        Assert.True(SetupGuards.IsPlayersTurnToPlace(state, "p2").IsSuccess);
+    }
+
+    /// <summary>
+    /// FO §5.1: bij Random faalt plaatsen zodra het eigen budget op is, met een andere
+    /// foutcode dan de beurt-gebonden variant (het gaat hier niet om een beurt) — terwijl
+    /// een andere speler met budget intussen gewoon kan doorplaatsen.
+    /// </summary>
+    [Fact]
+    public void IsPlayersTurnToPlace_BijRandom_SpelerZonderBudget_KrijgtNoArmiesLeftFoutcode()
+    {
+        var territories = new[] { new TerritoryOwnership("t1", "p1", 10), new TerritoryOwnership("t2", "p2", 1) };
+        var state = State(GamePhase.InitialPlacement, territories, startingArmies: 10, setupMode: SetupMode.Random);
+
+        var result = SetupGuards.IsPlayersTurnToPlace(state, "p1");
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Errors, error => error.Code == "setup.noArmiesLeftToPlace");
+
+        Assert.True(SetupGuards.IsPlayersTurnToPlace(state, "p2").IsSuccess);
     }
 }

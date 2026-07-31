@@ -75,6 +75,8 @@ en worden niet meer gemeld als afwijking.
 |Waar is het op van toepassing| Wat is er anders|Wat was de verwachting|Impact op applicatie|
 | RemovablePlayerRow.tsx | Breedte van de knop is w-[19.5%] | Breedte van de knop is w-[22.5%] | minimaal |
 | ClaimTerritoryStep.tsx | Geen `claimSimRound`-knop ("Volgende ronde (demo)") | Telefoon.dc.html L445 toont die knop in de "niet jouw beurt"-substaat van Claim | geen — de knop was een designdemo-simulatie zonder server-tegenhanger; server drijft de voortgang echt |
+| Spelerskleuren (overal waar een spelerskleur getoond wordt) | `data/colors.json` geeft rood `#ca3c25`, blauw `#0057ff`, paars `#6a00f4`, en een andere symbooltoewijzing per kleur (rood=circle, blauw=square, groen=triangle, geel=diamond, paars=star) | `ds/colors_and_type.css` L130-136 geeft `--player-red:#800020`, `--player-blue:#1d5da8`, `--player-purple:#7900b0` en ▲Rood ●Blauw ■Groen ★Geel ✚Paars | zichtbaar op elk speler-element (avatars, badges, en straks de kaart): drie van de zeven kleuren en de symbooltoewijzing wijken af van het design. Groen en oranje zijn wél gelijkgetrokken (commit 820bda0), de rest bewust niet — `data/colors.json` is bevroren speeldata en blijft leidend voor de runtime |
+| useHeldPhase.ts | Order-roll-scherm blijft 8 seconden staan nadat de server de fase al verlaten heeft | De export schrijft geen hold voor: het volgordescherm schakelt daar op state (`sc-if isOrder`), en de enige `setTimeout`s in beide exports zijn layout-fits van 120/400 ms | nodig, anders ziet niemand de bepaalde volgorde — de server springt meteen door. Presentatietiming, geen spelregel: de uitkomst verandert er niet door en er wordt niet op de server vooruitgelopen |
 
 ## Animatie
 

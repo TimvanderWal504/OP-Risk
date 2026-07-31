@@ -31,6 +31,7 @@ describe('ClaimTerritoryStep', () => {
         colors={colors}
         activePlayerId="alice"
         playerId="alice"
+        claimableTerritoryIds={['alaska', 'brazil']}
         onClaim={vi.fn()}
       />,
     )
@@ -50,6 +51,7 @@ describe('ClaimTerritoryStep', () => {
         colors={colors}
         activePlayerId="alice"
         playerId="alice"
+        claimableTerritoryIds={['alaska']}
         onClaim={onClaim}
       />,
     )
@@ -73,6 +75,7 @@ describe('ClaimTerritoryStep', () => {
         colors={colors}
         activePlayerId="bob"
         playerId="alice"
+        claimableTerritoryIds={['brazil']}
         onClaim={vi.fn()}
       />,
     )

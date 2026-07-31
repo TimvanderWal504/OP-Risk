@@ -271,7 +271,8 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
                 new Persistence.Events.PlayerJoined(gameId, "p1", "Alice", IsHost: true),
                 new Persistence.Events.ColorChosen(gameId, "p1", "red"),
                 new Persistence.Events.TurnOrderDetermined(gameId, ["p1"]),
-                new Persistence.Events.PhaseChanged(gameId, "p1", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), now));
+                new Persistence.Events.PhaseChanged(
+                    gameId, "p1", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), now, ArmiesGranted: 3));
 
             await session.SaveChangesAsync();
         }

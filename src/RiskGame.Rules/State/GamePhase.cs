@@ -12,7 +12,10 @@ public enum GamePhase
     /// <summary>Spelers claimen om beurten een leeg gebied (alleen bij <see cref="SetupMode.Claiming"/>).</summary>
     Claiming,
 
-    /// <summary>Resterende startlegers worden om beurten bijgeplaatst (FO §5.1).</summary>
+    /// <summary>
+    /// Resterende startlegers worden bijgeplaatst (FO §5.1): om beurten bij
+    /// <see cref="SetupMode.Claiming"/>, gelijktijdig (geen beurt) bij <see cref="SetupMode.Random"/>.
+    /// </summary>
     InitialPlacement,
 
     /// <summary>Het eigenlijke spel: beurten van Versterken, Aanvallen en Verplaatsen.</summary>

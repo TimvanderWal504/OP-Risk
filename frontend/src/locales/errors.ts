@@ -95,6 +95,10 @@ export const errors = {
       nl: "Speler '{{playerId}}' is niet aan de beurt om bij te plaatsen.",
       en: "Player '{{playerId}}' is not the active placer.",
     },
+    noArmiesLeftToPlace: {
+      nl: "Speler '{{playerId}}' heeft geen startlegers meer over om te plaatsen.",
+      en: "Player '{{playerId}}' has no starting armies left to place.",
+    },
   },
   orderRoll: {
     notYourTurnToRoll: {

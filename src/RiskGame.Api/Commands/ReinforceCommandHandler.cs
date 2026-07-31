@@ -76,7 +76,22 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
             return Result<GameStateDto>.Failure(validation.Errors);
         }
 
-        session.Events.Append(gameId, new CardsTraded(gameId, playerId, cardIds));
+        // De opbrengst hoort bij het feit, niet bij het vouwen ervan (src/CLAUDE.md, event
+        // sourcing): berekenen op de state zoals die nú is, en het resultaat het event in.
+        var tradedCards = cardIds
+            .Select(cardId => state.Player(playerId).Hand.First(card => card.Id == cardId))
+            .ToArray();
+        var outcome = CardTradeCalculator.Evaluate(state, playerId, tradedCards);
+
+        session.Events.Append(
+            gameId,
+            new CardsTraded(
+                gameId,
+                playerId,
+                cardIds,
+                outcome.SetValue,
+                outcome.OwnedTerritoryBonuses,
+                CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue)));
 
         await session.SaveChangesAsync();
 
