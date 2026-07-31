@@ -38,7 +38,7 @@
   --font-brand:   "Brand Font", "Archivo", ui-sans-serif, system-ui, sans-serif; /* swapbare merk-font (zie @font-face) */
   --font-display: var(--font-brand); /* headlines, scores, ranks — nu de merk-font */
   --font-body:    "Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose — nu de swapbare body-font */
-  --font-sans:    "Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose — nu de swapbare body-font */
+  --font-sans:    var(--font-body); /* fallback voor body-font, ook voor Tailwind */
   --font-mono:    "Geist Mono", ui-monospace, monospace; /* FIFA codes, kickoff, tabular data */
 
   /* ---- Type scale (mobile-first; px in comments) ---- */
@@ -127,13 +127,13 @@
      Symbols (colorblind-safe) are documented, not CSS: ▲ ● ■ ★ ✚ ⬡ ◆
      Single source of truth — mirrored by COLORS[] in both DC files.
      =========================================================================== */
-  --player-red:#800020;    --player-red-on:#f9a8a8;    /* ▲ Rood   */
-  --player-blue:#1d5da8;   --player-blue-on:#e6f0fa;   /* ● Blauw  */
-  --player-green:#1e3b1e;  --player-green-on:#e8f2e3;  /* ■ Groen  */
+  --player-red:#ca3c25;    --player-red-on:#fffbbd;    /* ▲ Rood   */
+  --player-blue:#0057ff;   --player-blue-on:#f8f7f4;   /* ● Blauw  */
+  --player-green:#cfff74;  --player-green-on:#2f3a1d;  /* ■ Groen  */
   --player-yellow:#fcdb32; --player-yellow-on:#141d38; /* ★ Geel   */
-  --player-purple:#7900b0; --player-purple-on:#e6e6fa; /* ✚ Paars  */
+  --player-purple:#6a00f4; --player-purple-on:#ffd6a5; /* ✚ Paars  */
   --player-cyan:#34e0a1;   --player-cyan-on:#000000;   /* ⬡ Turquoise  */
-  --player-orange:#e58423; --player-orange-on:#1b1716; /* ◆ Oranje */
+  --player-orange:#fc6c26; --player-orange-on:#fff4dc; /* ◆ Oranje */
 }
 
 /* ===========================================================================
@@ -225,7 +225,7 @@ h3, .twc-h3 {
   line-height: var(--leading-snug);
   color: var(--fg1);
 }
-p, .twc-body {
+.twc-body {
   font-family: var(--font-body);
   font-weight: var(--weight-regular);
   font-size: var(--text-body);
@@ -285,6 +285,8 @@ code, .twc-code {
   --atlas-overlay:rgba(226,231,240,.78); --atlas-card:linear-gradient(#ffffff,#f2f5fa);
   --atlas-sheen:rgba(17,24,38,.05); --atlas-track:rgba(17,24,38,.08);
   --atlas-t02:rgba(17,24,38,.025); --atlas-t03:rgba(17,24,38,.035); --atlas-t04:rgba(17,24,38,.05); --atlas-t05:rgba(17,24,38,.06); --atlas-t06:rgba(17,24,38,.07); --atlas-t10:rgba(17,24,38,.10); --atlas-t12:rgba(17,24,38,.12);
+  /* Lobby glass: translucent panel op de veldslag-illustratie (thema-afhankelijk, beeld blijft zichtbaar) */
+  --atlas-glass:rgba(255,255,255,.58); --atlas-glass-row:rgba(17,24,38,.05); --atlas-glass-border:rgba(17,24,38,.14);
 }
 .dark, [data-theme="dark"] {
   --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #0d1626 0%, #05070d 60%, #04060b 100%);
@@ -297,6 +299,7 @@ code, .twc-code {
   --atlas-overlay:rgba(4,6,11,.72); --atlas-card:linear-gradient(#0f1826,#0b131f);
   --atlas-sheen:rgba(255,255,255,.08); --atlas-track:rgba(255,255,255,.08);
   --atlas-t02:rgba(255,255,255,.02); --atlas-t03:rgba(255,255,255,.03); --atlas-t04:rgba(255,255,255,.04); --atlas-t05:rgba(255,255,255,.05); --atlas-t06:rgba(255,255,255,.06); --atlas-t10:rgba(255,255,255,.10); --atlas-t12:rgba(255,255,255,.12);
+  --atlas-glass:rgba(8,11,19,.54); --atlas-glass-row:rgba(255,255,255,.07); --atlas-glass-border:rgba(255,255,255,.14);
 }
 
 /* Light thema: pitch-green ramp verwijst naar de broadcast-blue ramp.

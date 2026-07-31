@@ -62,18 +62,18 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
   ]
 
   return (
-    <div
-      className="w-[440px] flex-none rounded-sheet border border-border-strong p-[28px_26px]"
-      style={{ background: 'linear-gradient(#101826,#0b111c)' }}
-    >
-      <p className="mb-[18px] text-[16px] font-extrabold tracking-[.14em] text-gold-400 uppercase">
+    <div className="flex-none rounded-[22px] border border-[var(--atlas-glass-border)] bg-[var(--atlas-glass)] p-[20px_22px] shadow-[0_24px_60px_rgba(0,0,0,.4)]">
+      <p className="mb-2 text-[16px] font-extrabold tracking-[.14em] text-pitch-500 uppercase">
         {t('settings.title')}
       </p>
-      <dl className="flex flex-col gap-1.5">
-        {rows.map(([label, value, color]) => (
-          <div key={label} className="flex items-center justify-between border-b border-border p-[15px_4px]">
-            <dt className="text-[20px] text-fg-secondary">{label}</dt>
-            <dd className="font-display text-[20px] font-extrabold" style={{ color }}>
+      <dl className="grid grid-cols-2 gap-x-[26px] gap-y-[2px]">
+        {rows.map(([label, value ]) => (
+          <div
+            key={label}
+            className="flex items-center justify-between gap-3 border-b border-[var(--atlas-glass-border)] py-[9px]"
+          >
+            <dt className="text-[16px] text-fg-secondary">{label}</dt>
+            <dd className="text-right font-display text-[16px] font-extrabold">
               {value}
             </dd>
           </div>

@@ -68,67 +68,81 @@
 
       <!-- ============ LOBBY ============ -->
       <sc-if value="{{ isLobby }}" hint-placeholder-val="{{ true }}">
-      <div style="position:absolute;inset:0;padding:56px 60px;display:flex;flex-direction:column;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:34px;">
-          <div style="display:flex;align-items:baseline;gap:18px;">
-            <span style="font-family:var(--font-display);font-weight:900;font-size:44px;letter-spacing:.14em;color:var(--fg1);">OPERATIE ATLAS</span>
-            <span style="width:60px;height:5px;background:var(--pitch-500);border-radius:3px;display:inline-block;transform:translateY(-6px);"></span>
-            <span style="font-family:var(--font-mono);font-size:20px;color:var(--fg3);letter-spacing:.1em;">CAMPAGNE-TERMINAL</span>
-          </div>
-          <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:16px;color:var(--gold-400);border:1px solid var(--gold-700);padding:9px 18px;border-radius:999px;">{{ t.lobbyKicker }}</span>
-        </div>
-        <div style="flex:1;display:flex;gap:36px;min-height:0;">
-          <!-- QR -->
-          <div style="width:560px;flex:none;background:var(--atlas-panel);border:1px solid var(--border-strong);border-radius:24px;padding:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.5);">
-            <div style="background: #fff; border-radius: 18px; padding: 24px; box-shadow: var; border: 3px solid var(--silver)">
-              <svg viewBox="0 0 25 25" width="360" height="360" shape-rendering="crispEdges" style="display:block;">
-                <rect x="0" y="0" width="25" height="25" fill="#ffffff"></rect>
-                <sc-for list="{{ qrCells }}" as="c" hint-placeholder-count="180">
-                  <rect x="{{ c.x }}" y="{{ c.y }}" width="1" height="1" fill="#0a0e17"></rect>
-                </sc-for>
-              </svg>
-            </div>
-            <div style="font-family:var(--font-display);font-weight:800;font-size:30px;margin-top:26px;color:var(--fg1);">{{ t.join }}</div>
-            <div style="display:flex;align-items:center;gap:14px;margin-top:16px;">
-              <span style="font-family:var(--font-mono);font-size:18px;color:var(--fg3);">{{ joinUrl }}</span>
-              <span style="font-family:var(--font-mono);font-weight:600;font-size:26px;letter-spacing:.18em;color:#04060b;background:var(--pitch-400);padding:6px 16px;border-radius:10px;">{{ gameCode }}</span>
-            </div>
-          </div>
-          <!-- Players -->
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+        <!-- Cinematic battlefield backdrop -->
+        <img src="assets/lobby-battlefield.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;">
+        <!-- Left-weighted scrim: darkens left for the title, keeps the battlefield readable, anchors the right rail -->
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,6,11,.82) 0%,rgba(4,6,11,.5) 26%,rgba(4,6,11,.12) 48%,rgba(4,6,11,.22) 62%,rgba(4,6,11,.72) 100%);"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,6,11,.55) 0%,rgba(4,6,11,.12) 30%,rgba(4,6,11,.25) 70%,rgba(4,6,11,.8) 100%);"></div>
+
+        <div style="position:relative;flex:1;padding:64px 66px;display:flex;align-items:stretch;gap:48px;">
+          <!-- ===== LEFT: title by the castle ===== -->
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-              <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:16px;color:var(--fg3);">{{ t.playersJoined }}</span>
-              <span style="font-family:var(--font-display);font-weight:900;font-size:26px;color:var(--pitch-400);">{{ joinedCountEl }}</span>
+            <span style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:16px;color:#f2c14e;border:1px solid rgba(242,193,78,.55);padding:9px 18px;border-radius:999px;align-self:flex-start;background:rgba(4,6,11,.34);backdrop-filter:blur(6px);">{{ t.lobbyKicker }}</span>
+            <div style="margin-top:26px;">
+              <div style="font-family:var(--font-display);font-weight:900;font-size:132px;line-height:.92;letter-spacing:-.01em;color:#f7f9fc;text-shadow:0 6px 40px rgba(4,6,11,.9),0 2px 8px rgba(4,6,11,.8);">OPERATIE</div>
+              <div style="font-family:var(--font-display);font-weight:900;font-size:132px;line-height:.92;letter-spacing:-.01em;color:#f7f9fc;text-shadow:0 6px 40px rgba(4,6,11,.9),0 2px 8px rgba(4,6,11,.8);">ATLAS</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start;">
-              <sc-for list="{{ lobbyPlayers }}" as="p" hint-placeholder-count="6">
-                <div style="display:flex;align-items:center;gap:16px;background:var(--atlas-row);border:1px solid var(--border);border-radius:16px;padding:16px 18px;animation:{{ p.cardAnim }};">
-                  <div style="width:56px;height:56px;flex:none;border-radius:14px;background:{{ p.hex }};display:flex;align-items:center;justify-content:center;font-size:30px;color:{{ p.on }};box-shadow:0 0 18px {{ p.glow }};">{{ p.sym }}</div>
-                  <div style="min-width:0;">
-                    <div style="font-family:var(--font-display);font-weight:800;font-size:26px;line-height:1.1;color:var(--fg1);">{{ p.name }}</div>
-                    <div style="font-family:var(--font-body);font-size:16px;color:var(--fg3);">{{ p.cw }}{{ p.roleEl }}</div>
-                  </div>
-                </div>
-              </sc-for>
-              <div style="display:flex;align-items:center;gap:16px;border:2px dashed var(--border-strong);border-radius:16px;padding:16px 18px;opacity:.6;">
-                <div style="width:56px;height:56px;flex:none;border-radius:14px;border:2px dashed var(--fg3);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--fg3);">+</div>
-                <div style="font-family:var(--font-body);font-size:19px;color:var(--fg3);">{{ t.waitSlot }}</div>
+            <div style="display:flex;align-items:center;gap:16px;margin-top:26px;">
+              <span style="width: 64px; height: 5px; background: var(--pitch-500); border-radius: 3px; display: inline-block"></span>
+              <span style="font-family:var(--font-mono);font-size:20px;color:rgba(247,249,252,.82);letter-spacing:.14em;text-shadow:0 2px 12px rgba(4,6,11,.9);">CAMPAGNE-TERMINAL</span>
+            </div>
+            <div style="margin-top:auto;font-family:var(--font-body);font-size:19px;color:rgba(247,249,252,.72);display:flex;align-items:center;gap:12px;text-shadow:0 2px 12px rgba(4,6,11,.9);">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--pitch-500);; animation: atlasDot 1.4s infinite; box-shadow: 0 0 14px rgba(161,194,58,.8)"></span>{{ t.waiting }}
+            </div>
+          </div>
+
+          <!-- ===== RIGHT: compact glass rail, always visible ===== -->
+          <div style="width:620px;flex:none;display:flex;flex-direction:column;gap:20px;">
+            <!-- QR -->
+            <div style="display: flex; align-items: center; gap: 22px; background: var(--atlas-glass); border: 1px solid var(--atlas-glass-border); border-radius: 22px; padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.45)">
+              <div style="background:#fff;border-radius:14px;padding:12px;flex:none;box-shadow:0 6px 18px rgba(0,0,0,.3);">
+                <svg viewBox="0 0 25 25" width="150" height="150" shape-rendering="crispEdges" style="display:block;">
+                  <rect x="0" y="0" width="25" height="25" fill="#ffffff"></rect>
+                  <sc-for list="{{ qrCells }}" as="c" hint-placeholder-count="180">
+                    <rect x="{{ c.x }}" y="{{ c.y }}" width="1" height="1" fill="#0a0e17"></rect>
+                  </sc-for>
+                </svg>
+              </div>
+              <div style="min-width:0;">
+                <div style="font-family:var(--font-display);font-weight:800;font-size:26px;color:var(--fg1);line-height:1.1;">{{ t.join }}</div>
+                <div style="font-family:var(--font-mono);font-size:16px;color:var(--fg3);margin-top:10px;">{{ joinUrl }}</div>
+                <span style="display:inline-block;font-family:var(--font-mono);font-weight:600;font-size:24px;letter-spacing:.18em;color:var(--on-pitch);background:var(--pitch-500);padding:6px 16px;border-radius:10px;margin-top:12px;">{{ gameCode }}</span>
               </div>
             </div>
-            <div style="margin-top:auto;padding-top:22px;font-family:var(--font-body);font-size:19px;color:var(--fg3);display:flex;align-items:center;gap:12px;">
-              <span style="width:12px;height:12px;border-radius:50%;background:var(--pitch-400);animation:atlasDot 1.4s infinite;"></span>{{ t.waiting }}
-            </div>
-          </div>
-          <!-- Settings -->
-          <div style="width:440px;flex:none;background:var(--atlas-panel-2);border:1px solid var(--border-strong);border-radius:24px;padding:28px 26px;">
-            <div style="font-family:var(--font-body);font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-size:16px;color:var(--gold-400);margin-bottom:18px;">{{ t.settings }}</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <sc-for list="{{ settingsRows }}" as="s" hint-placeholder-count="6">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 4px;border-bottom:1px solid var(--border);">
-                  <span style="font-family:var(--font-body);font-size:20px;color:var(--fg2);">{{ s.label }}</span>
-                  <span style="font-family:var(--font-display);font-weight:800;font-size:20px;color:{{ s.color }};">{{ s.value }}</span>
+            <!-- Players -->
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--atlas-glass); border: 1px solid var(--atlas-glass-border); border-radius: 22px; padding: 22px 22px 20px; box-shadow: 0 24px 60px rgba(0,0,0,.4)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-family: var(--font-body); font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: 15px; color: var(--pitch-500)">{{ t.playersJoined }}</span>
+                <span style="font-family:var(--font-display);font-weight:900;font-size:24px;color:var(--pitch-400);">{{ joinedCountEl }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;">
+                <sc-for list="{{ lobbyPlayers }}" as="p" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;gap:12px;background:var(--atlas-glass-row);border:1px solid var(--atlas-glass-border);border-radius:13px;padding:11px 13px;animation:{{ p.cardAnim }};">
+                    <div style="width:42px;height:42px;flex:none;border-radius:11px;background:{{ p.hex }};display:flex;align-items:center;justify-content:center;font-size:22px;color:{{ p.on }};box-shadow:0 0 14px {{ p.glow }};">{{ p.sym }}</div>
+                    <div style="min-width:0;">
+                      <div style="font-family:var(--font-display);font-weight:800;font-size:19px;line-height:1.1;color:var(--fg1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ p.name }}</div>
+                      <div style="font-family: var(--font-body); font-size: 13px; color: var(--pitch-500)">{{ p.cw }}{{ p.roleEl }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;gap:12px;border:2px dashed var(--border-strong);border-radius:13px;padding:11px 13px;opacity:.7;">
+                  <div style="width:42px;height:42px;flex:none;border-radius:11px;border:2px dashed var(--fg3);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--fg3);">+</div>
+                  <div style="font-family: var(--font-body); font-size: 14px; color: var(--fg2)">{{ t.waitSlot }}</div>
                 </div>
-              </sc-for>
+              </div>
+            </div>
+            <!-- Settings -->
+            <div style="flex: none; background: var(--atlas-glass); border: 1px solid var(--atlas-glass-border); border-radius: 22px; padding: 20px 22px; box-shadow: 0 24px 60px rgba(0,0,0,.4)">
+              <div style="font-family: var(--font-body); font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: 15px; color: var(--pitch-500); margin-bottom: 8px">{{ t.settings }}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 26px;">
+                <sc-for list="{{ settingsRows }}" as="s" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--atlas-glass-border);">
+                    <span style="font-family:var(--font-body);font-size:15px;color:var(--fg2);">{{ s.label }}</span>
+                    <span style="font-family: var(--font-display); font-weight: 800; font-size: 15px; color: {{ s.color }}; text-align: right">{{ s.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
             </div>
           </div>
         </div>
@@ -1045,13 +1059,13 @@ class Component extends DCLogic {
       roleEl: (idx < lobbyRoleN) ? React.createElement('span', { key:'role'+idx, style:{ display:'inline-block', animation: reduceMotion?'none':'atlasChipIn .4s cubic-bezier(.2,.7,.3,1) both' } }, ' · '+p.role[L]) : null }));
     const joinedCountEl = fig('joined', lobbyN+' / 7');
     const settingsRows = [
-      { label:t.setMap,    value:t.mapVal,      color:'var(--fg1)' },
-      { label:t.setWin,    value:t.valMissions, color:'var(--gold-400)' },
-      { label:t.setRoles,  value:t.on,          color:'var(--pitch-400)' },
-      { label:t.setEvents, value:t.on,          color:'var(--pitch-400)' },
-      { label:t.setLayout, value:t.valRandom,   color:'var(--fg1)' },
-      { label:t.setArmies, value:t.armiesVal,   color:'var(--fg1)' },
-      { label:t.setTimer,  value:'3:00',        color:'var(--fg1)' },
+      { label:t.setMap,    value:t.mapVal,      color:'var(--fg1)',      colorFixed:'#f7f9fc' },
+      { label:t.setWin,    value:t.valMissions, color:'var(--gold-400)', colorFixed:'#f2c14e' },
+      { label:t.setRoles,  value:t.on,          color:'var(--pitch-400)',colorFixed:'#a1c23a' },
+      { label:t.setEvents, value:t.on,          color:'var(--pitch-400)',colorFixed:'#a1c23a' },
+      { label:t.setLayout, value:t.valRandom,   color:'var(--fg1)',      colorFixed:'#f7f9fc' },
+      { label:t.setArmies, value:t.armiesVal,   color:'var(--fg1)',      colorFixed:'#f7f9fc' },
+      { label:t.setTimer,  value:'3:00',        color:'var(--fg1)',      colorFixed:'#f7f9fc' },
     ];
 
     // order (A3: keyed dice re-fire in place on a tie-break reroll)

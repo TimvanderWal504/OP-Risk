@@ -10,12 +10,18 @@ export const lobby = {
   },
   qr: {
     ariaLabel: { nl: 'QR-code om te joinen op {{url}}', en: 'QR code to join at {{url}}' },
-    scanToJoin: { nl: 'Scan om te joinen', en: 'Scan to join' },
+    scanToJoin: { nl: 'Scan om mee te doen', en: 'Scan to join' },
   },
   players: {
-    title: { nl: 'Spelers', en: 'Players' },
+    title: { nl: 'Spelers aangesloten', en: 'Players joined' },
     noColorYet: { nl: 'Nog geen kleur', en: 'No color yet' },
-    waitingForPlayer: { nl: 'Wachten op speler', en: 'Waiting for player' },
+    waitingForPlayer: { nl: 'Wacht op speler', en: 'Open slot' },
+  },
+  waiting: {
+    forHost: {
+      nl: 'Wachten tot de host het spel start…',
+      en: 'Waiting for the host to start the game…',
+    },
   },
   settings: {
     title: { nl: 'Instellingen', en: 'Settings' },

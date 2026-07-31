@@ -22,7 +22,7 @@ describe('LobbyPlayerList', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument()
     expect(screen.getByText('Rood')).toBeInTheDocument()
     expect(screen.getByText('1 / 3')).toBeInTheDocument()
-    expect(screen.getAllByText('Wachten op speler')).toHaveLength(2)
+    expect(screen.getAllByText('Wacht op speler')).toHaveLength(1)
   })
 
   it('geeft een spelerskaart de entrance-animatie uit het design (motion.ts A4)', () => {

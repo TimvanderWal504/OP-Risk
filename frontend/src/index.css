@@ -56,6 +56,34 @@ body {
     opacity: 1;
   }
 }
+/* Host-scherm.dc.html L18-26 — lobby-wachtstip (atlasDot) en chip/rol-bijkomst op een
+   bestaande spelerskaart (atlasChipIn), toegepast via inline `animation` in TvLobbyScreen
+   en LobbyPlayerList. */
+@keyframes atlasDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+@keyframes atlasChipIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 @keyframes phDice {
   0% {
     transform: translateY(-420px) rotate(-540deg) scale(0.6);
