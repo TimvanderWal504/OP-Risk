@@ -142,8 +142,8 @@ Drie aanvullende databestanden completeren de spel-dataset:
 
 Twee modi, instelbaar in de lobby (§10). **Standaard: random verdeeld.**
 
-- **Random (standaard):** de server verdeelt alle gebieden gelijkmatig willekeurig; daarna plaatsen spelers om beurten hun resterende startlegers (1 per keer, klassiek).
-- **Claimen:** spelers claimen om beurten één leeg gebied tot alles verdeeld is; daarna om beurten resterende legers bijplaatsen.
+- **Random (standaard):** de server verdeelt alle gebieden gelijkmatig willekeurig; daarna plaatsen alle spelers **gelijktijdig**, buiten de normale beurtvolgorde om, hun resterende startlegers (1 per keer, klassiek) — niemand hoeft op elkaar te wachten.
+- **Claimen:** spelers claimen **om beurten** één leeg gebied tot alles verdeeld is; daarna plaatsen alle spelers **gelijktijdig**, buiten de normale beurtvolgorde om, hun resterende legers bij (1 per keer, klassiek) — niemand hoeft op elkaar te wachten.
 
 **Startlegers:** 18 per speler bij 7 spelers. Voor 2–6 spelers gelden de klassieke aantallen (40/35/30/25/20). Instelbaar als lobby-parameter.
 
