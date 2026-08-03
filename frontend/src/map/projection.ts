@@ -1,8 +1,9 @@
 /**
- * 1-op-1 poort van `files/build_silhouette_v4.py` (CLAUDE.md, kaart-projectie-regel): dezelfde
- * formule als waarmee `map-background-final.png` is gegenereerd, anders vallen klikvlakken en
- * achtergrond uit elkaar (TO §7.2). Wijzigt de Python-bron, dan wijzigt dit bestand mee — nooit
- * zelfstandig "verbeteren".
+ * Poort van `files/build_silhouette_v4.py` (CLAUDE.md, kaart-projectie-regel): dezelfde formule
+ * als waarmee `map-background-final.png` is gegenereerd, anders vallen klikvlakken en achtergrond
+ * uit elkaar (TO §7.2). De vier venstergrenzen zijn sinds 2026-08-03 gefit op de daadwerkelijke
+ * asset in plaats van 1-op-1 overgenomen uit het script — zie de toelichting bij `LON_MIN` en
+ * TO §7.2. Wijzigt de asset, dan is die fit aan herhaling toe.
  *
  * `build_silhouette_v4.py:7` noemt de generatiecanvas 1920×1000, maar het daadwerkelijk in de
  * repo opgeslagen `map-background-final.png` was dat al vóór dit bestand bestond nooit exact
@@ -18,20 +19,29 @@
 export const MAP_WIDTH_PX = 4096
 /** Daadwerkelijke hoogte van `data/maps/standaard-43/map-background-final.png`. */
 export const MAP_HEIGHT_PX = 2132
-/** `build_silhouette_v4.py:8` — bewust niet het standaard -180/180-bereik, zie TO §7.2. */
-const LON_MIN = -180
-const LON_MAX = 191
+/**
+ * `build_silhouette_v4.py:8` — bewust niet het standaard -180/180-bereik, zie TO §7.2.
+ *
+ * De grenzen zijn hier gefit op de daadwerkelijke `map-background-final.png`
+ * (IoU-grid-search over het venster, zie TO §7.2): dit is het codeplafond na de
+ * asset-wissel van 2026-08-03, niet meer de nominale -180/191 uit het Python-script.
+ * Elke wijziging aan het bestand vraagt om een herhaling van die meting.
+ */
+export const LON_MIN = -180.5
+export const LON_MAX = 192
+export const LAT_MAX = 88.5
+export const LAT_MIN = -88.5
 
 export interface ProjectedPoint {
   x: number
   y: number
 }
 
-/** `build_silhouette_v4.py:10-11`. */
+/** `build_silhouette_v4.py:10-11`, geparametriseerd op het gefitte venster (zie boven). */
 export function project(lon: number, lat: number): ProjectedPoint {
   return {
     x: ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * MAP_WIDTH_PX,
-    y: ((90 - lat) / 180) * MAP_HEIGHT_PX,
+    y: ((LAT_MAX - lat) / (LAT_MAX - LAT_MIN)) * MAP_HEIGHT_PX,
   }
 }
 

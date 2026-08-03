@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
+import { atlasRoughTok } from '../../../design-reference/shared/design-tokens'
+import { DESIGN_UNIT_PX, designToMap } from '../../../map/boardScale'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { fixtureState } from './tvScreenFixture'
 
@@ -58,6 +60,25 @@ describe('TvMainBoardScreen', () => {
 
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
     expect(screen.getByText('5')).toBeInTheDocument()
+  })
+
+  it('hangt de gebiedenlaag in het atlasRough-filter (Host-scherm.dc.html:280,290)', async () => {
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} />)
+    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
+
+    const filter = container.querySelector('filter#atlasRough')
+    expect(filter).not.toBeNull()
+
+    const turbulence = filter?.querySelector('feTurbulence')
+    expect(turbulence?.getAttribute('baseFrequency')).toBe(String(atlasRoughTok.baseFrequency / DESIGN_UNIT_PX))
+    expect(turbulence?.getAttribute('numOctaves')).toBe(String(atlasRoughTok.numOctaves))
+    expect(turbulence?.getAttribute('seed')).toBe(String(atlasRoughTok.seed))
+
+    const displacement = filter?.querySelector('feDisplacementMap')
+    expect(displacement?.getAttribute('scale')).toBe(String(designToMap(atlasRoughTok.scale)))
+
+    const path = container.querySelector('path')
+    expect(path?.closest('g')?.getAttribute('filter')).toBe('url(#atlasRough)')
   })
 
   it('meldt een console-fout als de achtergrondafbeelding niet de verwachte afmeting heeft', () => {

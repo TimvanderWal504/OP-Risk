@@ -4,11 +4,52 @@ import { tDynamic } from '../../../i18n/useT'
 import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
-import { boardTok } from '../../../design-reference/shared/design-tokens'
+import { DESIGN_UNIT_PX, designToMap } from '../../../map/boardScale'
+import { atlasRoughTok, boardMarkerTok, boardTok } from '../../../design-reference/shared/design-tokens'
 import { tvAnimations } from '../../../design-reference/shared/motion'
 import type { TvScreenProps } from './tvScreens'
 
 const MAP_ID = 'standaard-43'
+
+/**
+ * Randdikte van een gebied zonder eigenaar, in design-eenheden. De export kent geen neutrale
+ * gebieden — `sw` is daar `isOwn ? tok.ownSw : tok.enSw` — dus dit is geen exportwaarde maar
+ * een op 2026-08-03 met de gebruiker afgesproken keuze; zie de afwijkingenlijst in
+ * frontend/CLAUDE.md. `boardTok.neuStroke` is nadrukkelijk géén dikte maar een opacity,
+ * naast `ownStroke`/`enStroke`.
+ */
+const NEUTRAL_STROKE_DESIGN_UNITS = 1.25
+
+/** Alle markermaten uit `boardMarkerTok`, één keer omgerekend naar onze viewBox. */
+const marker = {
+  discR: designToMap(boardMarkerTok.discR),
+  ringSwOwn: designToMap(boardMarkerTok.ringSwOwn),
+  ringSwEnemy: designToMap(boardMarkerTok.ringSwEnemy),
+  armyFontSize: designToMap(boardMarkerTok.armyFontSize),
+  nameOffsetY: designToMap(boardMarkerTok.nameOffsetY),
+  nameFontSize: designToMap(boardMarkerTok.nameFontSize),
+  nameStrokeWidth: designToMap(boardMarkerTok.nameStrokeWidth),
+} as const
+
+/** Randdikte van de gebiedspolygonen, idem omgerekend. */
+const territoryStroke = {
+  own: designToMap(boardTok.ownSw),
+  enemy: designToMap(boardTok.enSw),
+  neutral: designToMap(NEUTRAL_STROKE_DESIGN_UNITS),
+} as const
+
+/**
+ * `atlasRoughTok` omgerekend naar onze viewBox. `scale` is een verplaatsing in
+ * viewBox-eenheden en gaat via `designToMap` mee met de rest van de kaart; `baseFrequency`
+ * is cycli per eenheid en schaalt daarom omgekeerd (grotere eenheden op onze grotere
+ * viewBox → lagere frequentie nodig voor dezelfde ruwheid per schermpixel).
+ */
+const atlasRough = {
+  baseFrequency: atlasRoughTok.baseFrequency / DESIGN_UNIT_PX,
+  numOctaves: atlasRoughTok.numOctaves,
+  seed: atlasRoughTok.seed,
+  scale: designToMap(atlasRoughTok.scale),
+} as const
 
 /**
  * Vangnet voor TO §7.2: `projection.ts` gaat uit van een vaste achtergrondgrootte
@@ -84,29 +125,54 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
           preserveAspectRatio="xMidYMid slice"
           className="absolute inset-0 h-full w-full"
         >
-          {geometry?.map((territory) => {
-            const owned = state.territories.find((t) => t.territoryId === territory.id)
-            const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
-            const color = state.colors.find((c) => c.id === owner?.colorId)
-            const isOwn = owner?.id === activePlayer.id
-            const fillHex = color?.hex ?? boardTok.neutral
-            const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
-            const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
-            const strokeWidth = color ? (isOwn ? boardTok.ownSw : boardTok.enSw) : boardTok.neuStroke
-
-            return (
-              <path
-                key={territory.id}
-                d={territory.pathD}
-                fill={fillHex}
-                fillOpacity={fillOpacity}
-                stroke={fillHex}
-                strokeOpacity={strokeOpacity}
-                strokeWidth={strokeWidth}
-                strokeLinejoin="round"
+          <defs>
+            <filter id="atlasRough">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency={atlasRough.baseFrequency}
+                numOctaves={atlasRough.numOctaves}
+                seed={atlasRough.seed}
+                result="n"
               />
-            )
-          })}
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="n"
+                scale={atlasRough.scale}
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
+          </defs>
+
+          <g filter="url(#atlasRough)">
+            {geometry?.map((territory) => {
+              const owned = state.territories.find((t) => t.territoryId === territory.id)
+              const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
+              const color = state.colors.find((c) => c.id === owner?.colorId)
+              const isOwn = owner?.id === activePlayer.id
+              const fillHex = color?.hex ?? boardTok.neutral
+              const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
+              const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
+              const strokeWidth = color
+                ? isOwn
+                  ? territoryStroke.own
+                  : territoryStroke.enemy
+                : territoryStroke.neutral
+
+              return (
+                <path
+                  key={territory.id}
+                  d={territory.pathD}
+                  fill={fillHex}
+                  fillOpacity={fillOpacity}
+                  stroke={fillHex}
+                  strokeOpacity={strokeOpacity}
+                  strokeWidth={strokeWidth}
+                  strokeLinejoin="round"
+                />
+              )
+            })}
+          </g>
 
           {geometry?.map((territory) => {
             const owned = state.territories.find((t) => t.territoryId === territory.id)
@@ -115,6 +181,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
             const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
             const color = state.colors.find((c) => c.id === owner?.colorId)
             const ringColor = color?.hex ?? boardTok.neutral
+            // Host-scherm.dc.html:995 — `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
+            // bij de nog niet gebouwde selectiestaat.
+            const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
 
             const wasArmy = prevArmy[territory.id]
             const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
@@ -124,11 +193,11 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                 <circle
                   cx={territory.centroidPx.x}
                   cy={territory.centroidPx.y}
-                  r={40}
+                  r={marker.discR}
                   fill={boardTok.disc}
                   fillOpacity={boardTok.discOp}
                   stroke={ringColor}
-                  strokeWidth={1.5}
+                  strokeWidth={ringSw}
                 />
                 <text
                   x={territory.centroidPx.x}
@@ -137,7 +206,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   dominantBaseline="central"
                   fontFamily="Archivo, sans-serif"
                   fontWeight={700}
-                  fontSize={52}
+                  fontSize={marker.armyFontSize}
                   fill={boardTok.numFg}
                   style={{
                     fontVariantNumeric: 'tabular-nums',
@@ -150,16 +219,16 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                 </text>
                 <text
                   x={territory.centroidPx.x}
-                  y={territory.centroidPx.y + 70}
+                  y={territory.centroidPx.y + marker.nameOffsetY}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontFamily="Archivo, sans-serif"
                   fontWeight={700}
-                  fontSize={29}
+                  fontSize={marker.nameFontSize}
                   fill={boardTok.numFg}
                   stroke={boardTok.disc}
-                  strokeWidth={3.2}
-                  strokeOpacity={0.85}
+                  strokeWidth={marker.nameStrokeWidth}
+                  strokeOpacity={boardMarkerTok.nameStrokeOpacity}
                   strokeLinejoin="round"
                   style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
                 >

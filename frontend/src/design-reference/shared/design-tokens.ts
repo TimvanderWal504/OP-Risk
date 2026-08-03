@@ -210,3 +210,41 @@ export const boardTok = {
   accent: '#f2a922',
   numFg: '#eef2f8',
 } as const;
+
+/**
+ * De viewBox waarin het TV-bord in de export getekend wordt —
+ * `tv/Operatie Atlas Host-scherm.dc.html:278` (`viewBox="0 0 1500 790"`). Elke maat hieronder
+ * staat in déze eenheden; `map/boardScale.ts` rekent ze om naar onze eigen viewBox.
+ */
+export const boardViewBox = { w: 1500, h: 790 } as const;
+
+/**
+ * Legerteller-marker op de kaart — `armyEl` in
+ * `tv/Operatie Atlas Host-scherm.dc.html:996-1010`. Waarden in `boardViewBox`-eenheden.
+ * `ringSwHl` (1.75) hoort bij de selectie-/gevechtsstaat, die nog niet gebouwd is.
+ */
+export const boardMarkerTok = {
+  discR: 20,
+  ringSwOwn: 1.5,
+  ringSwEnemy: 1.25,
+  ringSwHl: 1.75,
+  armyFontSize: 26,
+  nameOffsetY: 35,
+  nameFontSize: 14.5,
+  nameStrokeWidth: 3.2,
+  nameStrokeOpacity: 0.85,
+} as const;
+
+/**
+ * `atlasRough`-filter op de gebiedenlaag — `tv/Operatie Atlas Host-scherm.dc.html:280`
+ * (`feTurbulence`/`feDisplacementMap`, gebruikt op L290/296), "roughened for organic
+ * coastlines". `scale` staat in `boardViewBox`-eenheden en gaat door `designToMap()`;
+ * `baseFrequency` is cycli per eenheid en schaalt daarom omgekeerd, door `DESIGN_UNIT_PX`
+ * te delen (zie `TvMainBoardScreen.tsx`).
+ */
+export const atlasRoughTok = {
+  baseFrequency: 0.014,
+  numOctaves: 2,
+  seed: 7,
+  scale: 16,
+} as const;
