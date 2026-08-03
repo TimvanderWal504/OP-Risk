@@ -7,6 +7,8 @@ import { join } from './join'
 import { lobby } from './lobby'
 import { setup } from './setup'
 import { orderRoll } from './orderRoll'
+import { board } from './board'
+import { reinforce } from './reinforce'
 import { colors } from './colors'
 import { roles } from './roles'
 import { territories } from './territories'
@@ -26,6 +28,8 @@ export const trees = {
   lobby,
   setup,
   orderRoll,
+  board,
+  reinforce,
   colors,
   roles,
   territories,

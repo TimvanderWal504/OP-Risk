@@ -85,7 +85,8 @@ public sealed class GameHub(
     SetupCommandHandler setupCommands,
     ReinforceCommandHandler reinforceCommands,
     AttackCommandHandler attackCommands,
-    TurnFlowCommandHandler turnFlowCommands) : Hub<IGameClient>
+    TurnFlowCommandHandler turnFlowCommands,
+    TimeProvider timeProvider) : Hub<IGameClient>
 {
     /// <summary>
     /// Voegt de aanroepende connectie toe aan de spelgroep en levert de huidige state —
@@ -93,7 +94,7 @@ public sealed class GameHub(
     /// </summary>
     public async Task<GameStateDto> WatchGame(string gameId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
         await using var session = store.QuerySession();
         var state = await session.LoadAsync<GameState>(gameId);
@@ -104,12 +105,12 @@ public sealed class GameHub(
                 new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
         }
 
-        return GameStateDtoMapper.ToDto(state) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        return GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
     }
 
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
         var result = await lobbyCommands.JoinGameAsync(gameId, playerName);
 
@@ -138,9 +139,9 @@ public sealed class GameHub(
                 new ValidationError("common.unknownPlayer", new Dictionary<string, string> { ["playerId"] = playerId })));
         }
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(gameId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
-        return GameStateDtoMapper.ToDto(state) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        return GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
     }
 
     public async Task<GameStateDto> ChooseColor(string gameId, string playerId, string colorId)
@@ -177,7 +178,7 @@ public sealed class GameHub(
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GroupName(gameId)).DiceRolled(
+            await Clients.Group(GameGroups.All(gameId)).DiceRolled(
                 new DiceRolledMessage(playerId, [result.Value.Die1, result.Value.Die2], "order-roll", null));
         }
 
@@ -226,7 +227,7 @@ public sealed class GameHub(
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GroupName(gameId)).DiceRolled(
+            await Clients.Group(GameGroups.All(gameId)).DiceRolled(
                 new DiceRolledMessage(playerId, result.Value.AttackerRolls, "attack", result.Value.CorrelationId));
         }
 
@@ -244,12 +245,12 @@ public sealed class GameHub(
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GroupName(gameId)).DiceRolled(
+            await Clients.Group(GameGroups.All(gameId)).DiceRolled(
                 new DiceRolledMessage(playerId, result.Value.DefenderRolls, "defense", result.Value.CorrelationId));
 
             await using var versionSession = store.QuerySession();
 
-            await Clients.Group(GroupName(gameId)).CombatNarrated(new CombatNarratedMessage(
+            await Clients.Group(GameGroups.All(gameId)).CombatNarrated(new CombatNarratedMessage(
                 result.Value.CorrelationId,
                 result.Value.AttackerId,
                 result.Value.DefenderId,
@@ -305,8 +306,6 @@ public sealed class GameHub(
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
     }
 
-    private static string GroupName(string gameId) => $"game-{gameId}-all";
-
     /// <summary>
     /// De echte, monotoon oplopende client-syncversie (TO §6) komt uit Martens eigen
     /// stream-versie, niet uit een zelf bijgehouden teller op <see cref="GameState"/>: zo'n
@@ -345,7 +344,7 @@ public sealed class GameHub(
         var versionedState = extractState(response) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
         response = withState(response, versionedState);
 
-        await Clients.Group(GroupName(gameId)).GameStateUpdated(versionedState);
+        await Clients.Group(GameGroups.All(gameId)).GameStateUpdated(versionedState);
 
         return response;
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -7,25 +7,27 @@ import {
   WinConditionDto,
   type CreateGameResponse,
   type GameSettingsDto,
+  type StartingArmiesPresetDto,
 } from '../types/GameSettings'
 import { ToggleRow } from './ui/ToggleRow'
 import { Switch } from './ui/Switch'
 import { Stepper } from './ui/Stepper'
+import { SelectableOption } from './ui/SelectableOption'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { Footer } from './ui/Footer'
 import { Button } from './ui/Button'
 import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
+import { tDynamic } from '../i18n/useT'
 
-/** FO §10-standaardwaarden. Startlegers blijft een vrij invulbaar getal — de
- * "klassieke tabel per spelersaantal" staat niet in data/*.json en het spelersaantal
- * is nog onbekend op het moment dat de host dit scherm invult (vóór de lobby).
- * Roltoewijzing en verplaatsen-timer hebben geen bediening in het design (Instellingen-
- * scherm) en blijven daarom op hun default staan — geen invulruimte, zie CLAUDE.md. */
+/** FO §10-standaardwaarden. Roltoewijzing en verplaatsen-timer hebben geen bediening
+ * in het design (Instellingen-scherm) en blijven daarom op hun default staan — geen
+ * invulruimte, zie CLAUDE.md. `startingArmiesPresetId` valt terug op "classic" totdat
+ * `/maps/{mapId}/starting-armies-presets` teruggekomen is. */
 const DEFAULT_SETTINGS: GameSettingsDto = {
   winCondition: WinConditionDto.SecretMissions,
   setupMode: SetupModeDto.Random,
-  startingArmies: 20,
+  startingArmiesPresetId: 'classic',
   turnTimerSeconds: 180,
   fortifyTimerSeconds: 60,
   rolesEnabled: true,
@@ -33,8 +35,6 @@ const DEFAULT_SETTINGS: GameSettingsDto = {
   eventsEnabled: true,
 }
 
-const MIN_ARMIES = 10
-const MAX_ARMIES = 40
 const MIN_TIMER_SECONDS = 30
 const MAX_TIMER_SECONDS = 600
 const TIMER_STEP_SECONDS = 15
@@ -53,8 +53,26 @@ export interface CreateGameFormProps {
 export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
   const { t } = useTranslation('createGame')
   const [settings, setSettings] = useState<GameSettingsDto>(DEFAULT_SETTINGS)
+  const [presets, setPresets] = useState<StartingArmiesPresetDto[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch(`/maps/${mapId}/starting-armies-presets`)
+      .then((response) => (response.ok ? (response.json() as Promise<StartingArmiesPresetDto[]>) : []))
+      .then((loaded) => {
+        if (!cancelled) {
+          setPresets(loaded)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [mapId])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -178,27 +196,34 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
               />
             </div>
 
-            <Stepper
-              label={t('startingArmies.label')}
-              sub={t('startingArmies.sub')}
-              value={String(settings.startingArmies)}
-              valueFontSize={24}
-              valueMinWidth={34}
-              canDecrement={settings.startingArmies > MIN_ARMIES}
-              canIncrement={settings.startingArmies < MAX_ARMIES}
-              onDecrement={() =>
-                setSettings((s) => ({
-                  ...s,
-                  startingArmies: Math.max(MIN_ARMIES, s.startingArmies - 1),
-                }))
-              }
-              onIncrement={() =>
-                setSettings((s) => ({
-                  ...s,
-                  startingArmies: Math.min(MAX_ARMIES, s.startingArmies + 1),
-                }))
-              }
-            />
+            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
+              <div className="mb-0.5 font-display text-base font-extrabold">{t('startingArmies.title')}</div>
+              <div className="mb-2.5 text-[11.5px] text-fg-muted">{t('startingArmies.description')}</div>
+              <div role="radiogroup" aria-label={t('startingArmies.title')} className="flex flex-col gap-2">
+                {presets.map((preset) => (
+                  <SelectableOption
+                    key={preset.id}
+                    selected={settings.startingArmiesPresetId === preset.id}
+                    onSelect={() => setSettings((s) => ({ ...s, startingArmiesPresetId: preset.id }))}
+                    className="flex flex-col gap-1 px-3 py-2.5 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-display font-bold">
+                        {tDynamic(`startingArmies.preset.${preset.id}.title`, 'createGame')}
+                      </span>
+                      {settings.startingArmiesPresetId === preset.id && (
+                        <span className="ml-auto text-pitch-400" aria-hidden>
+                          {'✓'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11.5px] text-fg-muted">
+                      {tDynamic(`startingArmies.preset.${preset.id}.description`, 'createGame')}
+                    </p>
+                  </SelectableOption>
+                ))}
+              </div>
+            </div>
 
             <Stepper
               label={t('turnTimer.label')}

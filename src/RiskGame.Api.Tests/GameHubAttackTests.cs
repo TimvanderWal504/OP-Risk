@@ -1,9 +1,7 @@
 using Marten;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
@@ -25,12 +23,10 @@ namespace RiskGame.Api.Tests;
 [Collection(PostgresCollection.Name)]
 public sealed class GameHubAttackTests(PostgresFixture postgres)
 {
-    private const int StartingArmies = 25;
-
     private static readonly GameSettingsDto SettingsDto = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
@@ -38,31 +34,12 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         EventsEnabled: false);
 
     private WebApplicationFactory<Program> CreateFactory(params int[] diceSequence) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
+        ApiTestHost.Create(
+            postgres,
+            services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(diceSequence)));
 
-            builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(new SequenceRandomSource(diceSequence)));
-        });
-
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     /// <summary>
     /// Bouwt een spel rechtstreeks op in de projectie-fase Attack, met "alaska" (p1) grenzend
@@ -83,7 +60,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         var settings = new GameSettings(
             WinCondition.SecretMissions,
             SetupMode.Claiming,
-            StartingArmies,
+            SettingsDto.StartingArmiesPresetId,
             TurnTimer: TimeSpan.FromSeconds(SettingsDto.TurnTimerSeconds),
             FortifyTimer: TimeSpan.FromSeconds(SettingsDto.FortifyTimerSeconds),
             RolesEnabled: false,
@@ -119,7 +96,6 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using var session = store.LightweightSession();
         session.Store(state);

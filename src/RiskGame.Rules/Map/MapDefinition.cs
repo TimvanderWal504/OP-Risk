@@ -7,10 +7,18 @@ namespace RiskGame.Rules.Map;
 
 /// <summary>
 /// De volledige, gevalideerde statische data van één kaartvariant.
-/// Er is bewust geen static of gedeelde cache: elke aanroep van
+/// Er is bewust geen static of gedeelde cache in deze laag: elke aanroep van
 /// <see cref="MapDefinitionParser.Parse"/> levert een nieuwe, onafhankelijke instantie,
 /// zodat twee gelijktijdige spellen met verschillende varianten elkaar niet raken.
 /// </summary>
+/// <remarks>
+/// Dat betekent niet dat een instantie nooit gedeeld mag worden. Het type is immutable —
+/// get-only properties, <see cref="FrozenDictionary{TKey,TValue}"/> en
+/// <see cref="IReadOnlyList{T}"/> over records — dus twee spellen op dezelfde variant kunnen
+/// veilig dezelfde instantie gebruiken. De I/O-laag (<c>MapDefinitionSource</c> in
+/// <c>RiskGame.Persistence</c>) cachet daarom per <c>mapId</c> binnen één bron, wat de garantie
+/// hierboven ongemoeid laat: verschillende varianten blijven verschillende instanties.
+/// </remarks>
 public sealed class MapDefinition
 {
     private readonly FrozenDictionary<string, Territory> _territoriesById;
@@ -27,7 +35,8 @@ public sealed class MapDefinition
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> themes,
         IReadOnlyList<MissionDefinition> missions,
         IReadOnlyList<EventDefinition> events,
-        IReadOnlyList<RoleDefinition> roles)
+        IReadOnlyList<RoleDefinition> roles,
+        IReadOnlyList<StartingArmiesPreset> startingArmiesPresets)
     {
         MapId = mapId;
         Territories = territories;
@@ -40,6 +49,7 @@ public sealed class MapDefinition
         Missions = missions;
         Events = events;
         Roles = roles;
+        StartingArmiesPresets = startingArmiesPresets;
         Adjacency = new AdjacencyGraph(borders);
 
         _territoriesById = territories.ToFrozenDictionary(
@@ -78,6 +88,9 @@ public sealed class MapDefinition
     /// gefilterd, niet geladen.
     /// </summary>
     public IReadOnlyList<RoleDefinition> Roles { get; }
+
+    /// <summary>Startlegers-presets (FO §5.1/§10), gedeeld over kaartvarianten.</summary>
+    public IReadOnlyList<StartingArmiesPreset> StartingArmiesPresets { get; }
 
     public AdjacencyGraph Adjacency { get; }
 

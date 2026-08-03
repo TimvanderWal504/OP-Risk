@@ -1,10 +1,8 @@
 using System.Net.Http.Json;
 using Marten;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
@@ -24,46 +22,25 @@ namespace RiskGame.Api.Tests;
 [Collection(PostgresCollection.Name)]
 public sealed class GameHubReinforceTests(PostgresFixture postgres)
 {
-    private const int StartingArmies = 25;
-
     private static readonly GameSettingsDto Settings = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
+    // Zelfde volgorde als GameHubSetupTests: 2 trekkingen voor SecretMissions, dan wint Alice de
+    // order-roll altijd meteen, zodat TurnOrder vaststaat.
     private WebApplicationFactory<Program> CreateFactory() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
+        ApiTestHost.Create(
+            postgres,
+            services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
 
-            // Zelfde volgorde als GameHubSetupTests: 2 trekkingen voor SecretMissions, dan
-            // wint Alice de order-roll altijd meteen, zodat TurnOrder vaststaat.
-            builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
-        });
-
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     private static async Task<string> CreateGameAsync(HttpClient client)
     {
@@ -117,17 +94,26 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
             }
         }
 
-        // 43 gebieden, om en om vanaf Alice: Alice krijgt er 22 (budget 25-22=3), Bob 21
-        // (budget 25-21=4) — zelfde verdeling als GameHubSetupTests.
-        var placementOrder = new[]
-        {
-            alice.PlayerId, bob.PlayerId, alice.PlayerId, bob.PlayerId, alice.PlayerId, bob.PlayerId, bob.PlayerId,
-        };
+        // Classic-preset, 2 spelers (data/starting-armies-presets.json): 40 startlegers.
+        // 43 gebieden, om en om vanaf Alice: Alice krijgt er 22 (budget 40-22=18), Bob 21
+        // (budget 40-21=19) — zelfde afwisseling als SetupTurnCalculator (en GameHubSetupTests).
+        const int startingArmies = 40;
+        var aliceBudget = startingArmies - latest.Territories.Count(t => t.OwnerPlayerId == alice.PlayerId);
+        var bobBudget = startingArmies - latest.Territories.Count(t => t.OwnerPlayerId == bob.PlayerId);
 
-        foreach (var placerId in placementOrder)
+        while (aliceBudget > 0 || bobBudget > 0)
         {
-            var territoryId = placerId == alice.PlayerId ? aliceTerritoryId! : bobTerritoryId!;
-            latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, placerId, territoryId);
+            if (aliceBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId!);
+                aliceBudget--;
+            }
+
+            if (bobBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId!);
+                bobBudget--;
+            }
         }
 
         return (gameId, alice.PlayerId, bob.PlayerId, aliceTerritoryId!, bobTerritoryId!, latest);
@@ -148,6 +134,90 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         Assert.Equal(TurnPhaseDto.Reinforce, state.TurnState.TurnPhase);
         // Alice bezit 22 gebieden: max(3, 22/3) = max(3, 7) = 7, geen continent compleet.
         Assert.Equal(7, state.TurnState.ArmiesRemaining);
+    }
+
+    /// <summary>
+    /// Doorloopt een volledige beurtcyclus (Reinforce → Attack → Fortify → volgende speler →
+    /// Reinforce) end-to-end vanaf de echte InitialPlacement-uitkomst, om te bewijzen dat de
+    /// cyclus daadwerkelijk teruglust en dat <c>ArmiesRemaining</c> bij terugkomst opnieuw
+    /// klopt — niet alleen de eenmalige binnenkomst uit
+    /// <see cref="VolledigeStartopstelling_LandtInReinforceMetPoolVoorAlice"/>. Events staan in
+    /// <see cref="Settings"/> uit, dus dit bewijst niet of/wat er na een volledige rónde (alle
+    /// spelers een beurt gehad, FO §9.2) gebeurt — dat is gebeurtenisronde-werk voor een latere
+    /// taak (zie het Reinforce-plan, feit 5: het TV-dispatchmodel hoeft daar niet op te wachten).
+    /// </summary>
+    [Fact]
+    public async Task VolledigeBeurtcyclus_KomtTerugBijReinforceMetOpnieuwCorrectePool()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var (gameId, aliceId, bobId, aliceTerritoryId, bobTerritoryId, state) =
+            await SetUpToReinforceAsync(connection, client);
+
+        // Alice: plaats de volledige pool (7, zie VolledigeStartopstelling_...) en loop de
+        // beurt af.
+        var afterPlacing = await connection.InvokeAsync<GameStateDto>(
+            "PlaceReinforcements", gameId, aliceId, aliceTerritoryId, state.TurnState!.ArmiesRemaining);
+        Assert.Equal(0, afterPlacing.TurnState!.ArmiesRemaining);
+
+        var afterAliceToAttack = await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, aliceId);
+        Assert.Equal(TurnPhaseDto.Attack, afterAliceToAttack.TurnState!.TurnPhase);
+
+        var afterAliceToFortify = await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, aliceId);
+        Assert.Equal(TurnPhaseDto.Fortify, afterAliceToFortify.TurnState!.TurnPhase);
+
+        var afterAliceTurn = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, aliceId);
+        Assert.Equal(bobId, afterAliceTurn.TurnState!.ActivePlayerId);
+        Assert.Equal(TurnPhaseDto.Reinforce, afterAliceTurn.TurnState.TurnPhase);
+        // Bob bezit 21 gebieden: max(3, 21/3) = 7, geen continent compleet — zelfde rekenregel
+        // als voor Alice.
+        Assert.Equal(7, afterAliceTurn.TurnState.ArmiesRemaining);
+
+        // Bob: zelfde cyclus, terug naar Alice.
+        var afterBobPlacing = await connection.InvokeAsync<GameStateDto>(
+            "PlaceReinforcements", gameId, bobId, bobTerritoryId, afterAliceTurn.TurnState.ArmiesRemaining);
+        Assert.Equal(0, afterBobPlacing.TurnState!.ArmiesRemaining);
+
+        await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, bobId);
+        await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, bobId);
+        var backToAlice = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, bobId);
+
+        Assert.Equal(aliceId, backToAlice.TurnState!.ActivePlayerId);
+        Assert.Equal(TurnPhaseDto.Reinforce, backToAlice.TurnState.TurnPhase);
+        Assert.Equal(7, backToAlice.TurnState.ArmiesRemaining);
+        Assert.NotNull(backToAlice.TurnState.Timer);
+        Assert.False(backToAlice.TurnState.Timer!.IsPaused);
+    }
+
+    /// <summary>
+    /// Rejoin-tijdens-Reinforce (Reinforce-plan, verificatiepunt "rejoin midden in
+    /// Reinforce"): een speler die alvast een deel van de pool geplaatst heeft en dan
+    /// opnieuw verbindt (nieuwe SignalR-connectie, zelfde scenario als een paginaherlaad)
+    /// moet het restbudget en de breakdown terugkrijgen zoals de server ze nu kent — geen
+    /// client-side staging die "doorleeft" over een reconnect heen.
+    /// </summary>
+    [Fact]
+    public async Task RejoinTijdensReinforce_LevertActueelRestbudgetEnBreakdownOp()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var (gameId, aliceId, _, aliceTerritoryId, _, state) = await SetUpToReinforceAsync(connection, client);
+
+        // Alice plaatst 3 van haar 7 legers, dan valt de verbinding weg (nieuwe tab/refresh).
+        await connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, aliceId, aliceTerritoryId, 3);
+
+        await using var reconnected = await ConnectAsync(factory, client);
+        var rejoined = await reconnected.InvokeAsync<GameStateDto>("RejoinGame", gameId, aliceId);
+
+        Assert.Equal(GamePhaseDto.InProgress, rejoined.Phase);
+        Assert.Equal(TurnPhaseDto.Reinforce, rejoined.TurnState!.TurnPhase);
+        Assert.Equal(state.TurnState!.ArmiesRemaining - 3, rejoined.TurnState.ArmiesRemaining);
+        Assert.NotNull(rejoined.TurnState.ReinforcementBreakdown);
+        Assert.Equal(7, rejoined.TurnState.ReinforcementBreakdown!.BaseArmies);
     }
 
     [Fact]
@@ -223,7 +293,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         var settings = new GameSettings(
             WinCondition.SecretMissions,
             SetupMode.Claiming,
-            StartingArmies,
+            Settings.StartingArmiesPresetId,
             TurnTimer: TimeSpan.FromSeconds(Settings.TurnTimerSeconds),
             FortifyTimer: TimeSpan.FromSeconds(Settings.FortifyTimerSeconds),
             RolesEnabled: false,
@@ -255,7 +325,6 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using var session = store.LightweightSession();
         session.Store(state);

@@ -38,7 +38,7 @@ builder.Services.AddSignalR(options => options.AddFilter<HubExceptionLoggingFilt
 var app = builder.Build();
 
 app.MapGameHub();
-app.MapGameEndpoints();
+app.MapGameEndpoints(mapsRoot);
 
 app.Run();
 

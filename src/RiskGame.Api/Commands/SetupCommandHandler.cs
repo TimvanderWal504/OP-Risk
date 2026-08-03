@@ -51,7 +51,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> PlaceInitialArmyAsync(string gameId, string playerId, string territoryId)
@@ -64,10 +64,22 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
             return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
+        // StartingArmiesResolver vereist een definitief spelersaantal (2–7): pas veilig zodra
+        // de fase-guard bevestigt dat het spel echt in InitialPlacement is. Een client die dit
+        // commando te vroeg aanroept (bv. nog in Lobby, 1 speler) krijgt zo een nette
+        // validatiefout in plaats van een crash op de preset-opzoeking.
+        var phaseCheck = SetupGuards.GameIsInInitialPlacement(state);
+
+        if (!phaseCheck.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(phaseCheck.Errors);
+        }
+
+        var startingArmies = StartingArmiesResolver.Resolve(state);
+
         var validation = ValidationResult.Combine(
-            SetupGuards.GameIsInInitialPlacement(state),
             Guards.PlayerExists(state, playerId),
-            SetupGuards.IsPlayersTurnToPlace(state, playerId),
+            SetupGuards.IsPlayersTurnToPlace(state, playerId, startingArmies),
             Guards.OwnsTerritory(state, playerId, territoryId));
 
         if (!validation.IsSuccess)
@@ -78,7 +90,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
         session.Events.Append(gameId, new InitialArmyPlaced(gameId, playerId, territoryId));
 
         var totalArmiesPlaced = state.Territories.Sum(territory => territory.ArmyCount) + 1;
-        var totalArmiesExpected = state.Settings.StartingArmies * state.Players.Count;
+        var totalArmiesExpected = startingArmies * state.Players.Count;
 
         if (totalArmiesPlaced == totalArmiesExpected)
         {
@@ -105,6 +117,6 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

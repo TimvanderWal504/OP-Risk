@@ -5,6 +5,7 @@ import {
   WinConditionDto,
   type GameSettingsDto,
 } from '../types/GameSettings'
+import { tDynamic } from '../i18n/useT'
 
 export interface LobbySettingsSummaryProps {
   settings: GameSettingsDto
@@ -57,7 +58,11 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
       settings.eventsEnabled ? 'var(--pitch-400)' : 'var(--fg1)',
     ],
     [t('settings.setupMode'), setupModeLabels[settings.setupMode], 'var(--fg1)'],
-    [t('settings.startingArmies'), String(settings.startingArmies), 'var(--fg1)'],
+    [
+      t('settings.startingArmies'),
+      tDynamic(`startingArmies.preset.${settings.startingArmiesPresetId}.title`, 'createGame'),
+      'var(--fg1)',
+    ],
     [t('settings.turnTimer'), formatSeconds(settings.turnTimerSeconds), 'var(--fg1)'],
   ]
 

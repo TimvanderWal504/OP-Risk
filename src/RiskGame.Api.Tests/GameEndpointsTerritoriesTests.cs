@@ -1,8 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using RiskGame.Api.Dtos;
 
 namespace RiskGame.Api.Tests;
@@ -18,7 +16,7 @@ public sealed class GameEndpointsTerritoriesTests(PostgresFixture postgres) : IA
     private static readonly GameSettingsDto Settings = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies: 25,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
@@ -30,15 +28,7 @@ public sealed class GameEndpointsTerritoriesTests(PostgresFixture postgres) : IA
 
     public Task InitializeAsync()
     {
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
-        });
-
+        _factory = ApiTestHost.Create(postgres);
         _client = _factory.CreateClient();
 
         return Task.CompletedTask;

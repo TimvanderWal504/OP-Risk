@@ -22,7 +22,7 @@ export const fixtureState: GameStateDto = {
   settings: {
     winCondition: WinConditionDto.WorldDomination,
     setupMode: SetupModeDto.Claiming,
-    startingArmies: 20,
+    startingArmiesPresetId: 'classic',
     turnTimerSeconds: 180,
     fortifyTimerSeconds: 60,
     rolesEnabled: false,

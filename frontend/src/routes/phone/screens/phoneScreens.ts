@@ -5,6 +5,7 @@ import type { PlayerDto } from '../../../types/Player'
 import type { TerritoryCatalogDto } from '../../../types/TerritoryCatalog'
 import { PhoneClaimingScreen } from './PhoneClaimingScreen'
 import { PhoneInitialPlacementScreen } from './PhoneInitialPlacementScreen'
+import { PhoneInProgressScreen } from './PhoneInProgressScreen'
 import { PhoneLobbyScreen } from './PhoneLobbyScreen'
 import { PhoneOrderRollScreen } from './PhoneOrderRollScreen'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
@@ -30,6 +31,8 @@ export interface PhoneScreenProps {
   rollForOrder: () => Promise<void>
   claimTerritory: (territoryId: string) => Promise<void>
   placeInitialArmy: (territoryId: string) => Promise<void>
+  placeReinforcements: (territoryId: string, amount: number) => Promise<void>
+  endPhase: () => Promise<void>
 }
 
 export type PhoneScreen = (props: PhoneScreenProps) => ReactNode
@@ -44,7 +47,7 @@ export const phoneScreens: Record<GamePhaseDto, PhoneScreen> = {
   [GamePhaseDto.OrderRoll]: PhoneOrderRollScreen,
   [GamePhaseDto.Claiming]: PhoneClaimingScreen,
   [GamePhaseDto.InitialPlacement]: PhoneInitialPlacementScreen,
-  [GamePhaseDto.InProgress]: PhonePlaceholderScreen,
+  [GamePhaseDto.InProgress]: PhoneInProgressScreen,
   [GamePhaseDto.Finished]: PhonePlaceholderScreen,
 }
 

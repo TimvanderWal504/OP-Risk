@@ -5,9 +5,9 @@ import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
 import type { PhoneScreenProps } from './phoneScreens'
 
 /**
- * Startopstelling · Bijplaatsen (FO §5.1). Twee substaten: wachten tot je aan de beurt bent
- * en zelf plaatsen. Of er überhaupt beurten zijn leidt de server af — bij de willekeurige
- * opstelling plaatst iedereen tegelijk en stuurt de server `activePlayerId: null`.
+ * Startopstelling · Bijplaatsen (FO §5.1). Turn-based bij zowel Random als Claimen: twee
+ * substaten, wachten tot je aan de beurt bent en zelf plaatsen. `activePlayerId` is alleen
+ * `null` zodra bijplaatsen voor iedereen klaar is (server stuurt dan meteen de volgende fase).
  */
 export function PhoneInitialPlacementScreen({
   state,

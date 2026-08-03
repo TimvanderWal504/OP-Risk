@@ -10,7 +10,7 @@ describe('LobbySettingsSummary', () => {
         settings={{
           winCondition: WinConditionDto.SecretMissions,
           setupMode: SetupModeDto.Random,
-          startingArmies: 30,
+          startingArmiesPresetId: 'classic',
           turnTimerSeconds: 180,
           fortifyTimerSeconds: 60,
           rolesEnabled: false,
@@ -22,7 +22,7 @@ describe('LobbySettingsSummary', () => {
 
     expect(screen.getByText('Kaart')).toBeInTheDocument()
     expect(screen.getByText('Geheime missies')).toBeInTheDocument()
-    expect(screen.getByText('30')).toBeInTheDocument()
+    expect(screen.getByText('Klassiek')).toBeInTheDocument()
     expect(screen.getByText('3 min')).toBeInTheDocument()
     expect(screen.queryByText('1 min')).not.toBeInTheDocument()
     expect(screen.getAllByText('Uit')).toHaveLength(2)

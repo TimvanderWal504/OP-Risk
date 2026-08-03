@@ -142,10 +142,10 @@ Drie aanvullende databestanden completeren de spel-dataset:
 
 Twee modi, instelbaar in de lobby (§10). **Standaard: random verdeeld.**
 
-- **Random (standaard):** de server verdeelt alle gebieden gelijkmatig willekeurig; daarna plaatsen alle spelers **gelijktijdig**, buiten de normale beurtvolgorde om, hun resterende startlegers (1 per keer, klassiek) — niemand hoeft op elkaar te wachten.
-- **Claimen:** spelers claimen **om beurten** één leeg gebied tot alles verdeeld is; daarna plaatsen alle spelers **gelijktijdig**, buiten de normale beurtvolgorde om, hun resterende legers bij (1 per keer, klassiek) — niemand hoeft op elkaar te wachten.
+- **Random (standaard):** de server verdeelt alle gebieden gelijkmatig willekeurig; daarna plaatsen spelers **om de beurt** hun resterende startlegers bij, klassiek in de vaste beurtvolgorde, totdat alle legers geplaatst zijn.
+- **Claimen:** spelers claimen **om beurten** één leeg gebied tot alles verdeeld is; daarna plaatsen spelers **om de beurt** hun resterende startlegers bij, in dezelfde volgorde, totdat alle legers geplaatst zijn.
 
-**Startlegers:** 18 per speler bij 7 spelers. Voor 2–6 spelers gelden de klassieke aantallen (40/35/30/25/20). Instelbaar als lobby-parameter.
+**Startlegers:** klassieke tabel per spelersaantal — 40/35/30/25/20 voor 2–6 spelers, 18 bij 7. De host kiest in de lobby een **preset** (Klassiek, Modern, Klassiek-49) in plaats van een los getal; het exacte aantal per speler volgt uit de gekozen preset zodra het definitieve spelersaantal bekend is (bij het starten van het spel, niet bij het aanmaken).
 
 **Rolrestrictie bij verdeling:** een speler mag zijn eigen rol-herkomstland niet in startbezit krijgen (§8).
 
@@ -328,7 +328,7 @@ moeten maken voordat het spel verdergaat:
 |---|---|---|
 | Winconditie | Werelddominantie / Geheime missies | Missies |
 | Startopstelling | Random / Claimen | Random |
-| Startlegers | Per spelersaantal, aanpasbaar | Klassiek; 18 bij 7 spelers |
+| Startlegers | Preset: Klassiek / Modern / Klassiek-49 | Klassiek (40/35/30/25/20/18) |
 | Beurttimer (Versterken + Aanvallen) | Aanpasbaar | 3 min |
 | Verplaatsen-timer | Aanpasbaar | 1 min |
 | Rollen | Aan / uit | Uit |

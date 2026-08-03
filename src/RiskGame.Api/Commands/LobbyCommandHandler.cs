@@ -1,7 +1,9 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
+using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.Roles;
@@ -17,12 +19,42 @@ public sealed record JoinGameResult(string PlayerId, GameStateDto State);
 /// de rules engine, dan pas events persisteren en de nieuwe projectie teruggeven. Faalt de
 /// validatie, dan wordt er niets opgeslagen (geen state-wijziging, TO §4-diagram).
 /// </summary>
-public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource random)
+public sealed class LobbyCommandHandler(
+    IDocumentStore store, IRandomSource random, IMapDefinitionSource mapSource, TimeProvider timeProvider)
 {
     public async Task<Result<CreateGameResponse>> CreateGameAsync(CreateGameRequest request)
     {
         var gameId = GameIdGenerator.NewGameId();
         var settings = GameStateDtoMapper.ToDomain(request.Settings);
+
+        // Er bestaat nog geen GameState om tegen te valideren (dit event ís de eerste), dus
+        // rechtstreeks tegen de geladen kaartvariant — zelfde bron als waarmee de engine straks
+        // startlegers oplost (StartingArmiesResolver), zodat een onbekende preset-id hier
+        // wordt geweigerd in plaats van pas te crashen bij de eerste StartGame/plaatsing.
+        // MapDefinitionSource.Load gooit InvalidOperationException bij een ongeldige (maar
+        // bestaande) kaartvariant, en IOException (o.a. DirectoryNotFoundException,
+        // FileNotFoundException) wanneer de map-submap voor een onbekend MapId niet bestaat —
+        // dat gooit File.ReadAllText al vóór het eigen IsSuccess-resultaat. Beide zijn hier
+        // geen bug maar clientinvoer, dus afvangen en teruggeven via hetzelfde Result-patroon
+        // als de preset-check hieronder, i.p.v. een onbehandelde 500.
+        MapDefinition map;
+        try
+        {
+            map = mapSource.Load(request.MapId);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
+        {
+            return Result<CreateGameResponse>.Failure(
+                "lobby.unknownMap",
+                new Dictionary<string, string> { ["mapId"] = request.MapId });
+        }
+
+        if (!map.StartingArmiesPresets.Any(preset => preset.Id == settings.StartingArmiesPresetId))
+        {
+            return Result<CreateGameResponse>.Failure(
+                "lobby.unknownStartingArmiesPreset",
+                new Dictionary<string, string> { ["presetId"] = settings.StartingArmiesPresetId });
+        }
 
         await using var session = store.LightweightSession();
         session.Events.StartStream<GameState>(gameId, new GameCreated(gameId, request.MapId, settings));
@@ -58,7 +90,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
         var updated = await session.LoadAsync<GameState>(gameId);
 
         return Result<JoinGameResult>.Success(
-            new JoinGameResult(playerId, GameStateDtoMapper.ToDto(updated!)));
+            new JoinGameResult(playerId, GameStateDtoMapper.ToDto(updated!, timeProvider)));
     }
 
     public async Task<Result<GameStateDto>> ChooseColorAsync(string gameId, string playerId, string colorId)
@@ -87,7 +119,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> StartGameAsync(string gameId, string playerId)
@@ -156,7 +188,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
-        var dto = GameStateDtoMapper.ToDto(updated!);
+        var dto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
         if (dto.Phase == GamePhaseDto.OrderRoll)
         {
@@ -195,7 +227,7 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> SelectRoleAsync(string gameId, string playerId, string roleId)
@@ -225,6 +257,6 @@ public sealed class LobbyCommandHandler(IDocumentStore store, IRandomSource rand
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

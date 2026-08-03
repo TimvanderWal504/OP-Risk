@@ -8,8 +8,7 @@ public sealed class SetupTurnCalculatorTests
     private static GameState State(
         IReadOnlyList<Player> players,
         IReadOnlyList<TerritoryOwnership> territories,
-        GamePhase phase,
-        int startingArmies = 10)
+        GamePhase phase)
     {
         var map = Standaard43Data.Load();
 
@@ -17,7 +16,7 @@ public sealed class SetupTurnCalculatorTests
             gameId: "test-game",
             map,
             phase,
-            TestGame.Settings() with { StartingArmies = startingArmies },
+            TestGame.Settings(),
             players,
             territories,
             turnOrder: [.. players.Select(player => player.Id)],
@@ -82,9 +81,9 @@ public sealed class SetupTurnCalculatorTests
             new TerritoryOwnership("t3", "p1", 1),
             new TerritoryOwnership("t4", "p2", 1),
         };
-        var state = State(players, territories, GamePhase.InitialPlacement, startingArmies: 10);
+        var state = State(players, territories, GamePhase.InitialPlacement);
 
-        Assert.Equal("p1", SetupTurnCalculator.ActivePlacerId(state));
+        Assert.Equal("p1", SetupTurnCalculator.ActivePlacerId(state, startingArmies: 10));
     }
 
     [Fact]
@@ -100,10 +99,10 @@ public sealed class SetupTurnCalculatorTests
             new TerritoryOwnership("t3", "p1", 1),
             new TerritoryOwnership("t4", "p2", 2), // p2: nog 4 - 2 = 2 legers te plaatsen
         };
-        var state = State(players, territories, GamePhase.InitialPlacement, startingArmies: 4);
+        var state = State(players, territories, GamePhase.InitialPlacement);
 
         // p1 is klaar (0 resterend); p2 heeft nog legers over, dus die is aan de beurt.
-        Assert.Equal("p2", SetupTurnCalculator.ActivePlacerId(state));
+        Assert.Equal("p2", SetupTurnCalculator.ActivePlacerId(state, startingArmies: 4));
     }
 
     [Fact]
@@ -115,8 +114,8 @@ public sealed class SetupTurnCalculatorTests
             new TerritoryOwnership("t1", "p1", 5),
             new TerritoryOwnership("t2", "p2", 5),
         };
-        var state = State(players, territories, GamePhase.InitialPlacement, startingArmies: 5);
+        var state = State(players, territories, GamePhase.InitialPlacement);
 
-        Assert.Null(SetupTurnCalculator.ActivePlacerId(state));
+        Assert.Null(SetupTurnCalculator.ActivePlacerId(state, startingArmies: 5));
     }
 }

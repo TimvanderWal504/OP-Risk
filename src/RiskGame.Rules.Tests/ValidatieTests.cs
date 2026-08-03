@@ -95,6 +95,12 @@ public class ValidatieTests
         }
         """;
 
+    private const string GeldigeStartingArmiesPresets = """
+        [
+          { "id": "classic", "armiesByPlayerCount": { "2": 40, "3": 35, "4": 30, "5": 25, "6": 20, "7": 18 } }
+        ]
+        """;
+
     private static Result Parse(
         string? territories = null,
         string? adjacency = null,
@@ -103,7 +109,8 @@ public class ValidatieTests
         string? cards = null,
         string? missions = null,
         string? events = null,
-        string? roles = null)
+        string? roles = null,
+        string? startingArmiesPresets = null)
     {
         var result = MapDefinitionParser.Parse("test", new MapDataSources(
             territories ?? GeldigeTerritories,
@@ -113,7 +120,8 @@ public class ValidatieTests
             cards ?? GeldigeCards,
             missions ?? GeldigeMissions,
             events ?? GeldigeEvents,
-            roles ?? GeldigeRoles));
+            roles ?? GeldigeRoles,
+            startingArmiesPresets ?? GeldigeStartingArmiesPresets));
 
         return new Result(
             result.IsSuccess,
@@ -485,7 +493,7 @@ public class ValidatieTests
         // Geen datafout (FO: rollen zonder herkomstland op de kaart horen niet in de pool).
         var result = MapDefinitionParser.Parse("test", new MapDataSources(
             GeldigeTerritories, GeldigeAdjacency, GeldigeContinents, GeldigeColors, GeldigeCards,
-            GeldigeMissions, GeldigeEvents, roles));
+            GeldigeMissions, GeldigeEvents, roles, GeldigeStartingArmiesPresets));
 
         Assert.True(result.IsSuccess, string.Join(" | ", result.Errors));
         Assert.Empty(result.Value.Roles);

@@ -28,6 +28,8 @@ export function PhonePage() {
     rollForOrder,
     claimTerritory,
     placeInitialArmy,
+    placeReinforcements,
+    endPhase,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
 
@@ -69,6 +71,8 @@ export function PhonePage() {
         rollForOrder,
         claimTerritory,
         placeInitialArmy,
+        placeReinforcements,
+        endPhase,
       })}
     </PhoneShell>
   )

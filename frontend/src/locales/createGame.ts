@@ -45,8 +45,25 @@ export const createGame = {
     claiming: { nl: 'Claimen', en: 'Claiming' },
   },
   startingArmies: {
-    label: { nl: 'Startlegers', en: 'Starting armies' },
-    sub: { nl: 'Per speler · aantal spelers nog onbekend', en: 'Per player · player count not yet known' },
+    title: { nl: 'Startlegers', en: 'Starting armies' },
+    description: {
+      nl: 'Legers per speler; het exacte aantal volgt uit het spelersaantal zodra de lobby sluit.',
+      en: 'Armies per player; the exact count follows from the player count once the lobby closes.',
+    },
+    preset: {
+      classic: {
+        title: { nl: 'Klassiek', en: 'Classic' },
+        description: { nl: '40 t/m 18 legers (2–7 spelers).', en: '40 to 18 armies (2–7 players).' },
+      },
+      modern: {
+        title: { nl: 'Modern', en: 'Modern' },
+        description: { nl: '45 t/m 23 legers (2–7 spelers).', en: '45 to 23 armies (2–7 players).' },
+      },
+      'classic-49': {
+        title: { nl: 'Klassiek-49', en: 'Classic-49' },
+        description: { nl: '50 t/m 27 legers (2–7 spelers).', en: '50 to 27 armies (2–7 players).' },
+      },
+    },
   },
   turnTimer: {
     label: { nl: 'Beurttimer', en: 'Turn timer' },

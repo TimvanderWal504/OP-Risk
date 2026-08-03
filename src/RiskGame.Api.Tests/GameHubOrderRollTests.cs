@@ -1,9 +1,7 @@
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
@@ -18,51 +16,22 @@ namespace RiskGame.Api.Tests;
 /// zodat de dobbelworpen vaststaan (TO §9: reproduceerbaar via een test-double).
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLifetime
+public sealed class GameHubOrderRollTests(PostgresFixture postgres)
 {
     private static readonly GameSettingsDto Settings = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies: 25,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
-    private WebApplicationFactory<Program> _factory = null!;
-    private HttpClient _client = null!;
-
-    public Task InitializeAsync()
-    {
-        _factory = CreateFactory();
-        _client = _factory.CreateClient();
-
-        return Task.CompletedTask;
-    }
-
-    public Task DisposeAsync()
-    {
-        _client.Dispose();
-        _factory.Dispose();
-
-        return Task.CompletedTask;
-    }
-
     private WebApplicationFactory<Program> CreateFactory(IRandomSource? randomSource = null) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
-
-            if (randomSource is not null)
-            {
-                builder.ConfigureServices(services => services.AddSingleton(randomSource));
-            }
-        });
+        ApiTestHost.Create(
+            postgres,
+            randomSource is null ? null : services => services.AddSingleton(randomSource));
 
     private static async Task<string> CreateGameAsync(HttpClient client)
     {
@@ -75,19 +44,8 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
         return body!.GameId;
     }
 
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     private static async Task<string> JoinAndChooseColorAsync(
         HubConnection connection, string gameId, string playerName, string colorId)
@@ -101,8 +59,10 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
     [Fact]
     public async Task StartGame_DoorHostMetVoldoendeSpelersEnKleuren_GaatNaarOrderRoll()
     {
-        var gameId = await CreateGameAsync(_client);
-        await using var connection = await ConnectAsync(_factory, _client);
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
 
         var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
         await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
@@ -115,8 +75,10 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
     [Fact]
     public async Task StartGame_DoorNietHost_WordtGeweigerd()
     {
-        var gameId = await CreateGameAsync(_client);
-        await using var connection = await ConnectAsync(_factory, _client);
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
 
         await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
         var bobId = await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
@@ -161,8 +123,10 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
     [Fact]
     public async Task StartGame_GaatNaarOrderRoll_IedereenMagInRonde1Gooien()
     {
-        var gameId = await CreateGameAsync(_client);
-        await using var connection = await ConnectAsync(_factory, _client);
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
 
         var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
         var bobId = await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
@@ -192,10 +156,8 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres) : IAsyncLife
 
         await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, aliceId);
 
-        var completed = await Task.WhenAny(received.Task, Task.Delay(TimeSpan.FromSeconds(5)));
-        Assert.Same(received.Task, completed);
+        var message = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
-        var message = await received.Task;
         Assert.Equal(aliceId, message.PlayerId);
         Assert.Equal([6, 4], message.Dice);
         Assert.Equal("order-roll", message.Context);

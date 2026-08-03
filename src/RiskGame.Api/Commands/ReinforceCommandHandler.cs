@@ -13,7 +13,7 @@ namespace RiskGame.Api.Commands;
 /// (FO §5.2). Geen dobbelen nodig, dus geen <see cref="RiskGame.Rules.Abstractions.IRandomSource"/>
 /// — alleen guards, event(s) appenden en de nieuwe projectie teruggeven.
 /// </summary>
-public sealed class ReinforceCommandHandler(IDocumentStore store)
+public sealed class ReinforceCommandHandler(IDocumentStore store, TimeProvider timeProvider)
 {
     public async Task<Result<GameStateDto>> PlaceReinforcementsAsync(
         string gameId, string playerId, string territoryId, int amount)
@@ -53,7 +53,7 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> TradeInCardsAsync(
@@ -97,6 +97,6 @@ public sealed class ReinforceCommandHandler(IDocumentStore store)
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

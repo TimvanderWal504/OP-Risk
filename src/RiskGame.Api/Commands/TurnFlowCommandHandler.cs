@@ -44,7 +44,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> EndPhaseAsync(string gameId, string playerId)
@@ -78,7 +78,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 
     public async Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId)
@@ -169,6 +169,6 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

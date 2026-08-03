@@ -3,13 +3,15 @@ import { ColorSymbol } from './ColorSymbol'
 
 export interface ColorAvatarProps {
   color: PlayerColorDto | null | undefined
-  /** `banner`: 46px/radius 12px/tekst 24px (Telefoon.dc.html L429,475). `row`: 34px/radius 9px/tekst 16px (L437,461). */
-  variant: 'banner' | 'row'
+  /** `banner`: 46px/radius 12px/tekst 24px (Telefoon.dc.html L429,475). `row`: 34px/radius 9px/tekst 16px
+   * (L437,461). `reinforce`: 32px/radius 9px/tekst 15px (L530, Versterken-rij). */
+  variant: 'banner' | 'row' | 'reinforce'
 }
 
 const VARIANTS = {
   banner: 'h-[46px] w-[46px] rounded-xl text-2xl',
   row: 'h-[34px] w-[34px] rounded-[9px] text-base',
+  reinforce: 'h-8 w-8 rounded-[9px] text-[15px]',
 } as const
 
 /**

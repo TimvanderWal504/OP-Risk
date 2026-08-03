@@ -38,6 +38,7 @@ export default defineConfig({
     proxy: {
       '/hubs': { target: 'http://localhost:5001', ws: true },
       '/games': { target: 'http://localhost:5001' },
+      '/maps': { target: 'http://localhost:5001' },
     },
   },
   test: {

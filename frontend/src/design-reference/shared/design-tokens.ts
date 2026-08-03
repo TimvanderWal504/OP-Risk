@@ -182,3 +182,31 @@ export const playerColors: Record<PlayerColorId, { hex: string; onHex: string; s
   orange: { hex: '#e58423', onHex: '#1b1716', symbol: 'line', name: 'Oranje' },
   turquoise: { hex: '#34e0a1', onHex: '#000000', symbol: 'cross', name: 'Turquoise' },
 };
+
+// ---------------------------------------------------------------------------
+// TV-bord (Main board / Region select / Combat) — `atlasTok()` in
+// `tv/Operatie Atlas Host-scherm.dc.html:889-902`, alleen de donkere-thema-tak.
+// De app heeft geen runtime theme-toggle (geverifieerd: geen `data-theme`,
+// `useTheme` of `prefers-color-scheme`-lezing elders in de al gebouwde TV-code) —
+// de export se theme-toggle is demo-only, dus de lichte tak wordt hier bewust
+// niet overgenomen.
+// ---------------------------------------------------------------------------
+export const boardTok = {
+  ownFill: 0.12,
+  ownStroke: 1,
+  ownSw: 2.5,
+  enFill: 0.08,
+  enStroke: 0.75,
+  enSw: 2,
+  neutral: '#6f7e97',
+  neuFill: 0.05,
+  neuStroke: 0.4,
+  selHalo: 0.28,
+  tgtHalo: 0.32,
+  tgtFill: 0.12,
+  disc: '#080c14',
+  discOp: 0.5,
+  fg: '#eef2f8',
+  accent: '#f2a922',
+  numFg: '#eef2f8',
+} as const;

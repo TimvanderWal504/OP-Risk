@@ -1,9 +1,7 @@
 using Marten;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
@@ -22,12 +20,10 @@ namespace RiskGame.Api.Tests;
 [Collection(PostgresCollection.Name)]
 public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 {
-    private const int StartingArmies = 25;
-
     private static readonly GameSettingsDto SettingsDto = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
@@ -35,31 +31,11 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         EventsEnabled: false);
 
     private WebApplicationFactory<Program> CreateFactory() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
+        ApiTestHost.Create(
+            postgres, services => services.AddSingleton<IRandomSource>(new SequenceRandomSource()));
 
-            builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(new SequenceRandomSource()));
-        });
-
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     /// <summary>
     /// Bouwt een spel rechtstreeks op met "alaska" (p1) grenzend aan "alberta" (p1 of p2,
@@ -72,7 +48,8 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         string albertaOwnerId,
         int albertaArmies,
         PendingCombat? pendingCombat = null,
-        IReadOnlyList<string>? extraTerritoriesForP2 = null)
+        IReadOnlyList<string>? extraTerritoriesForP2 = null,
+        int armiesRemaining = 0)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -81,7 +58,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         var settings = new GameSettings(
             WinCondition.SecretMissions,
             SetupMode.Claiming,
-            StartingArmies,
+            SettingsDto.StartingArmiesPresetId,
             TurnTimer: TimeSpan.FromSeconds(SettingsDto.TurnTimerSeconds),
             FortifyTimer: TimeSpan.FromSeconds(SettingsDto.FortifyTimerSeconds),
             RolesEnabled: false,
@@ -115,12 +92,11 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
-                "p1", turnPhase, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), pendingCombat, ArmiesRemaining: 0),
+                "p1", turnPhase, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), pendingCombat, armiesRemaining),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using var session = store.LightweightSession();
         session.Store(state);
@@ -173,6 +149,22 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
         Assert.Equal(TurnPhaseDto.Attack, updated.TurnState!.TurnPhase);
         Assert.Equal("p1", updated.TurnState.ActivePlayerId);
+    }
+
+    [Fact]
+    public async Task EndPhase_VanuitVersterkenMetOngeplaatsteLegers_WordtGeweigerd()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Reinforce, albertaOwnerId: "p2", albertaArmies: 1, armiesRemaining: 3);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1"));
+
+        Assert.Contains("turnFlow.armiesRemaining", exception.Message);
     }
 
     [Fact]

@@ -1,10 +1,8 @@
 using System.Net.Http.Json;
 using Marten;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api;
 using RiskGame.Api.Dtos;
@@ -24,47 +22,29 @@ namespace RiskGame.Api.Tests;
 [Collection(PostgresCollection.Name)]
 public sealed class GameHubSetupTests(PostgresFixture postgres)
 {
-    private const int StartingArmies = 25;
+    // Classic-preset, 2 spelers (data/starting-armies-presets.json): 40 startlegers.
+    private const int StartingArmies = 40;
 
     private static readonly GameSettingsDto Settings = new(
         WinConditionDto.SecretMissions,
         SetupModeDto.Claiming,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: false,
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
+    // De eerste 2 waarden gaan naar StartGame's missietoewijzing (WinCondition.SecretMissions,
+    // 2 spelers = 2 trekkingen); daarna wint Alice de order-roll altijd meteen (10 tegen 5),
+    // zodat TurnOrder vaststaat.
     private WebApplicationFactory<Program> CreateFactory() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
+        ApiTestHost.Create(
+            postgres,
+            services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
 
-            // De eerste 2 waarden gaan naar StartGame's missietoewijzing (WinCondition.
-            // SecretMissions, 2 spelers = 2 trekkingen); daarna wint Alice de order-roll
-            // altijd meteen (10 tegen 5), zodat TurnOrder vaststaat.
-            builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
-        });
-
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     private static async Task<string> CreateGameAsync(HttpClient client)
     {
@@ -168,17 +148,29 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
             }
         }
 
-        // 43 gebieden, om en om vanaf Alice: Alice krijgt er 22 (budget 25-22=3), Bob 21
-        // (budget 25-21=4) — Claiming rondt dus vanzelf af naar InitialPlacement.
+        // 43 gebieden, om en om vanaf Alice: Alice krijgt er 22 (budget 40-22=18), Bob 21
+        // (budget 40-21=19) — Claiming rondt dus vanzelf af naar InitialPlacement.
         Assert.Equal(GamePhaseDto.InitialPlacement, latest.Phase);
         Assert.Equal(aliceId, latest.SetupState?.ActivePlayerId);
 
-        var placementOrder = new[] { aliceId, bobId, aliceId, bobId, aliceId, bobId, bobId };
+        var aliceBudget = StartingArmies - latest.Territories.Count(t => t.OwnerPlayerId == aliceId);
+        var bobBudget = StartingArmies - latest.Territories.Count(t => t.OwnerPlayerId == bobId);
 
-        foreach (var placerId in placementOrder)
+        // Zelfde afwisseling als de server (SetupTurnCalculator): om de beurt plaatsen zolang
+        // beiden nog budget hebben, daarna alleen wie er nog over heeft.
+        while (aliceBudget > 0 || bobBudget > 0)
         {
-            var territoryId = placerId == aliceId ? aliceTerritoryId! : bobTerritoryId!;
-            latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, placerId, territoryId);
+            if (aliceBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!);
+                aliceBudget--;
+            }
+
+            if (bobBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bobId, bobTerritoryId!);
+                bobBudget--;
+            }
         }
 
         Assert.Equal(GamePhaseDto.InProgress, latest.Phase);
@@ -197,6 +189,8 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
 
         string? aliceTerritoryId = null;
         string? bobTerritoryId = null;
+        var aliceTerritoryCount = 0;
+        var bobTerritoryCount = 0;
 
         for (var i = 0; i < territoryIds.Length; i++)
         {
@@ -206,20 +200,31 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
             if (claimerId == aliceId)
             {
                 aliceTerritoryId ??= territoryIds[i];
+                aliceTerritoryCount++;
             }
             else
             {
                 bobTerritoryId ??= territoryIds[i];
+                bobTerritoryCount++;
             }
         }
 
-        // Alice heeft budget 3 (25 - 22 gebieden); na 3 plaatsingen (afgewisseld met Bob,
-        // die nog ruimschoots budget over heeft) is zij klaar.
-        await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!);
-        await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bobId, bobTerritoryId!);
-        await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!);
-        await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bobId, bobTerritoryId!);
-        await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!);
+        // Alice heeft budget 18 (40 - 22 gebieden); na 18 plaatsingen (afgewisseld met Bob,
+        // die nog budget over heeft) is zij klaar en wordt haar volgende poging geweigerd.
+        var aliceBudget = StartingArmies - aliceTerritoryCount;
+        var bobBudget = StartingArmies - bobTerritoryCount;
+
+        while (aliceBudget > 0)
+        {
+            await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!);
+            aliceBudget--;
+
+            if (bobBudget > 0)
+            {
+                await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bobId, bobTerritoryId!);
+                bobBudget--;
+            }
+        }
 
         var exception = await Assert.ThrowsAsync<HubException>(() =>
             connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, aliceId, aliceTerritoryId!));
@@ -230,7 +235,7 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
     private static readonly GameSettingsDto RandomSetupSettings = new(
         WinConditionDto.WorldDomination,
         SetupModeDto.Random,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: true,
@@ -247,18 +252,10 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
     /// met de hand voorberekenen is niet haalbaar/onderhoudbaar.
     /// </summary>
     private WebApplicationFactory<Program> CreateRandomModeFactory() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
-
-            builder.ConfigureServices(services =>
-                services.AddSingleton<IRandomSource>(
-                    new PrefixThenRandomSource(new SystemRandomSource(), 0, 1, 6, 4, 3, 2)));
-        });
+        ApiTestHost.Create(
+            postgres,
+            services => services.AddSingleton<IRandomSource>(
+                new PrefixThenRandomSource(new SystemRandomSource(), 0, 1, 6, 4, 3, 2)));
 
     /// <summary>
     /// FO §5.1 (Random-startopstelling) end-to-end: na de order-roll-winnaar moet
@@ -292,7 +289,7 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var state = bobRoll.State;
 
         Assert.Equal(GamePhaseDto.InitialPlacement, state.Phase);
-        Assert.Null(state.SetupState?.ActivePlayerId);
+        Assert.Equal(alice.PlayerId, state.SetupState?.ActivePlayerId);
         Assert.All(state.Territories, territory => Assert.NotNull(territory.OwnerPlayerId));
         Assert.All(state.Territories, territory => Assert.Equal(1, territory.ArmyCount));
 
@@ -320,14 +317,13 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// FO §5.1: bij Random-startopstelling mag een speler plaatsen zonder op zijn beurt te
-    /// wachten — dit bewijst het end-to-end door de speler die niet vooraan in
-    /// <see cref="GameStateDto.TurnOrder"/> staat (Bob, want Alice wint de order-roll altijd
-    /// in <see cref="CreateRandomModeFactory"/>) als eerste te laten plaatsen, zonder dat
-    /// Alice ooit heeft geplaatst.
+    /// FO §5.1 (gecorrigeerd): bijplaatsen is ook bij Random turn-based — een speler die niet
+    /// vooraan in <see cref="GameStateDto.TurnOrder"/> staat (Bob, want Alice wint de
+    /// order-roll altijd in <see cref="CreateRandomModeFactory"/>) mag dus niet vóór Alice
+    /// plaatsen, net als bij Claimen.
     /// </summary>
     [Fact]
-    public async Task PlaceInitialArmy_BijRandom_SpelerNietVoorinBeurtvolgorde_MagDirectPlaatsen()
+    public async Task PlaceInitialArmy_BijRandom_SpelerNietVoorinBeurtvolgorde_WordtGeweigerd()
     {
         await using var factory = CreateRandomModeFactory();
         using var client = factory.CreateClient();
@@ -349,22 +345,23 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var state = bobRoll.State;
 
         Assert.Equal([alice.PlayerId, bob.PlayerId], state.TurnOrder);
+        Assert.Equal(alice.PlayerId, state.SetupState?.ActivePlayerId);
 
         var bobTerritoryId = state.Territories.First(territory => territory.OwnerPlayerId == bob.PlayerId).TerritoryId;
 
-        var afterBobPlaces = await connection.InvokeAsync<GameStateDto>(
-            "PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId);
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId));
 
-        Assert.Equal(2, afterBobPlaces.Territories.First(t => t.TerritoryId == bobTerritoryId).ArmyCount);
+        Assert.Contains("setup.notYourTurnToPlace", exception.Message);
     }
 
     /// <summary>
-    /// FO §5.1: bij Random faalt plaatsen zodra het eigen budget op is
-    /// (<c>setup.noArmiesLeftToPlace</c>, niet de beurt-gebonden foutcode), terwijl de andere
-    /// speler intussen gewoon door kan plaatsen.
+    /// FO §5.1 (gecorrigeerd): bij Random blijft de beurt afgedwongen totdat een speler zijn
+    /// budget op heeft — daarna schuift de beurt door naar de ander, met dezelfde foutcode als
+    /// bij Claimen (<c>setup.notYourTurnToPlace</c>, niet een apart "geen budget"-pad).
     /// </summary>
     [Fact]
-    public async Task PlaceInitialArmy_BijRandom_ZonderBudget_GeeftNoArmiesLeftFoutcode()
+    public async Task PlaceInitialArmy_BijRandom_BlijftBeurtAfgedwongenTotBudgetOp()
     {
         await using var factory = CreateRandomModeFactory();
         using var client = factory.CreateClient();
@@ -386,117 +383,44 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var state = bobRoll.State;
 
         var aliceTerritoryId = state.Territories.First(t => t.OwnerPlayerId == alice.PlayerId).TerritoryId;
-        var aliceTerritoryCount = state.Territories.Count(t => t.OwnerPlayerId == alice.PlayerId);
-        var aliceBudget = StartingArmies - aliceTerritoryCount;
+        var bobTerritoryId = state.Territories.First(t => t.OwnerPlayerId == bob.PlayerId).TerritoryId;
+        var aliceBudget = StartingArmies - state.Territories.Count(t => t.OwnerPlayerId == alice.PlayerId);
+        var bobBudget = StartingArmies - state.Territories.Count(t => t.OwnerPlayerId == bob.PlayerId);
 
         GameStateDto latest = state;
 
-        for (var i = 0; i < aliceBudget; i++)
+        while (aliceBudget > 0 || bobBudget > 0)
         {
-            latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId);
+            if (aliceBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId);
+                aliceBudget--;
+            }
+
+            if (bobBudget > 0)
+            {
+                latest = await connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId);
+                bobBudget--;
+            }
         }
 
-        var exception = await Assert.ThrowsAsync<HubException>(() =>
-            connection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId));
-        Assert.Contains("setup.noArmiesLeftToPlace", exception.Message);
-
-        var bobTerritoryId = latest.Territories.First(t => t.OwnerPlayerId == bob.PlayerId).TerritoryId;
-        var afterBobPlaces = await connection.InvokeAsync<GameStateDto>(
-            "PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId);
-
-        Assert.Equal(2, afterBobPlaces.Territories.First(t => t.TerritoryId == bobTerritoryId).ArmyCount);
-    }
-
-    /// <summary>
-    /// Legt vast (lost niet op) wat er gebeurt als twee spelers, elk met precies 1 leger over,
-    /// letterlijk gelijktijdig hun laatste startleger plaatsen bij Random — het scenario waarbij
-    /// beide requests <c>totalArmiesPlaced == totalArmiesExpected</c> zouden kunnen zien en dus
-    /// allebei proberen de fase naar Reinforce te schuiven (zie het plan-document,
-    /// "Geverifieerde randgevallen · Concurrency"). Twee aparte <see cref="HubConnection"/>-
-    /// instanties (niet één gedeelde) zodat elke aanroep, net als in productie, zijn eigen
-    /// scoped <c>IDocumentSession</c> krijgt i.p.v. een sessie-reentrancy-exceptie te forceren
-    /// die niets over het echte race-gedrag zegt.
-    /// </summary>
-    [Fact]
-    public async Task PlaceInitialArmy_BijRandom_TweeSpelersGelijktijdigLaatsteLeger_LegtHuidigGedragVast()
-    {
-        await using var factory = CreateRandomModeFactory();
-        using var aliceClient = factory.CreateClient();
-        using var bobClient = factory.CreateClient();
-        await using var aliceConnection = await ConnectAsync(factory, aliceClient);
-        await using var bobConnection = await ConnectAsync(factory, bobClient);
-
-        var createResponse = await aliceClient.PostAsJsonAsync(
-            "/games", new CreateGameRequest("standaard-43", RandomSetupSettings));
-        createResponse.EnsureSuccessStatusCode();
-        var gameId = (await createResponse.Content.ReadFromJsonAsync<CreateGameResponse>())!.GameId;
-
-        var alice = await aliceConnection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
-        var bob = await bobConnection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Bob");
-        await aliceConnection.InvokeAsync<GameStateDto>("ChooseColor", gameId, alice.PlayerId, "red");
-        await bobConnection.InvokeAsync<GameStateDto>("ChooseColor", gameId, bob.PlayerId, "blue");
-        await aliceConnection.InvokeAsync<GameStateDto>("StartGame", gameId, alice.PlayerId);
-
-        await aliceConnection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, alice.PlayerId);
-        var bobRoll = await bobConnection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, bob.PlayerId);
-        var state = bobRoll.State;
-
-        var aliceTerritoryId = state.Territories.First(t => t.OwnerPlayerId == alice.PlayerId).TerritoryId;
-        var aliceBudget = StartingArmies - state.Territories.Count(t => t.OwnerPlayerId == alice.PlayerId);
-        var bobTerritoryId = state.Territories.First(t => t.OwnerPlayerId == bob.PlayerId).TerritoryId;
-        var bobBudget = StartingArmies - state.Territories.Count(t => t.OwnerPlayerId == bob.PlayerId);
-
-        for (var i = 0; i < aliceBudget - 1; i++)
-        {
-            await aliceConnection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId);
-        }
-
-        for (var i = 0; i < bobBudget - 1; i++)
-        {
-            await bobConnection.InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId);
-        }
-
-        // Beide spelers hebben nu precies 1 leger over — dit is de laatste plaatsing die
-        // gezamenlijk totalArmiesPlaced == totalArmiesExpected doet omslaan.
-        Exception? aliceFailure = null;
-        Exception? bobFailure = null;
-
-        var aliceTask = aliceConnection
-            .InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, alice.PlayerId, aliceTerritoryId)
-            .ContinueWith(t => aliceFailure = t.Exception?.InnerException);
-        var bobTask = bobConnection
-            .InvokeAsync<GameStateDto>("PlaceInitialArmy", gameId, bob.PlayerId, bobTerritoryId)
-            .ContinueWith(t => bobFailure = t.Exception?.InnerException);
-
-        await Task.WhenAll(aliceTask, bobTask);
-
-        // Verwacht gedrag (redenering, NIET zelf uitgevoerd — CLAUDE.md: unittests draait de
-        // gebruiker): Marten's uniek-per-stream-versienummer zou de tweede append gewoon na de
-        // eerste moeten laten plaatsvinden i.p.v. botsen, dus geen dubbele PhaseChanged en geen
-        // exceptie bij beide spelers. Dit is een voorspelling op basis van de architectuur
-        // (ProjectionLifecycle.Inline, geen expected-version-check), geen geverifieerd feit.
-        // Faalt deze assertie bij de eerste echte testrun, dan is dát de bevinding — de
-        // assertie aanpassen aan het werkelijke gedrag, niet aan de aanname hier.
-        Assert.Null(aliceFailure);
-        Assert.Null(bobFailure);
-
-        var final = await aliceConnection.InvokeAsync<GameStateDto>("RejoinGame", gameId, alice.PlayerId);
-        Assert.Equal(GamePhaseDto.InProgress, final.Phase);
+        Assert.Equal(GamePhaseDto.InProgress, latest.Phase);
     }
 
     /// <summary>
     /// De eerste beurt is van de eerste speler in de beurtvolgorde, en zíjn versterkingen
     /// horen op het <c>PhaseChanged</c>-event te staan — niet die van wie toevallig het
-    /// laatste startleger plaatste. Bij <see cref="SetupModeDto.Random"/> plaatst iedereen
-    /// tegelijk, dus die laatste kan elke speler zijn. De twee spelers krijgen hier bewust een
-    /// óngelijk gebiedsbezit (p1 heel Australië: 5 gebieden + continentbonus 3 = 6; p2 één
-    /// gebied: het minimum van 3), anders levert de verkeerde speler dezelfde uitkomst op en
-    /// blijft de test groen op een bug.
+    /// laatste startleger plaatste (die twee vallen bij turn-based bijplaatsen meestal samen,
+    /// maar hoeven dat niet: hier plaatst p2, niet p1, het laatste leger). De twee spelers
+    /// krijgen hier bewust een óngelijk gebiedsbezit (p1 heel Australië: 5 gebieden +
+    /// continentbonus 3 = 6; p2 één gebied: het minimum van 3), anders levert de verkeerde
+    /// speler dezelfde uitkomst op en blijft de test groen op een bug.
     /// </summary>
     [Fact]
     public async Task LaatsteStartleger_ZetDeVersterkingenVanDeEersteSpelerInDeVolgorde()
     {
-        const int startingArmies = 6;
+        // Classic-preset, 2 spelers: 40 startlegers (data/starting-armies-presets.json).
+        const int startingArmies = 40;
 
         await using var factory = CreateFactory();
         using var client = factory.CreateClient();
@@ -509,17 +433,17 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         var settings = new GameSettings(
             WinCondition.WorldDomination,
             SetupMode.Random,
-            startingArmies,
+            StartingArmiesPresetId: "classic",
             TurnTimer: TimeSpan.FromMinutes(3),
             FortifyTimer: TimeSpan.FromMinutes(1),
             RolesEnabled: false,
             RoleAssignment: RoleAssignmentMode.Random,
             EventsEnabled: false);
 
-        // p1 heeft zijn 6 legers al geplaatst (2+1+1+1+1), p2 heeft er nog één over.
+        // p1 heeft zijn 40 legers al geplaatst (36+1+1+1+1), p2 heeft er nog één over.
         var australia = new Dictionary<string, int>
         {
-            ["indonesia"] = 2,
+            ["indonesia"] = 36,
             ["new-guinea"] = 1,
             ["western-australia"] = 1,
             ["eastern-australia"] = 1,
@@ -551,7 +475,6 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using (var session = store.LightweightSession())
         {

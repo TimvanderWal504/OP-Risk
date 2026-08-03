@@ -18,7 +18,7 @@ public sealed record OrderRollResult(int Die1, int Die2, GameStateDto State);
 /// event), leest deze handler de ruwe stream terug om te bepalen wie er nu nog mag/moet
 /// gooien — <see cref="OrderRollCalculator"/> repliceert de rondes daaruit.
 /// </summary>
-public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource random)
+public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
 {
     public async Task<Result<OrderRollResult>> RollForOrderAsync(string gameId, string playerId)
     {
@@ -86,7 +86,7 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
-        var dto = GameStateDtoMapper.ToDto(updated!) with
+        var dto = GameStateDtoMapper.ToDto(updated!, timeProvider) with
         {
             OrderRollState = new OrderRollStateDto(updatedProgress.StillToRoll),
         };

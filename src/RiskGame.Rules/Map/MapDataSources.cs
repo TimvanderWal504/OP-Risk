@@ -13,4 +13,5 @@ public sealed record MapDataSources(
     string CardsJson,
     string MissionsJson,
     string EventsJson,
-    string RolesJson);
+    string RolesJson,
+    string StartingArmiesPresetsJson);

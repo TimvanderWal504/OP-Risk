@@ -77,6 +77,14 @@ export const errors = {
       nl: 'De host kan niet verwijderd worden.',
       en: 'The host cannot be removed.',
     },
+    unknownStartingArmiesPreset: {
+      nl: "Onbekende startlegers-preset '{{presetId}}'.",
+      en: "Unknown starting-armies preset '{{presetId}}'.",
+    },
+    unknownMap: {
+      nl: "Onbekende kaartvariant '{{mapId}}'.",
+      en: "Unknown map variant '{{mapId}}'.",
+    },
   },
   setup: {
     notYourTurnToClaim: {
@@ -94,10 +102,6 @@ export const errors = {
     notYourTurnToPlace: {
       nl: "Speler '{{playerId}}' is niet aan de beurt om bij te plaatsen.",
       en: "Player '{{playerId}}' is not the active placer.",
-    },
-    noArmiesLeftToPlace: {
-      nl: "Speler '{{playerId}}' heeft geen startlegers meer over om te plaatsen.",
-      en: "Player '{{playerId}}' has no starting armies left to place.",
     },
   },
   orderRoll: {

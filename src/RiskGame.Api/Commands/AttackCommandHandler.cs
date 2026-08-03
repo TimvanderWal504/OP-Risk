@@ -72,7 +72,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var updated = await session.LoadAsync<GameState>(gameId);
 
         return Result<DeclareAttackResult>.Success(
-            new DeclareAttackResult(attackerRolls, correlationId, GameStateDtoMapper.ToDto(updated!)));
+            new DeclareAttackResult(attackerRolls, correlationId, GameStateDtoMapper.ToDto(updated!, timeProvider)));
     }
 
     public async Task<Result<ChooseDefenseDiceResult>> ChooseDefenseDiceAsync(
@@ -158,7 +158,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             pendingCombat.ToTerritoryId,
             eliminatedPlayerId,
             pendingCombat.CorrelationId,
-            GameStateDtoMapper.ToDto(updated!)));
+            GameStateDtoMapper.ToDto(updated!, timeProvider)));
     }
 
     public async Task<Result<GameStateDto>> MoveAfterConquestAsync(
@@ -199,6 +199,6 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!));
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

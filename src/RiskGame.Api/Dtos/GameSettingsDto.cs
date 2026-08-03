@@ -8,7 +8,7 @@ namespace RiskGame.Api.Dtos;
 public sealed record GameSettingsDto(
     WinConditionDto WinCondition,
     SetupModeDto SetupMode,
-    int StartingArmies,
+    string StartingArmiesPresetId,
     int TurnTimerSeconds,
     int FortifyTimerSeconds,
     bool RolesEnabled,
@@ -32,3 +32,10 @@ public enum RoleAssignmentModeDto
     Random,
     Choose,
 }
+
+/// <summary>
+/// Draad-representatie van <see cref="RiskGame.Rules.Map.StartingArmiesPreset"/> (FO §5.1/§10)
+/// — de client kiest hieruit een <c>Id</c> voor <see cref="GameSettingsDto.StartingArmiesPresetId"/>;
+/// namen/beschrijvingen per preset-id zijn client-side i18n, niet hier.
+/// </summary>
+public sealed record StartingArmiesPresetDto(string Id, IReadOnlyDictionary<int, int> ArmiesByPlayerCount);

@@ -9,10 +9,12 @@ vóór dit document (routes/tv, hooks, types, betrokken components, `GameHub.cs`
 `GameStateDto.cs`/`GameStateDtoMapper.cs`, `motion.ts`, de TV-`.dc.html`-export inclusief
 de demo-state-JS, FO en TO volledig).
 
-**Statusnotitie vooraf:** `TvPage.tsx` implementeert vandaag alleen `Lobby` en
-`OrderRoll`. `Claiming`, `InitialPlacement`, `InProgress` en `Finished` vallen allemaal
-terug op dezelfde generieke placeholder-tekst — er bestaat nog geen component voor. De
-rijen hieronder voor die fases zijn dus **spec-only**, afgeleid uit het design-export
+**Statusnotitie vooraf:** `TvPage.tsx` implementeert `Lobby`, `OrderRoll` en — sinds de
+Reinforce-taak — het "Main board"-deel van `InProgress` (`TvMainBoardScreen`). `Claiming`,
+`InitialPlacement` en `Finished` vallen nog terug op dezelfde generieke placeholder-tekst; de
+sub-toestanden van `InProgress` buiten Main board (Region select/Combat/Event/Elimination,
+het rechterspelerspaneel, de feed-strip) bestaan ook nog niet. De rijen hieronder voor al die
+niet-gebouwde stukken zijn dus nog steeds **spec-only**, afgeleid uit het design-export
 (demo-states 2–9) en FO/TO, en expliciet gemarkeerd als "niet geïmplementeerd".
 
 ---
@@ -75,26 +77,30 @@ inferentie gemarkeerd.
 | Actieve-plaatser-indicator | `turnState.activePlayerId` rouleert | zelfde topbalk-chip als Claiming/Board | niet geïmplementeerd | per plaatsing |
 | Resterende-startlegers-teller per speler | **geen DTO-veld gevonden** — `TurnStateDto.armiesRemaining` is qua doc-comment gekoppeld aan de Reinforce-fase, niet aan startopstelling | n.v.t. | n.v.t. | vraag, zie §5 (FO-gat) |
 
-### InProgress (spec-only — design-states 3–8: Main board / Region select / Combat / Event card / Event resolved / Player eliminated)
+### InProgress (design-states 3–8: Main board / Region select / Combat / Event card / Event resolved / Player eliminated)
 
 Dit is één `GamePhaseDto`-waarde met meerdere zichtbare sub-toestanden, gedreven door
-`TurnStateDto`/transiënte overlays, niet door aparte fases.
+`TurnStateDto`/transiënte overlays, niet door aparte fases. **Alleen "Main board" (topbalk +
+kaart/gebiedslaag hieronder) is geïmplementeerd** (`TvMainBoardScreen` +
+`TurnStatusHeader`, Reinforce-taak). Region select/Combat/Event/Elimination/het
+rechterspelerspaneel/de feed-strip blijven **spec-only** zoals hieronder gedocumenteerd — eigen
+taken (Attack e.v.), zie de rijen verderop.
 
-**Topbalk (persistent tijdens InProgress)**
-
-| Change | Trigger | Rendered by | Existing motion | Frequency |
-|---|---|---|---|---|
-| Actieve-speler-chip (icoon+naam+kleurwoord) | `turnState.activePlayerId` | niet geïmplementeerd | geen (statische wissel) | per beurt |
-| Fase-pil-highlight (Versterken/Aanvallen/Verplaatsen) | `turnState.turnPhase` | niet geïmplementeerd | geen geïdentificeerd behalve statische box-shadow-gloed | tot 3× per beurt |
-| Timer-cijferwaarde | server-gezaghebbende aftelling (TO §5.3, `Tick`) | niet geïmplementeerd | — | continu / per servertick — **geen DTO-veld gevonden**, zie §5 |
-| Timer-visuele-staat (normaal → laag → gepauzeerd) | drempelwaarde resterende tijd / `DeclareAttack`-pauze (TO §5.3) | niet geïmplementeerd | `tvAnimations.timerLow` (`atlasLow`) alleen in "laag" | 0–2× per beurt |
-
-**Kaart / gebiedslaag**
+**Topbalk (persistent tijdens InProgress) — geïmplementeerd**
 
 | Change | Trigger | Rendered by | Existing motion | Frequency |
 |---|---|---|---|---|
-| Gebiedsvulling wisselt (eigenaarswissel) | `TerritoryDto.ownerPlayerId` wijzigt (`TerritoryConquered`) | niet geïmplementeerd | geen geïdentificeerd | per verovering, kan vaak per spel |
-| Legeraantal-cijfer op gebied wijzigt | `TerritoryDto.armyCount` wijzigt (`ArmiesReinforced`, verlies bij `CombatResolved`, `ArmiesMovedAfterConquest`, `Fortified`) | niet geïmplementeerd | geen geïdentificeerd | zeer frequent, apart te tellen van eigenaarswissel ook al vallen ze soms samen |
+| Actieve-speler-chip (icoon+naam+kleurwoord) | `turnState.activePlayerId` | `TurnStatusHeader` (gekeyed op `activePlayer.id`) | `tvAnimations.turnChipSwap` (`atlasTurnSwap`) | per beurt |
+| Fase-pil-highlight (Versterken/Aanvallen/Verplaatsen) | `turnState.turnPhase` | `TurnStatusHeader` | `tvAnimations.phasePillPop` (`atlasPhasePop`) op de actieve pil | tot 3× per beurt |
+| Timer-cijferwaarde | server-gezaghebbende aftelling, relatief geleverd via `TurnStateDto.timer.remainingMs` (`GameStateDtoMapper`, `TimeProvider`-gebaseerd) | `TurnStatusHeader` via `useCountdown` (monotone-anchor, her-ankert op elke nieuwe push) | `tvAnimations.timerSwap`/`timerLow` | continu client-side tussen twee `GameStateUpdated`-pushes, her-anker per push |
+| Timer-visuele-staat (normaal → laag → gepauzeerd) | client-drempel `TIMER_LOW_THRESHOLD_MS=60s` (productbeslissing, niet uit de export — zie doc-comment in `TurnStatusHeader.tsx`, analoog aan `useHeldPhase`'s hold-duur) / `timer.isPaused` | `TurnStatusHeader` | `tvAnimations.timerLow` (`atlasLow`) alleen in "laag"; `timerSwap` bij elke staatwissel | per drempel-passage / per pauze |
+
+**Kaart / gebiedslaag — geïmplementeerd (read-only, geen klik-/selectie-interactie, die hoort bij Attack)**
+
+| Change | Trigger | Rendered by | Existing motion | Frequency |
+|---|---|---|---|---|
+| Gebiedsvulling wisselt (eigenaarswissel) | `TerritoryDto.ownerPlayerId` wijzigt (`TerritoryConquered`) | `TvMainBoardScreen` (`boardTok.ownFill`/`enFill`/`neuFill` uit `atlasTok()`) | geen ownership-washovergang gebouwd in deze taak (`atlasOwnerWash`/`atlasBadgeSwap` horen bij Attack, waar eigenaarswissels daadwerkelijk voorkomen — Reinforce wijzigt nooit `ownerPlayerId`) | n.v.t. in Reinforce; bevinding voor de Attack-taak |
+| Legeraantal-cijfer op gebied wijzigt | `TerritoryDto.armyCount` wijzigt (`ArmiesReinforced` e.a.) | `TvMainBoardScreen` (centroid-badge, `prevArmy`-ref per territorium) | `tvAnimations.countTick(dir)` (`atlasCountUp`/`atlasCountDown`) | per bevestigde `PlaceReinforcements`-call |
 | Gestippelde rand rond rol-herkomstgebied verschijnt/verdwijnt | eigenaarschap van `role.originTerritory` wijzigt t.o.v. de rolhouder (FO §8.1) | niet geïmplementeerd | geen | per eigenaarswissel van een herkomstgebied |
 | Selectie-highlight op geldige bron-gebieden | server-berekende geldige-opties-lijst tijdens gebiedsselectie (FO §2.3) | niet geïmplementeerd — **geen DTO-veld gevonden** dat "highlightbare gebieden" draagt | statische rand-wissel in export (L296-297), geen keyframe | per selectiestap — bevinding, zie §5 |
 | Selectie-highlight wisselt van "geldige bron" naar "geldig doelwit" | speler kiest een bron | zelfde gat als hierboven | — | per aanval/verplaatsing |
@@ -206,12 +212,14 @@ die de demo bewust samenvouwt.
 - `useHeldPhase` vertraagt alleen wanneer de fase-overgang zelf (en dus de bijbehorende
   remount) plaatsvindt — het is geen aparte animatielaag, het schuift de remount-timing
   op.
-- **Claiming / InitialPlacement / InProgress / Finished:** in de huidige code renderen
-  al deze fases identieke JSX (`{t('lobby:placeholder.tv')}`), zonder dat het
-  fase-nummer ooit in die tekst verwerkt wordt. Dat betekent dat het overgaan tussen
-  bijvoorbeeld Claiming → InitialPlacement → InProgress vandaag **geen enkele
-  zichtbare wijziging** oplevert, laat staan een remount — de vier fases zijn visueel
-  niet van elkaar te onderscheiden op dit moment.
+- **Claiming / InitialPlacement / Finished:** renderen nog steeds identieke placeholder-JSX
+  (`{t('lobby:placeholder.tv')}`) — dat blijft ongewijzigd door deze taak.
+- **InProgress:** heeft sinds deze taak een eigen component (`TvMainBoardScreen`, geregistreerd
+  in `tvScreens.ts`), dus de overgang naar `InProgress` levert nu wél een zichtbare wijziging
+  en een remount op (structureel andere JSX-boom dan de placeholder-branch). Alleen "Main
+  board" is gebouwd; de sub-toestanden binnen `InProgress` (Region select/Combat/Event/
+  Elimination) bestaan nog niet — daarbinnen verandert er dus nog niets zichtbaars totdat de
+  Attack-taak die overlays bouwt.
 
 ---
 

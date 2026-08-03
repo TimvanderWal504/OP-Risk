@@ -1,0 +1,30 @@
+import { TurnPhaseDto } from '../../../types/GameState'
+import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
+import { PhoneReinforceScreen } from './PhoneReinforceScreen'
+import type { PhoneScreen } from './phoneScreens'
+
+/**
+ * Sub-dispatch binnen `GamePhaseDto.InProgress` op `TurnStateDto.turnPhase` — tweede
+ * `Record` naast de fase-as in `phoneScreens.ts`, zelfde motivatie: een gemiste
+ * `TurnPhaseDto` geeft een compilefout in plaats van een stille placeholder. Alleen
+ * Reinforce heeft in deze taak een echt scherm; Attack/Fortify volgen in latere taken.
+ *
+ * Losstaand van `PhoneInProgressScreen.tsx` (i.p.v. co-located) zodat dat bestand alleen
+ * de component exporteert — een bestand dat naast een component ook losse constanten
+ * exporteert breekt Fast Refresh (react-refresh/only-export-components).
+ */
+const turnPhaseScreens: Record<TurnPhaseDto, PhoneScreen> = {
+  [TurnPhaseDto.Reinforce]: PhoneReinforceScreen,
+  [TurnPhaseDto.Attack]: PhonePlaceholderScreen,
+  [TurnPhaseDto.Fortify]: PhonePlaceholderScreen,
+}
+
+/**
+ * Runtime-vangnet naast de compile-time garantie hierboven — dekt versie-skew
+ * (`resolvePhoneScreen` in `phoneScreens.ts` is het analoge vangnet op de fase-as) en een
+ * (nog) ontbrekende `turnState` (bv. het venster vóór de eerste `GameStateUpdated` na
+ * fase-intrede).
+ */
+export function resolvePhoneTurnPhaseScreen(turnPhase: TurnPhaseDto | undefined): PhoneScreen {
+  return (turnPhase !== undefined && turnPhaseScreens[turnPhase]) || PhonePlaceholderScreen
+}

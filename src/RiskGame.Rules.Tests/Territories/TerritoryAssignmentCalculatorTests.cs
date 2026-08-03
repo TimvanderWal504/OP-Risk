@@ -74,16 +74,17 @@ public class TerritoryAssignmentCalculatorTests
     }
 
     /// <summary>
-    /// De geaccepteerde uitzondering (FO §5.1, zie doc-comment op
-    /// <see cref="TerritoryAssignmentCalculator"/>): als het eigen rol-herkomstland het enige
-    /// overgebleven gebied is, wijst de calculator het alsnog toe in plaats van vast te
-    /// lopen. Bewust doorgerekend scenario (2 spelers, 3 gebieden, p1's herkomstland = t3):
-    /// stap 0 (p1, remaining=[t1,t2,t3], t1 uitgesloten) kiest eligible-index 1 (t2) via
-    /// waarde 1; stap 1 (p2, remaining=[t1,t3], geen restrictie) kiest eligible-index 0
-    /// (t1) via waarde 0; stap 2 (p1, remaining=[t3], geen alternatief) is gedwongen tot t3.
+    /// FO §5.1/§8: geen uitzondering, ook niet als het eigen rol-herkomstland het enige
+    /// overgebleven gebied is — de calculator ruilt dan met een al toegewezen gebied van een
+    /// andere speler in plaats van de restrictie te schenden. Bewust doorgerekend scenario
+    /// (2 spelers, 3 gebieden, p1's herkomstland = t3): stap 0 (p1, remaining=[t1,t2,t3], t1
+    /// uitgesloten) kiest eligible-index 1 (t2) via waarde 1; stap 1 (p2, remaining=[t1,t3],
+    /// geen restrictie) kiest eligible-index 0 (t1) via waarde 0; stap 2 (p1, remaining=[t3],
+    /// geen alternatief) ruilt t3 met p2's eerder toegewezen t1 in plaats van t3 aan p1 te
+    /// geven.
     /// </summary>
     [Fact]
-    public void Toewijzen_MetAlleenNogHetEigenHerkomstlandOver_WijstHetTochToe()
+    public void Toewijzen_MetAlleenNogHetEigenHerkomstlandOver_RuiltInPlaatsVanDeRestrictieTeSchenden()
     {
         var players = new[] { TestGame.Player("p1", "red", roleId: "r1"), TestGame.Player("p2", "blue") };
         var territories = new[] { MapTerritory("t1"), MapTerritory("t2"), MapTerritory("t3") };
@@ -92,6 +93,12 @@ public class TerritoryAssignmentCalculatorTests
 
         var assignments = TerritoryAssignmentCalculator.Assign(players, territories, roles, random);
 
-        Assert.Contains(("t3", "p1"), assignments);
+        Assert.DoesNotContain(("t3", "p1"), assignments);
+        Assert.Contains(("t3", "p2"), assignments);
+        Assert.Contains(("t1", "p1"), assignments);
+        Assert.Equal(3, assignments.Count);
+        Assert.Equal(
+            territories.Select(t => t.Id).ToHashSet(),
+            assignments.Select(a => a.TerritoryId).ToHashSet());
     }
 }

@@ -1,9 +1,7 @@
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
@@ -22,7 +20,7 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
     private static readonly GameSettingsDto ChooseSettings = new(
         WinConditionDto.WorldDomination,
         SetupModeDto.Claiming,
-        StartingArmies: 25,
+        StartingArmiesPresetId: "classic",
         TurnTimerSeconds: 180,
         FortifyTimerSeconds: 60,
         RolesEnabled: true,
@@ -35,19 +33,9 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
     };
 
     private WebApplicationFactory<Program> CreateFactory(IRandomSource? randomSource = null) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
-
-            if (randomSource is not null)
-            {
-                builder.ConfigureServices(services => services.AddSingleton(randomSource));
-            }
-        });
+        ApiTestHost.Create(
+            postgres,
+            randomSource is null ? null : services => services.AddSingleton(randomSource));
 
     private static async Task<string> CreateGameAsync(HttpClient client, GameSettingsDto settings)
     {
@@ -59,19 +47,8 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
         return body!.GameId;
     }
 
-    private static async Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client)
-    {
-        var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(client.BaseAddress!, "/hubs/game"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-            })
-            .Build();
-
-        await connection.StartAsync();
-
-        return connection;
-    }
+    private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     private static async Task<string> JoinAndChooseColorAsync(
         HubConnection connection, string gameId, string playerName, string colorId)

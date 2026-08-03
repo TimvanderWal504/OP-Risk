@@ -21,7 +21,8 @@ internal static class Standaard43Data
         Json("cards.json"),
         Json("missions.json"),
         Json("events.json"),
-        Json("roles.json"));
+        Json("roles.json"),
+        Json("starting-armies-presets.json"));
 
     public static MapDefinition Load()
     {

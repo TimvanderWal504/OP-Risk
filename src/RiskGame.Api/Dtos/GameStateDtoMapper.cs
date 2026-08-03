@@ -1,3 +1,4 @@
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
 using RiskGame.Rules.Validation;
@@ -10,7 +11,12 @@ namespace RiskGame.Api.Dtos;
 /// </summary>
 public static class GameStateDtoMapper
 {
-    public static GameStateDto ToDto(GameState state)
+    /// <summary>
+    /// <paramref name="timeProvider"/> is verplicht (geen intern <c>DateTimeOffset.UtcNow</c>)
+    /// zodat <see cref="TurnTimerDto.RemainingMs"/> deterministisch en testbaar blijft — zelfde
+    /// patroon als <see cref="RiskGame.Api.Services.TurnTimerBackgroundService"/>.
+    /// </summary>
+    public static GameStateDto ToDto(GameState state, TimeProvider timeProvider)
     {
         var takenColorIds = state.Players
             .Where(player => player.ColorId is not null)
@@ -37,7 +43,11 @@ public static class GameStateDtoMapper
                 state.TurnState.ActivePlayerId,
                 ToDto(state.TurnState.TurnPhase),
                 state.TurnState.ArmiesRemaining,
-                ToDto(state.TurnState.PendingCombat));
+                ToDto(state.TurnState.PendingCombat),
+                ToDto(state.TurnState.Timer, timeProvider),
+                state.TurnState.TurnPhase == TurnPhase.Reinforce
+                    ? ToDto(ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId))
+                    : null);
 
         var colors = state.Map.Colors
             .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))
@@ -47,14 +57,20 @@ public static class GameStateDtoMapper
             .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description, role.OriginTerritory))
             .ToArray();
 
-        var setupState = state.Phase switch
+        // StartingArmiesResolver vereist een definitief spelersaantal (2–7, zie de preset-
+        // tabel) — pas betekenisvol vanaf Claiming/InitialPlacement, dus alleen daar berekend
+        // (in Lobby staat het aantal nog niet vast, vaak nog maar 1 speler).
+        SetupStateDto? setupState = null;
+
+        if (state.Phase is GamePhase.Claiming or GamePhase.InitialPlacement)
         {
-            GamePhase.Claiming => ToSetupDto(state, SetupTurnCalculator.ActiveClaimerId(state)),
-            GamePhase.InitialPlacement => ToSetupDto(
-                state,
-                state.Settings.SetupMode == SetupMode.Random ? null : SetupTurnCalculator.ActivePlacerId(state)),
-            _ => null,
-        };
+            var startingArmies = StartingArmiesResolver.Resolve(state);
+            var activePlayerId = state.Phase == GamePhase.Claiming
+                ? SetupTurnCalculator.ActiveClaimerId(state)
+                : SetupTurnCalculator.ActivePlacerId(state, startingArmies);
+
+            setupState = ToSetupDto(state, activePlayerId, startingArmies);
+        }
 
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
@@ -68,11 +84,11 @@ public static class GameStateDtoMapper
     /// commando's valideren — zo kan wat de client toont niet uit de pas lopen met wat de
     /// server accepteert.
     /// </summary>
-    private static SetupStateDto ToSetupDto(GameState state, string? activePlayerId) => new(
+    private static SetupStateDto ToSetupDto(GameState state, string? activePlayerId, int startingArmies) => new(
         activePlayerId,
         state.Players.ToDictionary(
             player => player.Id,
-            player => SetupTurnCalculator.RemainingArmiesFor(state, player.Id)),
+            player => SetupTurnCalculator.RemainingArmiesFor(state, player.Id, startingArmies)),
         state.Players.ToDictionary(
             player => player.Id,
             player => SetupGuards.ClaimableTerritoryIdsFor(state, player.Id)));
@@ -80,7 +96,7 @@ public static class GameStateDtoMapper
     private static GameSettingsDto ToDto(GameSettings settings) => new(
         ToDto(settings.WinCondition),
         ToDto(settings.SetupMode),
-        settings.StartingArmies,
+        settings.StartingArmiesPresetId,
         (int)settings.TurnTimer.TotalSeconds,
         (int)settings.FortifyTimer.TotalSeconds,
         settings.RolesEnabled,
@@ -112,6 +128,30 @@ public static class GameStateDtoMapper
         ? null
         : new PendingCombatDto(pendingCombat.FromTerritoryId, pendingCombat.ToTerritoryId, pendingCombat.AttackDice);
 
+    /// <summary>
+    /// <c>Remaining − (nu − LastUpdatedUtc)</c>, geklemd op 0 (zie doc-comment op
+    /// <see cref="TurnTimerDto"/>). Bij <see cref="PhaseTimer.IsPaused"/> telt niets af:
+    /// <see cref="PhaseTimer.Remaining"/> ligt dan al vast, ongeacht hoe lang geleden dat was.
+    /// </summary>
+    private static TurnTimerDto? ToDto(PhaseTimer? timer, TimeProvider timeProvider)
+    {
+        if (timer is null)
+        {
+            return null;
+        }
+
+        var remaining = timer.IsPaused
+            ? timer.Remaining
+            : timer.Remaining - (timeProvider.GetUtcNow() - timer.LastUpdatedUtc);
+
+        var remainingMs = (int)Math.Max(0, remaining.TotalMilliseconds);
+
+        return new TurnTimerDto(remainingMs, timer.IsPaused);
+    }
+
+    private static ReinforcementBreakdownDto ToDto(ReinforcementBreakdown breakdown) => new(
+        breakdown.BaseArmies, breakdown.ContinentBonus, breakdown.RoleBonus, breakdown.EventBonus);
+
     private static TurnPhaseDto ToDto(TurnPhase turnPhase) => turnPhase switch
     {
         TurnPhase.Reinforce => TurnPhaseDto.Reinforce,
@@ -134,7 +174,7 @@ public static class GameStateDtoMapper
     public static GameSettings ToDomain(GameSettingsDto dto) => new(
         ToDomain(dto.WinCondition),
         ToDomain(dto.SetupMode),
-        dto.StartingArmies,
+        dto.StartingArmiesPresetId,
         TimeSpan.FromSeconds(dto.TurnTimerSeconds),
         TimeSpan.FromSeconds(dto.FortifyTimerSeconds),
         dto.RolesEnabled,

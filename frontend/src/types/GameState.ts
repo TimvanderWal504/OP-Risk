@@ -53,11 +53,31 @@ export interface PendingCombatDto {
   attackDice: number
 }
 
+/**
+ * Spiegelt RiskGame.Api.Dtos.TurnTimerDto — bewust relatief (`remainingMs`), geen absolute
+ * deadline: zo vergelijkt de client zijn eigen klok nooit met die van de server (klokdrift
+ * tussen TV en telefoon bestaat dan niet als categorie). Al geklemd op 0 door de mapper.
+ */
+export interface TurnTimerDto {
+  remainingMs: number
+  isPaused: boolean
+}
+
+/** Spiegelt RiskGame.Api.Dtos.ReinforcementBreakdownDto — alleen gevuld tijdens Reinforce. */
+export interface ReinforcementBreakdownDto {
+  baseArmies: number
+  continentBonus: number
+  roleBonus: number
+  eventBonus: number
+}
+
 export interface TurnStateDto {
   activePlayerId: string
   turnPhase: TurnPhaseDto
   armiesRemaining: number
   pendingCombat: PendingCombatDto | null
+  timer: TurnTimerDto | null
+  reinforcementBreakdown: ReinforcementBreakdownDto | null
 }
 
 /** Spiegelt RiskGame.Api.Dtos.OrderRollStateDto — wie er nog mag gooien voor de volgorde. */

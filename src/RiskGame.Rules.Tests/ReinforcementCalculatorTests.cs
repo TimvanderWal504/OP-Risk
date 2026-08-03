@@ -163,4 +163,30 @@ public class ReinforcementCalculatorTests
 
         Assert.Equal(7, armies);
     }
+
+    [Fact]
+    public void CalculateBreakdown_SplitstDeVierOptellermenApart()
+    {
+        var effect = new ActiveEffect(
+            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4), RoundsRemaining: 0);
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "president"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, settings: settings, activeEffects: [effect])
+            .WithTerritory(new TerritoryOwnership("eastern-united-states", "p1", 1));
+
+        foreach (var territoryId in AustraliaTerritories)
+        {
+            state = state.WithTerritory(new TerritoryOwnership(territoryId, "p1", 1));
+        }
+
+        var breakdown = ReinforcementCalculator.CalculateBreakdown(state, "p1");
+
+        Assert.Equal(3, breakdown.BaseArmies);
+        Assert.Equal(3, breakdown.ContinentBonus);
+        Assert.Equal(1, breakdown.RoleBonus);
+        Assert.Equal(4, breakdown.EventBonus);
+        Assert.Equal(11, breakdown.Total);
+        Assert.Equal(ReinforcementCalculator.CalculateArmies(state, "p1"), breakdown.Total);
+    }
 }

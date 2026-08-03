@@ -93,14 +93,43 @@ public sealed record RoleSummaryDto(string Id, string Name, string Description, 
 public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int ArmyCount);
 
 /// <summary>
-/// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>. Nog geen timer —
-/// die hoort bij een latere plak (aftellen, TO §5.3).
+/// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>.
 /// </summary>
+/// <param name="ReinforcementBreakdown">
+/// Alleen gevuld tijdens <see cref="TurnPhaseDto.Reinforce"/> (telefoon-"Opbouw"-paneel,
+/// Telefoon.dc.html L510-518) — <c>null</c> in Attack/Fortify, waar het niet van toepassing is.
+/// Berekend uit de actuele state, niet uit een bij fase-intrede vastgezet snapshot: gebiedsbezit
+/// verandert niet tijdens Reinforce, dus levert dat dezelfde optellermen als toen
+/// <see cref="ArmiesRemaining"/> voor het eerst werd gezet. Openbaar zoals <c>ArmiesRemaining</c>
+/// zelf al is (geen nieuwe privacy-grens, TO §6.1 blijft ongemoeid).
+/// </param>
 public sealed record TurnStateDto(
-    string ActivePlayerId, TurnPhaseDto TurnPhase, int ArmiesRemaining, PendingCombatDto? PendingCombat);
+    string ActivePlayerId,
+    TurnPhaseDto TurnPhase,
+    int ArmiesRemaining,
+    PendingCombatDto? PendingCombat,
+    TurnTimerDto? Timer,
+    ReinforcementBreakdownDto? ReinforcementBreakdown = null);
+
+/// <summary>
+/// Draad-representatie van <see cref="RiskGame.Rules.Reinforcement.ReinforcementBreakdown"/> —
+/// dezelfde vier optellermen als <see cref="RiskGame.Rules.Reinforcement.ReinforcementCalculator.CalculateArmies"/>.
+/// </summary>
+public sealed record ReinforcementBreakdownDto(int BaseArmies, int ContinentBonus, int RoleBonus, int EventBonus);
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.PendingCombat"/>.</summary>
 public sealed record PendingCombatDto(string FromTerritoryId, string ToTerritoryId, int AttackDice);
+
+/// <summary>
+/// Draad-representatie van <see cref="RiskGame.Rules.State.PhaseTimer"/> (FO §5.4) — bewust
+/// relatief (<see cref="RemainingMs"/>) en niet een absolute deadline: een client die zijn
+/// eigen wandklok tegen een serverdeadline afzet, introduceert klokdrift tussen TV en
+/// telefoon als categorie. Deze waarde wordt op serialisatiemoment berekend
+/// (<c>GameStateDtoMapper</c>) uit <c>Remaining − (nu − LastUpdatedUtc)</c>, geklemd op 0 —
+/// nooit negatief, ook niet in het venster tussen een verlopen timer en de daadwerkelijke
+/// serverzijdige faseovergang.
+/// </summary>
+public sealed record TurnTimerDto(int RemainingMs, bool IsPaused);
 
 public enum TurnPhaseDto
 {

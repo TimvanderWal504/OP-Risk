@@ -29,7 +29,9 @@ public static class TurnGuards
 
         return state.TurnState!.TurnPhase switch
         {
-            TurnPhase.Reinforce => ValidationResult.Success(),
+            TurnPhase.Reinforce => state.TurnState.ArmiesRemaining == 0
+                ? ValidationResult.Success()
+                : ValidationResult.Failure("turnFlow.armiesRemaining"),
             TurnPhase.Attack => state.TurnState.PendingCombat is null
                 ? ValidationResult.Success()
                 : ValidationResult.Failure("turnFlow.combatInProgress"),

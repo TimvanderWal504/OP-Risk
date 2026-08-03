@@ -23,7 +23,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     private static readonly GameSettings Settings = new(
         WinCondition.SecretMissions,
         SetupMode.Claiming,
-        StartingArmies: 25,
+        StartingArmiesPresetId: "classic",
         TurnTimer: TimeSpan.FromMinutes(3),
         FortifyTimer: TimeSpan.FromMinutes(1),
         RolesEnabled: false,

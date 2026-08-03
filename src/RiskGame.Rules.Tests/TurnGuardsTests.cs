@@ -16,6 +16,17 @@ public class TurnGuardsTests
     }
 
     [Fact]
+    public void EndPhase_VanuitVersterkenMetOngeplaatsteLegers_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Reinforce, armiesRemaining: 3);
+
+        var result = TurnGuards.CanEndPhase(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("turnFlow.armiesRemaining", result.Errors.Single().Code);
+    }
+
+    [Fact]
     public void EndPhase_VanuitAanvallenZonderLopendGevecht_IsGeldig()
     {
         var state = TestGame.InProgress(turnPhase: TurnPhase.Attack);

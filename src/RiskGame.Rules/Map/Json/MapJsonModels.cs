@@ -201,3 +201,11 @@ internal sealed class RoleEffectParamsJson
 
     public int? Moves { get; init; }
 }
+
+// Geen omhullend "presets"-object: het bestand is bewust een platte lijst (FO §5.1/§10).
+internal sealed class StartingArmiesPresetJson
+{
+    public string? Id { get; init; }
+
+    public Dictionary<string, int>? ArmiesByPlayerCount { get; init; }
+}

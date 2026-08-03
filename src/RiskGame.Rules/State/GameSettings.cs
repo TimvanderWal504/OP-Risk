@@ -4,10 +4,11 @@ namespace RiskGame.Rules.State;
 /// De lobby-instellingen van één spel (FO §10). Alles wat een getal of een aan/uit-keuze
 /// is staat hier, zodat er verderop in de engine geen losse magic numbers nodig zijn.
 /// </summary>
-/// <param name="StartingArmies">
-/// Startlegers per speler; klassiek 40/35/30/25/20 voor 2–6 spelers en 18 bij 7 (FO §5.1).
-/// Het aantal hoort bij het spelersaantal en wordt daarom bij het aanmaken vastgelegd,
-/// niet in de engine berekend.
+/// <param name="StartingArmiesPresetId">
+/// Welke startlegers-preset (FO §5.1/§10, bv. "classic") de host koos bij het aanmaken.
+/// Het exacte aantal per speler hangt af van het spelersaantal, dat pas vaststaat zodra de
+/// lobby sluit — vandaar dat hier alleen de preset-id staat, niet een vast getal. Zie
+/// <see cref="TurnFlow.StartingArmiesResolver"/> voor het opgeloste aantal.
 /// </param>
 /// <param name="TurnTimer">
 /// Loopt over Versterken én Aanvallen samen — één doorlopende timer over twee fases,
@@ -25,7 +26,7 @@ namespace RiskGame.Rules.State;
 public sealed record GameSettings(
     WinCondition WinCondition,
     SetupMode SetupMode,
-    int StartingArmies,
+    string StartingArmiesPresetId,
     TimeSpan TurnTimer,
     TimeSpan FortifyTimer,
     bool RolesEnabled,

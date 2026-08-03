@@ -3,6 +3,7 @@ import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import { TvLobbyScreen } from './TvLobbyScreen'
 import { TvOrderRollScreen } from './TvOrderRollScreen'
+import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
 
 /** Wat elk host-scherm van de route meekrijgt; zie `PhoneScreenProps` voor dezelfde opzet. */
@@ -22,7 +23,7 @@ export const tvScreens: Record<GamePhaseDto, TvScreen> = {
   [GamePhaseDto.OrderRoll]: TvOrderRollScreen,
   [GamePhaseDto.Claiming]: TvPlaceholderScreen,
   [GamePhaseDto.InitialPlacement]: TvPlaceholderScreen,
-  [GamePhaseDto.InProgress]: TvPlaceholderScreen,
+  [GamePhaseDto.InProgress]: TvMainBoardScreen,
   [GamePhaseDto.Finished]: TvPlaceholderScreen,
 }
 

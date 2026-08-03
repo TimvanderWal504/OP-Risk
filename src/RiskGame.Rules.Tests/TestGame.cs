@@ -18,7 +18,7 @@ internal static class TestGame
     public static GameSettings Settings() => new(
         WinCondition.WorldDomination,
         SetupMode.Random,
-        StartingArmies: 30,
+        StartingArmiesPresetId: "classic",
         TurnTimer: TimeSpan.FromMinutes(3),
         FortifyTimer: TimeSpan.FromMinutes(1),
         RolesEnabled: false,
@@ -49,7 +49,8 @@ internal static class TestGame
         IReadOnlyList<ActiveEffect>? activeEffects = null,
         GameSettings? settings = null,
         int nextTradeValue = 4,
-        IReadOnlyList<string>? winners = null)
+        IReadOnlyList<string>? winners = null,
+        int armiesRemaining = 0)
     {
         var map = Standaard43Data.Load();
 
@@ -69,7 +70,7 @@ internal static class TestGame
             players,
             territories,
             turnOrder,
-            new TurnState(turnOrder[0], turnPhase, timer, pendingCombat),
+            new TurnState(turnOrder[0], turnPhase, timer, pendingCombat, armiesRemaining),
             new DeckState(map.Deck, DiscardPile: [], nextTradeValue),
             activeEffects ?? [],
             winners ?? []);

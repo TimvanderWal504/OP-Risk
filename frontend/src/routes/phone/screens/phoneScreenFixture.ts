@@ -27,7 +27,7 @@ export const fixtureState: GameStateDto = {
   settings: {
     winCondition: WinConditionDto.WorldDomination,
     setupMode: SetupModeDto.Claiming,
-    startingArmies: 20,
+    startingArmiesPresetId: 'classic',
     turnTimerSeconds: 180,
     fortifyTimerSeconds: 60,
     rolesEnabled: false,
@@ -61,5 +61,7 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   rollForOrder: vi.fn(),
   claimTerritory: vi.fn(),
   placeInitialArmy: vi.fn(),
+  placeReinforcements: vi.fn(),
+  endPhase: vi.fn(),
   ...overrides,
 })

@@ -90,13 +90,13 @@ public static class SetupGuards
     }
 
     /// <summary>
-    /// FO §5.1: bij <see cref="SetupMode.Claiming"/> blijft bijplaatsen turn-based (faalt ook
-    /// als het al klaar is — <see cref="SetupTurnCalculator.ActivePlacerId"/> is dan
-    /// <c>null</c>, dus geen enkele speler is nog "aan de beurt"). Bij
-    /// <see cref="SetupMode.Random"/> is er geen beurt: elke speler mag plaatsen zolang hij
-    /// zelf nog restbudget heeft (<see cref="SetupTurnCalculator.RemainingArmiesFor"/>).
+    /// FO §5.1: bijplaatsen is turn-based, zowel bij <see cref="SetupMode.Random"/> als
+    /// <see cref="SetupMode.Claiming"/> — spelers plaatsen om de beurt hun resterende
+    /// startlegers, in de vaste beurtvolgorde. Faalt ook als het al klaar is —
+    /// <see cref="SetupTurnCalculator.ActivePlacerId"/> is dan <c>null</c>, dus geen enkele
+    /// speler is nog "aan de beurt".
     /// </summary>
-    public static ValidationResult IsPlayersTurnToPlace(GameState state, string playerId)
+    public static ValidationResult IsPlayersTurnToPlace(GameState state, string playerId, int startingArmies)
     {
         var exists = Guards.PlayerExists(state, playerId);
 
@@ -105,14 +105,7 @@ public static class SetupGuards
             return exists;
         }
 
-        if (state.Settings.SetupMode == SetupMode.Random)
-        {
-            return SetupTurnCalculator.RemainingArmiesFor(state, playerId) > 0
-                ? ValidationResult.Success()
-                : ValidationResult.Failure("setup.noArmiesLeftToPlace", new Dictionary<string, string> { ["playerId"] = playerId });
-        }
-
-        return playerId == SetupTurnCalculator.ActivePlacerId(state)
+        return playerId == SetupTurnCalculator.ActivePlacerId(state, startingArmies)
             ? ValidationResult.Success()
             : ValidationResult.Failure("setup.notYourTurnToPlace", new Dictionary<string, string> { ["playerId"] = playerId });
     }

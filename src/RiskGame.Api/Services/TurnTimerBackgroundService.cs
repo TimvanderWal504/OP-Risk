@@ -1,5 +1,7 @@
 using Marten;
+using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
+using RiskGame.Api.Hubs;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -32,6 +34,7 @@ namespace RiskGame.Api.Services;
 public sealed class TurnTimerBackgroundService(
     IServiceScopeFactory scopeFactory,
     TimeProvider timeProvider,
+    IHubContext<GameHub, IGameClient> hubContext,
     ILogger<TurnTimerBackgroundService> logger) : BackgroundService
 {
     // Precisie komt nu uit de klok (LastUpdatedUtc + Remaining), niet uit het pollritme —
@@ -124,7 +127,25 @@ public sealed class TurnTimerBackgroundService(
         if (!result.IsSuccess)
         {
             LogRejectedThrottled(gameId, turnState, result.Errors, now);
+            return;
         }
+
+        // Zelfde stempel als GameHub.UnwrapAndBroadcastAsync: result.Value komt van
+        // GameStateDtoMapper.ToDto met StateVersion op de default (0). Zonder de echte
+        // Marten-streamversie erop te zetten, beoordeelt de client-guard
+        // (`next.stateVersion <= current.stateVersion`, useGameState.tsx/useTvGame.tsx) deze
+        // push als verouderd en negeert 'm stilzwijgend — de overstap persisteert dan wel,
+        // maar geen enkele al verbonden client krijgt 'm te zien vóór een handmatige reload.
+        var store = services.GetRequiredService<IDocumentStore>();
+        await using var querySession = store.QuerySession();
+        var streamState = await querySession.Events.FetchStreamStateAsync(gameId);
+        var versionedState = result.Value with { StateVersion = (int)(streamState?.Version ?? 0) };
+
+        // Zelfde push als na een speler-geïnitieerd commando (GameHub.UnwrapAndBroadcastAsync):
+        // zonder deze broadcast persisteert de timeout-overstap wel, maar horen al verbonden
+        // clients er pas iets van bij hun eerstvolgende eigen commando of een handmatige
+        // reconnect (WatchGame/RejoinGame) — precies het gerapporteerde synchronisatiegat.
+        await hubContext.Clients.Group(GameGroups.All(gameId)).GameStateUpdated(versionedState);
     }
 
     private void LogRejectedThrottled(

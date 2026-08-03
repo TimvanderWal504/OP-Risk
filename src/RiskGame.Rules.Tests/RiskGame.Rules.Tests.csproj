@@ -28,9 +28,13 @@
     <Content Include="..\..\data\maps\standaard-43\*.json"
              Link="data\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
-    <!-- colors.json is gedeeld over kaartvarianten en staat in data/, niet data/maps/{mapId}/. -->
+    <!-- colors.json en starting-armies-presets.json zijn gedeeld over kaartvarianten en
+         staan in data/, niet data/maps/{mapId}/. -->
     <Content Include="..\..\data\colors.json"
              Link="data\colors.json"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\starting-armies-presets.json"
+             Link="data\starting-armies-presets.json"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -1,9 +1,9 @@
 using Marten;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Store;
@@ -22,14 +22,24 @@ namespace RiskGame.Api.Tests;
 /// hoeft niet op de klok te wachten om dat te bewijzen.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
+public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : IAsyncLifetime
 {
-    private const int StartingArmies = 25;
+    /// <summary>
+    /// De enige testklasse die <c>TurnTimerBackgroundService</c> écht meedraait, en daarmee de
+    /// enige die last heeft van achtergelaten spellen: de service pollt
+    /// <c>Query&lt;GameState&gt;().Where(Phase == InProgress)</c> ongefilterd, dus zonder opruimen
+    /// zou hij ook de spellen van eerdere tests zien en die met de vooruitgezette
+    /// <see cref="FakeTimeProvider"/> daadwerkelijk doorschuiven. De tests binnen deze klasse
+    /// draaien sequentieel (één xUnit-collection), dus leegmaken is hier veilig.
+    /// </summary>
+    public Task InitializeAsync() => postgres.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private static readonly GameSettings Settings = new(
         WinCondition.SecretMissions,
         SetupMode.Claiming,
-        StartingArmies,
+        StartingArmiesPresetId: "classic",
         TurnTimer: TimeSpan.FromMinutes(3),
         FortifyTimer: TimeSpan.FromMinutes(1),
         RolesEnabled: false,
@@ -37,20 +47,14 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
         EventsEnabled: false);
 
     private WebApplicationFactory<Program> CreateFactory(FakeTimeProvider timeProvider) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:Postgres"] = postgres.ConnectionString,
-                }));
-
-            builder.ConfigureServices(services =>
+        ApiTestHost.Create(
+            postgres,
+            services =>
             {
                 services.AddSingleton<IRandomSource>(new SequenceRandomSource());
                 services.AddSingleton<TimeProvider>(timeProvider);
-            });
-        });
+            },
+            withTurnTimer: true);
 
     private static async Task<(string GameId, IDocumentStore Store)> SetUpStateAsync(
         WebApplicationFactory<Program> factory, TurnPhase turnPhase, PhaseTimer timer)
@@ -86,7 +90,6 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using var session = store.LightweightSession();
         session.Store(state);
@@ -95,29 +98,9 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
         return (gameId, store);
     }
 
-    private static async Task<GameState> WaitForAsync(
-        IDocumentStore store, string gameId, Func<GameState, bool> predicate, TimeSpan timeout)
-    {
-        var deadline = DateTimeOffset.UtcNow + timeout;
-
-        while (true)
-        {
-            await using var session = store.QuerySession();
-            var state = await session.LoadAsync<GameState>(gameId);
-
-            if (state is not null && predicate(state))
-            {
-                return state;
-            }
-
-            if (DateTimeOffset.UtcNow >= deadline)
-            {
-                Assert.Fail($"Verwachte toestand voor spel '{gameId}' niet bereikt binnen {timeout}.");
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-        }
-    }
+    private static Task<HubConnection> ConnectAsync(
+        WebApplicationFactory<Program> factory, HttpClient client) =>
+        ApiTestHost.ConnectAsync(factory, client);
 
     /// <summary>
     /// Verzet de <see cref="FakeTimeProvider"/> in kleine stapjes van iets meer dan het
@@ -166,6 +149,46 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
 
         Assert.Equal(TurnPhase.Fortify, updated!.TurnState!.TurnPhase);
         Assert.Equal("p1", updated.TurnState.ActivePlayerId);
+    }
+
+    /// <summary>
+    /// De regressie die de kernvraag beantwoordt: persisteert de timeout-overstap alléén
+    /// (zichtbaar pas na reconnect/<c>WatchGame</c>), of pusht <c>TurnTimerBackgroundService</c>
+    /// 'm ook live naar clients die al in de spelgroep zitten via een echte SignalR-verbinding
+    /// (<see cref="Microsoft.AspNetCore.SignalR.IHubContext{THub,T}"/>) — precies zoals elk
+    /// speler-geïnitieerd commando dat al doet via <c>GameHub.UnwrapAndBroadcastAsync</c>.
+    /// </summary>
+    [Fact]
+    public async Task VersterkenTimerVerloopt_PushtGameStateUpdatedNaarAlVerbondenClients()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+
+        var (gameId, store) = await SetUpStateAsync(
+            factory, TurnPhase.Reinforce, new PhaseTimer(TimeSpan.FromSeconds(1), timeProvider.GetUtcNow()));
+
+        await using var connection = await ConnectAsync(factory, client);
+        var received = new TaskCompletionSource<GameStateDto>();
+        connection.On<GameStateDto>("GameStateUpdated", state => received.TrySetResult(state));
+        await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        await AdvancePastDeadlineAsync(
+            timeProvider, store, gameId, state => state.TurnState!.TurnPhase != TurnPhase.Reinforce);
+
+        var pushed = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(gameId, pushed.GameId);
+        Assert.Equal(TurnPhaseDto.Fortify, pushed.TurnState!.TurnPhase);
+        Assert.Equal("p1", pushed.TurnState.ActivePlayerId);
+
+        // De regel die de vorige regressie miste: GameHub.UnwrapAndBroadcastAsync stempelt elke
+        // push met de echte Marten-streamversie; blijft die op de DTO-default (0) staan, dan
+        // beoordeelt de client-guard (`next.stateVersion <= current.stateVersion`) deze push als
+        // verouderd en negeert 'm — de overstap persisteert dan wel, maar geen client ziet 'm live.
+        await using var versionSession = store.QuerySession();
+        var streamState = await versionSession.Events.FetchStreamStateAsync(gameId);
+        Assert.Equal((int)streamState!.Version, pushed.StateVersion);
     }
 
     [Fact]
@@ -254,11 +277,8 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
     [Fact]
     public async Task Herstart_HeeftDezelfdeDeadlineAlsVoorHetHerprojecteren()
     {
-        var mapSource = new MapDefinitionSource(
-            Path.Combine(AppContext.BaseDirectory, "data", "maps"));
-
-        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+        var mapSource = postgres.MapSource;
+        var store = postgres.Store;
 
         var gameId = $"game-{Guid.NewGuid()}";
         var now = DateTimeOffset.UtcNow;
@@ -341,7 +361,6 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres)
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
-        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
 
         await using (var session = store.LightweightSession())
         {

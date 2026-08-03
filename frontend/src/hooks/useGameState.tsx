@@ -255,6 +255,25 @@ export function useGameState(gameId: string) {
     [invoke, gameId, playerId],
   )
 
+  const placeReinforcements = useCallback(
+    async (territoryId: string, amount: number) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('PlaceReinforcements', gameId, playerId, territoryId, amount)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  const endPhase = useCallback(async () => {
+    if (!playerId) return
+
+    const updated = await invoke<GameStateDto>('EndPhase', gameId, playerId)
+
+    if (updated) applyState(updated)
+  }, [invoke, gameId, playerId])
+
   return {
     state,
     playerId,
@@ -270,5 +289,7 @@ export function useGameState(gameId: string) {
     rollForOrder,
     claimTerritory,
     placeInitialArmy,
+    placeReinforcements,
+    endPhase,
   }
 }

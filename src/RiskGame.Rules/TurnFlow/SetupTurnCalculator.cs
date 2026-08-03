@@ -31,13 +31,16 @@ public static class SetupTurnCalculator
     /// legerbudgetten aan het begin van deze fase bekend zijn, dus simuleert deze functie de
     /// ronde vanaf het begin om te bepalen wiens beurt de
     /// eerstvolgende plaatsing is. <c>null</c> zodra niemand nog legers over heeft
-    /// (Bijplaatsen is klaar).
+    /// (Bijplaatsen is klaar). <paramref name="startingArmies"/> komt van
+    /// <see cref="StartingArmiesResolver.Resolve"/> — puur rekenwerk hier, geen
+    /// preset-opzoeking, zodat dit ook met een vast getal getest kan worden.
     /// </summary>
-    public static string? ActivePlacerId(GameState state)
+    public static string? ActivePlacerId(GameState state, int startingArmies)
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var budgets = state.TurnOrder.ToDictionary(playerId => playerId, playerId => RemainingArmiesFor(state, playerId));
+        var budgets = state.TurnOrder.ToDictionary(
+            playerId => playerId, playerId => RemainingArmiesFor(state, playerId, startingArmies));
 
         if (budgets.Values.All(remaining => remaining == 0))
         {
@@ -50,7 +53,7 @@ public static class SetupTurnCalculator
         // alle spelers.
         var initialBudgets = state.TurnOrder.ToDictionary(
             playerId => playerId,
-            playerId => state.Settings.StartingArmies - state.TerritoriesOf(playerId).Count());
+            playerId => startingArmies - state.TerritoriesOf(playerId).Count());
 
         var stepsSoFar = state.TurnOrder.Sum(playerId => initialBudgets[playerId] - budgets[playerId]);
 
@@ -71,12 +74,11 @@ public static class SetupTurnCalculator
 
     /// <summary>
     /// Hoeveel startlegers <paramref name="playerId"/> nog moet plaatsen tijdens
-    /// <see cref="GamePhase.InitialPlacement"/> — gebruikt door <see cref="ActivePlacerId"/>
-    /// (Claimen-pad) en door <c>SetupGuards.IsPlayersTurnToPlace</c> (Random-pad, waar er
-    /// geen beurt is, alleen een budget-check).
+    /// <see cref="GamePhase.InitialPlacement"/> — gebruikt door <see cref="ActivePlacerId"/>,
+    /// ongeacht <see cref="SetupMode"/> (bijplaatsen is altijd turn-based, FO §5.1).
     /// </summary>
-    public static int RemainingArmiesFor(GameState state, string playerId) =>
-        state.Settings.StartingArmies - state.TerritoriesOf(playerId).Sum(t => t.ArmyCount);
+    public static int RemainingArmiesFor(GameState state, string playerId, int startingArmies) =>
+        startingArmies - state.TerritoriesOf(playerId).Sum(t => t.ArmyCount);
 
     private static int NextIndexWithBudget(
         IReadOnlyList<string> turnOrder, IReadOnlyDictionary<string, int> remainingBudgets, int startIndex)

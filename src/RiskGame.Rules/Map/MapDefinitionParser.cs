@@ -48,6 +48,8 @@ public static class MapDefinitionParser
             sources.EventsJson, "events.json", errors);
         var roleFile = Deserialize<RolesFileJson>(
             sources.RolesJson, "roles.json", errors);
+        var startingArmiesPresetModels = Deserialize<List<StartingArmiesPresetJson>>(
+            sources.StartingArmiesPresetsJson, "starting-armies-presets.json", errors);
 
         // Zonder leesbare bestanden heeft verder valideren geen zin.
         if (errors.Count > 0)
@@ -63,6 +65,7 @@ public static class MapDefinitionParser
         var missions = ReadMissions(missionFile!.Missions, errors);
         var events = ReadEvents(eventFile!.Events, errors);
         var roles = ReadRoles(roleFile!.Roles, errors);
+        var startingArmiesPresets = ReadStartingArmiesPresets(startingArmiesPresetModels!, errors);
 
         ValidateReferences(territories, continents, borders, errors);
         ValidateConnectivity(territories, borders, errors);
@@ -79,7 +82,7 @@ public static class MapDefinitionParser
 
         return Result<MapDefinition>.Success(new MapDefinition(
             mapId, territories, continents, colors, borders, deck, deckRules.SetRules, deckRules.Themes,
-            missions, events, roles));
+            missions, events, roles, startingArmiesPresets));
     }
 
     /// <summary>
@@ -821,6 +824,61 @@ public static class MapDefinitionParser
         ReportDuplicates(available.Select(role => role.OriginTerritory), "roles.json", "herkomstland", errors);
 
         return available;
+    }
+
+    /// <summary>
+    /// FO §5.1/§10: elke preset moet een positief legeraantal geven voor elk spelersaantal
+    /// van 2 t/m 7 — anders kan een spel met dat spelersaantal nooit startlegers bepalen.
+    /// </summary>
+    private static readonly int[] SupportedPlayerCounts = [2, 3, 4, 5, 6, 7];
+
+    private static List<StartingArmiesPreset> ReadStartingArmiesPresets(
+        List<StartingArmiesPresetJson> models, List<string> errors)
+    {
+        var presets = new List<StartingArmiesPreset>(models.Count);
+
+        foreach (var model in models)
+        {
+            if (string.IsNullOrWhiteSpace(model.Id))
+            {
+                errors.Add("starting-armies-presets.json: een preset zonder id.");
+                continue;
+            }
+
+            var armiesByPlayerCount = new Dictionary<int, int>();
+            var valid = true;
+
+            foreach (var playerCount in SupportedPlayerCounts)
+            {
+                if (model.ArmiesByPlayerCount is null
+                    || !model.ArmiesByPlayerCount.TryGetValue(playerCount.ToString(), out var armies)
+                    || armies <= 0)
+                {
+                    errors.Add(
+                        $"starting-armies-presets.json: preset '{model.Id}' heeft geen positief aantal legers voor {playerCount} spelers.");
+                    valid = false;
+                    continue;
+                }
+
+                armiesByPlayerCount[playerCount] = armies;
+            }
+
+            if (!valid)
+            {
+                continue;
+            }
+
+            presets.Add(new StartingArmiesPreset(model.Id, armiesByPlayerCount));
+        }
+
+        if (presets.Count == 0)
+        {
+            errors.Add("starting-armies-presets.json: geen enkele geldige preset.");
+        }
+
+        ReportDuplicates(presets.Select(preset => preset.Id), "starting-armies-presets.json", "preset-id", errors);
+
+        return presets;
     }
 
     private static string RouteKey(string from, string to) =>

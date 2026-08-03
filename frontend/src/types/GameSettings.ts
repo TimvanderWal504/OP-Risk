@@ -29,12 +29,18 @@ export interface GameSettingsDto {
    * hij in `SetupStateDto`. Wie hier toch op brancht, bouwt een spelregel terug in de client.
    */
   setupMode: SetupModeDto
-  startingArmies: number
+  startingArmiesPresetId: string
   turnTimerSeconds: number
   fortifyTimerSeconds: number
   rolesEnabled: boolean
   roleAssignment: RoleAssignmentModeDto
   eventsEnabled: boolean
+}
+
+/** Spiegelt RiskGame.Api.Dtos.StartingArmiesPresetDto (src/RiskGame.Api/Dtos/GameSettingsDto.cs). */
+export interface StartingArmiesPresetDto {
+  id: string
+  armiesByPlayerCount: Record<number, number>
 }
 
 /** Spiegelt RiskGame.Api.Dtos.CreateGameDtos (src/RiskGame.Api/Dtos/CreateGameDtos.cs). */

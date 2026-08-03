@@ -109,6 +109,11 @@ export const tvAnimations = {
   selectionRing: (kind: 'src' | 'tgt') => `atlasSelIn .4s cubic-bezier(.2,.7,.3,1) ${kind === 'src' ? '0' : '.14'}s both`,
   /** B5 — selectie-banner onderaan de kaart (L308). */
   selectionBannerUp: 'atlasBannerUp .4s cubic-bezier(.2,.7,.3,1) both',
+  /** B6 — beurt-chip wisselt van speler (component-helper `turnChipEl`, L1140-1141: geen
+   *  letterlijk markup-regelnummer, `atlasTurnSwap` wordt daar via een React-key-swap
+   *  toegepast, niet via `sc-if`). Gekeyed op de actieve speler zodat elke beurtwissel
+   *  opnieuw animeert. */
+  turnChipSwap: 'atlasTurnSwap .3s cubic-bezier(.2,.7,.3,1) both',
   /** B6 — actieve fase-pil (L250). */
   phasePillPop: 'atlasPhasePop .3s cubic-bezier(.2,.7,.3,1) both',
   /** B6 — timer-staatwissel, alle drie modi (normaal/laag/gepauzeerd, L256-258). In de "laag"-toestand
