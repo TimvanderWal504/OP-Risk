@@ -5,7 +5,13 @@ import { fixtureState } from './tvScreenFixture'
 
 describe('TvOrderRollScreen', () => {
   it('toont de worpen en de bepaalde speelvolgorde', () => {
-    render(<TvOrderRollScreen state={fixtureState} orderRollThrows={{ alice: [4, 5], bob: [2, 3] }} />)
+    render(
+      <TvOrderRollScreen
+        state={fixtureState}
+        orderRollThrows={{ alice: [4, 5], bob: [2, 3] }}
+        lastClaimedTerritoryId={null}
+      />,
+    )
 
     // Elke naam staat twee keer op het scherm: bij zijn eigen worp én in de volgordelijst
     // eronder (Host-scherm.dc.html, `isOrder`).
@@ -19,6 +25,7 @@ describe('TvOrderRollScreen', () => {
       <TvOrderRollScreen
         state={{ ...fixtureState, turnOrder: [] }}
         orderRollThrows={{ alice: [4, 5] }}
+        lastClaimedTerritoryId={null}
       />,
     )
 

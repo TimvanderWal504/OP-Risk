@@ -22,3 +22,13 @@ export interface DiceRolledMessage {
   dice: number[]
   context: 'order-roll' | 'attack' | 'defense'
 }
+
+/**
+ * Spiegelt RiskGame.Api.Hubs.TerritoryClaimedMessage — transiënt "TerritoryClaimed"-broadcast
+ * (geen state) voor de TV-flare op het laatst geclaimde gebied tijdens `GamePhaseDto.Claiming`.
+ */
+export interface TerritoryClaimedMessage {
+  territoryId: string
+  playerId: string
+  stateVersion: number
+}

@@ -65,6 +65,15 @@ public sealed record CombatNarratedMessage(
     int StateVersion);
 
 /// <summary>
+/// Een gebied is zojuist geclaimd (FO §5.1, <see cref="RiskGame.Rules.State.GamePhase.Claiming"/>).
+/// Narratief event, geen state: de TV gebruikt dit om de laatst-geclaimde-gebied-flare te tonen
+/// zonder twee <c>GameStateDto.Territories</c>-snapshots te hoeven diffen — dat zou breken bij
+/// reconnect (geen vorige snapshot), meerdere claims tussen twee broadcasts, en de
+/// rollback/vertrek-richting (waarbij <c>ownerPlayerId</c> juist leeg raakt, geen claim is).
+/// </summary>
+public sealed record TerritoryClaimedMessage(string TerritoryId, string PlayerId, int StateVersion);
+
+/// <summary>
 /// SignalR-hub voor alle spelcommando's (TO §4.1): lobby, order-roll, startopstelling,
 /// rol-/missietoewijzing, versterken, aanvallen en de generieke beurtoverstap (Fortify/
 /// EndPhase/EndTurn). Dun: elke methode delegeert de TO §4-pijplijn naar de bijbehorende
@@ -193,6 +202,14 @@ public sealed class GameHub(
     public async Task<GameStateDto> ClaimTerritory(string gameId, string playerId, string territoryId)
     {
         var result = await setupCommands.ClaimTerritoryAsync(gameId, playerId, territoryId);
+
+        if (result.IsSuccess)
+        {
+            await using var versionSession = store.QuerySession();
+
+            await Clients.Group(GameGroups.All(gameId)).TerritoryClaimed(new TerritoryClaimedMessage(
+                territoryId, playerId, await FetchStateVersionAsync(versionSession, gameId)));
+        }
 
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
     }

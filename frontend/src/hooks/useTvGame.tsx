@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
-import type { DiceRolledMessage } from '../types/HubResponses'
+import type { DiceRolledMessage, TerritoryClaimedMessage } from '../types/HubResponses'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 /**
@@ -16,6 +16,11 @@ export function useTvGame(gameId: string) {
   const [state, setState] = useState<GameStateDto | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
+  // Laatst-geclaimde-gebied-flare (TvClaimingScreen): komt uit het "TerritoryClaimed"-narratief-
+  // event, niet uit het vergelijken van twee `territories`-snapshots — dat breekt bij reconnect
+  // (geen vorige snapshot) en bij meerdere claims tussen twee broadcasts (welke krijgt de flare?).
+  // Start op `null`: geen flare tot de eerstvolgende claim, geaccepteerd (zie bouwplan Blocker 1).
+  const [lastClaimedTerritoryId, setLastClaimedTerritoryId] = useState<string | null>(null)
 
   // Negeert stale snapshots/broadcasts: een WatchGame-respons die terugkomt ná een
   // nieuwere GameStateUpdated (of vice versa) mag de nieuwere state niet overschrijven.
@@ -37,6 +42,10 @@ export function useTvGame(gameId: string) {
       setOrderRollThrows((current) =>
         updated.phase === GamePhaseDto.Lobby && Object.keys(current).length > 0 ? {} : current,
       )
+
+      // Idem voor de claim-flare: relevant zolang Claiming loopt, leegmaken zodra de fase
+      // verlaten is (InitialPlacement of terug naar Lobby bij een nieuw spel).
+      setLastClaimedTerritoryId((current) => (updated.phase !== GamePhaseDto.Claiming && current !== null ? null : current))
     }
 
     const onDiceRolled = (message: DiceRolledMessage) => {
@@ -45,12 +54,18 @@ export function useTvGame(gameId: string) {
       setOrderRollThrows((current) => ({ ...current, [message.playerId]: message.dice }))
     }
 
+    const onTerritoryClaimed = (message: TerritoryClaimedMessage) => {
+      setLastClaimedTerritoryId(message.territoryId)
+    }
+
     connection.on('GameStateUpdated', onUpdate)
     connection.on('DiceRolled', onDiceRolled)
+    connection.on('TerritoryClaimed', onTerritoryClaimed)
 
     return () => {
       connection.off('GameStateUpdated', onUpdate)
       connection.off('DiceRolled', onDiceRolled)
+      connection.off('TerritoryClaimed', onTerritoryClaimed)
     }
   }, [connection, gameId])
 
@@ -79,5 +94,5 @@ export function useTvGame(gameId: string) {
     }
   }, [connection, connectionState, gameId])
 
-  return { state, connectionState, error, orderRollThrows }
+  return { state, connectionState, error, orderRollThrows, lastClaimedTerritoryId }
 }

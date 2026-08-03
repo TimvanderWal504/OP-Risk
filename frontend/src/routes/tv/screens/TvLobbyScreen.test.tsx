@@ -5,7 +5,7 @@ import { fixtureState } from './tvScreenFixture'
 
 describe('TvLobbyScreen', () => {
   it('toont de wachtkamer met de spelers die al binnen zijn', () => {
-    render(<TvLobbyScreen state={fixtureState} orderRollThrows={{}} />)
+    render(<TvLobbyScreen state={fixtureState} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
 
     expect(screen.getByText('Wachtkamer')).toBeInTheDocument()
     expect(screen.getByText('Alice')).toBeInTheDocument()

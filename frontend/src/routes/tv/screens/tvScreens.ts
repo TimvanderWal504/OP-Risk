@@ -3,6 +3,8 @@ import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import { TvLobbyScreen } from './TvLobbyScreen'
 import { TvOrderRollScreen } from './TvOrderRollScreen'
+import { TvClaimingScreen } from './TvClaimingScreen'
+import { TvInitialPlacementScreen } from './TvInitialPlacementScreen'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
 
@@ -10,6 +12,8 @@ import { TvPlaceholderScreen } from './TvPlaceholderScreen'
 export interface TvScreenProps {
   state: GameStateDto
   orderRollThrows: Record<string, number[]>
+  /** Laatst geclaimde gebied (TvClaimingScreen-flare), of `null` als er nog geen event binnen is. */
+  lastClaimedTerritoryId: string | null
 }
 
 export type TvScreen = (props: TvScreenProps) => ReactNode
@@ -21,8 +25,8 @@ export type TvScreen = (props: TvScreenProps) => ReactNode
 export const tvScreens: Record<GamePhaseDto, TvScreen> = {
   [GamePhaseDto.Lobby]: TvLobbyScreen,
   [GamePhaseDto.OrderRoll]: TvOrderRollScreen,
-  [GamePhaseDto.Claiming]: TvPlaceholderScreen,
-  [GamePhaseDto.InitialPlacement]: TvPlaceholderScreen,
+  [GamePhaseDto.Claiming]: TvClaimingScreen,
+  [GamePhaseDto.InitialPlacement]: TvInitialPlacementScreen,
   [GamePhaseDto.InProgress]: TvMainBoardScreen,
   [GamePhaseDto.Finished]: TvPlaceholderScreen,
 }

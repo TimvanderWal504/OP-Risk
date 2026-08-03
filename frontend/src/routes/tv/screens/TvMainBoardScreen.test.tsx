@@ -44,26 +44,26 @@ describe('TvMainBoardScreen', () => {
   })
 
   it('rendert niets zolang er geen turnState is (fase nog niet InProgress)', () => {
-    const { container } = render(<TvMainBoardScreen state={{ ...fixtureState, turnState: null }} orderRollThrows={{}} />)
+    const { container } = render(<TvMainBoardScreen state={{ ...fixtureState, turnState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
   it('toont de beurtstatus-header voor de actieve speler', () => {
-    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} />)
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
 
     expect(screen.getByText('Alice')).toBeInTheDocument()
   })
 
   it('rendert een gebiedsvorm en het legeraantal per territorium zodra de geometrie geladen is', async () => {
-    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} />)
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
 
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
     expect(screen.getByText('5')).toBeInTheDocument()
   })
 
   it('hangt de gebiedenlaag in het atlasRough-filter (Host-scherm.dc.html:280,290)', async () => {
-    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} />)
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
 
     const filter = container.querySelector('filter#atlasRough')
@@ -83,7 +83,7 @@ describe('TvMainBoardScreen', () => {
 
   it('meldt een console-fout als de achtergrondafbeelding niet de verwachte afmeting heeft', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} />)
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
 
     const img = container.querySelector('img') as HTMLImageElement
     Object.defineProperty(img, 'naturalWidth', { value: 1500, configurable: true })

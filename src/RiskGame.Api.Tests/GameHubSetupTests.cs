@@ -95,6 +95,35 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         Assert.Contains("setup.notYourTurnToClaim", exception.Message);
     }
 
+    /// <summary>
+    /// FO §5.1: de TV leidt de laatst-geclaimde-gebied-flare af uit dit narratieve event
+    /// (zelfde familie als <c>CombatNarrated</c>, zie <see cref="GameHubAttackTests"/>), niet
+    /// uit het vergelijken van twee <c>GameStateDto.Territories</c>-snapshots — dat zou breken
+    /// bij reconnect en bij meerdere claims tussen twee broadcasts.
+    /// </summary>
+    [Fact]
+    public async Task ClaimTerritory_Geslaagd_BroadcastTerritoryClaimedNaarToeschouwer()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var (gameId, aliceId, _, state) = await SetUpToClaimingAsync(connection, client);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+        var firstTerritoryId = state.Territories[0].TerritoryId;
+
+        var received = new TaskCompletionSource<TerritoryClaimedMessage>();
+        spectator.On<TerritoryClaimedMessage>("TerritoryClaimed", message => received.TrySetResult(message));
+
+        var claimed = await connection.InvokeAsync<GameStateDto>("ClaimTerritory", gameId, aliceId, firstTerritoryId);
+        var narrated = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(firstTerritoryId, narrated.TerritoryId);
+        Assert.Equal(aliceId, narrated.PlayerId);
+        Assert.Equal(claimed.StateVersion, narrated.StateVersion);
+    }
+
     [Fact]
     public async Task ClaimTerritory_AlGeclaimdGebied_WordtGeweigerd()
     {

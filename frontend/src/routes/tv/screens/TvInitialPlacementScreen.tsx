@@ -1,24 +1,17 @@
 import { useState } from 'react'
 import type { SyntheticEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
-import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../design-reference/shared/design-tokens'
 import { tvAnimations } from '../../../design-reference/shared/motion'
+import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import type { TvScreenProps } from './tvScreens'
 
 const MAP_ID = 'standaard-43'
 
-/**
- * Vangnet voor TO §7.2: `projection.ts` gaat uit van een vaste achtergrondgrootte
- * (`MAP_WIDTH_PX`×`MAP_HEIGHT_PX`, momenteel 4096×2132 — zie projection.ts voor waarom dat niet
- * het nominale 1920×1000-canvas uit `build_silhouette_v4.py` is). Een toekomstige asset-vervanging
- * op dezelfde url die niet aan die afmeting voldoet, zou de SVG-overlay stilzwijgend laten
- * verschuiven t.o.v. de kustlijn — dit meldt dat hardop i.p.v. het pas maanden later als "de
- * kaart staat een beetje scheef" te ontdekken.
- */
 function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
   const img = event.currentTarget
   if (img.naturalWidth !== MAP_WIDTH_PX || img.naturalHeight !== MAP_HEIGHT_PX) {
@@ -29,20 +22,31 @@ function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
 }
 
 /**
- * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (Host-scherm.dc.html, state "Main board",
- * `isBoard`-tak L257-312). Read-only weergave (FO §7.3/§2.3: de telefoon is de enige
- * invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen (z-3) horen bij
- * Attack en zijn hier bewust niet gebouwd; idem het spelerspaneel en de gebeurtenis-feed
- * (rechterkolom/onderrand in de export) — geen deliverable in het goedgekeurde plan voor deze
- * taak, en voor de feed bestaat sowieso nog geen server-databron.
+ * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Geen letterlijke exportsectie —
+ * bevestigde bevinding (de TV-`states`-lijst in Host-scherm.dc.html kent geen aparte staat
+ * voor deze fase), afgestemd met de gebruiker: hergebruikt het Hoofdscherm-grid-patroon van
+ * `TvMainBoardScreen.tsx`, 3-rijen grid, geen rechterpaneel/feed-strip (zelfde scope-afspraak
+ * als daar).
+ *
+ * `state.setupState.activePlayerId` kan hier, anders dan bij `TvClaimingScreen`, wél `null`
+ * zijn (`SetupMode.Random`: iedereen plaatst gelijktijdig, geen actieve speler — TO/FO §5.1).
+ * Topbar en kaartkleuring hebben dus elk twee paden: met een actieve speler (SetupMode.Claiming,
+ * beurt-gebaseerd) gedraagt dit scherm zich als `TvMainBoardScreen`; zonder actieve speler is er
+ * geen zinvol eigen/vijand-perspectief, dus toont elk gebied zijn eigen kleur op volle
+ * `own`-opaciteit in plaats van een gedimde "iedereen is vijand"-weergave (geen exportwaarde,
+ * bewuste designkeuze — zie de afwijkingenlijst).
+ *
+ * Read-only (FO §7.3/§2.3) — geen `onClick` op de gebiedslagen.
  */
-export function TvMainBoardScreen({ state }: TvScreenProps) {
+export function TvInitialPlacementScreen({ state }: TvScreenProps) {
+  // 'board' erbij voor `turnOf` (Host-scherm.dc.html:192), zelfde hergebruik als TvClaimingScreen.
+  const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
 
-  // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen
-  // voor de A1-teldemo-animatie (Host-scherm.dc.html:642-675). Bijgewerkt tijdens render
-  // (niet via een ref of effect, react-hooks/refs staat geen ref-mutatie tijdens render toe):
-  // zelfde "vergelijk en pas aan"-patroon als `useHeldPhase.ts`.
+  // Zelfde "vergelijk en pas aan tijdens render"-patroon als TvMainBoardScreen, voor de
+  // telrichting van de A1-teldemo-animatie — een lokaal presentatiedetail over een getal dat
+  // al in `state.territories` zit, geen afgeleid gebeurtenis-feit (in tegenstelling tot de
+  // claim-flare op `TvClaimingScreen`, zie het bouwplan Blocker 1).
   const [prevArmy, setPrevArmy] = useState<Record<string, number>>({})
   const currentArmy: Record<string, number> = {}
   state.territories.forEach((territory) => {
@@ -55,20 +59,45 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
     setPrevArmy(currentArmy)
   }
 
-  const turnState = state.turnState
-  const activePlayer = state.players.find((p) => p.id === turnState?.activePlayerId)
-  if (!turnState || !activePlayer) return null
+  if (!state.setupState) return null
 
-  const activeColor = state.colors.find((c) => c.id === activePlayer.colorId)
+  const activePlayerId = state.setupState.activePlayerId
+  const activePlayer = activePlayerId ? state.players.find((p) => p.id === activePlayerId) : undefined
+  const activeColor = activePlayer ? state.colors.find((c) => c.id === activePlayer.colorId) : undefined
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <TurnStatusHeader
-        activePlayer={activePlayer}
-        activeColor={activeColor}
-        turnPhase={turnState.turnPhase}
-        timer={turnState.timer}
-      />
+      <div className="col-span-full flex items-center justify-between px-3.5">
+        {activePlayer && activeColor ? (
+          <div className="flex items-center gap-4.5">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-[16px] text-[34px]"
+              style={{ background: activeColor.hex, color: activeColor.onHex, boxShadow: `0 0 24px ${activeColor.hex}99` }}
+            >
+              <ColorSymbol symbol={activeColor.symbol} />
+            </div>
+            <div>
+              <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+                {t('board:turnOf')}
+              </div>
+              <div className="font-display text-[34px] font-black leading-none">
+                {activePlayer.name} <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+              {t('placeKicker')}
+            </div>
+            <div className="font-display text-[34px] font-black leading-none">{t('placeEveryoneAtOnce')}</div>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-[22px] font-black tracking-[.02em] text-pitch-300">
+          {t('placeTitle')}
+        </div>
+      </div>
 
       <div
         className="relative col-start-1 row-start-2 min-w-0 overflow-hidden rounded-[14px] border border-[var(--atlas-map-border)] bg-[var(--atlas-map-bg)]"
@@ -109,15 +138,15 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
               const owned = state.territories.find((t) => t.territoryId === territory.id)
               const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
               const color = state.colors.find((c) => c.id === owner?.colorId)
-              const isOwn = owner?.id === activePlayer.id
+              // Zonder actieve speler (SetupMode.Random) is er geen eigen/vijand-perspectief:
+              // elk geclaimd gebied krijgt zijn eigen kleur op volle `own`-opaciteit (bouwplan
+              // Belangrijk 8), niet de gedimde `enemy`-stijl. Mét actieve speler (SetupMode.
+              // Claiming) geldt het gewone eigen/vijand-onderscheid, zoals op het Hoofdscherm.
+              const isOwn = !activePlayer || owner?.id === activePlayer.id
               const fillHex = color?.hex ?? boardTok.neutral
               const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
               const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
-              const strokeWidth = color
-                ? isOwn
-                  ? territoryStroke.own
-                  : territoryStroke.enemy
-                : territoryStroke.neutral
+              const strokeWidth = color ? (isOwn ? territoryStroke.own : territoryStroke.enemy) : territoryStroke.neutral
 
               return (
                 <path
@@ -141,9 +170,8 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
             const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
             const color = state.colors.find((c) => c.id === owner?.colorId)
             const ringColor = color?.hex ?? boardTok.neutral
-            // Host-scherm.dc.html:995 — `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
-            // bij de nog niet gebouwde selectiestaat.
-            const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
+            const isOwn = !activePlayer || owner?.id === activePlayer.id
+            const ringSw = isOwn ? marker.ringSwOwn : marker.ringSwEnemy
 
             const wasArmy = prevArmy[territory.id]
             const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0

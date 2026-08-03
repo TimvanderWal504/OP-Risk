@@ -12,5 +12,7 @@ public interface IGameClient
 
     Task CombatNarrated(CombatNarratedMessage message);
 
+    Task TerritoryClaimed(TerritoryClaimedMessage message);
+
     Task GameStateUpdated(GameStateDto state);
 }
