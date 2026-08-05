@@ -3,10 +3,6 @@ import type { LocaleTree } from '../i18n/types'
 /** Openingsscherm van de telefoon-app (`routes/phone/HomePage.tsx`). */
 export const home = {
   title: { nl: 'OPERATIE ATLAS', en: 'OPERATION ATLAS' },
-  tagline: {
-    nl: 'Verover de wereld — één telefoon per veldheer.',
-    en: 'Conquer the world — one phone per commander.',
-  },
   joinCode: {
     title: { nl: 'Spelcode', en: 'Game code' },
     placeholder: { nl: 'bv. ATLAS7', en: 'e.g. ATLAS7' },

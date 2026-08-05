@@ -10,7 +10,6 @@ import {
   type StartingArmiesPresetDto,
 } from '../types/GameSettings'
 import { ToggleRow } from './ui/ToggleRow'
-import { Switch } from './ui/Switch'
 import { Stepper } from './ui/Stepper'
 import { SelectableOption } from './ui/SelectableOption'
 import { SegmentedControl } from './ui/SegmentedControl'
@@ -102,90 +101,46 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     }
   }
 
+  const winConditionDescription =
+    settings.winCondition === WinConditionDto.WorldDomination
+      ? t('winCondition.worldDomination.description')
+      : t('winCondition.secretMissions.description')
+
   return (
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
-      <div className="flex-none px-4.5 pt-3.5 pb-2.5">
-        <div className="flex items-center gap-2.5">
-          <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-silver-400 uppercase">
-            {t('header.kicker')}
-          </span>
-          <span className="rounded-md bg-silver-400 px-2 py-0.5 text-[10px] font-extrabold tracking-[.08em] text-[#0a0e17]">
-            {t('header.hostBadge')}
-          </span>
-        </div>
-        <div className="mt-1 font-display text-[26px] font-black">{t('header.title')}</div>
+      <div className="flex-none px-4 pt-4 pb-3">
+        <h1 className="font-display text-h1 font-black">{t('header.title')}</h1>
+        <p className="mt-1 text-sm text-fg-muted">{t('map.summary')}</p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4.5 pt-0.5 pb-3.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
         <div>
-          <div className="mx-0.5 mb-2 font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
+          <div className="mb-2 font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
             {t('section.rules')}
           </div>
           <div className="flex flex-col gap-2.5">
-            <div className="rounded-card border-2 border-pitch-500 bg-pitch-500/12 px-3.5 py-3">
-              <div className="flex items-start justify-between gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="font-display text-base font-extrabold">{t('map.title')}</div>
-                  <div className="text-[11.5px] text-fg-muted">{t('map.description')}</div>
-                </div>
-                <span className="flex h-6.5 w-6.5 flex-none items-center justify-center rounded-full border-2 border-pitch-500">
-                  <span className="h-3.5 w-3.5 rounded-full bg-pitch-400" />
-                </span>
-              </div>
-              <div className="mt-2.5">
-                <span className="block font-display text-base font-extrabold">
-                  {t('map.standardName')}
-                </span>
-                <span className="mt-0.5 block font-mono text-xs text-pitch-300">
-                  {t('map.standardStats')}
-                </span>
-                <span className="mt-0.5 block text-[11.5px] text-fg-muted">
-                  {t('map.standardDescription')}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-1.5">
-              <div className="px-0 py-2 text-xs text-fg-muted">{t('winCondition.sectionHint')}</div>
-              <div className="flex items-center gap-3 border-t border-border py-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="font-display text-base font-extrabold">
-                    {t('winCondition.worldDomination.title')}
-                  </div>
-                  <div className="text-[11.5px] text-fg-muted">
-                    {t('winCondition.worldDomination.description')}
-                  </div>
-                </div>
-                <Switch
-                  label={t('winCondition.worldDomination.title')}
-                  on={settings.winCondition === WinConditionDto.WorldDomination}
-                  onToggle={() =>
-                    setSettings((s) => ({ ...s, winCondition: WinConditionDto.WorldDomination }))
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-3 border-t border-border py-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="font-display text-base font-extrabold">
-                    {t('winCondition.secretMissions.title')}
-                  </div>
-                  <div className="text-[11.5px] text-fg-muted">
-                    {t('winCondition.secretMissions.description')}
-                  </div>
-                </div>
-                <Switch
-                  label={t('winCondition.secretMissions.title')}
-                  on={settings.winCondition === WinConditionDto.SecretMissions}
-                  onToggle={() =>
-                    setSettings((s) => ({ ...s, winCondition: WinConditionDto.SecretMissions }))
-                  }
-                />
-              </div>
+            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
+              <div className="mb-2 font-display text-base font-extrabold">{t('winCondition.title')}</div>
+              <SegmentedControl
+                value={settings.winCondition}
+                onChange={(winCondition) => setSettings((s) => ({ ...s, winCondition }))}
+                options={[
+                  {
+                    value: WinConditionDto.WorldDomination,
+                    label: t('winCondition.worldDomination.title'),
+                  },
+                  {
+                    value: WinConditionDto.SecretMissions,
+                    label: t('winCondition.secretMissions.title'),
+                  },
+                ]}
+              />
+              <p className="mt-2 text-xs text-fg-muted">{winConditionDescription}</p>
             </div>
 
             <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('setupMode.title')}</div>
-              <div className="mb-2.5 text-[11.5px] text-fg-muted">{t('setupMode.description')}</div>
+              <div className="mb-2.5 text-xs text-fg-muted">{t('setupMode.description')}</div>
               <SegmentedControl
                 value={settings.setupMode}
                 onChange={(setupMode) => setSettings((s) => ({ ...s, setupMode }))}
@@ -198,7 +153,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
 
             <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('startingArmies.title')}</div>
-              <div className="mb-2.5 text-[11.5px] text-fg-muted">{t('startingArmies.description')}</div>
+              <div className="mb-2.5 text-xs text-fg-muted">{t('startingArmies.description')}</div>
               <div role="radiogroup" aria-label={t('startingArmies.title')} className="flex flex-col gap-2">
                 {presets.map((preset) => (
                   <SelectableOption
@@ -207,17 +162,10 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
                     onSelect={() => setSettings((s) => ({ ...s, startingArmiesPresetId: preset.id }))}
                     className="flex flex-col gap-1 px-3 py-2.5 text-left"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-display font-bold">
-                        {tDynamic(`startingArmies.preset.${preset.id}.title`, 'createGame')}
-                      </span>
-                      {settings.startingArmiesPresetId === preset.id && (
-                        <span className="ml-auto text-pitch-400" aria-hidden>
-                          {'✓'}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11.5px] text-fg-muted">
+                    <span className="font-display font-bold">
+                      {tDynamic(`startingArmies.preset.${preset.id}.title`, 'createGame')}
+                    </span>
+                    <p className="text-xs text-fg-muted">
                       {tDynamic(`startingArmies.preset.${preset.id}.description`, 'createGame')}
                     </p>
                   </SelectableOption>
@@ -248,32 +196,21 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
         </div>
 
         <div>
-          <div className="mx-0.5 mb-2 font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
+          <div className="mb-2 font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
             {t('section.extras')}
           </div>
           <div className="flex flex-col gap-2.5">
             <ToggleRow
-              icon="🎖"
               label={t('roles.label')}
               sub={t('roles.sub')}
               on={settings.rolesEnabled}
               onToggle={() => setSettings((s) => ({ ...s, rolesEnabled: !s.rolesEnabled }))}
             />
             <ToggleRow
-              icon="🎴"
               label={t('events.label')}
               sub={t('events.sub')}
               on={settings.eventsEnabled}
               onToggle={() => setSettings((s) => ({ ...s, eventsEnabled: !s.eventsEnabled }))}
-            />
-            <ToggleRow
-              icon="🤝"
-              label={t('teams.label')}
-              sub={t('teams.sub')}
-              on={false}
-              disabled
-              soon
-              onToggle={() => {}}
             />
           </div>
         </div>

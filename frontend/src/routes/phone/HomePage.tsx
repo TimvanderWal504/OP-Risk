@@ -47,6 +47,7 @@ export function HomePage() {
               value={joinCode}
               onChange={setJoinCode}
               placeholder={t('home:joinCode.placeholder')}
+              ariaLabel={t('home:joinCode.title')}
             />
           </div>
           <Footer>
@@ -59,63 +60,30 @@ export function HomePage() {
     )
   }
 
+  const entries = [
+    { mode: 'create', title: t('home:createCard.title'), description: t('home:createCard.description') },
+    { mode: 'join', title: t('home:joinCard.title'), description: t('home:joinCard.description') },
+  ] as const
+
   return (
     <PhoneShell>
       <div className="flex flex-1 flex-col px-6 pt-10 pb-6">
-        <div className="text-center">
-          <h1 className="font-display text-[34px] leading-tight font-black tracking-[.08em]">
-            {t('home:title')}
-          </h1>
-          <p className="mt-2 text-sm text-fg-muted">{t('home:tagline')}</p>
-        </div>
+        <h1 className="text-center font-display text-h1 font-black tracking-[var(--tracking-wide)]">
+          {t('home:title')}
+        </h1>
 
-        <div className="flex flex-1 flex-col justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => setMode('create')}
-            className="flex w-full items-center gap-4 rounded-[20px] border border-silver-600 px-5 py-[22px] text-left"
-            style={{
-              background: 'linear-gradient(120deg, rgba(156,176,202,.18), rgba(156,176,202,.04))',
-            }}
-          >
-            <span
-              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-silver-400 text-h1 text-[#0a0e17]"
-              aria-hidden
+        <div className="flex flex-1 flex-col justify-center gap-3">
+          {entries.map((entry) => (
+            <button
+              key={entry.mode}
+              type="button"
+              onClick={() => setMode(entry.mode)}
+              className="w-full rounded-card border border-border-strong bg-[var(--atlas-t03)] px-5 py-5 text-left"
             >
-              {'✦'}
-            </span>
-            <span className="flex-1">
-              <span className="block font-display text-h2 font-black">
-                {t('home:createCard.title')}
-              </span>
-              <span className="mt-0.5 block text-sm text-fg-muted">
-                {t('home:createCard.description')}
-              </span>
-            </span>
-            <span className="text-h2 text-silver-300">›</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMode('join')}
-            className="flex w-full items-center gap-4 rounded-[20px] border border-border-strong bg-white/4 px-5 py-[22px] text-left"
-          >
-            <span
-              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-pitch-500 text-h1 text-[var(--on-pitch)]"
-              aria-hidden
-            >
-              {'⌂'}
-            </span>
-            <span className="flex-1">
-              <span className="block font-display text-h2 font-black">
-                {t('home:joinCard.title')}
-              </span>
-              <span className="mt-0.5 block text-sm text-fg-muted">
-                {t('home:joinCard.description')}
-              </span>
-            </span>
-            <span className="text-h2 text-fg-muted">›</span>
-          </button>
+              <span className="block font-display text-h2 font-black">{entry.title}</span>
+              <span className="mt-1 block text-sm text-fg-muted">{entry.description}</span>
+            </button>
+          ))}
         </div>
 
         <p className="text-center text-xs text-fg-muted">{t('home:footer.playerCount')}</p>

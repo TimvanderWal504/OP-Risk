@@ -3,29 +3,21 @@ import type { LocaleTree } from '../i18n/types'
 /** Instellingen-scherm van de host (`components/CreateGameForm.tsx`). */
 export const createGame = {
   header: {
-    kicker: { nl: 'Nieuw spel', en: 'New game' },
-    hostBadge: { nl: 'HOST', en: 'HOST' },
     title: { nl: 'Instellingen', en: 'Settings' },
   },
   section: {
     rules: { nl: 'Spelregels', en: 'Game rules' },
     extras: { nl: 'Extra spelelementen', en: 'Extra game elements' },
   },
+  /** Vaste kaart: `HomePage` levert altijd `standaard-43`, er is geen kaartkeuze. */
   map: {
-    title: { nl: 'Kaart', en: 'Map' },
-    description: {
-      nl: 'Bepaalt het aantal gebieden en de continentbonussen — kies daarom als eerste.',
-      en: 'Determines the number of territories and continent bonuses — pick this first.',
-    },
-    standardName: { nl: 'Standaard', en: 'Standard' },
-    standardStats: { nl: '43 gebieden · 6 continenten', en: '43 territories · 6 continents' },
-    standardDescription: {
-      nl: 'De vertrouwde wereldkaart, gebalanceerd voor 2-6 spelers.',
-      en: 'The classic world map, balanced for 2-6 players.',
+    summary: {
+      nl: 'Standaard · 43 gebieden · 6 continenten',
+      en: 'Standard · 43 territories · 6 continents',
     },
   },
   winCondition: {
-    sectionHint: { nl: 'Winconditie (meerdere mogelijk)', en: 'Win condition (multiple possible)' },
+    title: { nl: 'Winconditie', en: 'Win condition' },
     worldDomination: {
       title: { nl: 'Werelddominantie', en: 'World domination' },
       description: { nl: 'Verover alle gebieden.', en: 'Conquer every territory.' },
@@ -76,10 +68,6 @@ export const createGame = {
   events: {
     label: { nl: 'Gebeurtenisronde', en: 'Event round' },
     sub: { nl: 'Gebeurteniskaart na elke ronde.', en: 'Event card after every round.' },
-  },
-  teams: {
-    label: { nl: 'Teamspel', en: 'Team play' },
-    sub: { nl: 'Bondgenootschappen — binnenkort.', en: 'Alliances — coming soon.' },
   },
   submit: {
     busy: { nl: 'Bezig…', en: 'Working…' },
