@@ -18,15 +18,8 @@ namespace RiskGame.Api.Commands;
 /// Aanvallen. Kaart trekken bij verovering en missie-/wincheck horen niet bij deze plak
 /// (TO §11, latere bouwstap).
 /// </summary>
-public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider, ILogger<TurnFlowCommandHandler> logger)
+public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider)
 {
-    /// <summary>Zie de gelijknamige tijdelijke diagnose-logging in <see cref="AttackCommandHandler"/>.</summary>
-    private void LogTimerState(string command, string gameId, string playerId, GameStateDto state) =>
-        logger.LogInformation(
-            "[TimerDiag] {Command} game={GameId} player={PlayerId} isPaused={IsPaused} remainingMs={RemainingMs} serverNow={ServerNow:o}",
-            command, gameId, playerId, state.TurnState?.Timer?.IsPaused, state.TurnState?.Timer?.RemainingMs,
-            timeProvider.GetUtcNow());
-
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
     {
@@ -85,7 +78,6 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState($"EndPhase (→{nextPhase})", gameId, playerId, updatedDto);
 
         return Result<GameStateDto>.Success(updatedDto);
     }
@@ -130,7 +122,6 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState("ForceAdvanceToFortify (timeout)", gameId, playerId, updatedDto);
 
         return Result<GameStateDto>.Success(updatedDto);
     }
@@ -181,7 +172,6 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState("EndTurn (→volgende speler)", gameId, nextPlayerId, updatedDto);
 
         return Result<GameStateDto>.Success(updatedDto);
     }

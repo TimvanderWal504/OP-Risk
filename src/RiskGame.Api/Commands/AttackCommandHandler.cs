@@ -32,22 +32,8 @@ public sealed record ChooseDefenseDiceResult(
 /// handler rijgt ze aan elkaar, net als <see cref="ReinforceCommandHandler"/> dat deed
 /// voor Versterken.
 /// </summary>
-public sealed class AttackCommandHandler(
-    IDocumentStore store, IRandomSource random, TimeProvider timeProvider, ILogger<AttackCommandHandler> logger)
+public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
 {
-    /// <summary>
-    /// Tijdelijke diagnose-logging voor het gemelde beurttimer-probleem (FO §5.4): logt de
-    /// daadwerkelijk gepersisteerde timer-staat (niet de intentie) na elk commando dat 'm kan
-    /// raken, zodat een live sessie te herleiden is tot het exacte moment waarop
-    /// <see cref="RiskGame.Rules.State.PhaseTimer.IsPaused"/> onterecht omslaat. Verwijderen
-    /// zodra het gemeld gedrag bevestigd of weerlegd is.
-    /// </summary>
-    private void LogTimerState(string command, string gameId, string playerId, GameStateDto state) =>
-        logger.LogInformation(
-            "[TimerDiag] {Command} game={GameId} player={PlayerId} isPaused={IsPaused} remainingMs={RemainingMs} serverNow={ServerNow:o}",
-            command, gameId, playerId, state.TurnState?.Timer?.IsPaused, state.TurnState?.Timer?.RemainingMs,
-            timeProvider.GetUtcNow());
-
     public async Task<Result<DeclareAttackResult>> DeclareAttackAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
     {
@@ -99,7 +85,6 @@ public sealed class AttackCommandHandler(
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState(isSameTarget ? "DeclareAttack (zelfde doelwit)" : "DeclareAttack (nieuw doelwit)", gameId, playerId, updatedDto);
 
         return Result<DeclareAttackResult>.Success(new DeclareAttackResult(attackerRolls, correlationId, updatedDto));
     }
@@ -175,7 +160,6 @@ public sealed class AttackCommandHandler(
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState(conquest.Conquered ? "ChooseDefenseDice (veroverd)" : "ChooseDefenseDice (afgeslagen)", gameId, attackerId, updatedDto);
 
         return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(
             attackerRolls,
@@ -226,7 +210,6 @@ public sealed class AttackCommandHandler(
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState("AbandonAttack", gameId, playerId, updatedDto);
 
         return Result<GameStateDto>.Success(updatedDto);
     }
@@ -269,7 +252,6 @@ public sealed class AttackCommandHandler(
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-        LogTimerState("MoveAfterConquest", gameId, playerId, updatedDto);
 
         return Result<GameStateDto>.Success(updatedDto);
     }
