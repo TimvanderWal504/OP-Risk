@@ -190,6 +190,31 @@
   --font-sans:    "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono:    "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
+  /* ---- Type scale (mirrors colors_and_type.css :root --text-*; values must
+     live here too so Tailwind v4 generates the text-display/h1/h2/h3/body/sm/xs
+     utilities — a plain :root custom property does not) ---- */
+  --text-display:              2.5rem;    /* 40 — hero numerals, big scores  */
+  --text-display--line-height: 1.05;
+  --text-h1:                   1.75rem;   /* 28 — page titles                */
+  --text-h1--line-height:      1.25;
+  --text-h2:                   1.375rem;  /* 22 — section headers            */
+  --text-h2--line-height:      1.25;
+  --text-h3:                   1.0625rem; /* 17 — card titles                */
+  --text-h3--line-height:      1.25;
+  --text-body:                 0.9375rem; /* 15 — default body               */
+  --text-body--line-height:    1.55;
+  --text-sm:                   0.8125rem; /* 13 — secondary / labels         */
+  --text-xs:                   0.6875rem; /* 11 — meta, badge text           */
+
+  /* ---- Tracking (overrides Tailwind's defaults with the design-token values) ---- */
+  --tracking-tight: -0.02em; /* display headlines               */
+  --tracking-flat:   0em;
+  --tracking-wide:   0.08em; /* uppercase eyebrows / badges     */
+
+  /* ---- Font weight (font-black must resolve to 800, not Tailwind's default
+     900 — see design-tokens.ts fontWeight.black) ---- */
+  --font-weight-black: 800;
+
   /* ---- Pitch Green (primary) ---- */
   --color-pitch-50:  #f4f8e6;
   --color-pitch-100: #e6f0c6;
