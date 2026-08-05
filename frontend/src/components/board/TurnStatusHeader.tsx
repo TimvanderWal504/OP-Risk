@@ -4,7 +4,7 @@ import type { PlayerColorDto, TurnPhaseDto, TurnTimerDto } from '../../types/Gam
 import { TurnPhaseDto as TurnPhase } from '../../types/GameState'
 import { ColorSymbol } from '../ui/ColorSymbol'
 import { useCountdown } from '../../hooks/useCountdown'
-import { tvAnimations } from '../../design-reference/shared/motion'
+import { tvAnimations } from '../../styles/motion'
 
 export interface TurnStatusHeaderProps {
   activePlayer: PlayerDto
@@ -14,7 +14,7 @@ export interface TurnStatusHeaderProps {
 }
 
 /**
- * De low-drempel (60s) staat niet in de export: `Host-scherm.dc.html:666` doorloopt
+ * De low-drempel (60s) stond niet in het oorspronkelijke design: dat doorliep
  * `normal/low/paused` puur als demo-cyclus, zonder numerieke aanleiding. Productbeslissing,
  * expliciet nagevraagd en vastgelegd bij het bouwen van dit component (zelfde status als
  * `ORDER_ROLL_REVEAL_HOLD_MS` in `useHeldPhase.ts`) — geen waarde uit `motion.ts`/de export.
@@ -36,7 +36,7 @@ const PHASE_LABEL_KEY: Record<TurnPhaseDto, 'phaseReinforce' | 'phaseAttack' | '
 }
 
 /**
- * Topbalk van het TV-hoofdbord (Host-scherm.dc.html L258-274, "Main board"-state, `isBoard`):
+ * Topbalk van het TV-hoofdbord ("Main board"-state, `isBoard`, uit het oorspronkelijke design):
  * beurt-chip, fasepillen en beurttimer. Markup/tokens 1-op-1 uit die sectie, `atlasTok()` via
  * `boardTok` (design-tokens.ts) voor het speler-symbool-blok.
  */
@@ -58,7 +58,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           </div>
         )}
         <div>
-          <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+          <div className="font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
             {t('turnOf')}
           </div>
           <div className="font-display text-[34px] font-black leading-none">
@@ -81,7 +81,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           ) : (
             <div
               key={phase}
-              className="rounded-xl border border-border bg-[var(--atlas-row)] px-6 py-3 font-display text-[22px] font-bold text-fg-muted"
+              className="rounded-xl border border-border bg-[var(--atlas-row)] px-6 py-3 font-display text-h2 font-bold text-fg-muted"
             >
               {t(PHASE_LABEL_KEY[phase])}
             </div>
@@ -90,7 +90,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
       </div>
 
       <div className="flex flex-row items-end">
-        <span className="mr-1 self-center font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+        <span className="mr-1 self-center font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
           {t('timerLabel')}
         </span>
         {isPaused ? (

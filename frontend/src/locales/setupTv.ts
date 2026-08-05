@@ -1,7 +1,7 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * TV tijdens de startopstelling (FO §5.1): Claimen (Host-scherm.dc.html L184-254, `isClaim`,
+ * TV tijdens de startopstelling (FO §5.1): Claimen (`isClaim`-fase in het oorspronkelijke design,
  * letterlijke tekst L840/L856) en Bijplaatsen (geen aparte TV-staat in de export — bevestigde
  * bevinding, zie het bouwplan; hergebruikt daarom de telefoon-copy uit `setup.ts` `place.*`
  * voor consistentie tussen TV en telefoon tijdens dezelfde fase).

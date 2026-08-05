@@ -7,7 +7,7 @@ export interface JoinProgressHeaderProps {
   stepCount: number
 }
 
-/** Gedeelde chrome boven elke join-stap (Telefoon.dc.html L268-275): merknaam
+/** Gedeelde chrome boven elke join-stap: merknaam
  * + segmenten-voortgangsbalk. Segmenten tot en met `currentStep` zijn gevuld. */
 export function JoinProgressHeader({ currentStep, stepCount }: JoinProgressHeaderProps) {
   const { t } = useTranslation('join')

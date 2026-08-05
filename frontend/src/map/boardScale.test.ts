@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DESIGN_UNIT_PX, designToMap } from './boardScale'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from './projection'
-import { boardViewBox } from '../design-reference/shared/design-tokens'
+import { boardViewBox } from '../styles/design-tokens'
 
 describe('designToMap', () => {
   it('laat de hoogte van de design-viewBox samenvallen met die van de kaart-viewBox', () => {

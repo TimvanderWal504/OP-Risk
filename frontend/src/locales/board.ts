@@ -1,7 +1,7 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (Main board, Host-scherm.dc.html L833/L849) —
+ * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (de "Main board"-fase in het oorspronkelijke design) —
  * beurtindicator, fasepillen en beurttimer.
  */
 export const board = {

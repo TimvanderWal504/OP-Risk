@@ -3,7 +3,7 @@ import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { PlayerAvatar } from './ui/PlayerAvatar'
 import { tDynamic } from '../i18n/useT'
-import { tvAnimations } from '../design-reference/shared/motion'
+import { tvAnimations } from '../styles/motion'
 
 export interface LobbyPlayerListProps {
   players: PlayerDto[]
@@ -20,7 +20,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-[var(--atlas-glass-border)] bg-[var(--atlas-glass)] p-[22px_22px_20px] shadow-[0_24px_60px_rgba(0,0,0,.4)]">
       <div className="mb-[14px] flex items-center justify-between">
-        <span className="font-body text-[16px] font-extrabold tracking-[.14em] text-pitch-500 uppercase">
+        <span className="font-body text-h3 font-extrabold tracking-[.14em] text-pitch-500 uppercase">
           {t('players.title')}
         </span>
         <span className="font-display text-[24px] font-black text-pitch-400">
@@ -48,7 +48,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
                 <div className="truncate font-display text-[19px] leading-[1.1] font-extrabold text-fg">
                   {player.name}
                 </div>
-                <div className="truncate text-[14px] text-pitch-500">
+                <div className="truncate text-sm text-pitch-500">
                   {color ? tDynamic(color.id, 'colors') : t('players.noColorYet')}
                   {role && (
                     <span className="inline-block" style={{ animation: tvAnimations.lobbyRoleIn }}>
@@ -62,10 +62,10 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
         })}
         {hasOpenSlot && (
           <div className="flex items-center gap-3 rounded-[13px] border-2 border-dashed border-border-strong p-[11px_13px] opacity-70">
-            <div className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] border-2 border-dashed border-fg-muted text-[22px] text-fg-muted">
+            <div className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] border-2 border-dashed border-fg-muted text-h2 text-fg-muted">
               +
             </div>
-            <div className="text-[14px] text-fg-secondary">{t('players.waitingForPlayer')}</div>
+            <div className="text-sm text-fg-secondary">{t('players.waitingForPlayer')}</div>
           </div>
         )}
       </div>

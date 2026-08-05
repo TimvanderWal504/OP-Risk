@@ -133,6 +133,7 @@ Commando binnen (SignalR)
 | `DeclareAttack` (= "Gooi") | Attack | Van-gebied ≥ 2 legers, doel is vijandelijke buur, #dobbelstenen ≤ legers−1 (max 3) |
 | `ChooseDefenseDice` | Attack (verdediger) | 1 of 2; bij 1 verdedigend leger gedwongen 1 |
 | `MoveAfterConquest` | Attack | ≥ gebruikte aanvalsdobbelstenen, ≤ (bron−1) |
+| `AbandonAttack` (= "Ander gevecht") | Attack | Speler aan de beurt, geen actief `PendingCombat`, er staat een bevroren belegering (`TurnState.PausedAttackTarget`) om af te breken |
 | `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter |
 | `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt |
 | `SetAutoPass` (host) | elke | Aanroeper is host; doel is afwezige speler |
@@ -183,7 +184,7 @@ De verantwoordelijkheid ligt bewust op twee plekken:
 - **De rules engine** houdt alleen de **resterende tijd** bij (`PhaseTimer`: resterend + gepauzeerd), nooit een absolute deadline. Verstreken tijd komt binnen via een `Tick`. Daardoor heeft `RiskGame.Rules` geen klok-abstractie nodig, is hij ongevoelig voor een verspringende serverklok, en zijn timerregels zonder test-double reproduceerbaar.
 - **De API-laag** telt af: die houdt bij wanneer de fase begon en brengt het verstrijken van tijd als commando de engine in.
 
-Pauzeren is daarmee één regel: een `Tick` op een gepauzeerde timer verandert niets. De timer pauzeert bij `DeclareAttack` en hervat na volledige gevechtsafhandeling.
+Pauzeren is daarmee één regel: een `Tick` op een gepauzeerde timer verandert niets. De timer pauzeert bij `DeclareAttack` en blijft dat voor de hele belegering van dát doelgebied — ook over meerdere achtereenvolgende worpen heen — en hervat bij volledige afhandeling (verovering + meeverplaatsing), bij `AbandonAttack` ("Ander gevecht", het handmatig opgeven van de belegering zonder meteen een nieuw doelgebied te kiezen), of zodra de aanvaller alsnog een ánder doelgebied aanvalt terwijl de timer nog van de vorige belegering bevroren stond (FO §5.4, herzien 2026-08-04). `TurnState.PausedAttackTarget` (`RiskGame.Rules.State.AttackEngagement`) houdt bij voor welk gebiedspaar de pauze geldt; `PhaseTimer.ResumeAndTick` verrekent in één stap de tijd die verstrijkt tussen het opgeven van de belegering (via `AbandonAttack` of een `DeclareAttack` op een ander gebiedspaar) en het moment van hervatten.
 
 ---
 
@@ -232,7 +233,7 @@ Bekende, geaccepteerde cosmetische afwijkingen tussen achtergrond en overlay: In
 
 `map-background-final.png` schildert Kamtsjatka's oostpunt nog altijd niet volledig — dit is bevestigd met twee kandidaat-vervangingen (een 4096×2132-herexport en een los gegenereerde afbeelding) die het schiereiland allebei ófwel niet vollediger, ófwel (de herexport) juist met 23-41% minder land tekenen dan de huidige asset. Geen combinatie van venster/schaal/translatie kan dit compenseren zonder de wereldwijde IoU elders te laten instorten (geverifieerd met een sweep van `LON_MAX`). Dit is een tekortkoming van de artwork zelf, niet van de projectie of de geodata, en blijft openstaan tot er een asset is die het schiereiland wél volledig bevat.
 
-De gebiedenlaag hangt sinds 2026-08-03 in het `atlasRough`-SVG-filter uit de export (`Host-scherm.dc.html:280`, `feTurbulence`+`feDisplacementMap`, "roughened for organic coastlines") — dit roughened de polygoonrand zodat de resterende vormafwijking visueel als handgetekende kustlijn oogt in plaats van als net-niet-kloppende uitlijning. De prestatie-impact van dit filter op de daadwerkelijke TV-hardware (zwakke GPU, zie frontend/CLAUDE.md) is nog niet gemeten.
+De gebiedenlaag hangt sinds 2026-08-03 in het `atlasRough`-SVG-filter uit het oorspronkelijke TV-design (`feTurbulence`+`feDisplacementMap`, "roughened for organic coastlines") — dit roughened de polygoonrand zodat de resterende vormafwijking visueel als handgetekende kustlijn oogt in plaats van als net-niet-kloppende uitlijning. De prestatie-impact van dit filter op de daadwerkelijke TV-hardware (zwakke GPU, zie frontend/CLAUDE.md) is nog niet gemeten.
 
 ### 7.3 Gebiedsselectie
 

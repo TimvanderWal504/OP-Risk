@@ -13,7 +13,7 @@ import { resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
 export function TvPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { t } = useTranslation('lobby')
-  const { state, error, orderRollThrows, lastClaimedTerritoryId } = useTvGame(gameId!)
+  const { state, error, orderRollThrows, lastClaimedTerritoryId, combat } = useTvGame(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
 
   if (error) {
@@ -32,8 +32,8 @@ export function TvPage() {
     )
   }
 
-  const screenProps = { state, orderRollThrows, lastClaimedTerritoryId }
-  const overlay = resolveTvOverlay(state)
+  const screenProps = { state, orderRollThrows, lastClaimedTerritoryId, combat }
+  const overlay = resolveTvOverlay(combat)
 
   // createElement en niet <Screen …/>: zie PhonePage — het schermtype is dynamisch, de
   // referentie komt uit het module-level register.

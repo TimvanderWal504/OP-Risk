@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GamePhaseDto } from '../../../types/GameState'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
-import { fixtureState } from './tvScreenFixture'
+import { TvCombatOverlay } from './TvCombatOverlay'
 import { resolveTvOverlay, resolveTvScreen, tvScreens } from './tvScreens'
 
 describe('tvScreens', () => {
@@ -16,9 +16,16 @@ describe('tvScreens', () => {
     expect(resolveTvScreen(99 as GamePhaseDto)).toBe(TvPlaceholderScreen)
   })
 
-  // De overlay-as (motion.ts C9-C12) ligt qua vorm vast, maar de overlays zelf zijn
-  // bouwstap 5/6-werk — tot die tijd hoort hier niets overheen te komen.
-  it('levert nog geen overlay zolang die schermen niet bestaan', () => {
-    expect(resolveTvOverlay(fixtureState)).toBeNull()
+  // De overlay-as (motion.ts C9-C12) ligt qua vorm vast; combat (C9/C11) is de eerste die
+  // 'm invult. Gebeurtenis/attritie (C10) bestaan nog niet — geen `combat`-input voor die,
+  // dus altijd `null` zolang er geen gevecht loopt.
+  it('levert de combat-overlay zodra er gehouden combat-data is', () => {
+    expect(
+      resolveTvOverlay({ correlationId: 'c1', attackerRolls: [5], defenderRolls: null, narrated: null }),
+    ).toBe(TvCombatOverlay)
+  })
+
+  it('levert geen overlay zolang er geen combat-data is', () => {
+    expect(resolveTvOverlay(null)).toBeNull()
   })
 })

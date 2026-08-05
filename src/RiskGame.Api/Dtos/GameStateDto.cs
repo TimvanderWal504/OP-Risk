@@ -56,13 +56,17 @@ public sealed record SetupStateDto(
 
 /// <summary>
 /// Draad-representatie van de territoriumcatalogus van de kaartvariant
-/// (<see cref="RiskGame.Rules.Map.Territory"/>) — alleen het continent; de weergavenaam komt
-/// client-side via <c>tDynamic(id, 'territories')</c> (frontend/src/locales/territories.ts),
-/// nooit het <c>Name</c>-veld uit de brondata (zelfde patroon als <c>RoleSummaryDto</c>).
-/// Statische data, bewust los van <see cref="GameStateDto"/>: verandert nooit tijdens een
-/// spel, dus geen reden om 'm op elke state-push mee te sturen.
+/// (<see cref="RiskGame.Rules.Map.Territory"/>) — continent + aangrenzende gebieden; de
+/// weergavenaam komt client-side via <c>tDynamic(id, 'territories')</c>
+/// (frontend/src/locales/territories.ts), nooit het <c>Name</c>-veld uit de brondata (zelfde
+/// patroon als <c>RoleSummaryDto</c>). Statische data, bewust los van <see cref="GameStateDto"/>:
+/// verandert nooit tijdens een spel, dus geen reden om 'm op elke state-push mee te sturen.
+/// <c>NeighborTerritoryIds</c> spiegelt <see cref="RiskGame.Rules.Map.AdjacencyGraph.Neighbours"/>
+/// — nodig voor de Attack-fase (welke gebieden kunnen vanuit een gekozen bron aangevallen
+/// worden) zonder dat de client de bevroren adjacency-data zelf zou moeten naspelen
+/// (frontend/CLAUDE.md: geen spelregel-/kaartdata-duplicatie).
 /// </summary>
-public sealed record TerritoryCatalogDto(string Id, string Continent);
+public sealed record TerritoryCatalogDto(string Id, string Continent, IReadOnlyList<string> NeighborTerritoryIds);
 
 /// <summary>
 /// Wie er nu nog mag gooien voor de spelersvolgorde (FO §2.1). Alleen gevuld door
@@ -96,8 +100,8 @@ public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int
 /// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>.
 /// </summary>
 /// <param name="ReinforcementBreakdown">
-/// Alleen gevuld tijdens <see cref="TurnPhaseDto.Reinforce"/> (telefoon-"Opbouw"-paneel,
-/// Telefoon.dc.html L510-518) — <c>null</c> in Attack/Fortify, waar het niet van toepassing is.
+/// Alleen gevuld tijdens <see cref="TurnPhaseDto.Reinforce"/> (telefoon-"Opbouw"-paneel)
+/// — <c>null</c> in Attack/Fortify, waar het niet van toepassing is.
 /// Berekend uit de actuele state, niet uit een bij fase-intrede vastgezet snapshot: gebiedsbezit
 /// verandert niet tijdens Reinforce, dus levert dat dezelfde optellermen als toen
 /// <see cref="ArmiesRemaining"/> voor het eerst werd gezet. Openbaar zoals <c>ArmiesRemaining</c>

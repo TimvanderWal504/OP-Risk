@@ -3,6 +3,8 @@ import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import type { PlayerDto } from '../../../types/Player'
 import type { TerritoryCatalogDto } from '../../../types/TerritoryCatalog'
+import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
+import type { CombatResultResponse } from '../../../types/HubResponses'
 import { PhoneClaimingScreen } from './PhoneClaimingScreen'
 import { PhoneInitialPlacementScreen } from './PhoneInitialPlacementScreen'
 import { PhoneInProgressScreen } from './PhoneInProgressScreen'
@@ -33,6 +35,15 @@ export interface PhoneScreenProps {
   placeInitialArmy: (territoryId: string) => Promise<void>
   placeReinforcements: (territoryId: string, amount: number) => Promise<void>
   endPhase: () => Promise<void>
+  /** Narratieve gevechts-broadcastdata (attacker/defender-worpen + resultaat), zie
+   *  `useCombatBroadcast.ts`. Alleen relevant tijdens `TurnPhaseDto.Attack`. */
+  combat: CombatBroadcastState | null
+  declareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<void>
+  /** Géén fire-and-forget: `DefendStep` toont het resultaat rechtstreeks uit deze respons. */
+  chooseDefenseDice: (defenseDice: number) => Promise<CombatResultResponse | undefined>
+  moveAfterConquest: (armiesToMove: number) => Promise<void>
+  /** "Ander gevecht" (FO §5.4): stopt de huidige belegering handmatig, hervat de beurttimer. */
+  abandonAttack: () => Promise<void>
 }
 
 export type PhoneScreen = (props: PhoneScreenProps) => ReactNode

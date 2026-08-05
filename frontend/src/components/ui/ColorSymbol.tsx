@@ -1,4 +1,4 @@
-import { symbolGlyph } from '../../design-reference/shared/design-tokens'
+import { symbolGlyph } from '../../styles/design-tokens'
 
 export interface ColorSymbolProps {
   symbol: string

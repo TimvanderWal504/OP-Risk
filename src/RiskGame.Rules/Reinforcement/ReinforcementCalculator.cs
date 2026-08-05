@@ -7,7 +7,7 @@ namespace RiskGame.Rules.Reinforcement;
 /// <summary>
 /// Itemized uitkomst van <see cref="ReinforcementCalculator.CalculateBreakdown"/> — dezelfde
 /// vier optellermen als <see cref="ReinforcementCalculator.CalculateArmies"/>, apart
-/// blootgesteld zodat de telefoon-UI ("Opbouw"-paneel, Telefoon.dc.html L510-518) kan tonen
+/// blootgesteld zodat de telefoon-UI ("Opbouw"-paneel) kan tonen
 /// waar de pool vandaan komt i.p.v. alleen het totaal.
 /// </summary>
 public readonly record struct ReinforcementBreakdown(int BaseArmies, int ContinentBonus, int RoleBonus, int EventBonus)

@@ -6,7 +6,7 @@ import { GamePhaseDto } from '../types/GameState'
  * (FO §2.1) — zonder deze hold zou de TV/telefoon dat moment nooit tonen.
  *
  * Deze duur komt **niet** uit de export: het volgordescherm schakelt daar op state
- * (`sc-if isOrder`), en de enige `setTimeout`s in beide `.dc.html`-bestanden zijn layout-fits
+ * (`sc-if isOrder`), en de enige `setTimeout`s in het oorspronkelijke design waren layout-fits
  * van 120/400 ms. Het is dus een productbeslissing, vastgelegd als uitzondering in
  * frontend/CLAUDE.md — niet iets om uit `motion.ts` te halen, want daar hoort alleen in wat
  * het design voorschrijft.

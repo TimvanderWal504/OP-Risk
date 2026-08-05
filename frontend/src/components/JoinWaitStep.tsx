@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { JoinProgressHeader } from './ui/JoinProgressHeader'
-import { phoneAnimations } from '../design-reference/shared/motion'
+import { phoneAnimations } from '../styles/motion'
 import { tDynamic } from '../i18n/useT'
 import { QuoteCard } from './ui/QuoteCard'
 
@@ -20,7 +20,7 @@ export interface JoinWaitStepProps {
 }
 
 /**
- * Laatste join-stap voor een niet-host speler (Telefoon.dc.html L336-356,
+ * Laatste join-stap voor een niet-host speler (uit het oorspronkelijke design,
  * `joinWait`): wachten tot de host start. Geen kleur-symbooltegel — de export
  * toont alleen titel, `naam · kleur` en (indien gekozen) `rol · herkomstland`,
  * daaronder de roterende quote-kaart. De host krijgt een eigen scherm
@@ -47,11 +47,11 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
         <div className="flex w-full flex-1 flex-col items-center justify-center">
           <div className="flex-1">
             <p className="font-display text-[26px] font-black">{t('wait.title')}</p>
-            <p className="mt-1.5 font-body text-[16px] text-fg-muted">
+            <p className="mt-1.5 font-body text-h3 text-fg-muted">
               {me.name} · {color ? tDynamic(color.id, 'colors') : t('wait.noColor')}
             </p>
             {role && (
-              <p className="mt-1 font-body text-[13px] text-pitch-400">
+              <p className="mt-1 font-body text-sm text-pitch-400">
                 {tDynamic(`${role.id}.name`, 'roles')} · {tDynamic(role.originTerritory, 'territories')}
               </p>
             )}
@@ -65,7 +65,7 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
               animationStyle={{ animation: phoneAnimations.popImmediate }}
             />
           </div>
-          <div className="flex flex-1 items-center gap-2.5 font-body text-[15px] text-fg-muted">
+          <div className="flex flex-1 items-center gap-2.5 font-body text-body text-fg-muted">
             <span
               className="h-[11px] w-[11px] rounded-full"
               style={{ background: 'var(--pitch-400)', animation: phoneAnimations.waitingDot }}
@@ -73,7 +73,7 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
             {t('wait.waitingForHost')}
           </div>
         </div>
-        <p className="pt-1.5 font-mono text-[14px] text-fg-muted">
+        <p className="pt-1.5 font-mono text-sm text-fg-muted">
           {t('wait.playersPresent', { count: joinedCount })}
         </p>
       </div>

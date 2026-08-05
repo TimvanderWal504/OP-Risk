@@ -40,6 +40,24 @@ public sealed record PhaseTimer(TimeSpan Remaining, bool IsPaused, DateTimeOffse
     public PhaseTimer Resume(DateTimeOffset now) => this with { IsPaused = false, LastUpdatedUtc = now };
 
     /// <summary>
+    /// Hervat én verrekent in één stap de tijd die is verstreken sinds het bevriezen (FO §5.4:
+    /// een aanvaller die van doelwit wisselt, laat de tijd tussen twee belegeringen weer
+    /// meetellen). Anders dan <see cref="Resume"/> (die <see cref="Remaining"/> ongewijzigd
+    /// laat, voor het hervatten ná een volledig afgehandeld gevecht) trekt dit de tijd sinds
+    /// <see cref="LastUpdatedUtc"/> er alsnog vanaf — nodig omdat <see cref="Tick"/> een
+    /// no-op is zolang <see cref="IsPaused"/> waar is, dus een gewone <c>Resume().Tick(...)`-
+    /// keten zou de tussenliggende tijd juist NIET verrekenen (de nieuwe
+    /// <see cref="LastUpdatedUtc"/> van <c>Resume</c> ligt al op <paramref name="now"/>).
+    /// Bedoeld voor het bevroren geval; op een al lopende timer zou dit dubbel aftrekken.
+    /// </summary>
+    public PhaseTimer ResumeAndTick(DateTimeOffset now)
+    {
+        var remaining = Remaining - (now - LastUpdatedUtc);
+
+        return this with { Remaining = remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining, IsPaused = false, LastUpdatedUtc = now };
+    }
+
+    /// <summary>
     /// Trekt de verstreken tijd af. Een gepauzeerde timer blijft ongewijzigd — dat is de
     /// hele pauzeregel. De resterende tijd zakt nooit onder nul, zodat "hoeveel is er
     /// over" altijd een zinnige waarde is om te tonen.

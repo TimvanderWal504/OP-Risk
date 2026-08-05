@@ -5,6 +5,7 @@ import { fixtureProps, fixtureState } from './phoneScreenFixture'
 import { PhoneInProgressScreen } from './PhoneInProgressScreen'
 import { resolvePhoneTurnPhaseScreen } from './phoneTurnPhaseScreens'
 import { PhoneReinforceScreen } from './PhoneReinforceScreen'
+import { PhoneAttackScreen } from './PhoneAttackScreen'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
 
 const baseTurnState = {
@@ -20,8 +21,11 @@ describe('resolvePhoneTurnPhaseScreen', () => {
     expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Reinforce)).toBe(PhoneReinforceScreen)
   })
 
-  it('valt terug op de placeholder voor Attack/Fortify (nog niet gebouwd) en een onbekende/ontbrekende fase', () => {
-    expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Attack)).toBe(PhonePlaceholderScreen)
+  it('koppelt Attack aan PhoneAttackScreen', () => {
+    expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Attack)).toBe(PhoneAttackScreen)
+  })
+
+  it('valt terug op de placeholder voor Fortify (nog niet gebouwd) en een onbekende/ontbrekende fase', () => {
     expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Fortify)).toBe(PhonePlaceholderScreen)
     expect(resolvePhoneTurnPhaseScreen(undefined)).toBe(PhonePlaceholderScreen)
     expect(resolvePhoneTurnPhaseScreen(99 as TurnPhaseDto)).toBe(PhonePlaceholderScreen)

@@ -44,7 +44,7 @@ describe('TvClaimingScreen', () => {
       <TvClaimingScreen
         state={{ ...claimingState, setupState: { ...claimingState.setupState, activePlayerId: 'onbekend' } }}
         orderRollThrows={{}}
-        lastClaimedTerritoryId={null}
+        lastClaimedTerritoryId={null} combat={null}
       />,
     )
 
@@ -52,30 +52,30 @@ describe('TvClaimingScreen', () => {
   })
 
   it('toont de teller als "geclaimd / totaal", niet een hardcoded totaal', () => {
-    render(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('1 / 2')).toBeInTheDocument()
     // "Bob" staat twee keer: als actieve claimer in de topbar én in het rechterpaneel
-    // (Host-scherm.dc.html L193, L245) — beide horen er te zijn, niet dubbel geteld als bug.
+    // beide horen er te zijn (uit het oorspronkelijke design), niet dubbel geteld als bug.
     expect(screen.getAllByText('Bob')).toHaveLength(2)
   })
 
   it('toont de flare-ring alleen op het laatst geclaimde gebied, niet zonder event', async () => {
     const { container, rerender } = render(
-      <TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} />,
+      <TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />,
     )
     await waitFor(() => expect(container.querySelector('path')).not.toBeNull())
 
     expect(container.querySelector(`circle[r="${claimMarker.flareR}"]`)).toBeNull()
 
-    rerender(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId="alaska" />)
+    rerender(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId="alaska" combat={null} />)
 
     const flare = container.querySelector(`circle[r="${claimMarker.flareR}"]`)
     expect(flare).not.toBeNull()
   })
 
   it('heeft geen click-handler op de gebiedslagen (read-only, FO §7.3/§2.3)', async () => {
-    render(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId="alaska" />)
+    render(<TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId="alaska" combat={null} />)
     await waitFor(() => expect(screen.getByText('1 / 2')).toBeInTheDocument())
 
     document.querySelectorAll('path, svg circle').forEach((el) => fireEvent.click(el))

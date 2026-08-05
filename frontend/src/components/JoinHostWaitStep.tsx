@@ -18,7 +18,7 @@ export interface JoinHostWaitStepProps {
 }
 
 /**
- * Host-lobbyscherm op de telefoon (Telefoon.dc.html L232-263, `isWaiting`) —
+ * Host-lobbyscherm op de telefoon (`isWaiting`-fase in het oorspronkelijke design) —
  * losstaand van de "0 JOIN"-chrome die de andere join-stappen delen (dit is
  * geen host-variant van {@link JoinWaitStep}, maar een eigen design-sectie
  * met eigen kicker/badge). Geen QR/URL op dit scherm — alleen een hint dat de
@@ -39,10 +39,10 @@ export function JoinHostWaitStep({
   return (
     <div className="flex flex-1 flex-col p-[16px_18px]">
       <div className="flex items-center gap-2.5">
-        <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-gold-400 uppercase">
+        <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-silver-400 uppercase">
           {t('hostWait.kicker')}
         </span>
-        <span className="rounded-[6px] bg-gold-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+        <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
           {t('hostWait.hostBadge')}
         </span>
       </div>

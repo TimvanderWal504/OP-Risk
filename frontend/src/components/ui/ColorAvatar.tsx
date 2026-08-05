@@ -3,7 +3,7 @@ import { ColorSymbol } from './ColorSymbol'
 
 export interface ColorAvatarProps {
   color: PlayerColorDto | null | undefined
-  /** `banner`: 46px/radius 12px/tekst 24px (Telefoon.dc.html L429,475). `row`: 34px/radius 9px/tekst 16px
+  /** `banner`: 46px/radius 12px/tekst 24px. `row`: 34px/radius 9px/tekst 16px
    * (L437,461). `reinforce`: 32px/radius 9px/tekst 15px (L530, Versterken-rij). */
   variant: 'banner' | 'row' | 'reinforce'
 }
@@ -16,7 +16,7 @@ const VARIANTS = {
 
 /**
  * Gekleurd vak met kleurensymbool, gebruikt voor de "aan zet"-banner en de
- * spelerrijen in Claim/Startopstelling (Telefoon.dc.html L392-469).
+ * spelerrijen in Claim/Startopstelling.
  */
 export function ColorAvatar({ color, variant }: ColorAvatarProps) {
   return (

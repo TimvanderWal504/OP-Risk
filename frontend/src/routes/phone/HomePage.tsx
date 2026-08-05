@@ -73,26 +73,26 @@ export function HomePage() {
           <button
             type="button"
             onClick={() => setMode('create')}
-            className="flex w-full items-center gap-4 rounded-[20px] border border-gold-600 px-5 py-[22px] text-left"
+            className="flex w-full items-center gap-4 rounded-[20px] border border-silver-600 px-5 py-[22px] text-left"
             style={{
-              background: 'linear-gradient(120deg, rgba(242,169,34,.18), rgba(242,169,34,.04))',
+              background: 'linear-gradient(120deg, rgba(156,176,202,.18), rgba(156,176,202,.04))',
             }}
           >
             <span
-              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-gold-400 text-[28px] text-[#0a0e17]"
+              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-silver-400 text-h1 text-[#0a0e17]"
               aria-hidden
             >
               {'✦'}
             </span>
             <span className="flex-1">
-              <span className="block font-display text-[22px] font-black">
+              <span className="block font-display text-h2 font-black">
                 {t('home:createCard.title')}
               </span>
-              <span className="mt-0.5 block text-[13px] text-fg-muted">
+              <span className="mt-0.5 block text-sm text-fg-muted">
                 {t('home:createCard.description')}
               </span>
             </span>
-            <span className="text-[22px] text-gold-300">›</span>
+            <span className="text-h2 text-silver-300">›</span>
           </button>
 
           <button
@@ -101,20 +101,20 @@ export function HomePage() {
             className="flex w-full items-center gap-4 rounded-[20px] border border-border-strong bg-white/4 px-5 py-[22px] text-left"
           >
             <span
-              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-pitch-500 text-[28px] text-[#04060b]"
+              className="flex h-[54px] w-[54px] flex-none items-center justify-center rounded-2xl bg-pitch-500 text-h1 text-[var(--on-pitch)]"
               aria-hidden
             >
               {'⌂'}
             </span>
             <span className="flex-1">
-              <span className="block font-display text-[22px] font-black">
+              <span className="block font-display text-h2 font-black">
                 {t('home:joinCard.title')}
               </span>
-              <span className="mt-0.5 block text-[13px] text-fg-muted">
+              <span className="mt-0.5 block text-sm text-fg-muted">
                 {t('home:joinCard.description')}
               </span>
             </span>
-            <span className="text-[22px] text-fg-muted">›</span>
+            <span className="text-h2 text-fg-muted">›</span>
           </button>
         </div>
 

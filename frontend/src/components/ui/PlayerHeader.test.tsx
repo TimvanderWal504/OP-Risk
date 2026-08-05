@@ -99,7 +99,7 @@ describe('PlayerHeader', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Mijn kaarten' })).toHaveClass('border-gold-600')
-    expect(screen.getByRole('button', { name: 'Mijn missie' })).not.toHaveClass('border-gold-600')
+    expect(screen.getByRole('button', { name: 'Mijn kaarten' })).toHaveClass('border-silver-600')
+    expect(screen.getByRole('button', { name: 'Mijn missie' })).not.toHaveClass('border-silver-600')
   })
 })

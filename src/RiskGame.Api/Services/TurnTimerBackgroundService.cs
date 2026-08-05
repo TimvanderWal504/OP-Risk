@@ -94,6 +94,15 @@ public sealed class TurnTimerBackgroundService(
         {
             seenGameIds.Add(state.GameId);
 
+            // Tijdelijke diagnose-logging voor het gemelde beurttimer-probleem (FO §5.4): toont
+            // wat de background poller — buiten elk speler-commando om — daadwerkelijk in de
+            // database aantreft, per actief spel per poll (elke 5s). Verwijderen zodra het
+            // gemeld gedrag bevestigd of weerlegd is.
+            logger.LogInformation(
+                "[TimerDiag] Poll game={GameId} player={PlayerId} isPaused={IsPaused} remainingMs={RemainingMs} lastUpdatedUtc={LastUpdatedUtc:o} serverNow={ServerNow:o}",
+                state.GameId, state.TurnState?.ActivePlayerId, state.TurnState?.Timer?.IsPaused,
+                state.TurnState?.Timer?.Remaining.TotalMilliseconds, state.TurnState?.Timer?.LastUpdatedUtc, now);
+
             if (state.TurnState is not { Timer: { IsPaused: false } timer } turnState)
             {
                 continue;

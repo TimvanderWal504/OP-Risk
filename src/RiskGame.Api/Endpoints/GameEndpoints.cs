@@ -82,7 +82,10 @@ public static class GameEndpoints
             }
 
             var territories = state.Map.Territories
-                .Select(territory => new TerritoryCatalogDto(territory.Id, territory.Continent))
+                .Select(territory => new TerritoryCatalogDto(
+                    territory.Id,
+                    territory.Continent,
+                    state.Map.Adjacency.Neighbours(territory.Id).ToArray()))
                 .ToArray();
 
             return Results.Ok(territories);

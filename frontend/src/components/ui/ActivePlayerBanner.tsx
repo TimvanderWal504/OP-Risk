@@ -12,7 +12,7 @@ export interface ActivePlayerBannerProps {
 }
 
 /**
- * "Nu aan zet"-banner (Telefoon.dc.html L427-432 `claimMineNot` en L473-476 `isIdle`) —
+ * "Nu aan zet"-banner (`claimMineNot`- en `isIdle`-substaten in het oorspronkelijke design) —
  * identieke kaart in beide substaten (padding 13px 14px, radius 16px, gap 12px).
  */
 export function ActivePlayerBanner({ kicker, playerName, color, subtitle, stat }: ActivePlayerBannerProps) {
@@ -27,7 +27,7 @@ export function ActivePlayerBanner({ kicker, playerName, color, subtitle, stat }
       </div>
       {stat && (
         <div className="flex-none text-right">
-          <div className="font-display text-[26px] leading-none font-black text-gold-300">{stat.value}</div>
+          <div className="font-display text-[26px] leading-none font-black text-silver-300">{stat.value}</div>
           <div className="font-body text-[10px] text-fg-muted">{stat.label}</div>
         </div>
       )}

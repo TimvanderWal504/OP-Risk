@@ -10,6 +10,8 @@ import { setupTv } from './setupTv'
 import { orderRoll } from './orderRoll'
 import { board } from './board'
 import { reinforce } from './reinforce'
+import { attack } from './attack'
+import { attackTv } from './attackTv'
 import { colors } from './colors'
 import { roles } from './roles'
 import { territories } from './territories'
@@ -32,6 +34,8 @@ export const trees = {
   orderRoll,
   board,
   reinforce,
+  attack,
+  attackTv,
   colors,
   roles,
   territories,

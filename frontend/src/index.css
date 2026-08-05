@@ -1,8 +1,8 @@
 /* Moet als eerste @import staan (CSS-spec) — colors_and_type.css bevat 'm ook, maar op
    een positie die na Tailwind's output valt en dus genegeerd zou worden. */
 @import "tailwindcss";
-@import "./design-reference/shared/ds/colors_and_type.css";
-@import "./design-reference/shared/ds/twc-theme.css";
+@import "./styles/ds/colors_and_type.css";
+@import "./styles/ds/twc-theme.css";
 
 html,
 body,
@@ -17,8 +17,21 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Telefoon.dc.html L18: @keyframes phLow — enige plek waar het design een
-   animatie gebruikt buiten design-reference/ (dat bestand is bevroren). */
+/* twc-theme.css (frozen) zet outline:none op focus-visible zonder vervanging
+   — --ring is daar wel gedefinieerd maar nergens gebruikt. Zie
+   frontend/CLAUDE.md-uitzonderingenlijst voor de motivatie. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* @keyframes phLow — de enige keyframe die niet met de andere Atlas-animaties
+   in dit bestand gebundeld staat, want hij komt uit een apart deel van het
+   oorspronkelijke design (de telefoon-timer-puls) dan de rest hieronder. */
 @theme {
   --animate-timer-low: phLow 0.7s infinite;
 }
@@ -32,8 +45,8 @@ body {
   }
 }
 
-/* Host-scherm.dc.html L20 / Telefoon.dc.html L18 — dobbelsteen-worp-animaties,
-   toegepast via inline `animation` (motion.ts levert de per-index delay). */
+/* Dobbelsteen-worp-animaties (TV en telefoon), toegepast via inline
+   `animation` (motion.ts levert de per-index delay). */
 @keyframes atlasTumble {
   0% {
     transform: translate(-680px, -880px) rotate(-900deg) scale(0.55);
@@ -56,9 +69,9 @@ body {
     opacity: 1;
   }
 }
-/* Host-scherm.dc.html L18-26 — lobby-wachtstip (atlasDot) en chip/rol-bijkomst op een
-   bestaande spelerskaart (atlasChipIn), toegepast via inline `animation` in TvLobbyScreen
-   en LobbyPlayerList. */
+/* Lobby-wachtstip (atlasDot) en chip/rol-bijkomst op een bestaande spelerskaart
+   (atlasChipIn), toegepast via inline `animation` in TvLobbyScreen en
+   LobbyPlayerList. */
 @keyframes atlasDot {
   0%,
   100% {
@@ -84,6 +97,119 @@ body {
     transform: scale(1);
   }
 }
+/* Combat-/eliminatie-overlay (TvCombatOverlay.tsx): dobbelsteen-worp van
+   links/rechts (atlasRollL/R) + schaduw-settle, scherm-in
+   (atlasStageIn/atlasOverlayIn), resultaat-pop (atlasPop) en eliminatie-slam
+   (atlasSlam). Toegepast via inline `animation` (motion.ts levert de exacte
+   strings/delays). */
+@keyframes atlasRollL {
+  0% {
+    transform: translate(-1500px, -260px) rotate(-1080deg) scale(0.6);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(90px, 30px) rotate(180deg) scale(1.08);
+  }
+  76% {
+    transform: translate(-46px, -16px) rotate(72deg) scale(1);
+  }
+  88% {
+    transform: translate(22px, 8px) rotate(-20deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes atlasRollR {
+  0% {
+    transform: translate(1500px, -300px) rotate(1080deg) scale(0.6);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-90px, 34px) rotate(-180deg) scale(1.08);
+  }
+  76% {
+    transform: translate(50px, -18px) rotate(-72deg) scale(1);
+  }
+  88% {
+    transform: translate(-24px, 9px) rotate(24deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes atlasSettle {
+  0%,
+  72% {
+    box-shadow:
+      0 16px 34px rgba(0, 0, 0, 0.55),
+      inset 0 3px 0 rgba(255, 255, 255, 0.28);
+  }
+  80% {
+    box-shadow:
+      0 4px 10px rgba(0, 0, 0, 0.6),
+      inset 0 3px 0 rgba(255, 255, 255, 0.28);
+  }
+  100% {
+    box-shadow:
+      0 16px 34px rgba(0, 0, 0, 0.55),
+      inset 0 3px 0 rgba(255, 255, 255, 0.28);
+  }
+}
+@keyframes atlasStageIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.965);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes atlasOverlayIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes atlasPop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes atlasSlam {
+  0% {
+    transform: scale(2.4);
+    opacity: 0;
+    letter-spacing: 0.4em;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    letter-spacing: 0.02em;
+  }
+}
 @keyframes phDice {
   0% {
     transform: translateY(-420px) rotate(-540deg) scale(0.6);
@@ -107,7 +233,7 @@ body {
   }
 }
 
-/* Telefoon.dc.html L18-26 — wachtrij-stip, avatar/resultaat-reveal, rij-entree. */
+/* Wachtrij-stip, avatar/resultaat-reveal, rij-entree (telefoon). */
 @keyframes phDot {
   0%,
   100% {
@@ -148,4 +274,16 @@ body {
    zit alleen de donkere variant vast en doet de lichte niets. */
 @utility bg-hero-pattern {
   background: var(--atlas-stage-bg);
+}
+
+/* twc-theme.css (frozen, imported above) al zet animation-/transition-duration
+   op 0.001ms onder reduced-motion, maar reset infinite-lussen (atlasDot, phLow,
+   .animate-timer-low) niet — die blijven anders oneindig micro-loopen. Alleen
+   die aanvulling hier, om niet te dupliceren met de bevroren regel. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+  }
 }

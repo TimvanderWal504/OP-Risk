@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
+import { useCombatBroadcast } from './useCombatBroadcast'
+import { useHeldCombat } from './useHeldCombat'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage, TerritoryClaimedMessage } from '../types/HubResponses'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
@@ -94,5 +96,7 @@ export function useTvGame(gameId: string) {
     }
   }, [connection, connectionState, gameId])
 
-  return { state, connectionState, error, orderRollThrows, lastClaimedTerritoryId }
+  const combat = useHeldCombat(useCombatBroadcast(connection), state)
+
+  return { state, connectionState, error, orderRollThrows, lastClaimedTerritoryId, combat }
 }

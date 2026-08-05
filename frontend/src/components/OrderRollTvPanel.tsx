@@ -4,7 +4,7 @@ import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { Dice, type DiceValue } from './ui/Dice'
-import { tvAnimations } from '../design-reference/shared/motion'
+import { tvAnimations } from '../styles/motion'
 import { Badge } from './ui/Badge'
 
 export interface OrderRollTvPanelProps {
@@ -17,7 +17,7 @@ export interface OrderRollTvPanelProps {
 
 const DICE_BOX_SHADOW = '0 18px 40px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.25)'
 
-/** Order-roll-weergave op de TV (FO §2.1, Host-scherm.dc.html L108-141): per
+/** Order-roll-weergave op de TV (FO §2.1): per
  * speler 2 dobbelstenen in zijn eigen kleur, of "wacht op worp"; daaronder de
  * eindvolgorde zodra de server die aanlevert. */
 export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTvPanelProps) {
@@ -43,7 +43,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
       <h1 className="mt-3 mb-1.5 font-display text-[64px] font-black leading-none tracking-[-.02em]">
         {t('title')}
       </h1>
-      <p className="mb-1.5 text-[22px] text-fg-muted">{t('sub')}</p>
+      <p className="mb-1.5 text-h2 text-fg-muted">{t('sub')}</p>
 
       <div className="flex flex-wrap justify-center gap-8" style={{ margin: 'auto' }}>
         {players.map((player, idx) => {
@@ -94,12 +94,12 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
               )}
               <div className="flex items-center gap-2">
                 <span
-                  className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] text-[13px]"
+                  className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] text-sm"
                   style={{ background: color.hex, color: color.onHex }}
                 >
                   <ColorSymbol symbol={color.symbol} />
                 </span>
-                <span className="font-display text-[22px] font-bold">{player.name}</span>
+                <span className="font-display text-h2 font-bold">{player.name}</span>
               </div>
             </div>
           )
@@ -108,7 +108,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
 
       {order && order.length > 0 && (
         <div className="mt-6 w-full max-w-[1500px]">
-          <div className="mb-3.5 text-center font-body text-[16px] font-black uppercase tracking-[.14em] text-fg-muted">
+          <div className="mb-3.5 text-center font-body text-h3 font-black uppercase tracking-[.14em] text-fg-muted">
             {t('turnOrder')}
           </div>
           <div className="flex justify-center gap-4">
@@ -122,22 +122,22 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                 <div
                   key={playerId}
                   className={`flex max-w-[220px] flex-1 items-center gap-4 rounded-[16px] border p-4 ${
-                    first ? 'border-gold-600 bg-gold-400/12' : 'border-border bg-[var(--atlas-row)]'
+                    first ? 'border-silver-600 bg-silver-400/12' : 'border-border bg-[var(--atlas-row)]'
                   }`}
                 >
                   <span
-                    className={`font-display text-[44px] font-black leading-none ${first ? 'text-gold-300' : 'text-fg-muted'}`}
+                    className={`font-display text-[44px] font-black leading-none ${first ? 'text-silver-300' : 'text-fg-muted'}`}
                   >
                     {rank + 1}
                   </span>
                   <div className="min-w-0">
                     <span
-                      className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] text-[15px]"
+                      className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px] text-body"
                       style={{ background: color.hex, color: color.onHex }}
                     >
                       <ColorSymbol symbol={color.symbol} />
                     </span>
-                    <div className="mt-1.5 truncate font-display text-[22px] font-bold">{player.name}</div>
+                    <div className="mt-1.5 truncate font-display text-h2 font-bold">{player.name}</div>
                   </div>
                 </div>
               )

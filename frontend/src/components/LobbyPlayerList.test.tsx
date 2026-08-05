@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { LobbyPlayerList } from './LobbyPlayerList'
-import { tvAnimations } from '../design-reference/shared/motion'
+import { tvAnimations } from '../styles/motion'
 
 const colors = [{ id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' }]
 const roles = [{ id: 'president', name: 'President', description: '', originTerritory: 'eastern-united-states' }]

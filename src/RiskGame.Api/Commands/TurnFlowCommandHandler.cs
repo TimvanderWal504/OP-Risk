@@ -18,8 +18,15 @@ namespace RiskGame.Api.Commands;
 /// Aanvallen. Kaart trekken bij verovering en missie-/wincheck horen niet bij deze plak
 /// (TO §11, latere bouwstap).
 /// </summary>
-public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider)
+public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider, ILogger<TurnFlowCommandHandler> logger)
 {
+    /// <summary>Zie de gelijknamige tijdelijke diagnose-logging in <see cref="AttackCommandHandler"/>.</summary>
+    private void LogTimerState(string command, string gameId, string playerId, GameStateDto state) =>
+        logger.LogInformation(
+            "[TimerDiag] {Command} game={GameId} player={PlayerId} isPaused={IsPaused} remainingMs={RemainingMs} serverNow={ServerNow:o}",
+            command, gameId, playerId, state.TurnState?.Timer?.IsPaused, state.TurnState?.Timer?.RemainingMs,
+            timeProvider.GetUtcNow());
+
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
     {
@@ -77,8 +84,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState($"EndPhase (→{nextPhase})", gameId, playerId, updatedDto);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
+        return Result<GameStateDto>.Success(updatedDto);
     }
 
     /// <summary>
@@ -102,7 +111,8 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         if (state.TurnState is not { ActivePlayerId: var activePlayerId } turnState
             || activePlayerId != playerId
             || turnState.TurnPhase is not (TurnPhase.Reinforce or TurnPhase.Attack)
-            || turnState.PendingCombat is not null)
+            || turnState.PendingCombat is not null
+            || turnState.Timer is { IsPaused: true })
         {
             return Result<GameStateDto>.Failure(
                 "turnFlow.cannotForceAdvance", new Dictionary<string, string> { ["playerId"] = playerId });
@@ -119,8 +129,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState("ForceAdvanceToFortify (timeout)", gameId, playerId, updatedDto);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
+        return Result<GameStateDto>.Success(updatedDto);
     }
 
     public async Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId)
@@ -168,7 +180,9 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState("EndTurn (→volgende speler)", gameId, nextPlayerId, updatedDto);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
+        return Result<GameStateDto>.Success(updatedDto);
     }
 }

@@ -19,7 +19,7 @@ export interface PlaceReinforcementStepProps {
 }
 
 /**
- * Versterken · Legers verdelen (Telefoon.dc.html L501-540, `isReinf`). Stage-then-confirm
+ * Versterken · Legers verdelen (`isReinf`-fase in het oorspronkelijke design). Stage-then-confirm
  * (design se `-`/`+`-stepper, `reinfExtra`/`reinfPool` L1483-1484): decrement raakt nooit de
  * server, één `PlaceReinforcements`-call per gebied bij bevestigen (niet N losse calls van 1 —
  * zie het Reinforce-plan). De "Kaarteninleg"-blok uit de export (L519-526) ontbreekt bewust,

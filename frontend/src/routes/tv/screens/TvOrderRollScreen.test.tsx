@@ -9,12 +9,12 @@ describe('TvOrderRollScreen', () => {
       <TvOrderRollScreen
         state={fixtureState}
         orderRollThrows={{ alice: [4, 5], bob: [2, 3] }}
-        lastClaimedTerritoryId={null}
+        lastClaimedTerritoryId={null} combat={null}
       />,
     )
 
     // Elke naam staat twee keer op het scherm: bij zijn eigen worp én in de volgordelijst
-    // eronder (Host-scherm.dc.html, `isOrder`).
+    // eronder (`isOrder`-fase in het oorspronkelijke design).
     expect(screen.getAllByText('Alice')).toHaveLength(2)
     expect(screen.getAllByText('Bob')).toHaveLength(2)
     expect(screen.getByText('Speelvolgorde')).toBeInTheDocument()
@@ -25,7 +25,7 @@ describe('TvOrderRollScreen', () => {
       <TvOrderRollScreen
         state={{ ...fixtureState, turnOrder: [] }}
         orderRollThrows={{ alice: [4, 5] }}
-        lastClaimedTerritoryId={null}
+        lastClaimedTerritoryId={null} combat={null}
       />,
     )
 

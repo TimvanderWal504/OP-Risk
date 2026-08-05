@@ -106,10 +106,10 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
       <div className="flex-none px-4.5 pt-3.5 pb-2.5">
         <div className="flex items-center gap-2.5">
-          <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-gold-400 uppercase">
+          <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-silver-400 uppercase">
             {t('header.kicker')}
           </span>
-          <span className="rounded-md bg-gold-400 px-2 py-0.5 text-[10px] font-extrabold tracking-[.08em] text-[#0a0e17]">
+          <span className="rounded-md bg-silver-400 px-2 py-0.5 text-[10px] font-extrabold tracking-[.08em] text-[#0a0e17]">
             {t('header.hostBadge')}
           </span>
         </div>

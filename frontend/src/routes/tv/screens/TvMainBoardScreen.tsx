@@ -5,8 +5,8 @@ import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
-import { boardTok } from '../../../design-reference/shared/design-tokens'
-import { tvAnimations } from '../../../design-reference/shared/motion'
+import { boardTok } from '../../../styles/design-tokens'
+import { tvAnimations } from '../../../styles/motion'
 import type { TvScreenProps } from './tvScreens'
 
 const MAP_ID = 'standaard-43'
@@ -29,7 +29,7 @@ function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
 }
 
 /**
- * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (Host-scherm.dc.html, state "Main board",
+ * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (state "Main board" in het oorspronkelijke design,
  * `isBoard`-tak L257-312). Read-only weergave (FO §7.3/§2.3: de telefoon is de enige
  * invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen (z-3) horen bij
  * Attack en zijn hier bewust niet gebouwd; idem het spelerspaneel en de gebeurtenis-feed
@@ -40,7 +40,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { data: geometry } = useTerritoryGeometry()
 
   // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen
-  // voor de A1-teldemo-animatie (Host-scherm.dc.html:642-675). Bijgewerkt tijdens render
+  // voor de A1-teldemo-animatie (uit het oorspronkelijke design). Bijgewerkt tijdens render
   // (niet via een ref of effect, react-hooks/refs staat geen ref-mutatie tijdens render toe):
   // zelfde "vergelijk en pas aan"-patroon als `useHeldPhase.ts`.
   const [prevArmy, setPrevArmy] = useState<Record<string, number>>({})
@@ -141,7 +141,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
             const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
             const color = state.colors.find((c) => c.id === owner?.colorId)
             const ringColor = color?.hex ?? boardTok.neutral
-            // Host-scherm.dc.html:995 — `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
+            // Oorspronkelijk design: `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
             // bij de nog niet gebouwde selectiestaat.
             const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
 

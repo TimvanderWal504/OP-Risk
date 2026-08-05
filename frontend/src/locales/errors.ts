@@ -168,6 +168,10 @@ export const errors = {
       nl: 'Er is geen verovering om legers naar te verplaatsen.',
       en: 'There is no conquest to move armies into.',
     },
+    noAttackToAbandon: {
+      nl: 'Er is geen lopende belegering om af te breken.',
+      en: 'There is no ongoing siege to abandon.',
+    },
   },
   fortify: {
     sourceAndTargetMustDiffer: {

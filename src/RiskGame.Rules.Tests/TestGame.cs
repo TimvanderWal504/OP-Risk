@@ -46,6 +46,7 @@ internal static class TestGame
         TurnPhase turnPhase = TurnPhase.Reinforce,
         PhaseTimer? timer = null,
         PendingCombat? pendingCombat = null,
+        AttackEngagement? pausedAttackTarget = null,
         IReadOnlyList<ActiveEffect>? activeEffects = null,
         GameSettings? settings = null,
         int nextTradeValue = 4,
@@ -70,7 +71,8 @@ internal static class TestGame
             players,
             territories,
             turnOrder,
-            new TurnState(turnOrder[0], turnPhase, timer, pendingCombat, armiesRemaining),
+            new TurnState(
+                turnOrder[0], turnPhase, timer, pendingCombat, pausedAttackTarget, ArmiesRemaining: armiesRemaining),
             new DeckState(map.Deck, DiscardPile: [], nextTradeValue),
             activeEffects ?? [],
             winners ?? []);

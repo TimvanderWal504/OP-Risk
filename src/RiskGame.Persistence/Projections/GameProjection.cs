@@ -165,7 +165,8 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
         return state
             .WithPhase(GamePhase.InProgress)
-            .WithTurnState(new TurnState(@event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, armiesRemaining));
+            .WithTurnState(new TurnState(
+                @event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, ArmiesRemaining: armiesRemaining));
     }
 
     /// <summary>
@@ -227,22 +228,31 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// <summary>
     /// Het moment van "Gooi" drukken (FO §5.3 stap 2): zet <see cref="PendingCombat"/> en
     /// pauzeert de lopende beurttimer (FO §5.4) — uitgevoerde aanvallen kosten de aanvaller
-    /// zo geen beurttijd.
+    /// zo geen beurttijd. <see cref="TurnState.PausedAttackTarget"/> wordt hier onvoorwaardelijk
+    /// op dit gebiedspaar gezet: bij een herhaalde aanval op hetzelfde doelwit is dat dezelfde
+    /// waarde (geen verandering), bij een nieuw doelwit vervangt het de vorige — de
+    /// command handler heeft <see cref="AttackDeclared.Remaining"/> in dat laatste geval al
+    /// verrekend met de tussenliggende tijd (<see cref="PhaseTimer.ResumeAndTick"/>).
     /// </summary>
     public GameState Apply(GameState state, AttackDeclared @event) =>
         state.WithTurnState(state.TurnState! with
         {
             PendingCombat = new PendingCombat(
                 @event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice, @event.CorrelationId),
+            PausedAttackTarget = new AttackEngagement(@event.FromTerritoryId, @event.ToTerritoryId),
             Timer = state.TurnState!.Timer!.Pause(@event.Remaining, @event.OccurredAtUtc),
         });
 
     /// <summary>
     /// Trekt de verliezen af van beide legeraantallen en gebruikt
     /// <see cref="ConquestResolution.Apply"/> — puur deterministisch, geen herimplementatie
-    /// — om af te leiden of het doelgebied hierdoor valt. Zo niet, dan is het gevecht al
-    /// volledig afgehandeld: <see cref="PendingCombat"/> naar <c>null</c>, timer hervat (FO
-    /// §5.4). Zo wel, dan blijft <see cref="PendingCombat"/> staan tot
+    /// — om af te leiden of het doelgebied hierdoor valt. <see cref="PendingCombat"/> gaat in
+    /// beide gevallen naar <c>null</c> zodra het doelgebied niet valt (het gevecht zelf is
+    /// dan afgehandeld), maar de beurttimer blijft doorlopend gepauzeerd (FO §5.4, herzien op
+    /// 2026-08-04): "een gevecht" is de hele belegering van dit doelwit, niet één worp — de
+    /// timer hervat pas als de aanvaller een ánder doelwit kiest (<see cref="AttackDeclared"/>
+    /// met een ander gebiedspaar) of de fase verlaat, niet automatisch hier. Valt het
+    /// doelgebied wel, dan blijft ook <see cref="PendingCombat"/> staan tot
     /// <see cref="ArmiesMovedAfterConquest"/> volgt.
     /// </summary>
     public GameState Apply(GameState state, CombatResolved @event)
@@ -260,11 +270,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
         if (!conquest.Conquered)
         {
-            state = state.WithTurnState(state.TurnState! with
-            {
-                PendingCombat = null,
-                Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc!.Value),
-            });
+            state = state.WithTurnState(state.TurnState! with { PendingCombat = null });
         }
 
         return state;
@@ -279,7 +285,8 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>
     /// Sluit het gevecht af (FO §5.4: inclusief eventuele meeverplaatsing na verovering) —
-    /// <see cref="PendingCombat"/> naar <c>null</c>, timer hervat — bovenop dezelfde
+    /// <see cref="PendingCombat"/> naar <c>null</c>, timer hervat, <see cref="TurnState.PausedAttackTarget"/>
+    /// naar <c>null</c> (de belegering van dit doelwit is voorbij) — bovenop dezelfde
     /// leger-verplaatsing als <see cref="Apply(GameState, Fortified)"/>.
     /// </summary>
     public GameState Apply(GameState state, ArmiesMovedAfterConquest @event)
@@ -289,9 +296,29 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return state.WithTurnState(state.TurnState! with
         {
             PendingCombat = null,
+            PausedAttackTarget = null,
             Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc),
         });
     }
+
+    /// <summary>
+    /// Sluit de belegering van het huidige doelwit af zonder verovering (FO §5.4,
+    /// "Ander gevecht") — hervat de beurttimer op het al door de command handler verrekende
+    /// bedrag (zie <see cref="AttackAbandoned.Remaining"/>) en wist <see cref="TurnState.PausedAttackTarget"/>.
+    /// <see cref="TurnState.PendingCombat"/> staat hier altijd al op <c>null</c>
+    /// (<see cref="AttackGuards.CanAbandonAttack"/> vereist dat).
+    /// </summary>
+    public GameState Apply(GameState state, AttackAbandoned @event) =>
+        state.WithTurnState(state.TurnState! with
+        {
+            PausedAttackTarget = null,
+            Timer = state.TurnState!.Timer! with
+            {
+                Remaining = @event.Remaining,
+                IsPaused = false,
+                LastUpdatedUtc = @event.OccurredAtUtc,
+            },
+        });
 
     /// <summary>Eén vrije verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant).</summary>
     public GameState Apply(GameState state, Fortified @event) =>

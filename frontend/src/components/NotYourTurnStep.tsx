@@ -10,7 +10,7 @@ export interface NotYourTurnStepProps {
 }
 
 /**
- * Generiek "niet jouw beurt"-scherm (Telefoon.dc.html L471-499, `isIdle`), gedeeld over
+ * Generiek "niet jouw beurt"-scherm (`isIdle`-fase in het oorspronkelijke design), gedeeld over
  * setup/reinf/attack/fortify (`inGame`-statemachine, L1554-1557) — `subtitle` i.p.v. een
  * fase-specifieke prop, zodat latere fases dit component hergebruiken i.p.v. een duplicaat.
  *

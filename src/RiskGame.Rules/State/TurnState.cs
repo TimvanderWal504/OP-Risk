@@ -9,6 +9,11 @@ namespace RiskGame.Rules.State;
 /// Niet-null zolang een gevecht loopt. De beurt blijft dan in
 /// <see cref="TurnPhase.Attack"/> — wachten op de verdediger is geen aparte fase (TO §4.1).
 /// </param>
+/// <param name="PausedAttackTarget">
+/// Zie <see cref="AttackEngagement"/>: welk gebiedspaar de beurttimer-pauze op dit moment
+/// vasthoudt. Null zolang er geen doorlopende belegering is (nog geen aanval gedaan deze
+/// fase, of het laatste doelwit is losgelaten/veroverd).
+/// </param>
 /// <param name="ArmiesRemaining">
 /// Nog te plaatsen legers uit de vrije versterkingspool (FO §5.2): gezet bij het ingaan van
 /// <see cref="TurnPhase.Reinforce"/> op <see cref="Reinforcement.ReinforcementCalculator.CalculateArmies"/>,
@@ -20,4 +25,5 @@ public sealed record TurnState(
     TurnPhase TurnPhase,
     PhaseTimer? Timer,
     PendingCombat? PendingCombat,
+    AttackEngagement? PausedAttackTarget = null,
     int ArmiesRemaining = 0);

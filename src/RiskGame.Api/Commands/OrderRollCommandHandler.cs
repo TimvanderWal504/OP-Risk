@@ -63,9 +63,7 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
 
         if (updatedProgress.Winner is not null)
         {
-            var turnOrder = new[] { updatedProgress.Winner }
-                .Concat(allPlayerIds.Where(id => id != updatedProgress.Winner))
-                .ToArray();
+            var turnOrder = OrderRollCalculator.DetermineTurnOrder(allPlayerIds, updatedProgress.Winner);
             session.Events.Append(gameId, new TurnOrderDetermined(gameId, turnOrder));
 
             if (state.Settings.SetupMode == SetupMode.Random)

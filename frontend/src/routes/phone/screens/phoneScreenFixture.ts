@@ -63,5 +63,10 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   placeInitialArmy: vi.fn(),
   placeReinforcements: vi.fn(),
   endPhase: vi.fn(),
+  combat: null,
+  declareAttack: vi.fn(),
+  chooseDefenseDice: vi.fn(),
+  moveAfterConquest: vi.fn(),
+  abandonAttack: vi.fn(),
   ...overrides,
 })

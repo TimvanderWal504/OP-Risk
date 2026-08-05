@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
-import { atlasRoughTok } from '../../../design-reference/shared/design-tokens'
+import { atlasRoughTok } from '../../../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from '../../../map/boardScale'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { fixtureState } from './tvScreenFixture'
@@ -44,26 +44,26 @@ describe('TvMainBoardScreen', () => {
   })
 
   it('rendert niets zolang er geen turnState is (fase nog niet InProgress)', () => {
-    const { container } = render(<TvMainBoardScreen state={{ ...fixtureState, turnState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    const { container } = render(<TvMainBoardScreen state={{ ...fixtureState, turnState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
   it('toont de beurtstatus-header voor de actieve speler', () => {
-    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('Alice')).toBeInTheDocument()
   })
 
   it('rendert een gebiedsvorm en het legeraantal per territorium zodra de geometrie geladen is', async () => {
-    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
     expect(screen.getByText('5')).toBeInTheDocument()
   })
 
-  it('hangt de gebiedenlaag in het atlasRough-filter (Host-scherm.dc.html:280,290)', async () => {
-    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+  it('hangt de gebiedenlaag in het atlasRough-filter (zoals in het oorspronkelijke design)', async () => {
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
 
     const filter = container.querySelector('filter#atlasRough')
@@ -83,7 +83,7 @@ describe('TvMainBoardScreen', () => {
 
   it('meldt een console-fout als de achtergrondafbeelding niet de verwachte afmeting heeft', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     const img = container.querySelector('img') as HTMLImageElement
     Object.defineProperty(img, 'naturalWidth', { value: 1500, configurable: true })

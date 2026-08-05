@@ -12,7 +12,7 @@ export interface PlaceInitialArmyStepProps {
 }
 
 /**
- * Startopstelling · Legers plaatsen (Telefoon.dc.html L450-469, `isSetup`): lijst van eigen
+ * Startopstelling · Legers plaatsen (`isSetup`-fase in het oorspronkelijke design): lijst van eigen
  * gebieden met een +-knop per rij, via de gedeelde `ArmyStepperRow` (`incrementOnly`, zie
  * de doc-comment daar voor waarom setup geen decrement heeft). `setupAddBg`/`setupCursor`
  * volgen uit `armiesLeft > 0` (L1701-1702) — bij 0 is de knop uitgeschakeld i.p.v. verborgen

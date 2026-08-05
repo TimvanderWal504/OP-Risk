@@ -7,7 +7,7 @@ export interface TvShellProps {
 /**
  * TV-viewport: de stage met de hero-achtergrond. Omhult elk host-scherm.
  *
- * Host-scherm.dc.html L34 draait de stage altijd in het donkere thema, ongeacht
+ * Het oorspronkelijke TV-design draait de stage altijd in het donkere thema, ongeacht
  * OS-voorkeur — vandaar de `dark`-klasse hier, net als bij `PhoneShell`.
  */
 export function TvShell({ children }: TvShellProps) {

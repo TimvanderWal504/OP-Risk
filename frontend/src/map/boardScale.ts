@@ -1,4 +1,4 @@
-import { boardViewBox } from '../design-reference/shared/design-tokens'
+import { boardViewBox } from '../styles/design-tokens'
 import { MAP_HEIGHT_PX } from './projection'
 
 /**
@@ -6,7 +6,7 @@ import { MAP_HEIGHT_PX } from './projection'
  *
  * De export tekent het bord in `viewBox="0 0 1500 790"` en legt de achtergrond daarin neer als
  * `<image x="0" y="0" width="1500" height="790" preserveAspectRatio="xMidYMid slice">`
- * (`tv/Operatie Atlas Host-scherm.dc.html:278,285`). `slice` schaalt met
+ * (het oorspronkelijke TV-ontwerp gebruikte `viewBox="0 0 1500 790"`). `slice` schaalt met
  * `max(1500/4096, 790/2132)` = `max(0.3662, 0.3706)` — de hoogte bindt, en de breedte loopt
  * daar met dezelfde factor in mee: de achtergrond wordt 1517,75 eenheden breed en er valt links
  * en rechts 8,87 eenheid buiten beeld. Eén design-eenheid is dus `MAP_HEIGHT_PX / 790`

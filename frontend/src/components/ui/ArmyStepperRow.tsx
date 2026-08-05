@@ -6,7 +6,7 @@ export interface ArmyStepperRowProps {
   label: string
   /**
    * `true`: alleen een +-knop, onomkeerbaar — matcht Startopstelling-plaatsen
-   * (Telefoon.dc.html L459-466, `setupAddBg`/`setupCursor` L1701-1702). `false`: volwaardige
+   * (`setupAddBg`/`setupCursor` in het oorspronkelijke design). `false`: volwaardige
    * +/− stepper — matcht Versterken (L528-536). De twee fases hebben bewust verschillend
    * gedrag in het design (FO §5.1: setup is 1-richting, Versterken mag je bijstellen vóór
    * bevestigen); deze vlag houdt één component bruikbaar voor beide zonder het design van de

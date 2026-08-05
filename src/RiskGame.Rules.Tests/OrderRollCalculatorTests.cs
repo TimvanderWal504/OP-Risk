@@ -91,4 +91,29 @@ public sealed class OrderRollCalculatorTests
         Assert.Null(progress.Winner);
         Assert.Equal(["p1", "p2"], progress.StillToRoll);
     }
+
+    [Fact]
+    public void DetermineTurnOrder_MetWinnaarMidVolgorde_RoteertVanafDeWinnaar()
+    {
+        var turnOrder = OrderRollCalculator.DetermineTurnOrder(
+            ["p1", "p2", "p3", "p4", "p5", "p6"], winnerId: "p3");
+
+        Assert.Equal(["p3", "p4", "p5", "p6", "p1", "p2"], turnOrder);
+    }
+
+    [Fact]
+    public void DetermineTurnOrder_MetWinnaarAlsLaatsteInDeRij_WraptNaarHetBegin()
+    {
+        var turnOrder = OrderRollCalculator.DetermineTurnOrder(["p1", "p2", "p3"], winnerId: "p3");
+
+        Assert.Equal(["p3", "p1", "p2"], turnOrder);
+    }
+
+    [Fact]
+    public void DetermineTurnOrder_MetWinnaarAlsEerste_LaatVolgordeOngewijzigd()
+    {
+        var turnOrder = OrderRollCalculator.DetermineTurnOrder(["p1", "p2", "p3"], winnerId: "p1");
+
+        Assert.Equal(["p1", "p2", "p3"], turnOrder);
+    }
 }

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import lobbyBattlefield from '../../../design-reference/shared/assets/lobby-battlefield.png'
-import { tvAnimations } from '../../../design-reference/shared/motion'
+import lobbyBattlefield from '../../../styles/assets/lobby-battlefield.png'
+import { tvAnimations } from '../../../styles/motion'
 import { LobbyPlayerList } from '../../../components/LobbyPlayerList'
 import { LobbyQrPanel } from '../../../components/LobbyQrPanel'
 import { LobbySettingsSummary } from '../../../components/LobbySettingsSummary'
@@ -38,7 +38,7 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
       <div className="relative flex flex-1 items-stretch gap-12 p-[64px_66px]">
         {/* Links: titel bij het kasteel */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="self-start rounded-chip border border-[rgba(242,193,78,.55)] bg-[rgba(4,6,11,.34)] px-[18px] py-[9px] font-body text-[16px] font-extrabold tracking-[.16em] text-[#f2c14e] uppercase backdrop-blur-[6px]">
+          <span className="self-start rounded-chip border border-[rgba(194,205,221,.55)] bg-[rgba(4,6,11,.34)] px-[18px] py-[9px] font-body text-h3 font-extrabold tracking-[.16em] text-[#c2cddd] uppercase backdrop-blur-[6px]">
             {t('header.badge')}
           </span>
           <div className="mt-[26px]">

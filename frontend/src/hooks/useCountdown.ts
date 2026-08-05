@@ -44,7 +44,8 @@ export function useCountdown(timer: CountdownInput | null | undefined): number {
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - anchor.atMs
-      setDisplayMs(Math.max(0, anchor.remainingMs - elapsed))
+      const next = Math.max(0, anchor.remainingMs - elapsed)
+      setDisplayMs(next)
     }, TICK_MS)
 
     return () => clearInterval(interval)

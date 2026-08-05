@@ -193,6 +193,33 @@ public static class AttackGuards
                 new Dictionary<string, string> { ["min"] = MinDefenseDice.ToString(), ["max"] = MaxDefenseDice.ToString() });
     }
 
+    /// <summary>
+    /// Of <paramref name="playerId"/> de lopende belegering van zijn huidige doelwit handmatig
+    /// mag afbreken (FO §5.4, "Ander gevecht"-knop) — alleen zinvol als er geen actief
+    /// <see cref="PendingCombat"/> meer is (het gevecht is al afgehandeld tot een afgeslagen
+    /// worp) én er nog een bevroren doelwit staat om af te breken.
+    /// </summary>
+    public static ValidationResult CanAbandonAttack(GameState state, string playerId)
+    {
+        var preconditions = ValidationResult.Combine(
+            Guards.IsActivePlayer(state, playerId),
+            Guards.IsInTurnPhase(state, TurnPhase.Attack));
+
+        if (!preconditions.IsSuccess)
+        {
+            return preconditions;
+        }
+
+        if (state.TurnState!.PendingCombat is not null)
+        {
+            return ValidationResult.Failure("attack.combatInProgress");
+        }
+
+        return state.TurnState.PausedAttackTarget is null
+            ? ValidationResult.Failure("attack.noAttackToAbandon")
+            : ValidationResult.Success();
+    }
+
     private static ValidationResult IsEnemyOwned(
         GameState state, string playerId, string territoryId)
     {

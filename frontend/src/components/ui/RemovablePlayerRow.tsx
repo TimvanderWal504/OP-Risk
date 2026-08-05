@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent, ReactNode } from 'react'
-import { phoneAnimations, transitions } from '../../design-reference/shared/motion'
+import { phoneAnimations, transitions } from '../../styles/motion'
 
 const SWIPE_WIDTH = 84
 
@@ -13,7 +13,7 @@ export interface RemovablePlayerRowProps {
 }
 
 /**
- * Swipe-to-delete-rij op het host-wachtscherm (Telefoon.dc.html `waitList`-sectie,
+ * Swipe-to-delete-rij op het host-wachtscherm (`waitList`-sectie in het oorspronkelijke design,
  * L244-262 na de export-update, plus de `rowDown`/`rowMove`/`rowUp`-handlers en
  * `SWIPE_W`-constante in de bijbehorende class-component). Naar links slepen
  * onthult een verwijderknop eronder; loslaat voorbij de helft houdt de rij open

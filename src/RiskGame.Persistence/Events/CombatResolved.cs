@@ -8,10 +8,15 @@ namespace RiskGame.Persistence.Events;
 /// en wordt zo herberekend in de vouwregel, niet apart opgeslagen als los feit.
 /// </summary>
 /// <param name="OccurredAtUtc">
-/// Tijdstip waarop de beurttimer hervat wordt (FO §5.4) — alleen gezet wanneer het
-/// doelgebied niét valt, want dan is het gevecht meteen afgehandeld. Valt het doelgebied
-/// wel, dan blijft de timer gepauzeerd tot <see cref="ArmiesMovedAfterConquest"/> volgt, en
-/// is dit veld <c>null</c>.
+/// Tijdstip waarop het gevecht is afgehandeld zonder verovering — <c>null</c> zolang het
+/// doelgebied wél valt (dan loopt de belegering door tot <see cref="ArmiesMovedAfterConquest"/>).
+/// Vóór de FO §5.4-herziening van 2026-08-04 hervatte de vouwregel hierop de beurttimer; sinds
+/// die herziening blijft een niet-veroverend gevecht op hetzelfde doelwit de timer bevroren
+/// zolang de aanvaller blijft belegeren (zie <see cref="AttackDeclared"/>, <c>isSameTarget</c>
+/// in <c>AttackCommandHandler.DeclareAttackAsync</c>) — resume gebeurt pas via
+/// <see cref="AttackAbandoned"/> of een <see cref="AttackDeclared"/> op een ánder doelwit.
+/// Dit veld wordt daarom bewust niet meer gelezen in <c>GameProjection</c>; het blijft staan
+/// voor narratie/audit op het al gepersisteerde event, niet als vouwregel-input.
 /// </param>
 public sealed record CombatResolved(
     string GameId,

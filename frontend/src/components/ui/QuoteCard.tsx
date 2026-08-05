@@ -16,11 +16,11 @@ export function QuoteCard({
   animationStyle,
 }: QuoteCardProps) {
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-gold-700 bg-[var(--atlas-t04)] p-[22px_22px_20px]">
-      <p className="mb-3.5 font-body text-[10px] font-extrabold tracking-[.16em] text-gold-400 uppercase">
+    <div className="relative overflow-hidden rounded-[20px] border border-silver-700 bg-[var(--atlas-t04)] p-[22px_22px_20px]">
+      <p className="mb-3.5 font-body text-[10px] font-extrabold tracking-[.16em] text-silver-400 uppercase">
         {quoteKicker}
       </p>
-      <p className="h-6 font-display text-[52px] leading-[.6] font-black text-gold-600">
+      <p className="h-6 font-display text-[52px] leading-[.6] font-black text-silver-600">
         {'“'}
       </p>
       <p

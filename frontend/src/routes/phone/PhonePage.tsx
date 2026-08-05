@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useGameState } from '../../hooks/useGameState'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
+import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { resolvePhoneScreen } from './screens/phoneScreens'
 import { takenColorIds } from './screens/takenColorIds'
@@ -30,6 +31,11 @@ export function PhonePage() {
     placeInitialArmy,
     placeReinforcements,
     endPhase,
+    combat,
+    declareAttack,
+    chooseDefenseDice,
+    moveAfterConquest,
+    abandonAttack,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
 
@@ -48,6 +54,18 @@ export function PhonePage() {
           stepCount={3}
           error={error}
         />
+      </PhoneShell>
+    )
+  }
+
+  // Geldt door élke fase heen zolang de speler is uitgeschakeld — vóór de fase-dispatch,
+  // want eliminatie is geen speleigenschap van één fase (`isElim`-fase in het oorspronkelijke design).
+  if (me.isEliminated) {
+    const myColor = state.colors.find((color) => color.id === me.colorId) ?? null
+
+    return (
+      <PhoneShell>
+        <PlayerEliminatedScreen myColor={myColor} />
       </PhoneShell>
     )
   }
@@ -73,6 +91,11 @@ export function PhonePage() {
         placeInitialArmy,
         placeReinforcements,
         endPhase,
+        combat,
+        declareAttack,
+        chooseDefenseDice,
+        moveAfterConquest,
+        abandonAttack,
       })}
     </PhoneShell>
   )

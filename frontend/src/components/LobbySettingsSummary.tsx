@@ -19,9 +19,9 @@ function formatSeconds(seconds: number): string {
 }
 
 /**
- * Instellingen-samenvatting op de TV (FO §10; Host-scherm.dc.html L92-103, `settingsRows`
+ * Instellingen-samenvatting op de TV (FO §10; `settingsRows` uit het oorspronkelijke design
  * L807-815). Rijvolgorde en per-rij accentkleur zijn letterlijk uit de export overgenomen:
- * winconditie in gold-400, "aan"-waarden in pitch-400, overige in fg1.
+ * winconditie in silver-400, "aan"-waarden in pitch-400, overige in fg1.
  *
  * De export toont maar één timer-rij ("Beurttimer") — geen aparte fortify-timer-rij, dus
  * `fortifyTimerSeconds` wordt hier niet getoond (wel elders, in `CreateGameForm`).
@@ -46,7 +46,7 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
 
   const rows: [string, string, string][] = [
     [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
-    [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--gold-400)'],
+    [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--silver-400)'],
     [
       t('settings.roles'),
       settings.rolesEnabled ? roleAssignmentLabels[settings.roleAssignment] : t('settings.off'),

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { PlayerAvatar } from './PlayerAvatar'
 
 export interface PlayerHeaderAction {
@@ -48,6 +49,8 @@ export function PlayerHeader({
   onSettings,
   actions = DEFAULT_ACTIONS,
 }: PlayerHeaderProps) {
+  const { t } = useTranslation('common')
+
   return (
     <div className="flex flex-col mt-4">
       <div className="flex items-center gap-[11px] rounded-card border border-border bg-[var(--atlas-t03)] px-3 py-2.5">
@@ -55,9 +58,9 @@ export function PlayerHeader({
           <PlayerAvatar colorHex={colorHex} colorOnHex={colorOnHex} colorSymbol={colorSymbol} />
           {isHost && (
             <span
-              className="absolute -right-[5px] -bottom-[5px] flex h-5 w-5 items-center justify-center rounded-full bg-gold-400 text-[10px]"
+              className="absolute -right-[5px] -bottom-[5px] flex h-5 w-5 items-center justify-center rounded-full bg-silver-400 text-xs"
               style={{ border: '2px solid var(--bg)' }}
-              aria-label="Host"
+              aria-label={t('playerHeader.hostBadge')}
             >
               👑
             </span>
@@ -65,9 +68,9 @@ export function PlayerHeader({
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-[19px] font-extrabold">
-            {name} <span className="text-[14px] font-bold text-fg-muted">· {colorName}</span>
+            {name} <span className="text-sm font-bold text-fg-muted">· {colorName}</span>
           </div>
-          <div className="mt-[3px] truncate text-[12.5px] text-fg-muted">{status}</div>
+          <div className="mt-[3px] truncate text-sm text-fg-muted">{status}</div>
         </div>
         <div className="flex-none text-right">
           <div className="font-body text-[9px] font-black tracking-[.14em] text-fg-muted uppercase">Beurttijd</div>
@@ -80,14 +83,14 @@ export function PlayerHeader({
             </div>
           )}
           {timerState === 'paused' && (
-            <div className="pt-[5px] font-display text-[15px] font-extrabold text-fg-muted">❚❚ {timer}</div>
+            <div className="pt-[5px] font-display text-body font-extrabold text-fg-muted">❚❚ {timer}</div>
           )}
         </div>
         <button
           type="button"
           onClick={onSettings}
-          aria-label="Instellingen"
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-[12px] border border-gold-700 bg-gold-400/10 text-[20px] text-gold-300"
+          aria-label={t('playerHeader.settings')}
+          className="flex h-11 w-11 flex-none items-center justify-center rounded-[12px] border border-silver-700 bg-silver-400/10 text-[20px] text-silver-300"
         >
           ⚙
         </button>
@@ -99,13 +102,13 @@ export function PlayerHeader({
             key={action.label}
             type="button"
             onClick={action.onClick}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-[12px] border px-1 py-2 text-[11px] font-bold ${
+            className={`flex flex-1 flex-col items-center gap-1 rounded-[12px] border px-1 py-2 text-xs font-bold ${
               action.active
-                ? 'border-gold-600 bg-gold-400/12 text-gold-300'
+                ? 'border-silver-600 bg-silver-400/12 text-silver-300'
                 : 'border-border bg-[var(--atlas-t03)] text-fg-secondary'
             }`}
           >
-            <span className="text-[17px]" aria-hidden>
+            <span className="text-h3" aria-hidden>
               {action.icon}
             </span>
             {action.label}

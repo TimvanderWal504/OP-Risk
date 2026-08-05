@@ -3,7 +3,7 @@ import type { LocaleTree } from '../i18n/types'
 /**
  * Startopstelling op de telefoon (FO §5.1): gebieden claimen (bij SetupMode
  * Claiming) of startlegers plaatsen (InitialPlacement), plus het gedeelde
- * "niet jouw beurt"-scherm. Telefoon.dc.html L392-499.
+ * "niet jouw beurt"-scherm.
  */
 export const setup = {
   claim: {

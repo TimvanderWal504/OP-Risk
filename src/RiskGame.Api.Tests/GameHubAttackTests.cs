@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
@@ -38,6 +39,17 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             postgres,
             services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(diceSequence)));
 
+    /// <summary>Zelfde als <see cref="CreateFactory(int[])"/>, met een besturbare klok voor de
+    /// timer-continuatie-tests (FO §5.4) — zelfde patroon als <see cref="GameStateDtoMapperTimerTests"/>.</summary>
+    private WebApplicationFactory<Program> CreateFactory(FakeTimeProvider timeProvider, params int[] diceSequence) =>
+        ApiTestHost.Create(
+            postgres,
+            services =>
+            {
+                services.AddSingleton<IRandomSource>(new SequenceRandomSource(diceSequence));
+                services.AddSingleton<TimeProvider>(timeProvider);
+            });
+
     private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
         ApiTestHost.ConnectAsync(factory, client);
 
@@ -56,6 +68,12 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
         var map = mapSource.Load("standaard-43");
+        // Niet `DateTimeOffset.UtcNow`: bij een `FakeTimeProvider`-factory (de
+        // timer-continuatie-tests) zou de échte klok tijdens de setup verder lopen dan de
+        // bevroren fake-klok, zodat de eerste `DeclareAttack` een negatieve verstreken tijd
+        // ziet en `PhaseTimer.Tick` gooit. Altijd de geïnjecteerde `TimeProvider` gebruiken,
+        // zodat setup en command handler dezelfde klok delen.
+        var timeProviderNow = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow();
 
         var settings = new GameSettings(
             WinCondition.SecretMissions,
@@ -91,7 +109,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
-                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -120,6 +138,9 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         Assert.Equal([3, 2], declareResult.AttackerRolls);
         Assert.NotNull(declareResult.State.TurnState!.PendingCombat);
+        // FO §5.4: uitgevoerde aanvallen kosten de aanvaller geen beurttijd — de beurttimer
+        // moet gepauzeerd zijn zolang het gevecht loopt.
+        Assert.True(declareResult.State.TurnState!.Timer!.IsPaused);
 
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
             "ChooseDefenseDice", gameId, "p2", 2);
@@ -129,10 +150,188 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.Equal(0, combatResult.DefenderLosses);
         Assert.False(combatResult.Conquered);
         Assert.Null(combatResult.State.TurnState!.PendingCombat);
+        // Geen verovering, maar "een gevecht" is de hele belegering van dit doelwit, niet één
+        // worp (FO §5.4, herzien 2026-08-04): de timer blijft gepauzeerd zolang de aanvaller
+        // hetzelfde doelwit belegert. Zie DeclareAttack_HerhaaldeAanvalOpzelfdeDoelwit_HoudtTimerBevroren.
+        Assert.True(combatResult.State.TurnState!.Timer!.IsPaused);
 
         Assert.Equal(3, combatResult.State.Territories.Single(t => t.TerritoryId == "alaska").ArmyCount);
         Assert.Equal(3, combatResult.State.Territories.Single(t => t.TerritoryId == "alberta").ArmyCount);
         Assert.Equal("p2", combatResult.State.Territories.Single(t => t.TerritoryId == "alberta").OwnerPlayerId);
+    }
+
+    [Fact]
+    public async Task DeclareAttack_HerhaaldeAanvalOpZelfdeDoelwit_HoudtTimerBevroren()
+    {
+        // FO §5.4 (herzien 2026-08-04): "een gevecht" is de hele belegering van één doelwit,
+        // niet één worp — de timer blijft bevroren over meerdere achtereenvolgende worpen op
+        // hetzelfde gebiedspaar heen, ook al verstrijkt er tussendoor echte klok-tijd.
+        var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        // 1 dobbelsteen per ronde, aanvaller verliest allebei (2 tegen 5 — gelijkspel/hoger
+        // wint de verdediger), geen verovering in beide rondes.
+        await using var factory = CreateFactory(timeProvider, 2, 5, 2, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 5);
+
+        var first = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        Assert.True(first.State.TurnState!.Timer!.IsPaused);
+
+        var afterFirstFight = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 1);
+        var remainingAfterFirstFight = afterFirstFight.State.TurnState!.Timer!.RemainingMs;
+        Assert.True(afterFirstFight.State.TurnState!.Timer!.IsPaused);
+
+        // 30 seconden "bedenktijd" tussen de twee worpen op hetzelfde doelwit — mag niet
+        // meetellen, want de belegering van "alberta" loopt door.
+        timeProvider.Advance(TimeSpan.FromSeconds(30));
+
+        var second = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+
+        Assert.True(second.State.TurnState!.Timer!.IsPaused);
+        Assert.Equal(remainingAfterFirstFight, second.State.TurnState!.Timer!.RemainingMs);
+    }
+
+    [Fact]
+    public async Task DeclareAttack_DrieOpeenvolgendeAanvallenOpZelfdeDoelwit_TimerBlijftBevrorenZonderDrift()
+    {
+        // Reproduceert de melding "na meerdere aanvallen loopt de timer weer op": niet twee maar
+        // drie achtereenvolgende worpen op hetzelfde doelwit, met telkens echte klok-tijd ertussen
+        // (zowel vóór als na elke ChooseDefenseDice) — bewijst dat elke herhaalde Pause()-aanroep
+        // (AttackCommandHandler.DeclareAttackAsync L72-74, isSameTarget-tak) geen tijd laat lekken
+        // over drie rondes heen, niet alleen over één herhaling.
+        var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        await using var factory = CreateFactory(timeProvider, 2, 5, 2, 5, 2, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 7, bobArmies: 8);
+
+        var first = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        Assert.True(first.State.TurnState!.Timer!.IsPaused);
+        var remainingAfterDeclare = first.State.TurnState!.Timer!.RemainingMs;
+
+        timeProvider.Advance(TimeSpan.FromSeconds(10));
+
+        for (var round = 0; round < 3; round++)
+        {
+            var afterFight = await connection.InvokeAsync<CombatResultResponse>(
+                "ChooseDefenseDice", gameId, "p2", 1);
+            Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
+            Assert.Equal(remainingAfterDeclare, afterFight.State.TurnState!.Timer!.RemainingMs);
+
+            timeProvider.Advance(TimeSpan.FromSeconds(15));
+
+            if (round == 2)
+            {
+                break;
+            }
+
+            var again = await connection.InvokeAsync<DeclareAttackResponse>(
+                "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+            Assert.True(again.State.TurnState!.Timer!.IsPaused);
+            Assert.Equal(remainingAfterDeclare, again.State.TurnState!.Timer!.RemainingMs);
+
+            timeProvider.Advance(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_AfgeslagenAanval_TimerBlijftBevrorenZonderVervolgcommando()
+    {
+        // Reproduceert het exacte scenario van de melding: de aanvaller blijft gewoon op het
+        // resultaatscherm van een afgeslagen aanval zitten (geen "Nog een keer aanvallen"/"Ander
+        // gevecht" geklikt) en ververst alleen de state (WatchGame, geen state-wijzigend
+        // commando) nadat er echte klok-tijd verstreken is. FO §5.4 (herzien 2026-08-04): de
+        // timer mag dan niet doortellen, ook niet stilzwijgend via een pure state-fetch.
+        var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        await using var factory = CreateFactory(timeProvider, 2, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 5);
+
+        await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        var afterFight = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 1);
+        var remainingAfterFight = afterFight.State.TurnState!.Timer!.RemainingMs;
+        Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
+
+        timeProvider.Advance(TimeSpan.FromSeconds(45));
+
+        var watched = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.True(watched.TurnState!.Timer!.IsPaused);
+        Assert.Equal(remainingAfterFight, watched.TurnState!.Timer!.RemainingMs);
+    }
+
+    [Fact]
+    public async Task DeclareAttack_AnderDoelwitNaAfgeslagenAanval_VerrekentTussenliggendeTijdEnPauzeertOpnieuw()
+    {
+        // FO §5.4 (herzien 2026-08-04): kiest de aanvaller ná een afgeslagen aanval een ánder
+        // doelwit, dan is dat een nieuwe belegering — de tijd tussen de twee gevechten telt nu
+        // wél mee, tot de nieuwe "Gooi" opnieuw pauzeert.
+        var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        await using var factory = CreateFactory(timeProvider, 2, 5, 6);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(
+            factory, aliceArmies: 5, bobArmies: 5, extraBobTerritoryId: "northwest-territory");
+
+        await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        var afterFirstFight = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 1);
+        var remainingAfterFirstFight = afterFirstFight.State.TurnState!.Timer!.RemainingMs;
+        Assert.True(afterFirstFight.State.TurnState!.Timer!.IsPaused);
+
+        timeProvider.Advance(TimeSpan.FromSeconds(20));
+
+        var switched = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "northwest-territory", 1);
+
+        Assert.True(switched.State.TurnState!.Timer!.IsPaused);
+        Assert.Equal(remainingAfterFirstFight - 20_000, switched.State.TurnState!.Timer!.RemainingMs, tolerance: 100);
+    }
+
+    [Fact]
+    public async Task AbandonAttack_NaAfgeslagenAanval_HervatDeTimerMeteenZonderNieuwDoelwit()
+    {
+        // FO §5.4 (herzien 2026-08-04): "Ander gevecht" is het handmatig opgeven van de
+        // belegering, óók vóórdat er een nieuw doelwit gekozen is — de timer hoeft dus niet te
+        // wachten op een volgende "Gooi" om te hervatten.
+        var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        await using var factory = CreateFactory(timeProvider, 2, 5);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 5);
+
+        await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        var afterFight = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 1);
+        var remainingAfterFight = afterFight.State.TurnState!.Timer!.RemainingMs;
+        Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
+
+        timeProvider.Advance(TimeSpan.FromSeconds(15));
+
+        var abandoned = await connection.InvokeAsync<GameStateDto>("AbandonAttack", gameId, "p1");
+
+        Assert.False(abandoned.TurnState!.Timer!.IsPaused);
+        Assert.Equal(remainingAfterFight - 15_000, abandoned.TurnState!.Timer!.RemainingMs, tolerance: 100);
+
+        // Een tweede "Ander gevecht" zonder tussenliggende nieuwe aanval is geen geldige
+        // belegering meer om af te breken.
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("AbandonAttack", gameId, "p1"));
+        Assert.Contains("attack.noAttackToAbandon", exception.Message);
     }
 
     [Fact]
@@ -160,13 +359,16 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.Equal("p1", alberta.OwnerPlayerId);
         Assert.Equal(0, alberta.ArmyCount);
 
-        // Het gevecht blijft open tot MoveAfterConquest.
+        // Het gevecht blijft open tot MoveAfterConquest — en dus blijft ook de timer gepauzeerd
+        // (FO §5.4): de aanvaller mag ongehaast kiezen hoeveel legers hij meeverplaatst.
         Assert.NotNull(combatResult.State.TurnState!.PendingCombat);
+        Assert.True(combatResult.State.TurnState!.Timer!.IsPaused);
         Assert.False(combatResult.State.Players.Single(p => p.Id == "p2").IsEliminated);
 
         var afterMove = await connection.InvokeAsync<GameStateDto>("MoveAfterConquest", gameId, "p1", 3);
 
         Assert.Null(afterMove.TurnState!.PendingCombat);
+        Assert.False(afterMove.TurnState!.Timer!.IsPaused);
         Assert.Equal(1, afterMove.Territories.Single(t => t.TerritoryId == "alaska").ArmyCount);
         Assert.Equal(3, afterMove.Territories.Single(t => t.TerritoryId == "alberta").ArmyCount);
     }

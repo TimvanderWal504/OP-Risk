@@ -1,8 +1,8 @@
 # i18n-inventaris (Fase 0)
 
-Scope: `frontend/src/**/*.{ts,tsx}`, exclusief `*.test.tsx` en `design-reference/`
-(bestaat nog niet). Alle strings hieronder zijn Nederlands en moeten via een key
-lopen (`nl` + `en`), tenzij expliciet uitgesloten.
+Scope: `frontend/src/**/*.{ts,tsx}`, exclusief `*.test.tsx`. Alle strings hieronder
+zijn Nederlands en moeten via een key lopen (`nl` + `en`), tenzij expliciet
+uitgesloten.
 
 ## Overzicht
 

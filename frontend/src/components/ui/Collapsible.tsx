@@ -16,7 +16,7 @@ export interface CollapsibleProps {
 /**
  * Generieke inklap-sectie — geen kennis van continenten, territoria of i18n. Labels/inhoud
  * komen van de aanroeper (frontend/CLAUDE.md, `components/ui`: klein en herbruikbaar).
- * Expand/collapse-timing staat niet in de export (geen van beide `.dc.html`-bestanden bevat
+ * Expand/collapse-timing stond niet in het oorspronkelijke design (geen van beide bronnen bevatte
  * een inklapbare sectie) — puur een instant show/hide, geen `motion.ts`-waarde om over te
  * nemen; een animatie hier zou zelf verzonnen zijn.
  */

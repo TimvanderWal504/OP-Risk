@@ -34,6 +34,26 @@ describe('useCountdown', () => {
     expect(result.current).toBe(5000)
   })
 
+  it('stopt het interval zodra een lopende timer via een rerender gepauzeerd wordt', () => {
+    const { result, rerender } = renderHook(({ timer }) => useCountdown(timer), {
+      initialProps: { timer: { remainingMs: 5000, isPaused: false } },
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    const frozenAt = result.current
+    expect(frozenAt).toBeLessThan(5000)
+
+    rerender({ timer: { remainingMs: frozenAt, isPaused: true } })
+
+    act(() => {
+      vi.advanceTimersByTime(10000)
+    })
+
+    expect(result.current).toBe(frozenAt)
+  })
+
   it('her-ankert op een nieuwe remainingMs-waarde uit een volgende server-push', () => {
     const { result, rerender } = renderHook(({ timer }) => useCountdown(timer), {
       initialProps: { timer: { remainingMs: 5000, isPaused: false } },

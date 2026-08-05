@@ -6,8 +6,8 @@ timingwaarden — alleen wat er al vastligt in `motion.ts`/de export wordt gecit
 
 **Bronnen:** zie de opdracht. Volledige lijst gelezen bestanden staat in het antwoord
 vóór dit document (routes/tv, hooks, types, betrokken components, `GameHub.cs`,
-`GameStateDto.cs`/`GameStateDtoMapper.cs`, `motion.ts`, de TV-`.dc.html`-export inclusief
-de demo-state-JS, FO en TO volledig).
+`GameStateDto.cs`/`GameStateDtoMapper.cs`, `motion.ts`, het (inmiddels verwijderde)
+oorspronkelijke TV-design inclusief de demo-state-JS, FO en TO volledig).
 
 **Statusnotitie vooraf:** `TvPage.tsx` implementeert `Lobby`, `OrderRoll` en — sinds de
 Reinforce-taak — het "Main board"-deel van `InProgress` (`TvMainBoardScreen`). `Claiming`,
@@ -376,10 +376,10 @@ nodig zijn om §1 volledig te kunnen implementeren:
   `transform`/`opacity` toe ("wat layout of paint triggert… stottert daar"). Dit is dus
   een expliciete schending in de export zelf van de eigen TV-motion-regel — melden, niet
   zelf oplossen met een `scaleX`-vervanger of iets dergelijks.
-- `atlasFlip` (gedefinieerd in `motion.ts`/de export, nergens toegepast) gebruikt
-  `filter`, wat sowieso niet mag op TV — al gemarkeerd als ongebruikt in `motion.ts`
-  zelf, hier bevestigd vanuit de export: geen enkele `animation:`-declaratie in de
-  `.dc.html` refereert naar `atlasFlip`.
+- `atlasFlip` (gedefinieerd in `motion.ts`/het oorspronkelijke design, nergens toegepast)
+  gebruikt `filter`, wat sowieso niet mag op TV — al gemarkeerd als ongebruikt in
+  `motion.ts` zelf, destijds bevestigd vanuit het oorspronkelijke design: geen enkele
+  `animation:`-declaratie daarin refereerde naar `atlasFlip`.
 
 ### Overig
 - De `showEvent`-vlag in de demo-JS stuurt zowel de kleine persistente

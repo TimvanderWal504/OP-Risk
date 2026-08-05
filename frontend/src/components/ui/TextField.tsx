@@ -24,7 +24,7 @@ export function TextField({
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       aria-label={ariaLabel}
-      className={`rounded-input border border-gold-600 bg-[var(--atlas-t05)] p-4 font-display text-h3 font-bold ${
+      className={`rounded-input border border-silver-600 bg-[var(--atlas-t05)] p-4 font-display text-h3 font-bold ${
         uppercase ? 'uppercase' : ''
       }`}
     />

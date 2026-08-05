@@ -18,7 +18,7 @@ export interface JoinRoleStepProps {
 }
 
 /** Tweede join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen.
- * Select-dan-bevestig (Telefoon.dc.html L303-332 na de export-update): een klik
+ * Select-dan-bevestig (uit het oorspronkelijke design): een klik
  * zet alleen de lokale keuze; zonder keuze toont de knopplek een placeholder-tekst
  * i.p.v. een knop. De footer is een rij van twee knoppen: `onBack` (naar de
  * naam+kleur-stap) en de bevestigknop die `onPick` aanroept. */

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { OrderRollTvPanel } from './OrderRollTvPanel'
-import { tvAnimations } from '../design-reference/shared/motion'
+import { tvAnimations } from '../styles/motion'
 
 const colors = [
   { id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' },

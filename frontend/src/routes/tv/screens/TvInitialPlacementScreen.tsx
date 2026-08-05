@@ -5,8 +5,8 @@ import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
-import { boardTok } from '../../../design-reference/shared/design-tokens'
-import { tvAnimations } from '../../../design-reference/shared/motion'
+import { boardTok } from '../../../styles/design-tokens'
+import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import type { TvScreenProps } from './tvScreens'
 
@@ -23,7 +23,7 @@ function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
 
 /**
  * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Geen letterlijke exportsectie —
- * bevestigde bevinding (de TV-`states`-lijst in Host-scherm.dc.html kent geen aparte staat
+ * bevestigde bevinding (de TV-`states`-lijst in het oorspronkelijke design kende geen aparte staat
  * voor deze fase), afgestemd met de gebruiker: hergebruikt het Hoofdscherm-grid-patroon van
  * `TvMainBoardScreen.tsx`, 3-rijen grid, geen rechterpaneel/feed-strip (zelfde scope-afspraak
  * als daar).
@@ -39,7 +39,7 @@ function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
  * Read-only (FO §7.3/§2.3) — geen `onClick` op de gebiedslagen.
  */
 export function TvInitialPlacementScreen({ state }: TvScreenProps) {
-  // 'board' erbij voor `turnOf` (Host-scherm.dc.html:192), zelfde hergebruik als TvClaimingScreen.
+  // 'board' erbij voor `turnOf`, zelfde hergebruik als TvClaimingScreen.
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
 

@@ -1,4 +1,4 @@
-import { atlasRoughTok, boardMarkerTok, boardTok } from '../design-reference/shared/design-tokens'
+import { atlasRoughTok, boardMarkerTok, boardTok } from '../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from './boardScale'
 
 /**
@@ -44,7 +44,7 @@ export const atlasRough = {
 } as const
 
 /**
- * Marker- en randmaten specifiek voor `TvClaimingScreen` — Host-scherm.dc.html:1161-1169
+ * Marker- en randmaten specifiek voor `TvClaimingScreen`, uit het oorspronkelijke TV-design
  * (`claimTerr`, `isClaim`-tak): een geclaimd gebied krijgt een dunnere polygoon-rand dan het
  * Hoofdscherm (`sw: claimed?2:1.5` i.p.v. `ownSw`/`enSw` uit `boardTok`, want Claiming kent geen
  * eigen/vijand-onderscheid — alleen geclaimd/vrij), en het laatst-geclaimde gebied krijgt zowel

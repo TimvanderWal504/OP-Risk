@@ -2,7 +2,7 @@ import type { LocaleTree } from '../i18n/types'
 
 /**
  * Versterken (`TurnPhaseDto.Reinforce`, FO §5.2), telefoonkant. Bron:
- * `design-reference/phone/Operatie Atlas Telefoon.dc.html` L501-540 (`isReinf`).
+ * het oorspronkelijke telefoon-design se `isReinf`-fase.
  * De "Kaarteninleg"-rij uit de export (L519-526) ontbreekt bewust — blokkeert op het
  * ontbrekende hand-DTO (zie het Reinforce-plan, "Buiten scope"), niet vergeten.
  */

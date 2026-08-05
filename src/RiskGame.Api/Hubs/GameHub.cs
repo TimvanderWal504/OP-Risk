@@ -301,6 +301,13 @@ public sealed class GameHub(
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
     }
 
+    public async Task<GameStateDto> AbandonAttack(string gameId, string playerId)
+    {
+        var result = await attackCommands.AbandonAttackAsync(gameId, playerId);
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+    }
+
     public async Task<GameStateDto> Fortify(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
     {

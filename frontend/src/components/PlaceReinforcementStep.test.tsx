@@ -6,11 +6,11 @@ import { PlaceReinforcementStep } from './PlaceReinforcementStep'
 const myColor = { id: 'red', name: 'Rood', hex: '#800020', onHex: '#f9a8a8', symbol: 'circle' }
 
 const territoryCatalog = [
-  { id: 'alaska', continent: 'north-america' },
-  { id: 'alberta', continent: 'north-america' },
-  { id: 'ontario', continent: 'north-america' },
-  { id: 'ukraine', continent: 'europe' },
-  { id: 'western-europe', continent: 'europe' },
+  { id: 'alaska', continent: 'north-america', neighborTerritoryIds: [] },
+  { id: 'alberta', continent: 'north-america', neighborTerritoryIds: [] },
+  { id: 'ontario', continent: 'north-america', neighborTerritoryIds: [] },
+  { id: 'ukraine', continent: 'europe', neighborTerritoryIds: [] },
+  { id: 'western-europe', continent: 'europe', neighborTerritoryIds: [] },
 ]
 
 const myTerritories = [

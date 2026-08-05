@@ -32,8 +32,22 @@ public sealed record ChooseDefenseDiceResult(
 /// handler rijgt ze aan elkaar, net als <see cref="ReinforceCommandHandler"/> dat deed
 /// voor Versterken.
 /// </summary>
-public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
+public sealed class AttackCommandHandler(
+    IDocumentStore store, IRandomSource random, TimeProvider timeProvider, ILogger<AttackCommandHandler> logger)
 {
+    /// <summary>
+    /// Tijdelijke diagnose-logging voor het gemelde beurttimer-probleem (FO §5.4): logt de
+    /// daadwerkelijk gepersisteerde timer-staat (niet de intentie) na elk commando dat 'm kan
+    /// raken, zodat een live sessie te herleiden is tot het exacte moment waarop
+    /// <see cref="RiskGame.Rules.State.PhaseTimer.IsPaused"/> onterecht omslaat. Verwijderen
+    /// zodra het gemeld gedrag bevestigd of weerlegd is.
+    /// </summary>
+    private void LogTimerState(string command, string gameId, string playerId, GameStateDto state) =>
+        logger.LogInformation(
+            "[TimerDiag] {Command} game={GameId} player={PlayerId} isPaused={IsPaused} remainingMs={RemainingMs} serverNow={ServerNow:o}",
+            command, gameId, playerId, state.TurnState?.Timer?.IsPaused, state.TurnState?.Timer?.RemainingMs,
+            timeProvider.GetUtcNow());
+
     public async Task<Result<DeclareAttackResult>> DeclareAttackAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
     {
@@ -58,7 +72,21 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         var now = timeProvider.GetUtcNow();
         var timer = state.TurnState!.Timer!;
-        var remaining = timer.Tick(now - timer.LastUpdatedUtc).Remaining;
+
+        // FO §5.4 (herzien 2026-08-04): "een gevecht" is de hele belegering van één doelwit,
+        // niet één worp. Blijft de aanvaller op hetzelfde gebiedspaar aanvallen, dan blijft de
+        // timer over de herhaalde worpen heen bevroren (Tick() is toch al een no-op zolang
+        // IsPaused waar is). Kiest de aanvaller een ánder doelwit terwijl de timer nog van de
+        // vorige belegering bevroren staat, dan telt de tijd die hij nu aan het kiezen besteedt
+        // weer mee — ResumeAndTick verrekent dat in één stap (zie doc-comment daar).
+        var isSameTarget = state.TurnState.PausedAttackTarget is { } pausedTarget
+            && pausedTarget.FromTerritoryId == fromTerritoryId
+            && pausedTarget.ToTerritoryId == toTerritoryId;
+
+        var remaining = timer.IsPaused && !isSameTarget
+            ? timer.ResumeAndTick(now).Remaining
+            : timer.Tick(now - timer.LastUpdatedUtc).Remaining;
+
         var correlationId = Guid.NewGuid();
 
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
@@ -70,9 +98,10 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState(isSameTarget ? "DeclareAttack (zelfde doelwit)" : "DeclareAttack (nieuw doelwit)", gameId, playerId, updatedDto);
 
-        return Result<DeclareAttackResult>.Success(
-            new DeclareAttackResult(attackerRolls, correlationId, GameStateDtoMapper.ToDto(updated!, timeProvider)));
+        return Result<DeclareAttackResult>.Success(new DeclareAttackResult(attackerRolls, correlationId, updatedDto));
     }
 
     public async Task<Result<ChooseDefenseDiceResult>> ChooseDefenseDiceAsync(
@@ -145,6 +174,8 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState(conquest.Conquered ? "ChooseDefenseDice (veroverd)" : "ChooseDefenseDice (afgeslagen)", gameId, attackerId, updatedDto);
 
         return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(
             attackerRolls,
@@ -158,7 +189,46 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             pendingCombat.ToTerritoryId,
             eliminatedPlayerId,
             pendingCombat.CorrelationId,
-            GameStateDtoMapper.ToDto(updated!, timeProvider)));
+            updatedDto));
+    }
+
+    /// <summary>
+    /// "Ander gevecht" (FO §5.4): de aanvaller stopt handmatig met de belegering van het
+    /// huidige doelwit na een afgeslagen worp, zonder meteen een nieuw doelwit te kiezen. Zelfde
+    /// <see cref="PhaseTimer.ResumeAndTick"/>-berekening als het wisselen van doelwit in
+    /// <see cref="DeclareAttackAsync"/>, maar hier los van een nieuwe <c>AttackDeclared</c> —
+    /// zonder dit event zou de timer op "Gepauzeerd" blijven staan tot de aanvaller alsnog een
+    /// volgende aanval aankondigt of de fase beëindigt.
+    /// </summary>
+    public async Task<Result<GameStateDto>> AbandonAttackAsync(string gameId, string playerId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+        }
+
+        var validation = AttackGuards.CanAbandonAttack(state, playerId);
+
+        if (!validation.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(validation.Errors);
+        }
+
+        var now = timeProvider.GetUtcNow();
+        var remaining = state.TurnState!.Timer!.ResumeAndTick(now).Remaining;
+
+        session.Events.Append(gameId, new AttackAbandoned(gameId, playerId, remaining, now));
+
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState("AbandonAttack", gameId, playerId, updatedDto);
+
+        return Result<GameStateDto>.Success(updatedDto);
     }
 
     public async Task<Result<GameStateDto>> MoveAfterConquestAsync(
@@ -198,7 +268,9 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+        LogTimerState("MoveAfterConquest", gameId, playerId, updatedDto);
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
+        return Result<GameStateDto>.Success(updatedDto);
     }
 }

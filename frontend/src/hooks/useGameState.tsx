@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
+import { useCombatBroadcast } from './useCombatBroadcast'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
-import type { DiceRolledMessage, JoinGameResponse, OrderRollResponse } from '../types/HubResponses'
+import type {
+  CombatResultResponse,
+  DeclareAttackResponse,
+  DiceRolledMessage,
+  JoinGameResponse,
+  OrderRollResponse,
+} from '../types/HubResponses'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
@@ -274,6 +281,67 @@ export function useGameState(gameId: string) {
     if (updated) applyState(updated)
   }, [invoke, gameId, playerId])
 
+  // De aanvaller krijgt zijn eigen worp ook via de "attack"-broadcast (dezelfde group als de
+  // caller), dus geen los retourwaarde-pad nodig — zelfde fire-and-forget-patroon als
+  // `placeReinforcements`. `combat` (hieronder) draagt de weergavedata voor zowel aanvaller als
+  // verdediger.
+  const declareAttack = useCallback(
+    async (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => {
+      if (!playerId) return
+
+      const response = await invoke<DeclareAttackResponse>(
+        'DeclareAttack',
+        gameId,
+        playerId,
+        fromTerritoryId,
+        toTerritoryId,
+        attackDice,
+      )
+
+      if (response) applyState(response.state)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  // In tegenstelling tot de andere acties hier géén fire-and-forget: `DefendStep` toont het
+  // volledige gevechtsresultaat rechtstreeks uit deze respons (geen `CombatNarrated`-broadcast
+  // nodig voor de verdediger zelf — zie het Attack-bouwplan).
+  const chooseDefenseDice = useCallback(
+    async (defenseDice: number): Promise<CombatResultResponse | undefined> => {
+      if (!playerId) return undefined
+
+      const response = await invoke<CombatResultResponse>('ChooseDefenseDice', gameId, playerId, defenseDice)
+
+      if (response) applyState(response.state)
+
+      return response
+    },
+    [invoke, gameId, playerId],
+  )
+
+  const moveAfterConquest = useCallback(
+    async (armiesToMove: number) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('MoveAfterConquest', gameId, playerId, armiesToMove)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  // "Ander gevecht" (FO §5.4): stopt de belegering van het huidige doelwit handmatig, zodat de
+  // beurttimer meteen hervat i.p.v. pas bij een volgende `DeclareAttack` — zie AttackCommandHandler.
+  const abandonAttack = useCallback(async () => {
+    if (!playerId) return
+
+    const updated = await invoke<GameStateDto>('AbandonAttack', gameId, playerId)
+
+    if (updated) applyState(updated)
+  }, [invoke, gameId, playerId])
+
+  const combat = useCombatBroadcast(connection)
+
   return {
     state,
     playerId,
@@ -281,6 +349,7 @@ export function useGameState(gameId: string) {
     error,
     orderRollThrows,
     territoryCatalog,
+    combat,
     joinGameWithColor,
     chooseColor,
     removePlayer,
@@ -290,6 +359,10 @@ export function useGameState(gameId: string) {
     claimTerritory,
     placeInitialArmy,
     placeReinforcements,
+    declareAttack,
+    chooseDefenseDice,
+    moveAfterConquest,
+    abandonAttack,
     endPhase,
   }
 }

@@ -144,6 +144,55 @@ public class AttackGuardsTests
     }
 
     [Fact]
+    public void AndereAanvalAfbreken_MetBevrorenBelegeringEnGeenLopendGevecht_IsGeldig()
+    {
+        var state = TestGame.InProgress(
+            turnPhase: TurnPhase.Attack,
+            pausedAttackTarget: new AttackEngagement("alaska", "alberta"));
+
+        var result = AttackGuards.CanAbandonAttack(state, "p1");
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void AndereAanvalAfbreken_ZonderBevrorenBelegering_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack);
+
+        var result = AttackGuards.CanAbandonAttack(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.noAttackToAbandon", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void AndereAanvalAfbreken_TerwijlErNogEenGevechtLoopt_IsOngeldig()
+    {
+        var state = TestGame.InProgress(
+            turnPhase: TurnPhase.Attack,
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()),
+            pausedAttackTarget: new AttackEngagement("alaska", "alberta"));
+
+        var result = AttackGuards.CanAbandonAttack(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.combatInProgress", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void AndereAanvalAfbreken_DoorNietDeActieveSpeler_IsOngeldig()
+    {
+        var state = TestGame.InProgress(
+            turnPhase: TurnPhase.Attack,
+            pausedAttackTarget: new AttackEngagement("alaska", "alberta"));
+
+        var result = AttackGuards.CanAbandonAttack(state, "p2");
+
+        Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
     public void Aanval_OverGeblokkeerdeZeeroute_IsOngeldig()
     {
         var state = TestGame.InProgress(

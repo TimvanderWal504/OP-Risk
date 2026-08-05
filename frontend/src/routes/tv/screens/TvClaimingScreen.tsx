@@ -2,15 +2,15 @@ import { useTranslation } from 'react-i18next'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, claimMarker } from '../../../map/boardVisualTokens'
-import { boardTok, symbolGlyph } from '../../../design-reference/shared/design-tokens'
-import { tvAnimations } from '../../../design-reference/shared/motion'
+import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
+import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import type { TvScreenProps } from './tvScreens'
 
 const MAP_ID = 'standaard-43'
 
 /**
- * TV tijdens `GamePhaseDto.Claiming` (Host-scherm.dc.html L184-254, `isClaim`, state-index 2).
+ * TV tijdens `GamePhaseDto.Claiming` (`isClaim`-fase, state-index 2, uit het oorspronkelijke design).
  * `state.setupState.activePlayerId` is tijdens Claiming per constructie nooit `null`
  * (`GameProjection.Apply(TurnOrderDetermined)` stapt alleen bij `SetupMode.Claiming` naar
  * deze fase — bij `SetupMode.Random` gaat de state rechtstreeks naar `InitialPlacement`, deze
@@ -33,7 +33,7 @@ const MAP_ID = 'standaard-43'
  * gebiedslagen.
  */
 export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProps) {
-  // 'board' erbij voor `turnOf` (Host-scherm.dc.html:192) — dezelfde tekst als op het
+  // 'board' erbij voor `turnOf` (zoals in het oorspronkelijke design) — dezelfde tekst als op het
   // Hoofdscherm, geen dubbele sleutel in twee namespaces (bouwplan Belangrijk 7).
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
@@ -62,7 +62,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
             </div>
           )}
           <div>
-            <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+            <div className="font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
               {t('board:turnOf')}
             </div>
             <div className="font-display text-[34px] font-black leading-none">
@@ -72,12 +72,12 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
           </div>
         </div>
 
-        <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-[22px] font-black tracking-[.02em] text-pitch-300">
+        <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-h2 font-black tracking-[.02em] text-pitch-300">
           {t('claimKicker')}
         </div>
 
         <div className="flex flex-col items-end">
-          <span className="mb-1 font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
+          <span className="mb-1 font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
             {t('claimCounterLabel')}
           </span>
           <div className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-[56px] font-black leading-none tabular-nums text-fg">
@@ -202,7 +202,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
       </div>
 
       <div className="col-start-2 row-start-2 flex min-h-0 flex-col">
-        <div className="mb-3 font-body text-[15px] font-extrabold uppercase tracking-[.14em] text-fg-muted">
+        <div className="mb-3 font-body text-body font-extrabold uppercase tracking-[.14em] text-fg-muted">
           {t('claimPanelTitle')}
         </div>
         <div className="flex flex-col gap-3">
@@ -219,11 +219,11 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 key={playerId}
                 className="relative flex items-center gap-4 overflow-hidden rounded-[14px] border p-3.5"
                 style={{
-                  background: isCurrent ? 'rgba(242,169,34,.10)' : 'var(--atlas-row)',
-                  borderColor: isCurrent ? 'var(--gold-600)' : 'var(--border)',
+                  background: isCurrent ? 'rgba(156,176,202,.10)' : 'var(--atlas-row)',
+                  borderColor: isCurrent ? 'var(--silver-600)' : 'var(--border)',
                 }}
               >
-                {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-gold-400" />}
+                {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-silver-400" />}
                 <div
                   className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-[28px]"
                   style={{ background: color.hex, color: color.onHex }}
@@ -232,7 +232,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
-                  <div className="mt-0.75 font-body text-[15px] text-fg-muted">{color.name}</div>
+                  <div className="mt-0.75 font-body text-body text-fg-muted">{color.name}</div>
                 </div>
                 <div className="font-display text-[34px] font-black tabular-nums text-fg">{count}</div>
               </div>

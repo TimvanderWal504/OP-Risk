@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T00:00:00Z",
+  "title": "Design System: Operatie Atlas",
+  "extensions": {
+    "colorMeta": {
+      "territory-green": { "role": "primary", "displayName": "Territory Green", "canonical": "#a1c23a", "tonalRamp": ["#1b2709", "#36481a", "#41571a", "#536f1b", "#6b8f1f", "#84ad28", "#a1c23a", "#bbd45f"] },
+      "territory-green-fill": { "role": "primary", "displayName": "Territory Green Fill", "canonical": "#84ad28", "tonalRamp": ["#1b2709", "#36481a", "#41571a", "#536f1b", "#6b8f1f", "#84ad28", "#a1c23a", "#bbd45f"] },
+      "command-blue": { "role": "secondary", "displayName": "Command Blue", "canonical": "#6ba2d8", "tonalRamp": ["#0b1a2b", "#142b44", "#173351", "#193d62", "#1c4a78", "#215990", "#3d79b5", "#6ba2d8"] },
+      "command-blue-deep": { "role": "secondary", "displayName": "Command Blue Deep", "canonical": "#2e6aa8", "tonalRamp": ["#0b1a2b", "#142b44", "#173351", "#193d62", "#1c4a78", "#215990", "#3d79b5", "#6ba2d8"] },
+      "recon-silver": { "role": "tertiary", "displayName": "Recon Silver", "canonical": "#c2cddd", "tonalRamp": ["#212733", "#394457", "#425068", "#4f607d", "#627798", "#7b93b3", "#9cb0ca", "#c2cddd"] },
+      "recon-silver-deep": { "role": "tertiary", "displayName": "Recon Silver Deep", "canonical": "#627798", "tonalRamp": ["#212733", "#394457", "#425068", "#4f607d", "#627798", "#7b93b3", "#9cb0ca", "#c2cddd"] },
+      "alert-red": { "role": "status", "displayName": "Alert Red", "canonical": "#ff4d52" },
+      "conquest-green": { "role": "status", "displayName": "Conquest Green", "canonical": "#56c96a" },
+      "caution-amber": { "role": "status", "displayName": "Caution Amber", "canonical": "#f2c14e" },
+      "field-ink-950": { "role": "neutral", "displayName": "Field Ink 950 (canvas)", "canonical": "#080c14", "tonalRamp": ["#080c14", "#111927", "#141d2c", "#1b2738", "#243246", "#354054", "#475468", "#6f7e97"] },
+      "field-ink-800": { "role": "neutral", "displayName": "Field Ink 800 (surface)", "canonical": "#1b2738" },
+      "field-ink-700": { "role": "neutral", "displayName": "Field Ink 700 (surface-3)", "canonical": "#243246" },
+      "field-ink-400": { "role": "neutral", "displayName": "Field Ink 400 (muted text)", "canonical": "#6f7e97" },
+      "field-ink-100": { "role": "neutral", "displayName": "Field Ink 100 (primary text)", "canonical": "#eef2f8" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero numerals, big scores, phase headlines. Lexend via the swappable 'Brand Font' @font-face alias." },
+      "h1": { "displayName": "H1", "purpose": "Screen/page titles." },
+      "body": { "displayName": "Body", "purpose": "Default UI copy. Gilroy via the swappable 'Body Font' @font-face alias." },
+      "label": { "displayName": "Label", "purpose": "Kickers, badges, meta text. Always uppercase, 0.08em tracking." },
+      "mono": { "displayName": "Mono", "purpose": "Tabular data: dice rolls, codes." }
+    },
+    "shadows": [
+      { "name": "pitch-glow", "value": "0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)", "purpose": "The single primary-CTA glow. Reserved for Button primary only." },
+      { "name": "card", "value": "0 1px 2px rgba(10,14,23,.06), 0 4px 16px -6px rgba(10,14,23,.12)", "purpose": "Optional raised-card elevation; tonal overlay is preferred by default." },
+      { "name": "raised", "value": "0 8px 30px -8px rgba(10,14,23,.22)", "purpose": "Stronger raise for floating elements." },
+      { "name": "sheet", "value": "0 -8px 40px -12px rgba(10,14,23,.35)", "purpose": "Bottom-sheet/modal separation from the page behind it." },
+      { "name": "glow-live", "value": "0 0 0 1px rgba(216,38,43,.5), 0 6px 24px -8px rgba(216,38,43,.45)", "purpose": "Live/urgent-state emphasis." }
+    ],
+    "motion": [
+      { "name": "atlas-ease", "value": "cubic-bezier(.2,.7,.3,1)", "purpose": "Default entrance/reveal easing used across nearly every TV and phone animation (chip-in, card reveal, overlay-in, badge swap)." },
+      { "name": "atlas-ease-brisk", "value": "cubic-bezier(.2,.8,.3,1)", "purpose": "Slightly snappier variant used for dice-roll/tumble animations." },
+      { "name": "atlas-duration-reveal", "value": "300ms-500ms", "purpose": "Typical duration band for state-driven reveals (chip-in, panel-in, stage-in)." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full-width, glowing brand CTA (Start spel, Gooien, confirm actions).",
+      "html": "<button class=\"ds-btn-primary\">START SPEL</button>",
+      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: #84ad28; color: #04060b; font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; box-shadow: 0 8px 22px rgba(132,173,40,0.35); border: none; transition: opacity 0.2s; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:focus-visible { outline: 2px solid #4f8fd4; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet, non-glowing action button for less prominent actions.",
+      "html": "<button class=\"ds-btn-secondary\">ANNULEREN</button>",
+      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: rgba(255,255,255,0.05); color: #eef2f8; border: 1px solid #33425a; font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; transition: opacity 0.2s; } .ds-btn-secondary:hover { opacity: 0.85; } .ds-btn-secondary:focus-visible { outline: 2px solid #4f8fd4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Silver-bordered text input, e.g. join-code entry.",
+      "html": "<input class=\"ds-input\" placeholder=\"CODE\" />",
+      "css": ".ds-input { border-radius: 10px; border: 1px solid #627798; background: rgba(255,255,255,0.05); padding: 16px; font-family: 'Lexend', sans-serif; font-size: 17px; font-weight: 700; color: #eef2f8; } .ds-input:focus-visible { outline: 2px solid #4f8fd4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Silver Outline Badge",
+      "kind": "chip",
+      "refersTo": "badge-silver-outline",
+      "description": "Default neutral kicker/phase-label chip.",
+      "html": "<span class=\"ds-badge-silver\">CLAIMEN</span>",
+      "css": ".ds-badge-silver { display: inline-flex; padding: 6px 16px; border-radius: 9999px; border: 1px solid #4f607d; color: #9cb0ca; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Pitch Solid Badge",
+      "kind": "chip",
+      "refersTo": "badge-pitch-solid",
+      "description": "Confirmed/active-state chip variant.",
+      "html": "<span class=\"ds-badge-pitch\">ACTIEF</span>",
+      "css": ".ds-badge-pitch { display: inline-flex; padding: 6px 16px; border-radius: 9999px; background: #a1c23a; color: #04060b; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Broadcast War Room",
+    "overview": "Operatie Atlas puts a shared TV screen at the center of the room and hands every player a private phone controller — the visual language borrows from sports broadcast graphics (scoreboards, lower-thirds, on-screen tickers) rather than board-game skeuomorphism, because the product's own framing is a command center the whole table watches together, not a tabletop replica. Bold, black-weight display type reads at a distance on a TV across a living room; tight uppercase label text and tabular numerals borrow directly from scorebug conventions; primary actions carry a soft glow rather than a hard shadow, the way a live broadcast highlights the active element on screen. The mood is confident and high-contrast: black-weight headlines, a saturated green CTA that glows rather than sits flat, and dark canvases that make map territory colors and player seat colors read clearly. Both the TV and phone shells force dark mode regardless of the device's OS theme preference — this is a deliberate, hard invariant, because the product is built to be read across a room on a TV. A complete light theme exists in the token layer in parallel for any surface that isn't the TV/phone game shells themselves.",
+    "keyCharacteristics": [
+      "Black-weight (800), display-font headlines and scores; body copy stays lighter and calmer.",
+      "Dark-forced game shells; a parallel light theme exists in tokens but isn't wired to any current screen.",
+      "Primary actions glow (soft ambient shadow) instead of using hard elevation shadows.",
+      "Uppercase, wide-tracked eyebrow/label text throughout (kickers, badges, stat headers).",
+      "Tabular numerals everywhere a value could change in place (timers, scores, dice results).",
+      "Seven colorblind-safe player seat colors (data/colors.json) sit outside this brand palette."
+    ],
+    "rules": [
+      { "name": "The One Glow Rule", "body": "Only the primary CTA gets shadow-glow-pitch. No other element glows — that's what keeps the primary action findable at a glance from across a room.", "section": "colors" },
+      { "name": "The Tabular Numerals Rule", "body": "Any number that can change in place — timers, dice results, army counts, scores — uses font-variant-numeric: tabular-nums so digit width never shifts.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Depth comes from a translucent tint layer or a border, not a shadow — shadows are reserved for the one CTA glow and sheet/modal separation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do reserve the glow shadow (shadow-glow-pitch) for the single primary CTA on a screen — it's a scarcity signal, not decoration.",
+      "Do use tabular numerals for any value that updates in place.",
+      "Do keep uppercase + wide letter-spacing (0.08em) for kicker/label/eyebrow text at the 11-13px sizes.",
+      "Do treat data/colors.json player seat colors as a separate system from this palette."
+    ],
+    "donts": [
+      "Don't reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04). Caution Amber is the one exception, since it's a functional status color, not decoration.",
+      "Don't add box-shadow-based elevation to cards or rows by default — use a tonal overlay or a border instead.",
+      "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today."
+    ]
+  }
+}

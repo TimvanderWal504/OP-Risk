@@ -11,14 +11,20 @@ telefoon-scherm per speler.
 1. `docs/functioneel-ontwerp-risk.md` — spelregels; nooit zelf invullen bij twijfel, vraag het na
 2. `docs/technisch-ontwerp-risk.md` — architectuur en stack
 3. `data/*.json` — alle kaart-, kleur-, kaartendeck- en grenzendata
-4. `frontend/src/design-reference/` — **normatief** voor alles wat zichtbaar of
-   bewegend is: layout, spacing, typografie, kleur, states, animatie en timing.
-   - TV/host: `frontend/src/design-reference/tv/Operatie Atlas Host-scherm.dc.html`
-   - Telefoon: `frontend/src/design-reference/phone/Operatie Atlas Telefoon.dc.html`
+4. `DESIGN.md` (repo-root) — **normatief** voor de visuele laag: kleuren,
+   typografie, vorm, elevatie en componentkarakter. Machinaal leesbare tokens
+   staan in de YAML-frontmatter; de sidecar `.impeccable/design.json` vult aan
+   met tonale ramps, schaduw-/motion-extensies en volledige component-snippets.
+   `frontend/src/styles/design-tokens.ts` en `motion.ts` blijven de exacte,
+   letterlijke implementatie-waarden (pixels, ms, easing) — `DESIGN.md` is de
+   beschrijvende laag erboven, geen pixel-exacte spec.
 
 Deze vier zijn even bindend. Het design is geen inspiratie en geen richting —
 het is de specificatie van de visuele laag, met dezelfde status als het FO voor
-de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
+de spelregels. Wijkt de implementatie af, dan is de implementatie fout. Anders
+dan bij het FO is `DESIGN.md` wel bedoeld om mee te evolueren met de codebase
+(regenereren via `/impeccable document` na een bewuste visuele wijziging) —
+zie frontend/CLAUDE.md voor hoe dat samenwerkt met de tokenbestanden.
 
 ## Repo-indeling
 
@@ -30,8 +36,9 @@ de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
 | [src/RiskGame.Rules.Tests/](src/RiskGame.Rules.Tests/) | Unit tests op de rules engine |
 | [src/RiskGame.Api/](src/RiskGame.Api/) | **Stap 2–3** — Minimal API + SignalR hub |
 | [src/RiskGame.Api.Tests/](src/RiskGame.Api.Tests/) | Integratietests op de API |
-| [frontend/src/design-reference/](frontend/src/design-reference/) | Ruwe Design-MCP-export — **ONGEWIJZIGD laten**, alleen lezen |
-| [frontend/src/components/](frontend/src/components/) | "Echte" componenten, geïnspireerd op `design-reference/` |
+| [DESIGN.md](DESIGN.md) | Impeccable-gegenereerde visuele spec (kleuren, typografie, vorm, componenten) — bindend, evolueert met de codebase via `/impeccable document` |
+| [frontend/src/styles/](frontend/src/styles/) | Design-tokens (`design-tokens.ts`, `motion.ts`) en de daadwerkelijke runtime-CSS (`ds/colors_and_type.css`, `ds/twc-theme.css`) — geen ruwe export meer, gewoon broncode |
+| [frontend/src/components/](frontend/src/components/) | "Echte" componenten, opgebouwd volgens `DESIGN.md` en de tokens in `frontend/src/styles/` |
 | [frontend/src/map/](frontend/src/map/) | Projectie-logica + SVG-overlay (§7.2 TO) |
 | `frontend/src/routes/<device>/screens/` | Eén scherm per spelfase + het fase→scherm-register; containers die props afleiden, geen presentational componenten |
 | [frontend/src/hooks/](frontend/src/hooks/) | `useSignalR`, `useGameState` |
@@ -40,17 +47,20 @@ de spelregels. Wijkt de implementatie af, dan is de implementatie fout.
 
 ## Werkafspraken
 
-- `design-reference/` is read-only én normatief. Nooit bewerken. De componenten
-  in `components/` moeten visueel en qua beweging **niet te onderscheiden** zijn
-  van de export; alleen de databron verschilt (echte server-state via SignalR in
-  plaats van de mock-data uit de export).
-- **Het design mag niet "verbeterd" worden.** Andere spacing, ander lettertype,
-  een net iets vloeiendere animatie, een extra hover-state, een "consistenter"
-  raster: allemaal afwijkingen, ook als ze objectief mooier zijn. Zie je iets dat
-  echt fout lijkt in het design, dan is dat een bevinding die je meldt — geen
-  invulruimte, net als bij een ontbrekende spelregel.
-- `design-tokens.ts` en `motion.ts` (zie frontend/CLAUDE.md) zijn afgeleiden van
-  de export en zijn eveneens bevroren: alleen wijzigen als de export wijzigt.
+- `DESIGN.md` is normatief voor kleur, typografie, vorm en componentkarakter.
+  De componenten in `components/` moeten visueel en qua beweging **niet te
+  onderscheiden** zijn van wat `DESIGN.md` en de tokens beschrijven; alleen de
+  databron verschilt (echte server-state via SignalR in plaats van mock-data).
+- **Het design mag niet stilzwijgend "verbeterd" worden.** Andere spacing, een
+  net iets vloeiendere animatie, een extra hover-state, een "consistenter"
+  raster: allemaal afwijkingen, ook als ze objectief mooier zijn — tenzij het
+  een bewuste, aan de gebruiker voorgelegde visuele wijziging is (dan hoort
+  het in `DESIGN.md` via `/impeccable document`, niet als stille drift). Zie je
+  iets dat echt fout lijkt, dan is dat een bevinding die je meldt.
+- `design-tokens.ts` en `motion.ts` (zie frontend/CLAUDE.md, nu in
+  `frontend/src/styles/`) zijn de exacte implementatiewaarden en zijn bevroren:
+  alleen wijzigen bij een bewuste, expliciet opgedragen visuele wijziging —
+  gevolgd door een `DESIGN.md`-regeneratie zodat de spec niet achterloopt.
 - `RiskGame.Rules` blijft vrij van ASP.NET-, SignalR-, Marten-, I/O- en
   tijdafhankelijkheden zodat spelregels deterministisch testbaar zijn. Dobbelen
   loopt altijd via een injecteerbare `IRandomSource`, nooit `System.Random` direct

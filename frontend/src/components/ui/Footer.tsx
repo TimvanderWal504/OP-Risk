@@ -19,7 +19,7 @@ export interface FooterProps {
 export function Footer({ children, error = null, hint, variant = 'plain' }: FooterProps) {
   if (variant === 'gradient') {
     return (
-      <div className="relative mt-auto flex-none bg-gradient-to-t from-[#080c13] from-26% to-transparent px-[18px] pt-3 pb-4">
+      <div className="relative mt-auto flex-none bg-gradient-to-t from-[var(--bg)] from-26% to-transparent px-[18px] pt-3 pb-4">
         {error && <p className="mb-2 text-loss">{error}</p>}
         <div className="flex flex-col gap-3">{children}</div>
         {hint && <p className="mt-2 text-xs text-fg-muted">{hint}</p>}

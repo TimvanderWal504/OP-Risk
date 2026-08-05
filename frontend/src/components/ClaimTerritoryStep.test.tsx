@@ -14,8 +14,8 @@ const colors = [
 ]
 
 const territoryCatalog = [
-  { id: 'alaska', continent: 'north-america' },
-  { id: 'brazil', continent: 'south-america' },
+  { id: 'alaska', continent: 'north-america', neighborTerritoryIds: [] },
+  { id: 'brazil', continent: 'south-america', neighborTerritoryIds: [] },
 ]
 
 describe('ClaimTerritoryStep', () => {

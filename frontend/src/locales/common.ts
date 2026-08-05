@@ -20,4 +20,8 @@ export const common = {
   dice: {
     ariaLabel: { nl: 'Dobbelsteen {{value}}', en: 'Die {{value}}' },
   },
+  playerHeader: {
+    hostBadge: { nl: 'Host', en: 'Host' },
+    settings: { nl: 'Instellingen', en: 'Settings' },
+  },
 } satisfies LocaleTree

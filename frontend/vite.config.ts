@@ -5,14 +5,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-// design-reference/shared/ds/colors_and_type.css (bevroren export) herhaalt de
-// Google Fonts @import die index.css al als eerste regel laadt. Vite/Tailwind's
-// lightningcss-optimizer hoist alleen top-level @imports, niet geneste imports
-// uit een @imported bestand, dus blijft dit onschadelijke duplicaat (de browser
-// negeert 'm) een warning geven — zowel via Vite's eigen logger (dev-server,
-// PostCSS) als via @tailwindcss/node's optimize()-stap, die rechtstreeks naar
-// console.warn schrijft (build). Het bronbestand is read-only — hier alleen
-// die ene melding wegfilteren, op beide plekken.
+// styles/ds/colors_and_type.css herhaalt de Google Fonts @import die index.css
+// al als eerste regel laadt. Vite/Tailwind's lightningcss-optimizer hoist alleen
+// top-level @imports, niet geneste imports uit een @imported bestand, dus blijft
+// dit onschadelijke duplicaat (de browser negeert 'm) een warning geven — zowel
+// via Vite's eigen logger (dev-server, PostCSS) als via @tailwindcss/node's
+// optimize()-stap, die rechtstreeks naar console.warn schrijft (build). Hier
+// alleen die ene melding wegfilteren, op beide plekken.
 const isDuplicateFontImportWarning = (msg: string) => msg.includes('@import') && msg.includes('must precede')
 
 const logger = createLogger()

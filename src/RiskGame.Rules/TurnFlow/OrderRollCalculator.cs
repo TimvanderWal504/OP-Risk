@@ -72,4 +72,20 @@ public static class OrderRollCalculator
             participants = tied;
         }
     }
+
+    /// <summary>
+    /// De definitieve speelvolgorde na de order-roll: <paramref name="allPlayerIds"/>
+    /// (zitpositie-volgorde) geroteerd zodat <paramref name="winnerId"/> vooraan staat —
+    /// de speler rechts van de winnaar gooit dus als tweede, enzovoort, rondlopend.
+    /// </summary>
+    public static IReadOnlyList<string> DetermineTurnOrder(
+        IReadOnlyList<string> allPlayerIds, string winnerId)
+    {
+        ArgumentNullException.ThrowIfNull(allPlayerIds);
+        ArgumentNullException.ThrowIfNull(winnerId);
+
+        var winnerIndex = allPlayerIds.ToList().IndexOf(winnerId);
+
+        return allPlayerIds.Skip(winnerIndex).Concat(allPlayerIds.Take(winnerIndex)).ToArray();
+    }
 }

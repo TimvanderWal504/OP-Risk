@@ -46,7 +46,7 @@ export default defineConfig([
   {
     // Bewaakt Fase 2/3 van de i18n-migratie: geen nieuwe hardcoded UI-tekst in
     // JSX. Alleen op echte componenten/routes, niet op tests (die mogen
-    // literale mock-tekst gebruiken) of de bevroren design-reference-export.
+    // literale mock-tekst gebruiken).
     // PlayerHeader.tsx: nog ongebruikt component (zie docs/i18n-inventory.md
     // §1), wordt bij de eigen migratietaak meegenomen — niet hier.
     files: ['src/components/**/*.tsx', 'src/routes/**/*.tsx'],

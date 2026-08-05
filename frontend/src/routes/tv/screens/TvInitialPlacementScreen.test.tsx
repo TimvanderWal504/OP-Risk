@@ -35,7 +35,7 @@ describe('TvInitialPlacementScreen', () => {
 
   it('rendert niets zonder setupState (fase nog niet InitialPlacement)', () => {
     const { container } = render(
-      <TvInitialPlacementScreen state={{ ...baseState, setupState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} />,
+      <TvInitialPlacementScreen state={{ ...baseState, setupState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />,
     )
 
     expect(container).toBeEmptyDOMElement()
@@ -46,7 +46,7 @@ describe('TvInitialPlacementScreen', () => {
       ...baseState,
       setupState: { activePlayerId: 'alice', remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
     }
-    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('Alice')).toBeInTheDocument()
   })
@@ -56,7 +56,7 @@ describe('TvInitialPlacementScreen', () => {
       ...baseState,
       setupState: { activePlayerId: null, remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
     }
-    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('Iedereen plaatst tegelijk')).toBeInTheDocument()
     expect(screen.queryByText('Alice')).not.toBeInTheDocument()
@@ -67,7 +67,7 @@ describe('TvInitialPlacementScreen', () => {
       ...baseState,
       setupState: { activePlayerId: null, remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
     }
-    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
     expect(screen.getByText('5')).toBeInTheDocument()
@@ -78,7 +78,7 @@ describe('TvInitialPlacementScreen', () => {
       ...baseState,
       setupState: { activePlayerId: null, remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
     }
-    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} />)
+    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
     await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
 
     document.querySelectorAll('path, svg circle').forEach((el) => fireEvent.click(el))

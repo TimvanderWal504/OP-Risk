@@ -23,7 +23,7 @@ export interface JoinNameColorStepProps {
 
 /**
  * Samengevoegde eerste join-stap (FO §3): naam én kleur op één scrollbare stap
- * (Telefoon.dc.html `joinNameColor`-sectie, L269-303 na de export-update). Select-
+ * (`joinNameColor`-sectie in het oorspronkelijke design). Select-
  * dan-bevestig voor de kleur, net als het losse kleur-kiezen daarvoor: één klik zet
  * de lokale keuze, `onSubmit` (de server-call) gaat pas bij de bevestigingsknop.
  */
@@ -49,7 +49,7 @@ export function JoinNameColorStep({
       <div className="flex flex-1 flex-col gap-0 overflow-y-auto pr-0.5">
         <h1 className="font-display text-[24px] font-extrabold mb-1">{t('join:name.title')}</h1>
         {fixedName ? (
-          <div className="flex items-center gap-2.5 rounded-[16px] border border-gold-600 bg-[var(--atlas-t05)] p-[14px_18px] font-display text-[24px] font-bold">
+          <div className="flex items-center gap-2.5 rounded-[16px] border border-silver-600 bg-[var(--atlas-t05)] p-[14px_18px] font-display text-[24px] font-bold">
             {fixedName}
           </div>
         ) : (

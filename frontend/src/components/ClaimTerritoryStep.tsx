@@ -28,7 +28,7 @@ export interface ClaimTerritoryStepProps {
 }
 
 /**
- * Startopstelling · Claimen (Telefoon.dc.html L391-448, `isClaim`). Twee substaten uit het
+ * Startopstelling · Claimen (`isClaim`-fase in het oorspronkelijke design). Twee substaten uit het
  * design: `claimMine` (jouw beurt — per-continent gegroepeerde knoppenlijst + bevestigen) en
  * `claimMineNot` (niet jouw beurt — wie heeft al hoeveel geclaimd). Substaat volgt uit
  * `activePlayerId === playerId`, niet uit lokale state.
@@ -76,11 +76,11 @@ export function ClaimTerritoryStep({
           statLabel={t('claim.left')}
           paddingY={11}
         />
-        <div className="mt-[11px] mb-2 font-body text-[13px] text-fg-muted">{t('claim.sub')}</div>
+        <div className="mt-[11px] mb-2 font-body text-sm text-fg-muted">{t('claim.sub')}</div>
         <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
           {groups.map((group) => (
             <div key={group.continent}>
-              <div className="mx-0.5 mb-[7px] font-body text-[11px] font-extrabold tracking-[.1em] text-fg-muted uppercase">
+              <div className="mx-0.5 mb-[7px] font-body text-xs font-extrabold tracking-[.1em] text-fg-muted uppercase">
                 {tDynamic(group.continent, 'continents')}
               </div>
               <div className="flex flex-col gap-2">
@@ -94,18 +94,18 @@ export function ClaimTerritoryStep({
                       onClick={() => setPendingTerritoryId(territoryId)}
                       className="flex min-h-[58px] w-full items-center gap-3 rounded-[14px] border-2 px-3.5 text-left text-fg"
                       style={{
-                        background: selected ? 'rgba(242,169,34,.14)' : 'var(--atlas-t04)',
-                        borderColor: selected ? 'var(--gold-400)' : 'var(--border)',
+                        background: selected ? 'rgba(156,176,202,.14)' : 'var(--atlas-t04)',
+                        borderColor: selected ? 'var(--silver-400)' : 'var(--border)',
                       }}
                     >
-                      <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-lg border-2 border-dashed text-[15px] text-fg-muted">
+                      <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-lg border-2 border-dashed text-body text-fg-muted">
                         {'◌'}
                       </span>
-                      <span className="flex-1 font-display text-[17px] font-extrabold">
+                      <span className="flex-1 font-display text-h3 font-extrabold">
                         {tDynamic(territoryId, 'territories')}
                       </span>
                       {selected && (
-                        <span className="text-[18px] text-gold-300" aria-hidden>
+                        <span className="text-h3 text-silver-300" aria-hidden>
                           {'✓'}
                         </span>
                       )}
@@ -159,7 +159,7 @@ export function ClaimTerritoryStep({
         subtitle={t('claim.confirm')}
         stat={{ value: claimFree, label: t('claim.left') }}
       />
-      <div className="mt-4 mb-2 font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
+      <div className="mt-4 mb-2 font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase">
         {t('claim.claimedBy')}
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
@@ -173,15 +173,15 @@ export function ClaimTerritoryStep({
             }}
           >
             <ColorAvatar color={color} variant="row" />
-            <span className="flex-1 font-display text-[16px] font-extrabold">
-              {player.name} {isMe && <span className="text-[11px] text-pitch-300">{`(${t('claim.you')})`}</span>}
+            <span className="flex-1 font-display text-h3 font-extrabold">
+              {player.name} {isMe && <span className="text-xs text-pitch-300">{`(${t('claim.you')})`}</span>}
             </span>
-            <span className="font-display text-[22px] font-black tabular-nums">{count}</span>
-            <span className="font-body text-[11px] text-fg-muted">{t('claim.colTerr')}</span>
+            <span className="font-display text-h2 font-black tabular-nums">{count}</span>
+            <span className="font-body text-xs text-fg-muted">{t('claim.colTerr')}</span>
           </div>
         ))}
       </div>
-      <div className="mt-2.5 mb-3 text-center font-body text-[12.5px] text-fg-muted">
+      <div className="mt-2.5 mb-3 text-center font-body text-sm text-fg-muted">
         {t('claim.yourTurnSoon')}
       </div>
     </div>

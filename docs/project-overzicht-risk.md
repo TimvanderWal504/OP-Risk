@@ -101,7 +101,7 @@ De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules
 | `src/RiskGame.Persistence.Tests/` | Round-trip tests event → projectie |
 | `src/RiskGame.Api/` | Minimal API + SignalR-hub + timer-service (§1.3) |
 | `src/RiskGame.Api.Tests/` | Integratietests op de API/hub |
-| `frontend/src/components/` | Schermcomponenten + UI-primitieven, gebaseerd op `design-reference/` |
+| `frontend/src/components/` | Schermcomponenten + UI-primitieven, gebaseerd op `DESIGN.md` |
 | `frontend/src/routes/` | `phone/HomePage`, `phone/PhonePage`, `tv/TvPage` |
 | `frontend/src/hooks/` | `useSignalR`, `useGameState`, `GameHubProvider`, `useHeldPhase`, `useTvGame` |
 | `frontend/src/i18n/`, `frontend/src/locales/` | Key-first i18n-opzet, 14 namespaces (nl/en) |
