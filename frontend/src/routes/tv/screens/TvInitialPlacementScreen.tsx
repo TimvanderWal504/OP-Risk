@@ -76,22 +76,13 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
             >
               <ColorSymbol symbol={activeColor.symbol} />
             </div>
-            <div>
-              <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
-                {t('board:turnOf')}
-              </div>
-              <div className="font-display text-[34px] font-black leading-none">
-                {activePlayer.name} <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>
-              </div>
+            <div className="font-display text-[34px] font-black leading-none">
+              {t('board:turnOf')} {activePlayer.name}{' '}
+              <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>
             </div>
           </div>
         ) : (
-          <div>
-            <div className="font-body text-[13px] font-extrabold uppercase tracking-[.16em] text-fg-muted">
-              {t('placeKicker')}
-            </div>
-            <div className="font-display text-[34px] font-black leading-none">{t('placeEveryoneAtOnce')}</div>
-          </div>
+          <div className="font-display text-[34px] font-black leading-none">{t('placeEveryoneAtOnce')}</div>
         )}
 
         <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-[22px] font-black tracking-[.02em] text-pitch-300">

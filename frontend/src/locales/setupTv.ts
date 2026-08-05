@@ -10,7 +10,6 @@ export const setupTv = {
   claimKicker: { nl: 'Startopstelling · Claimen', en: 'Setup · Claim' },
   claimCounterLabel: { nl: 'gebieden verdeeld', en: 'territories dealt' },
   claimPanelTitle: { nl: 'Geclaimd', en: 'Claimed' },
-  placeKicker: { nl: 'Startopstelling', en: 'Setup' },
   placeTitle: { nl: 'Plaats je legers', en: 'Place your armies' },
   /**
    * `activePlayerId === null` tijdens InitialPlacement (SetupMode.Random, gelijktijdig
