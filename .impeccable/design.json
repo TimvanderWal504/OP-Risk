@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-04T00:00:00Z",
+  "generatedAt": "2026-08-05T00:00:00Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -79,6 +79,13 @@
       "description": "Confirmed/active-state chip variant.",
       "html": "<span class=\"ds-badge-pitch\">ACTIEF</span>",
       "css": ".ds-badge-pitch { display: inline-flex; padding: 6px 16px; border-radius: 9999px; background: #a1c23a; color: #04060b; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Selectable Option",
+      "kind": "custom",
+      "description": "Radio-semantics card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Used for color pickers, role lists, and territory/army selection.",
+      "html": "<button class=\"ds-selectable\" role=\"radio\" aria-checked=\"true\">GROEN</button>",
+      "css": ".ds-selectable { position: relative; border-radius: 16px; border-width: 2px; border-style: solid; border-color: #84ad28; padding: 16px; color: #eef2f8; font-family: 'Lexend', sans-serif; font-weight: 700; background: transparent; } .ds-selectable[aria-checked=\"false\"] { border-color: #33425a; } .ds-selectable:disabled { border-color: #243246; opacity: 0.5; cursor: not-allowed; }"
     }
   ],
   "narrative": {
@@ -101,12 +108,15 @@
       "Do reserve the glow shadow (shadow-glow-pitch) for the single primary CTA on a screen — it's a scarcity signal, not decoration.",
       "Do use tabular numerals for any value that updates in place.",
       "Do keep uppercase + wide letter-spacing (0.08em) for kicker/label/eyebrow text at the 11-13px sizes.",
-      "Do treat data/colors.json player seat colors as a separate system from this palette."
+      "Do treat data/colors.json player seat colors as a separate system from this palette.",
+      "Do rely on the SelectableOption border/background change as the only selected-state signal — no redundant checkmark on top.",
+      "Do drop a phase-name kicker above a heading that already states the action; merge into one line instead when the heading alone isn't complete."
     ],
     "donts": [
       "Don't reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04). Caution Amber is the one exception, since it's a functional status color, not decoration.",
       "Don't add box-shadow-based elevation to cards or rows by default — use a tonal overlay or a border instead.",
-      "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today."
+      "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today.",
+      "Don't use a decorative unicode emoji or glyph as a stand-in icon. ColorSymbol's player-seat glyphs are the one exception — accessibility data, not decoration."
     ]
   }
 }

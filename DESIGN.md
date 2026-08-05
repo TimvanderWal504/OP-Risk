@@ -256,6 +256,9 @@ focus states.
 ### Player Header / Stat rows
 - Combines a colored player avatar (from the seat-color system, not this palette), display-font name/status text, and tabular-numeral timer text that swaps color (`normal` → ink, `low` → Alert Red, pulsing) based on state — a good example of the system's "state changes color, not shape" convention.
 
+### Selectable Option (radio card)
+- **Pattern:** a full-card `role="radio"`/`aria-checked` button (`SelectableOption`) whose border color alone carries the selected state — `--pitch-500` when selected, `--border-strong` when not, `--border` when disabled at 50% opacity. No separate checkmark glyph or icon is layered on top; the border/background change *is* the selection signal, another instance of **The Invisible Design Rule**. Used for color pickers, role lists, and territory/army selection lists.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -263,8 +266,11 @@ focus states.
 - **Do** use tabular numerals (`.tnum` / `font-variant-numeric: tabular-nums`) for any value that updates in place.
 - **Do** keep uppercase + wide letter-spacing (`0.08em`) for kicker/label/eyebrow text at the 11–13px sizes.
 - **Do** treat `data/colors.json` player seat colors as a separate system from this palette — never reuse a seat color as a UI brand color or vice versa.
+- **Do** rely on the `SelectableOption` border/background change as the only selected-state signal — a redundant checkmark or icon on top of an already-distinct border is chrome that doesn't carry new information (**The Invisible Design Rule**).
+- **Do** drop a phase-name kicker/eyebrow above a heading when the heading alone already states the action ("Verdeel je legers", "Wie mag beginnen?"); when the heading alone isn't a complete statement (e.g. a bare territory name), merge the kicker's words into the one heading line instead of stacking two lines.
 
 ### Don't:
 - **Don't** reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04) because the "trophy/World Cup" association didn't fit a conquest game. Caution Amber (`--warning`) is the one exception, since it's a functional status color, not decoration.
 - **Don't** add box-shadow-based elevation to cards or rows by default — use a tonal overlay (`--atlas-t0X`) or a border instead; reserve shadows for the primary glow and sheet/modal separation.
 - **Don't** assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today.
+- **Don't** use a decorative unicode emoji or glyph as a stand-in icon (🎲, ⚔, 👑, 📺, ⏱, ›, ◌, ✓). `ColorSymbol`'s player-seat glyphs (`▲ ● ■ ★ ✚ ⬡ ◆`) are the one exception — they're colorblind-accessibility data sourced from frozen `data/colors.json`, not decoration standing in for missing UI (removed across the phone screens, 2026-08-05).
