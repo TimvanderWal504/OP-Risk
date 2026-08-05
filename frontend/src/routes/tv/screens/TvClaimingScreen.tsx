@@ -61,14 +61,9 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
               <ColorSymbol symbol={activeColor.symbol} />
             </div>
           )}
-          <div>
-            <div className="font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
-              {t('board:turnOf')}
-            </div>
-            <div className="font-display text-[34px] font-black leading-none">
-              {activePlayer.name}{' '}
-              {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
-            </div>
+          <div className="font-display text-[34px] font-black leading-none">
+            {t('board:turnOf')} {activePlayer.name}{' '}
+            {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
           </div>
         </div>
 
