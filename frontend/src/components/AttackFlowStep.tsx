@@ -178,7 +178,6 @@ export function AttackFlowStep({
                     {t('targetsWord')}
                   </div>
                 </div>
-                <span className="text-2xl text-fg-muted">›</span>
               </button>
             ))}
           </div>
@@ -211,7 +210,6 @@ export function AttackFlowStep({
                     {target.ownerName} · {target.armyCount} {t('armiesWord')}
                   </div>
                 </div>
-                <span className="text-xl text-[#ff7a3d]">⚔</span>
               </button>
             ))}
           </div>
@@ -265,7 +263,7 @@ export function AttackFlowStep({
             onClick={roll}
             className="flex min-h-[72px] w-full items-center justify-center gap-3 rounded-[18px] border-none bg-[#c0392b] font-display text-h1 font-black tracking-[.04em] text-white shadow-[0_10px_26px_rgba(192,57,43,.45)] disabled:opacity-60"
           >
-            🎲 {t('roll')}
+            {t('roll')}
           </button>
           <div className="mt-2 text-center font-body text-xs text-fg-muted">{t('rollIsConfirm')}</div>
         </>
@@ -381,7 +379,7 @@ function AttackRolledResult({
               onClick={onEndPhase}
               className="flex min-h-14 flex-1 items-center justify-center rounded-2xl border-none bg-pitch-500 font-display text-body font-extrabold text-[var(--on-pitch)]"
             >
-              {t('toFortify')} ›
+              {t('toFortify')}
             </button>
           </div>
         </div>

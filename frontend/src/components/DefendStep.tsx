@@ -56,7 +56,7 @@ export function DefendStep({
     >
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3.5 text-center">
         <span className="font-body text-sm font-extrabold uppercase tracking-[.24em] text-[#ff5257]">
-          ⚔ {t('defend.underAttack')}
+          {t('defend.underAttack')}
         </span>
         <div className="flex items-center gap-3">
           <div
@@ -84,7 +84,7 @@ export function DefendStep({
               className="flex items-center gap-2 rounded-full border px-4 py-[7px] font-body text-sm"
               style={{ color: 'var(--pitch-400)', background: 'color-mix(in srgb, var(--pitch-400) 12%, transparent)', borderColor: 'var(--pitch-400)' }}
             >
-              ⏱ {t('defend.noTimer')}
+              {t('defend.noTimer')}
             </div>
           </>
         )}

@@ -38,9 +38,8 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
 
   return (
     <div className="flex flex-1 flex-col min-h-0 p-4 pt-0.5">
-      <div className="mt-1.5 text-center">
-        <span className="font-body text-xs font-extrabold uppercase tracking-[.18em] text-pitch-300">{t('conquest.captured')}</span>
-        <div className="mt-1.5 font-display text-[28px] font-black">{tDynamic(toTerritoryId, 'territories')}</div>
+      <div className="mt-1.5 text-center font-display text-[28px] font-black">
+        {t('conquest.captured')} {tDynamic(toTerritoryId, 'territories')}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[22px]">
