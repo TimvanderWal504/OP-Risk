@@ -2,7 +2,6 @@ import type { LocaleTree } from '../i18n/types'
 
 /** Order-roll-fase op TV en telefoon (FO §2.1): spelersvolgorde bepalen via dobbelworp. */
 export const orderRoll = {
-  badge: { nl: 'Spelersvolgorde', en: 'Turn order' },
   title: { nl: 'Wie mag beginnen?', en: 'Who may start?' },
   sub: {
     nl: 'Elke speler gooit twéé dobbelstenen. Hoogste totaal begint.',
