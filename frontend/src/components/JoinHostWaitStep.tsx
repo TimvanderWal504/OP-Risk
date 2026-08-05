@@ -21,7 +21,7 @@ export interface JoinHostWaitStepProps {
  * Host-lobbyscherm op de telefoon (`isWaiting`-fase in het oorspronkelijke design) —
  * losstaand van de "0 JOIN"-chrome die de andere join-stappen delen (dit is
  * geen host-variant van {@link JoinWaitStep}, maar een eigen design-sectie
- * met eigen kicker/badge). Geen QR/URL op dit scherm — alleen een hint dat de
+ * met eigen HOST-badge). Geen QR/URL op dit scherm — alleen een hint dat de
  * QR-code op de TV staat (`tvUrlPanel`-achtige weergave heeft hier geen
  * design-instantie, zie de plan-context).
  */
@@ -39,17 +39,13 @@ export function JoinHostWaitStep({
   return (
     <div className="flex flex-1 flex-col p-[16px_18px]">
       <div className="flex items-center gap-2.5">
-        <span className="font-body text-[11px] font-extrabold tracking-[.14em] text-silver-400 uppercase">
-          {t('hostWait.kicker')}
-        </span>
+        <p className="font-display text-[26px] font-black">{t('hostWait.title')}</p>
         <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
           {t('hostWait.hostBadge')}
         </span>
       </div>
-      <p className="mt-1 font-display text-[26px] font-black">{t('hostWait.title')}</p>
 
-      <div className="mt-3.5 flex items-center gap-2.5 rounded-card border border-secondary bg-[rgba(33,92,156,.14)] p-3.5">
-        <span className="text-[22px]">📺</span>
+      <div className="mt-3.5 rounded-card border border-secondary bg-[rgba(33,92,156,.14)] p-3.5">
         <span className="text-sm text-fg-secondary">{t('hostWait.qrHint')}</span>
       </div>
 
@@ -83,7 +79,11 @@ export function JoinHostWaitStep({
                 <span className="text-xs text-fg-muted">
                   {color ? tDynamic(color.id, 'colors') : ''}
                 </span>
-                {player.isHost && <span className="text-sm">👑</span>}
+                {player.isHost && (
+                  <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+                    {t('hostWait.hostBadge')}
+                  </span>
+                )}
               </div>
             </RemovablePlayerRow>
           )

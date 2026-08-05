@@ -84,11 +84,6 @@ export function JoinNameColorStep({
                 </span>
                 <span className="font-display text-[16px] font-bold">{tDynamic(color.id, 'colors')}</span>
                 {taken && <span className="absolute right-3 text-xs text-fg-muted">{t('join:color.taken')}</span>}
-                {selected && (
-                  <span className="absolute right-3 text-pitch-400" aria-hidden>
-                    {'✓'}
-                  </span>
-                )}
               </SelectableOption>
             )
           })}

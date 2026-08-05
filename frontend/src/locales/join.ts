@@ -32,7 +32,6 @@ export const join = {
     quoteKicker: { nl: 'Terwijl je wacht', en: 'While you wait' },
   },
   hostWait: {
-    kicker: { nl: 'Spel aangemaakt', en: 'Game created' },
     title: { nl: 'Wachten op spelers', en: 'Waiting for players' },
     hostBadge: { nl: 'HOST', en: 'HOST' },
     qrHint: {
