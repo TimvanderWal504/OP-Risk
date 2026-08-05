@@ -98,17 +98,9 @@ export function ClaimTerritoryStep({
                         borderColor: selected ? 'var(--silver-400)' : 'var(--border)',
                       }}
                     >
-                      <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-lg border-2 border-dashed text-body text-fg-muted">
-                        {'◌'}
-                      </span>
                       <span className="flex-1 font-display text-h3 font-extrabold">
                         {tDynamic(territoryId, 'territories')}
                       </span>
-                      {selected && (
-                        <span className="text-h3 text-silver-300" aria-hidden>
-                          {'✓'}
-                        </span>
-                      )}
                     </button>
                   )
                 })}
