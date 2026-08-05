@@ -89,21 +89,29 @@ Operatie Atlas puts a shared TV screen at the center of the room and hands every
 player a private phone controller — the visual language borrows from sports
 broadcast graphics (scoreboards, lower-thirds, on-screen tickers) rather than
 board-game skeuomorphism, because the product's own framing is a command center
-the whole table watches together, not a tabletop replica. Bold, black-weight
-display type reads at a distance on a TV across a living room; tight uppercase
-label text and tabular numerals borrow directly from scorebug conventions;
-primary actions carry a soft glow rather than a hard shadow, the way a live
-broadcast highlights the active element on screen.
+the whole table watches together, not a tabletop replica. Every bold choice in
+that language is legibility, not decoration: black-weight display type exists
+because it has to read at a distance on a TV across a living room; tight
+uppercase label text and tabular numerals exist because scorebug conventions are
+what let a glanced-at number register instantly; primary actions carry a soft
+glow instead of a hard shadow because a live broadcast highlights the one
+element that matters, not every element at once.
 
-The mood is confident and high-contrast: black-weight headlines, a saturated
-green CTA that glows rather than sits flat, and dark canvases that make map
-territory colors and player seat colors read clearly. Both the TV and phone
-shells force dark mode regardless of the device's OS theme preference — this is
-a deliberate, hard invariant (`TvShell`/`PhoneShell` both apply a `dark` class
-unconditionally), because the product is built to be read across a room on a
-TV, and a light system tray theme has no bearing on that. A complete light
-theme exists in the token layer in parallel (see **Light theme**, below) for
-any surface that isn't the TV/phone game shells themselves.
+The mood follows from that constraint, not from an aesthetic preference:
+contrast is spent only where state needs to register from across a room, and
+everywhere else the design steps back. A saturated green CTA glows because it's
+the one thing a player must find without reading; dark canvases exist because
+they make map territory colors and player seat colors — signal, not chrome —
+read clearly. This is the same instinct as **The Invisible Design Rule** (see
+Named Rules, below): the goal isn't confidence for its own sake, it's a screen
+where the content — whose turn, what changed, what's tappable — is the only
+thing that's loud. Both the TV and phone shells force dark mode regardless of
+the device's OS theme preference — this is a deliberate, hard invariant
+(`TvShell`/`PhoneShell` both apply a `dark` class unconditionally), because the
+product is built to be read across a room on a TV, and a light system tray
+theme has no bearing on that. A complete light theme exists in the token layer
+in parallel (see **Light theme**, below) for any surface that isn't the
+TV/phone game shells themselves.
 
 **Key Characteristics:**
 - Black-weight (800), display-font headlines and scores; body copy stays lighter and calmer.

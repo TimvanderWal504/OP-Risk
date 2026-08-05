@@ -107,12 +107,7 @@ export function PlaceReinforcementStep({
         className="flex items-center justify-between rounded-[14px] border border-pitch-700 px-3.5 py-[11px]"
         style={{ background: 'linear-gradient(90deg, rgba(132,173,40,.16), rgba(132,173,40,0))' }}
       >
-        <div>
-          <div className="font-body text-[11px] font-extrabold uppercase tracking-[.1em] text-pitch-300">
-            {t('kicker')}
-          </div>
-          <div className="font-display text-[17px] font-extrabold">{t('distribute')}</div>
-        </div>
+        <div className="font-display text-[17px] font-extrabold">{t('distribute')}</div>
         <div className="text-right">
           <div className="font-display text-[32px] font-black leading-none text-pitch-300">{remainingToStage}</div>
           <div className="font-body text-[11px] text-fg-muted">{t('toPlace')}</div>
