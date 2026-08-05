@@ -25,10 +25,7 @@ export function OrderRollWaitStep({ myDice, colorHex, colorOnHex, canRoll, onRol
 
   return (
     <div className="flex flex-1 flex-col items-center gap-1 p-5 pt-6 text-center">
-      <span className="font-body text-sm font-black tracking-[.18em] text-silver-400 uppercase">
-        {t('badge')}
-      </span>
-      <p className="mt-2 font-display text-[26px] font-black">{t('title')}</p>
+      <p className="font-display text-[26px] font-black">{t('title')}</p>
       <p className="max-w-[280px] text-body text-fg-muted">{t('sub')}</p>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-[22px]">
@@ -61,12 +58,8 @@ export function OrderRollWaitStep({ myDice, colorHex, colorOnHex, canRoll, onRol
           </div>
         ) : (
           <div className="flex gap-3" aria-label={t('notRolledYet')}>
-            <div className="flex h-[104px] w-[104px] items-center justify-center rounded-[22px] border-2 border-dashed border-border-strong text-[44px] text-fg-muted">
-              🎲
-            </div>
-            <div className="flex h-[104px] w-[104px] items-center justify-center rounded-[22px] border-2 border-dashed border-border-strong text-[44px] text-fg-muted">
-              🎲
-            </div>
+            <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
+            <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
           </div>
         )}
       </div>
