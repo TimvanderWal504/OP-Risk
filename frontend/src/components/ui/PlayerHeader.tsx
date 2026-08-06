@@ -27,12 +27,6 @@ export interface PlayerHeaderProps {
   actions?: PlayerHeaderAction[]
 }
 
-const DEFAULT_ACTIONS: PlayerHeaderAction[] = [
-  { icon: '🃏', label: 'Mijn kaarten' },
-  { icon: '🎯', label: 'Mijn missie' },
-  { icon: '📊', label: 'Spelinfo' },
-]
-
 /** Speler-header op de telefoon: identiteit, beurt-status, beurttimer,
  * instellingen en snelkoppelingen. Presentational — alle waarden komen via
  * props (nu nog placeholders tot het spelbord er is). */
@@ -47,9 +41,15 @@ export function PlayerHeader({
   timer,
   timerState = 'normal',
   onSettings,
-  actions = DEFAULT_ACTIONS,
+  actions,
 }: PlayerHeaderProps) {
   const { t } = useTranslation('common')
+  const defaultActions: PlayerHeaderAction[] = [
+    { icon: '🃏', label: t('playerHeader.actions.cards') },
+    { icon: '🎯', label: t('playerHeader.actions.mission') },
+    { icon: '📊', label: t('playerHeader.actions.info') },
+  ]
+  const resolvedActions = actions ?? defaultActions
 
   return (
     <div className="flex flex-col mt-4">
@@ -97,7 +97,7 @@ export function PlayerHeader({
       </div>
 
       <div className="mt-[9px] flex gap-[7px]">
-        {actions.map((action) => (
+        {resolvedActions.map((action) => (
           <button
             key={action.label}
             type="button"
