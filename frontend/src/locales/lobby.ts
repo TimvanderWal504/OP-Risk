@@ -5,9 +5,6 @@ export const lobby = {
   header: {
     badge: { nl: 'Wachtkamer', en: 'Waiting room' },
   },
-  tvUrlPanel: {
-    label: { nl: 'Open op de TV', en: 'Open on the TV' },
-  },
   qr: {
     ariaLabel: { nl: 'QR-code om te joinen op {{url}}', en: 'QR code to join at {{url}}' },
     scanToJoin: { nl: 'Scan om mee te doen', en: 'Scan to join' },

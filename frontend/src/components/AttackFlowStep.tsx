@@ -261,7 +261,7 @@ export function AttackFlowStep({
             type="button"
             disabled={submitting}
             onClick={roll}
-            className="flex min-h-[72px] w-full items-center justify-center gap-3 rounded-[18px] border-none bg-[#c0392b] font-display text-h1 font-black tracking-[.04em] text-white shadow-[0_10px_26px_rgba(192,57,43,.45)] disabled:opacity-60"
+            className="flex min-h-[72px] w-full items-center justify-center gap-3 rounded-[18px] border-none bg-pitch-500 font-display text-h1 font-black tracking-[.04em] text-[var(--on-pitch)] shadow-[var(--shadow-glow-pitch)] disabled:opacity-60"
           >
             {t('roll')}
           </button>
@@ -361,7 +361,7 @@ function AttackRolledResult({
             <button
               type="button"
               onClick={onAttackAgain}
-              className="flex min-h-15 w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-[#c0392b] font-display text-lg font-black text-white"
+              className="flex min-h-15 w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-pitch-500 font-display text-lg font-black text-[var(--on-pitch)] shadow-[var(--shadow-glow-pitch)]"
             >
               {t('attackAgain')}
             </button>
