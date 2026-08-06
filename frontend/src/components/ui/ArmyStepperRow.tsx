@@ -75,7 +75,7 @@ export function ArmyStepperRow({
         type="button"
         disabled={!canDecrement}
         onClick={onDecrement}
-        className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] border border-border-strong bg-[var(--atlas-t05)] font-black text-xl text-fg disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-11 w-11 flex-none items-center justify-center rounded-[11px] border border-border-strong bg-[var(--atlas-t05)] font-black text-xl text-fg disabled:cursor-not-allowed disabled:opacity-50"
       >
         {'−'}
       </button>

@@ -16,7 +16,7 @@ export function Switch({ on, onToggle, disabled = false, label }: SwitchProps) {
       onClick={onToggle}
       aria-pressed={on}
       aria-label={label}
-      className={`relative h-[30px] w-[52px] flex-none rounded-chip ${
+      className={`relative h-[30px] w-[52px] flex-none rounded-chip after:absolute after:-inset-[7px] after:content-[''] ${
         on ? 'bg-pitch-500' : 'bg-[var(--atlas-t12)]'
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
     >
