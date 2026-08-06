@@ -6,22 +6,21 @@ const color = { id: 'blue', name: 'Blauw', hex: '#2980b9', onHex: '#fff', symbol
 
 describe('ActivePlayerBanner', () => {
   it('toont naam en subtitle', () => {
-    render(<ActivePlayerBanner kicker="Nu aan zet" playerName="Bob" color={color} subtitle="Claim" />)
+    render(<ActivePlayerBanner turnOfLabel="Nu aan zet" playerName="Bob" color={color} subtitle="Claim" />)
 
-    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(screen.getByText(/Nu aan zet Bob/)).toBeInTheDocument()
     expect(screen.getByText(/· Claim/)).toBeInTheDocument()
-    expect(screen.getByText('Nu aan zet')).toBeInTheDocument()
   })
 
   it('toont de teller alleen als stat is meegegeven', () => {
     const { rerender } = render(
-      <ActivePlayerBanner kicker="Nu aan zet" playerName="Bob" color={color} subtitle="Claim" />,
+      <ActivePlayerBanner turnOfLabel="Nu aan zet" playerName="Bob" color={color} subtitle="Claim" />,
     )
     expect(screen.queryByText('Vrij')).not.toBeInTheDocument()
 
     rerender(
       <ActivePlayerBanner
-        kicker="Nu aan zet"
+        turnOfLabel="Nu aan zet"
         playerName="Bob"
         color={color}
         subtitle="Claim"

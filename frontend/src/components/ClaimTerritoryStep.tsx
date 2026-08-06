@@ -144,7 +144,7 @@ export function ClaimTerritoryStep({
   return (
     <div className="flex flex-1 flex-col min-h-0 p-4">
       <ActivePlayerBanner
-        kicker={t('idle.nowPlaying')}
+        turnOfLabel={t('idle.nowPlaying')}
         playerName={activePlayer?.name ?? ''}
         color={activeColor}
         subtitle={t('claim.confirm')}

@@ -25,7 +25,7 @@ export function NotYourTurnStep({ activePlayerName, activeColor, subtitle }: Not
   return (
     <div className="flex flex-1 flex-col min-h-0 p-4">
       <ActivePlayerBanner
-        kicker={t('idle.nowPlaying')}
+        turnOfLabel={t('idle.nowPlaying')}
         playerName={activePlayerName}
         color={activeColor}
         subtitle={subtitle}
