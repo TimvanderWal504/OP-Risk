@@ -36,9 +36,21 @@ export function Collapsible({ title, summary, children, defaultOpen, collapsible
         <span className="flex items-center gap-2">
           {summary}
           {collapsible && (
-            <span aria-hidden className="text-fg-muted">
-              {isOpen ? '▾' : '▸'}
-            </span>
+            <svg
+              aria-hidden
+              viewBox="0 0 16 16"
+              className="h-4 w-4 flex-none text-fg-muted transition-transform"
+              style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            >
+              <path
+                d="M6 4l4 4-4 4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           )}
         </span>
       </button>
