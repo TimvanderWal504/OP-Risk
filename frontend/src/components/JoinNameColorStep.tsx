@@ -61,7 +61,7 @@ export function JoinNameColorStep({
           />
         )}
         <h2 className="font-display text-[24px] font-extrabold mt-7 mb-3">{t('join:color.title')}</h2>
-        <div className="grid grid-cols-2 gap-[11px]">
+        <div role="radiogroup" aria-label={t('join:color.title')} className="grid grid-cols-2 gap-[11px]">
           {colors.map((color) => {
             const taken = takenColorIds.includes(color.id)
             const selected = pendingColorId === color.id

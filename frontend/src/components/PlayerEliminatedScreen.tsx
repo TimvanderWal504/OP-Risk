@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
+import { ColorSymbol } from './ui/ColorSymbol'
 import { phoneAnimations } from '../styles/motion'
 
 export interface PlayerEliminatedScreenProps {
@@ -24,7 +25,7 @@ export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps)
         className="flex h-24 w-24 items-center justify-center rounded-[24px] text-[52px] opacity-50 grayscale-[.5]"
         style={{ background: myColor?.hex, color: myColor?.onHex }}
       >
-        {myColor?.symbol}
+        {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
       </div>
       <div>
         <div className="font-display text-[34px] font-black tracking-[.02em]">{t('elim.title')}</div>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { phoneAnimations, transitions } from '../../styles/motion'
 
 const SWIPE_WIDTH = 84
@@ -20,6 +21,7 @@ export interface RemovablePlayerRowProps {
  * tot een volgende tik. Alleen `transform`/`opacity` animeren (frontend/CLAUDE.md).
  */
 export function RemovablePlayerRow({ children, onRemove, removable }: RemovablePlayerRowProps) {
+  const { t } = useTranslation('common')
   const [dragging, setDragging] = useState(false)
   const [dragX, setDragX] = useState(0)
   const [open, setOpen] = useState(false)
@@ -68,22 +70,26 @@ export function RemovablePlayerRow({ children, onRemove, removable }: RemovableP
 
   return (
     <div className="relative overflow-hidden rounded-card" style={{ animation: phoneAnimations.rowRise }}>
-      {showDelete && (
-        <button
-          type="button"
-          onClick={() => full && onRemove()}
-          className="absolute inset-y-0 right-0 flex w-[19.5%] flex-col items-center justify-center rounded-card border-none text-white"
-          style={{ background: 'var(--loss)', cursor: full ? 'pointer' : 'default', opacity: revealOpacity }}
-        >
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-          </svg>
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label={t('actions.removePlayer')}
+        onClick={() => (full || !showDelete) && onRemove()}
+        className="absolute inset-y-0 right-0 flex w-[19.5%] flex-col items-center justify-center rounded-card border-none text-white"
+        style={{
+          background: 'var(--loss)',
+          cursor: full ? 'pointer' : 'default',
+          opacity: showDelete ? revealOpacity : 0,
+          pointerEvents: showDelete ? 'auto' : 'none',
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18" />
+          <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6" />
+          <path d="M14 11v6" />
+        </svg>
+      </button>
       <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

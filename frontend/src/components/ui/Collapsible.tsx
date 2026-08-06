@@ -29,6 +29,7 @@ export function Collapsible({ title, summary, children, defaultOpen, collapsible
       <button
         type="button"
         disabled={!collapsible}
+        aria-expanded={isOpen}
         onClick={() => setOpen((current) => !current)}
         className="flex w-full items-center justify-between gap-2 py-1 text-left disabled:cursor-default"
       >

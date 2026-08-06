@@ -5,6 +5,7 @@ export const common = {
   actions: {
     join: { nl: 'Deelnemen', en: 'Join' },
     next: { nl: 'Volgende ›', en: 'Next ›' },
+    removePlayer: { nl: 'Verwijder speler', en: 'Remove player' },
   },
   badges: {
     comingSoon: { nl: 'binnenkort', en: 'coming soon' },
