@@ -38,8 +38,7 @@ describe('PhoneInitialPlacementScreen', () => {
       />,
     )
 
-    expect(screen.getByText('Aan de beurt')).toBeInTheDocument()
-    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt Bob/)).toBeInTheDocument()
   })
 
   // Bij een willekeurige verdeling is er geen beurt: de server stuurt activePlayerId null en

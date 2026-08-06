@@ -84,7 +84,7 @@ describe('PhoneAttackScreen', () => {
 
     render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
 
-    expect(screen.getByText('Veroverd!')).toBeInTheDocument()
+    expect(screen.getByText(/Veroverd! Kamtsjatka/)).toBeInTheDocument()
   })
 
   it('rendert de omstander-weergave voor een niet-betrokken speler', () => {

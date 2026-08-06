@@ -52,7 +52,7 @@ describe('TvMainBoardScreen', () => {
   it('toont de beurtstatus-header voor de actieve speler', () => {
     render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
-    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt Alice/)).toBeInTheDocument()
   })
 
   it('rendert een gebiedsvorm en het legeraantal per territorium zodra de geometrie geladen is', async () => {

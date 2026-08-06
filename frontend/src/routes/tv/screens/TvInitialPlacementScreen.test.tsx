@@ -48,7 +48,7 @@ describe('TvInitialPlacementScreen', () => {
     }
     render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
-    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt Alice/)).toBeInTheDocument()
   })
 
   it('toont een neutrale kop zonder crash als niemand actief is (SetupMode.Random, iedereen plaatst tegelijk)', () => {

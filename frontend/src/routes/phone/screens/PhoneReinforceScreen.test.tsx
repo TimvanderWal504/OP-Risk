@@ -33,7 +33,7 @@ describe('PhoneReinforceScreen', () => {
       />,
     )
 
-    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt Bob/)).toBeInTheDocument()
     expect(screen.queryByText('Verdeel je legers')).not.toBeInTheDocument()
   })
 
