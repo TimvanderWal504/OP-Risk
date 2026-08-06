@@ -30,7 +30,6 @@ export function PlaceInitialArmyStep({
   return (
     <div className="flex flex-1 flex-col min-h-0 p-4">
       <StatHeaderCard
-        kicker={t('place.kicker')}
         title={t('place.title')}
         statValue={armiesLeft}
         statLabel={t('place.armiesLeft')}

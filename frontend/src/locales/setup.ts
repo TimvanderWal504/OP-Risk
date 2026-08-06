@@ -7,7 +7,6 @@ import type { LocaleTree } from '../i18n/types'
  */
 export const setup = {
   claim: {
-    kicker: { nl: 'Startopstelling · Claimen', en: 'Setup · Claim' },
     title: { nl: 'Claim een leeg gebied', en: 'Claim an empty territory' },
     sub: {
       nl: 'Kies om de beurt één vrij gebied. Zo verdelen jullie de kaart voordat de legers worden bijgeplaatst.',
@@ -25,7 +24,6 @@ export const setup = {
     },
   },
   place: {
-    kicker: { nl: 'Startopstelling', en: 'Setup' },
     title: { nl: 'Plaats je legers', en: 'Place your armies' },
     armiesLeft: { nl: 'te plaatsen', en: 'to place' },
     hint: {

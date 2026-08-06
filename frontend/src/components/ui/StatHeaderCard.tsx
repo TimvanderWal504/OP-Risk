@@ -1,5 +1,4 @@
 export interface StatHeaderCardProps {
-  kicker: string
   title: string
   statValue: number | string
   statLabel: string
@@ -13,18 +12,17 @@ const PADDING_Y = {
 } as const
 
 /**
- * Zilverkleurige kop met kicker/titel links en een teller rechts (`isClaim/claimMine`-
+ * Zilverkleurige kop met titel links en een teller rechts (`isClaim/claimMine`-
  * en `isSetup`-substaten in het oorspronkelijke design) — identiek op gradient, border
  * en radius; alleen de verticale padding verschilt per scherm.
  */
-export function StatHeaderCard({ kicker, title, statValue, statLabel, paddingY }: StatHeaderCardProps) {
+export function StatHeaderCard({ title, statValue, statLabel, paddingY }: StatHeaderCardProps) {
   return (
     <div
       className={`flex items-center justify-between rounded-[14px] border border-[var(--silver-700)] px-3.5 ${PADDING_Y[paddingY]}`}
       style={{ background: 'linear-gradient(90deg, rgba(156,176,202,.14), rgba(156,176,202,0))' }}
     >
       <div className="min-w-0">
-        <div className="font-body text-xs font-extrabold tracking-[.12em] text-silver-400 uppercase">{kicker}</div>
         <div className="font-display text-h3 font-extrabold">{title}</div>
       </div>
       <div className="flex-none text-right">

@@ -70,7 +70,6 @@ export function ClaimTerritoryStep({
     return (
       <div className="flex flex-1 flex-col min-h-0 p-4">
         <StatHeaderCard
-          kicker={t('claim.kicker')}
           title={t('claim.title')}
           statValue={claimFree}
           statLabel={t('claim.left')}
