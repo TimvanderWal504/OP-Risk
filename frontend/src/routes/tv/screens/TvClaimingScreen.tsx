@@ -1,5 +1,7 @@
+import type { SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
+import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, claimMarker } from '../../../map/boardVisualTokens'
 import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
@@ -8,6 +10,20 @@ import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import type { TvScreenProps } from './tvScreens'
 
 const MAP_ID = 'standaard-43'
+
+/**
+ * Vangnet voor TO §7.2, zelfde functie als in `TvMainBoardScreen.tsx`/
+ * `TvInitialPlacementScreen.tsx` — hier ontbrak hij (audit-bevinding), lokaal
+ * gehouden i.p.v. cross-file geïmporteerd om de fix minimaal te houden.
+ */
+function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
+  const img = event.currentTarget
+  if (img.naturalWidth !== MAP_WIDTH_PX || img.naturalHeight !== MAP_HEIGHT_PX) {
+    console.error(
+      `Kaartachtergrond heeft onverwachte afmetingen (${img.naturalWidth}x${img.naturalHeight}, verwacht ${MAP_WIDTH_PX}x${MAP_HEIGHT_PX}) — projection.ts en de PNG lopen niet meer synchroon (TO §7.2).`,
+    )
+  }
+}
 
 /**
  * TV tijdens `GamePhaseDto.Claiming` (`isClaim`-fase, state-index 2, uit het oorspronkelijke design).
@@ -37,6 +53,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
   // Hoofdscherm, geen dubbele sleutel in twee namespaces (bouwplan Belangrijk 7).
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
+  const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
 
   const activePlayerId = state.setupState?.activePlayerId
   const activePlayer = state.players.find((p) => p.id === activePlayerId)
@@ -85,7 +102,12 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
         className="relative col-start-1 row-start-2 min-w-0 overflow-hidden rounded-[14px] border border-[var(--atlas-map-border)] bg-[var(--atlas-map-bg)]"
         style={{ boxShadow: 'inset 0 0 120px rgba(0,0,0,.75), inset 0 0 0 3px rgba(120,96,56,.18)' }}
       >
-        <img src={`/maps/${MAP_ID}/map-background.png`} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={`/maps/${MAP_ID}/map-background.png`}
+          onLoad={checkBackgroundDimensions}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <svg
           viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
           preserveAspectRatio="xMidYMid slice"
@@ -112,9 +134,9 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
 
           <g filter="url(#atlasRoughC)">
             {geometry?.map((territory) => {
-              const owned = state.territories.find((t) => t.territoryId === territory.id)
-              const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
-              const color = state.colors.find((c) => c.id === owner?.colorId)
+              const entry = ownership.get(territory.id)
+              const owned = entry?.owned
+              const color = entry?.color
               const claimed = owned?.ownerPlayerId != null
               const isFlare = territory.id === lastClaimedTerritoryId
 
@@ -144,11 +166,11 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
           </g>
 
           {geometry?.map((territory) => {
-            const owned = state.territories.find((t) => t.territoryId === territory.id)
+            const entry = ownership.get(territory.id)
+            const owned = entry?.owned
             if (!owned?.ownerPlayerId) return null
 
-            const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
-            const color = state.colors.find((c) => c.id === owner?.colorId)
+            const color = entry?.color
             if (!color) return null
 
             return (

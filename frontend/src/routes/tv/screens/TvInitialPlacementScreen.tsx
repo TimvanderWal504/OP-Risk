@@ -3,6 +3,7 @@ import type { SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
+import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../styles/design-tokens'
@@ -42,6 +43,7 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
   // 'board' erbij voor `turnOf`, zelfde hergebruik als TvClaimingScreen.
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
+  const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
 
   // Zelfde "vergelijk en pas aan tijdens render"-patroon als TvMainBoardScreen, voor de
   // telrichting van de A1-teldemo-animatie — een lokaal presentatiedetail over een getal dat
@@ -126,9 +128,9 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
 
           <g filter="url(#atlasRough)">
             {geometry?.map((territory) => {
-              const owned = state.territories.find((t) => t.territoryId === territory.id)
-              const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
-              const color = state.colors.find((c) => c.id === owner?.colorId)
+              const entry = ownership.get(territory.id)
+              const owner = entry?.owner
+              const color = entry?.color
               // Zonder actieve speler (SetupMode.Random) is er geen eigen/vijand-perspectief:
               // elk geclaimd gebied krijgt zijn eigen kleur op volle `own`-opaciteit (bouwplan
               // Belangrijk 8), niet de gedimde `enemy`-stijl. Mét actieve speler (SetupMode.
@@ -155,11 +157,12 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
           </g>
 
           {geometry?.map((territory) => {
-            const owned = state.territories.find((t) => t.territoryId === territory.id)
+            const entry = ownership.get(territory.id)
+            const owned = entry?.owned
             if (!owned) return null
 
-            const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
-            const color = state.colors.find((c) => c.id === owner?.colorId)
+            const owner = entry?.owner
+            const color = entry?.color
             const ringColor = color?.hex ?? boardTok.neutral
             const isOwn = !activePlayer || owner?.id === activePlayer.id
             const ringSw = isOwn ? marker.ringSwOwn : marker.ringSwEnemy

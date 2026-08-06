@@ -3,6 +3,7 @@ import type { SyntheticEvent } from 'react'
 import { tDynamic } from '../../../i18n/useT'
 import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
+import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
 import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../styles/design-tokens'
@@ -38,6 +39,7 @@ function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { data: geometry } = useTerritoryGeometry()
+  const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
 
   // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen
   // voor de A1-teldemo-animatie (uit het oorspronkelijke design). Bijgewerkt tijdens render
@@ -106,9 +108,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
 
           <g filter="url(#atlasRough)">
             {geometry?.map((territory) => {
-              const owned = state.territories.find((t) => t.territoryId === territory.id)
-              const owner = state.players.find((p) => p.id === owned?.ownerPlayerId)
-              const color = state.colors.find((c) => c.id === owner?.colorId)
+              const entry = ownership.get(territory.id)
+              const owner = entry?.owner
+              const color = entry?.color
               const isOwn = owner?.id === activePlayer.id
               const fillHex = color?.hex ?? boardTok.neutral
               const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
@@ -135,11 +137,12 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
           </g>
 
           {geometry?.map((territory) => {
-            const owned = state.territories.find((t) => t.territoryId === territory.id)
+            const entry = ownership.get(territory.id)
+            const owned = entry?.owned
             if (!owned) return null
 
-            const owner = state.players.find((p) => p.id === owned.ownerPlayerId)
-            const color = state.colors.find((c) => c.id === owner?.colorId)
+            const owner = entry?.owner
+            const color = entry?.color
             const ringColor = color?.hex ?? boardTok.neutral
             // Oorspronkelijk design: `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
             // bij de nog niet gebouwde selectiestaat.
