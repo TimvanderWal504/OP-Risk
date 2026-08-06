@@ -50,7 +50,7 @@ export function Dice({ value, colorHex, colorOnHex, size, radius, padding, gap, 
       }}
     >
       {Array.from({ length: 9 }).map((_, cell) => (
-        <span key={cell} className="flex items-center justify-center">
+        <span key={cell} aria-hidden className="flex items-center justify-center">
           {pips.includes(cell) && (
             <span className="rounded-full" style={{ width: pipSize, height: pipSize, background: colorOnHex }} />
           )}
