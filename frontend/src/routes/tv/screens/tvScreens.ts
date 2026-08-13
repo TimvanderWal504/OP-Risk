@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
+import type { StageScrimLevel } from '../../../styles/glass-tokens'
 import { TvLobbyScreen } from './TvLobbyScreen'
 import { TvOrderRollScreen } from './TvOrderRollScreen'
 import { TvClaimingScreen } from './TvClaimingScreen'
@@ -38,6 +39,27 @@ export const tvScreens: Record<GamePhaseDto, TvScreen> = {
 /** Versie-skew-vangnet, zie `resolvePhoneScreen` voor waarom dit náást het `Record` bestaat. */
 export function resolveTvScreen(phase: GamePhaseDto | undefined): TvScreen {
   return (phase !== undefined && tvScreens[phase]) || TvPlaceholderScreen
+}
+
+/**
+ * Fase → scrim-intensiteit van de persistente stage-achtergrond (`TvStageBackground`,
+ * tokens in `styles/glass-tokens.ts`). Losse as van `tvScreens` omdat de scrim-laag in
+ * `TvShell` zit — buiten het per-fase schermregister — en niet 1-op-1 met een scherm-
+ * component hoeft mee te lopen (Claiming/InitialPlacement/InProgress delen bewust
+ * hetzelfde "board"-niveau, zie de intensiteitscommentaar in glass-tokens.ts).
+ */
+export const tvStageScrimLevels: Record<GamePhaseDto, StageScrimLevel> = {
+  [GamePhaseDto.Lobby]: 'lobby',
+  [GamePhaseDto.OrderRoll]: 'setup',
+  [GamePhaseDto.Claiming]: 'board',
+  [GamePhaseDto.InitialPlacement]: 'board',
+  [GamePhaseDto.InProgress]: 'board',
+  [GamePhaseDto.Finished]: 'end',
+}
+
+/** Zelfde vangnet-opzet als `resolveTvScreen`: onbekende/ontbrekende fase (verbinden, fout) valt terug op het lobby-niveau. */
+export function resolveStageScrimLevel(phase: GamePhaseDto | undefined): StageScrimLevel {
+  return (phase !== undefined && tvStageScrimLevels[phase]) || 'lobby'
 }
 
 /**

@@ -31,7 +31,7 @@ export function PhoneInitialPlacementScreen({
       <NotYourTurnStep
         activePlayerName={activePlayer?.name ?? ''}
         activeColor={activeColor}
-        subtitle={t('place.title')}
+        subtitle={t('idle.placingArmies')}
       />
     )
   }

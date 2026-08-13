@@ -5,10 +5,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace RiskGame.Api.Tests;
 
 /// <summary>
-/// Bewijst dat de kaartlaag-bestanden (TO §7.2) verbatim opvraagbaar zijn via twee
-/// naam-specifieke routes — en dat er geen generieke static-file-hosting op de hele
+/// Bewijst dat het kaartlaag-bestand (TO §7.2) verbatim opvraagbaar is via een
+/// naam-specifieke route — en dat er geen generieke static-file-hosting op de hele
 /// `data/maps/{mapId}/`-map is opgezet, wat `missions.json`/`events.json` (FO §6.1/§9) vooraf
 /// zichtbaar zou maken. Zie de doc-comment op <see cref="Endpoints.GameEndpoints.MapGameEndpoints"/>.
+/// De vroegere `map-background.png`-route is op 2026-08-07 verwijderd (zie TO §7.2).
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsyncLifetime
@@ -44,16 +45,6 @@ public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsy
 
         Assert.NotNull(body);
         Assert.Equal(43, body!.Features.Count);
-    }
-
-    [Fact]
-    public async Task MapBackground_IsOpvraagbaar_AlsPngMetCacheControl()
-    {
-        var response = await _client.GetAsync("/maps/standaard-43/map-background.png");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("image/png", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal("public, max-age=3600", response.Headers.CacheControl?.ToString());
     }
 
     /// <summary>

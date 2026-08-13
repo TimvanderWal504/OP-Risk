@@ -140,10 +140,55 @@ describe('AttackFlowStep', () => {
       />,
     )
 
-    expect(screen.getByText('Jij −1 · verdediger −0')).toBeInTheDocument()
+    expect(screen.getByText('Jij verliest 1 leger')).toBeInTheDocument()
 
     await user.click(screen.getByText('Naar Verplaatsen', { exact: false }))
     expect(onEndPhase).toHaveBeenCalled()
+  })
+
+  // Alle uitkomsten die FO §5.3.5 kan opleveren: elk vergeleken dobbelsteenpaar kost precies één
+  // kant één leger en er zijn er hooguit twee, dus 1-om-0, 2-om-0, 0-om-1, 0-om-2 en 1-om-1.
+  it.each([
+    [0, 1, 'Jij verslaat 1 leger'],
+    [0, 2, 'Jij verslaat 2 legers'],
+    [1, 0, 'Jij verliest 1 leger'],
+    [2, 0, 'Jij verliest 2 legers'],
+    [1, 1, 'Jullie verliezen allebei 1 leger'],
+  ])('schrijft uitkomst %i-om-%i verhalend uit', (attackerLosses, defenderLosses, expected) => {
+    render(
+      <AttackFlowStep
+        playerId="alice"
+        myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
+        territories={territories}
+        territoryCatalog={territoryCatalog}
+        players={players}
+        colors={colors}
+        myColor={myColor}
+        pendingCombat={null}
+        combat={{
+          correlationId: 'c1',
+          attackerRolls: [5, 3],
+          defenderRolls: [4],
+          narrated: {
+            correlationId: 'c1',
+            attackerId: 'alice',
+            defenderId: 'bob',
+            fromTerritoryId: 'alaska',
+            toTerritoryId: 'kamchatka',
+            attackerLosses,
+            defenderLosses,
+            conquered: false,
+            eliminatedPlayerId: null,
+            stateVersion: 3,
+          },
+        }}
+        onDeclareAttack={vi.fn()}
+        onAbandonAttack={vi.fn()}
+        onEndPhase={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText(expected)).toBeInTheDocument()
   })
 
   it('roept onAbandonAttack aan zodra de aanvaller op "Ander gevecht" klikt, zodat de beurttimer meteen hervat (FO §5.4)', async () => {

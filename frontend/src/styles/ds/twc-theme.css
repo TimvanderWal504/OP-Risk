@@ -11,174 +11,65 @@
      • Semantic surface/text     → bg-bg, bg-surface, text-fg, text-fg-muted…
      • Status colors             → bg-live, text-win, bg-locked…
      • Radii / shadow / spacing  → rounded-card, shadow-card, etc.
-     • Display + body + mono type → font-display, font-sans, font-mono
+     • Display + body type        → font-display, font-sans
 
-   Dark mode flips the semantic vars automatically via prefers-color-scheme
-   AND a `.dark` class (manual toggle). Palette scales never change.
+   Single, dark-only semantic set — premium broadcast ink (cool, slightly
+   blue). Palette scales never change.
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
-   1. SEMANTIC RUNTIME VARS  (these flip per color scheme)
+   1. SEMANTIC RUNTIME VARS
    ---------------------------------------------------------------------------- */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Surfaces — light */
-  --bg:           #eef1f6;   /* app canvas                       */
-  --bg-elevated:  #ffffff;   /* raised header / sticky bars      */
-  --surface:      #ffffff;   /* primary card                     */
-  --surface-2:    #f4f6fa;   /* nested / inset panel             */
-  --surface-3:    #e8edf4;   /* track, inputs, chips             */
-  --overlay:      rgba(10, 14, 23, 0.45); /* scrim under modals  */
+  /* Surfaces */
+  --bg:           #080c14;   /* app canvas                       */
+  --bg-elevated:  #111927;   /* raised header / sticky bars      */
+  --surface:      #141d2c;   /* primary card                     */
+  --surface-2:    #1b2738;   /* nested / inset panel             */
+  --surface-3:    #243246;   /* track, inputs, chips             */
+  --overlay:      rgba(3, 6, 12, 0.66); /* scrim under modals    */
 
-  /* Hairlines / borders — light */
-  --border:        #e1e7f0;
-  --border-strong: #cdd6e3;
-  --ring:          #215990;  /* focus ring (broadcast blue)      */
+  /* Hairlines / borders */
+  --border:        #243044;
+  --border-strong: #33425a;
+  --ring:          #4f8fd4;  /* focus ring                       */
 
-  /* Text — light */
-  --fg:           #111826;   /* primary copy / scores            */
-  --fg-secondary: #475064;   /* labels, secondary copy           */
-  --fg-muted:     #7a869c;   /* meta, timestamps, captions       */
+  /* Text */
+  --fg:           #eef2f8;   /* primary copy / scores            */
+  --fg-secondary: #a9b6cb;   /* labels, secondary copy           */
+  --fg-muted:     #6f7e97;   /* meta, timestamps, captions       */
   --fg-onbrand:   #0c1208;   /* text on pitch-green fills        */
   --fg-onblue:    #ffffff;   /* text on blue fills               */
   --fg-ongold:    #2a1c00;   /* text on gold fills               */
 
-  /* Brand roles — light (text/link variants pick accessible steps) */
-  --primary:        #6b8f1f; /* pitch green, accessible on white */
+  /* Brand roles */
+  --primary:        #a1c23a; /* pitch green, lifted for dark contrast */
   --primary-fill:   #84ad28; /* CTA fill                         */
-  --primary-hover:  #6b8f1f;
-  --secondary:      #215990; /* broadcast blue                   */
-  --secondary-fill: #215990;
-  --link:           #1c4a78;
-  --accent:         #627798; /* silver-600, accessible on white */
-  --accent-fill:    #9cb0ca;
-
-  /* Status — light */
-  --live:        #d8262b;    /* LIVE match pulse / red           */
-  --live-soft:   #fdeaea;
-  --win:         #2f8f3e;    /* correct / win / positive delta   */
-  --win-soft:    #e7f4e9;
-  --loss:        #c43c3c;    /* loss / negative delta            */
-  --draw:        #7a869c;    /* draw / neutral                   */
-  --warning:     #b5790a;    /* soon / closing / locked-warning  */
-  --warning-soft:#fbf0d8;
-  --locked:      #7a869c;    /* locked chip                      */
-  --offline:     #f2a922;    /* offline banner (gold, attention) */
-
-  /* Champion / podium accents */
-  --gold:   #d4a017;
-  --silver: #9aa7b8;
-  --bronze: #b06b2c;
-}
-
-/* Dark — premium broadcast ink (cool, slightly blue) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-
-    --bg:           #080c14;
-    --bg-elevated:  #111927;
-    --surface:      #141d2c;
-    --surface-2:    #1b2738;
-    --surface-3:    #243246;
-    --overlay:      rgba(3, 6, 12, 0.66);
-
-    --border:        #243044;
-    --border-strong: #33425a;
-    --ring:          #4f8fd4;
-
-    --fg:           #eef2f8;
-    --fg-secondary: #a9b6cb;
-    --fg-muted:     #6f7e97;
-    --fg-onbrand:   #0c1208;
-    --fg-onblue:    #ffffff;
-    --fg-ongold:    #2a1c00;
-
-    --primary:        #a1c23a; /* lifted for dark contrast       */
-    --primary-fill:   #84ad28;
-    --primary-hover:  #95b933;
-    --secondary:      #6ba2d8;
-    --secondary-fill: #2e6aa8;
-    --link:           #7fb1e3;
-    --accent:         #c2cddd;
-    --accent-fill:    #9cb0ca;
-
-    --live:        #ff4d52;
-    --live-soft:   rgba(255, 77, 82, 0.14);
-    --win:         #56c96a;
-    --win-soft:    rgba(86, 201, 106, 0.14);
-    --loss:        #ff6b6b;
-    --draw:        #6f7e97;
-    --warning:     #f2c14e;
-    --warning-soft:rgba(242, 169, 34, 0.14);
-    --locked:      #6f7e97;
-    --offline:     #f2a922;
-
-    --gold:   #f2c14e;
-    --silver: #c2cddd;
-    --bronze: #cf8a4f;
-  }
-}
-
-/* Manual `.dark` class — mirrors the dark block (for the toggle in demos) */
-.dark {
-  color-scheme: dark;
-
-  --bg:           #080c14;
-  --bg-elevated:  #111927;
-  --surface:      #141d2c;
-  --surface-2:    #1b2738;
-  --surface-3:    #243246;
-  --overlay:      rgba(3, 6, 12, 0.66);
-
-  --border:        #243044;
-  --border-strong: #33425a;
-  --ring:          #4f8fd4;
-
-  --fg:           #eef2f8;
-  --fg-secondary: #a9b6cb;
-  --fg-muted:     #6f7e97;
-  --fg-onbrand:   #0c1208;
-  --fg-onblue:    #ffffff;
-  --fg-ongold:    #2a1c00;
-
-  --primary:        #a1c23a;
-  --primary-fill:   #84ad28;
   --primary-hover:  #95b933;
-  --secondary:      #6ba2d8;
+  --secondary:      #6ba2d8; /* broadcast blue                   */
   --secondary-fill: #2e6aa8;
   --link:           #7fb1e3;
   --accent:         #c2cddd;
   --accent-fill:    #9cb0ca;
 
-  --live:        #ff4d52;
+  /* Status */
+  --live:        #ff4d52;    /* LIVE match pulse / red           */
   --live-soft:   rgba(255, 77, 82, 0.14);
-  --win:         #56c96a;
+  --win:         #56c96a;    /* correct / win / positive delta   */
   --win-soft:    rgba(86, 201, 106, 0.14);
-  --loss:        #ff6b6b;
-  --draw:        #6f7e97;
-  --warning:     #f2c14e;
+  --loss:        #ff6b6b;    /* loss / negative delta            */
+  --draw:        #6f7e97;    /* draw / neutral                   */
+  --warning:     #f2c14e;    /* soon / closing / locked-warning  */
   --warning-soft:rgba(242, 169, 34, 0.14);
-  --locked:      #6f7e97;
-  --offline:     #f2a922;
+  --locked:      #6f7e97;    /* locked chip                      */
+  --offline:     #f2a922;    /* offline banner (gold, attention) */
 
+  /* Champion / podium accents */
   --gold:   #f2c14e;
   --silver: #c2cddd;
   --bronze: #cf8a4f;
-}
-
-/* Explicit light override — makes [data-theme="light"] deterministic even on a
-   dark-OS (beats the prefers-color-scheme:dark block below). Mirrors :root. */
-[data-theme="light"] {
-  color-scheme: light;
-  --bg:#eef1f6; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#e8edf4;
-  --overlay:rgba(10, 14, 23, 0.45);
-  --border:#e1e7f0; --border-strong:#cdd6e3; --ring:#215990;
-  --fg:#111826; --fg-secondary:#475064; --fg-muted:#7a869c; --fg-onbrand:#0c1208; --fg-onblue:#ffffff; --fg-ongold:#2a1c00;
-  --primary:#6b8f1f; --primary-fill:#84ad28; --primary-hover:#6b8f1f; --secondary:#215990; --secondary-fill:#215990; --link:#1c4a78; --accent:#627798; --accent-fill:#9cb0ca;
-  --live:#d8262b; --live-soft:#fdeaea; --win:#2f8f3e; --win-soft:#e7f4e9; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a; --warning-soft:#fbf0d8; --locked:#7a869c; --offline:#f2a922;
-  --gold:#d4a017; --silver:#9aa7b8; --bronze:#b06b2c;
 }
 
 /* ----------------------------------------------------------------------------
@@ -188,7 +79,6 @@
   /* ---- Type families ---- */
   --font-display: "Archivo", "Archivo Expanded", ui-sans-serif, system-ui, sans-serif;
   --font-sans:    "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono:    "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
   /* ---- Type scale (mirrors colors_and_type.css :root --text-*; values must
      live here too so Tailwind v4 generates the text-display/h1/h2/h3/body/sm/xs
@@ -327,15 +217,9 @@
   --radius-card:   1rem;    /* 16px — match cards, panels        */
   --radius-sheet:  1.5rem;  /* 24px — modals, bottom sheets      */
 
-  /* ---- Shadows / elevation ---- */
-  --shadow-card:   0 1px 2px rgba(10, 14, 23, 0.06), 0 4px 16px -6px rgba(10, 14, 23, 0.12);
-  --shadow-raised: 0 8px 30px -8px rgba(10, 14, 23, 0.22);
-  --shadow-sheet:  0 -8px 40px -12px rgba(10, 14, 23, 0.35);
-  --shadow-glow-live: 0 0 0 1px rgba(216, 38, 43, 0.5), 0 6px 24px -8px rgba(216, 38, 43, 0.45);
-
   /* ---- App layout metrics ---- */
   --spacing-tabbar: 4.25rem; /* bottom tab bar height            */
-  --spacing-gutter: 1rem;    /* mobile screen gutter             */
+  --spacing-gutter: 1.25rem; /* mobile screen gutter — PhoneScreen */
 }
 
 /* ----------------------------------------------------------------------------

@@ -8,7 +8,7 @@ describe('NotYourTurnStep', () => {
   it('toont wie er aan de beurt is met de meegegeven subtitle', () => {
     render(<NotYourTurnStep activePlayerName="Bob" activeColor={activeColor} subtitle="Claim" />)
 
-    expect(screen.getByText(/Aan de beurt Bob/)).toBeInTheDocument()
-    expect(screen.getByText(/· Claim/)).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt: Bob/)).toBeInTheDocument()
+    expect(screen.getByText('Claim')).toBeInTheDocument()
   })
 })

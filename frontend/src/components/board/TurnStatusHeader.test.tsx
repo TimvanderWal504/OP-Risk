@@ -17,7 +17,7 @@ describe('TurnStatusHeader', () => {
       />,
     )
 
-    expect(screen.getByText(/Aan de beurt Alice/)).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt: Alice/)).toBeInTheDocument()
     expect(screen.getByText('· Rood')).toBeInTheDocument()
     expect(screen.getByText('2:47')).toBeInTheDocument()
   })

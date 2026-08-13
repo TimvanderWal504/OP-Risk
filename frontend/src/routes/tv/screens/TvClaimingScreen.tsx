@@ -1,29 +1,14 @@
-import type { SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
-import { atlasRough, claimMarker } from '../../../map/boardVisualTokens'
+import { claimMarker, territoryGlow } from '../../../map/boardVisualTokens'
 import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
+import { InstructionKicker } from '../../../components/ui/InstructionKicker'
+import { GlassPanel } from '../../../components/ui/GlassPanel'
+import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import type { TvScreenProps } from './tvScreens'
-
-const MAP_ID = 'standaard-43'
-
-/**
- * Vangnet voor TO §7.2, zelfde functie als in `TvMainBoardScreen.tsx`/
- * `TvInitialPlacementScreen.tsx` — hier ontbrak hij (audit-bevinding), lokaal
- * gehouden i.p.v. cross-file geïmporteerd om de fix minimaal te houden.
- */
-function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
-  const img = event.currentTarget
-  if (img.naturalWidth !== MAP_WIDTH_PX || img.naturalHeight !== MAP_HEIGHT_PX) {
-    console.error(
-      `Kaartachtergrond heeft onverwachte afmetingen (${img.naturalWidth}x${img.naturalHeight}, verwacht ${MAP_WIDTH_PX}x${MAP_HEIGHT_PX}) — projection.ts en de PNG lopen niet meer synchroon (TO §7.2).`,
-    )
-  }
-}
 
 /**
  * TV tijdens `GamePhaseDto.Claiming` (`isClaim`-fase, state-index 2, uit het oorspronkelijke design).
@@ -68,7 +53,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <div className="col-span-full flex items-center justify-between px-3.5">
+      <GlassPanel elevation="base" context="tv" padding="none" className="col-span-full flex items-center justify-between px-3.5 py-3">
         <div className="flex items-center gap-4.5">
           {activeColor && (
             <div
@@ -79,128 +64,83 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
             </div>
           )}
           <div className="font-display text-[34px] font-black leading-none">
-            {t('board:turnOf')} {activePlayer.name}{' '}
+            {/* Dubbele punt, zelfde grammaticafix als TurnStatusHeader/ActivePlayerBanner. */}
+            {t('board:turnOf')}: {activePlayer.name}{' '}
             {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
           </div>
         </div>
 
-        <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-h2 font-black tracking-[.02em] text-pitch-300">
-          {t('claimKicker')}
-        </div>
+        <InstructionKicker>{t('claimKicker')}</InstructionKicker>
 
         <div className="flex flex-col items-end">
-          <span className="mb-1 font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
+          <span className="mb-1 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
             {t('claimCounterLabel')}
           </span>
           <div className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-[56px] font-black leading-none tabular-nums text-fg">
             {claimedCount} / {totalCount}
           </div>
         </div>
-      </div>
+      </GlassPanel>
 
-      <div
-        className="relative col-start-1 row-start-2 min-w-0 overflow-hidden rounded-[14px] border border-[var(--atlas-map-border)] bg-[var(--atlas-map-bg)]"
-        style={{ boxShadow: 'inset 0 0 120px rgba(0,0,0,.75), inset 0 0 0 3px rgba(120,96,56,.18)' }}
-      >
-        <img
-          src={`/maps/${MAP_ID}/map-background.png`}
-          onLoad={checkBackgroundDimensions}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <svg
-          viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-        >
-          <defs>
-            <filter id="atlasRoughC">
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency={atlasRough.baseFrequency}
-                numOctaves={atlasRough.numOctaves}
-                seed={atlasRough.seed}
-                result="n"
+      <TvBoardMap
+        geometry={geometry}
+        filterId="atlasRoughC"
+        getTerritoryVisual={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owned = entry?.owned
+          const color = entry?.color
+          const claimed = owned?.ownerPlayerId != null
+          const isFlare = territory.id === lastClaimedTerritoryId
+
+          const fillHex = claimed ? (color?.hex ?? boardTok.neutral) : boardTok.neutral
+          const fillOpacity = claimed ? boardTok.ownFill : boardTok.neuFill
+          const strokeHex = isFlare ? boardTok.fg : claimed ? (color?.hex ?? boardTok.neutral) : boardTok.neutral
+          const strokeOpacity = isFlare ? 1 : claimed ? boardTok.ownStroke : boardTok.neuStroke
+          const strokeWidth = isFlare
+            ? claimMarker.territorySwFlare
+            : claimed
+              ? claimMarker.territorySwClaimed
+              : claimMarker.territorySwFree
+          const glowPx = claimed && color ? territoryGlow.claimed : undefined
+
+          return { fillHex, fillOpacity, strokeHex, strokeOpacity, strokeWidth, glowPx, glowColor: color?.hex }
+        }}
+        renderMarker={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owned = entry?.owned
+          if (!owned?.ownerPlayerId) return null
+
+          const color = entry?.color
+          if (!color) return null
+
+          return (
+            <g key={territory.id}>
+              <circle
+                cx={territory.centroidPx.x}
+                cy={territory.centroidPx.y}
+                r={claimMarker.discR}
+                fill={boardTok.disc}
+                fillOpacity={boardTok.discOp}
+                stroke={color.hex}
+                strokeWidth={claimMarker.ringSw}
               />
-              <feDisplacementMap
-                in="SourceGraphic"
-                in2="n"
-                scale={atlasRough.scale}
-                xChannelSelector="R"
-                yChannelSelector="G"
-              />
-            </filter>
-          </defs>
-
-          <g filter="url(#atlasRoughC)">
-            {geometry?.map((territory) => {
-              const entry = ownership.get(territory.id)
-              const owned = entry?.owned
-              const color = entry?.color
-              const claimed = owned?.ownerPlayerId != null
-              const isFlare = territory.id === lastClaimedTerritoryId
-
-              const fillHex = claimed ? (color?.hex ?? boardTok.neutral) : boardTok.neutral
-              const fillOpacity = claimed ? boardTok.ownFill : boardTok.neuFill
-              const strokeHex = isFlare ? boardTok.fg : claimed ? (color?.hex ?? boardTok.neutral) : boardTok.neutral
-              const strokeOpacity = isFlare ? 1 : claimed ? boardTok.ownStroke : boardTok.neuStroke
-              const strokeWidth = isFlare
-                ? claimMarker.territorySwFlare
-                : claimed
-                  ? claimMarker.territorySwClaimed
-                  : claimMarker.territorySwFree
-
-              return (
-                <path
-                  key={territory.id}
-                  d={territory.pathD}
-                  fill={fillHex}
-                  fillOpacity={fillOpacity}
-                  stroke={strokeHex}
-                  strokeOpacity={strokeOpacity}
-                  strokeWidth={strokeWidth}
-                  strokeLinejoin="round"
-                />
-              )
-            })}
-          </g>
-
-          {geometry?.map((territory) => {
-            const entry = ownership.get(territory.id)
-            const owned = entry?.owned
-            if (!owned?.ownerPlayerId) return null
-
-            const color = entry?.color
-            if (!color) return null
-
-            return (
-              <g key={territory.id}>
-                <circle
-                  cx={territory.centroidPx.x}
-                  cy={territory.centroidPx.y}
-                  r={claimMarker.discR}
-                  fill={boardTok.disc}
-                  fillOpacity={boardTok.discOp}
-                  stroke={color.hex}
-                  strokeWidth={claimMarker.ringSw}
-                />
-                <text
-                  x={territory.centroidPx.x}
-                  y={territory.centroidPx.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontFamily="Archivo, sans-serif"
-                  fontWeight={700}
-                  fontSize={claimMarker.symFontSize}
-                  fill={color.onHex}
-                >
-                  {symbolGlyph[color.symbol as keyof typeof symbolGlyph] ?? ''}
-                </text>
-              </g>
-            )
-          })}
-
-          {flareTerritory && (
+              <text
+                x={territory.centroidPx.x}
+                y={territory.centroidPx.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontFamily="Archivo, sans-serif"
+                fontWeight={700}
+                fontSize={claimMarker.symFontSize}
+                fill={color.onHex}
+              >
+                {symbolGlyph[color.symbol as keyof typeof symbolGlyph] ?? ''}
+              </text>
+            </g>
+          )
+        }}
+        extraOverlay={
+          flareTerritory && (
             <circle
               cx={flareTerritory.centroidPx.x}
               cy={flareTerritory.centroidPx.y}
@@ -214,12 +154,12 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 animation: tvAnimations.burstShort,
               }}
             />
-          )}
-        </svg>
-      </div>
+          )
+        }
+      />
 
-      <div className="col-start-2 row-start-2 flex min-h-0 flex-col">
-        <div className="mb-3 font-body text-body font-extrabold uppercase tracking-[.14em] text-fg-muted">
+      <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
+        <div className="mb-3 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('claimPanelTitle')}
         </div>
         <div className="flex flex-col gap-3">
@@ -236,8 +176,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 key={playerId}
                 className="relative flex items-center gap-4 overflow-hidden rounded-[14px] border p-3.5"
                 style={{
-                  background: isCurrent ? 'rgba(156,176,202,.10)' : 'var(--atlas-row)',
-                  borderColor: isCurrent ? 'var(--silver-600)' : 'var(--border)',
+                  background: isCurrent ? 'color-mix(in srgb, var(--color-silver-400) 10%, transparent)' : 'var(--atlas-row)',
+                  borderColor: isCurrent ? 'var(--color-silver-600)' : 'var(--border)',
                 }}
               >
                 {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-silver-400" />}
@@ -249,14 +189,14 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
-                  <div className="mt-0.75 font-body text-body text-fg-muted">{color.name}</div>
+                  <div className="mt-0.75 font-body text-body text-fg-secondary">{color.name}</div>
                 </div>
                 <div className="font-display text-[34px] font-black tabular-nums text-fg">{count}</div>
               </div>
             )
           })}
         </div>
-      </div>
+      </GlassPanel>
     </div>
   )
 }

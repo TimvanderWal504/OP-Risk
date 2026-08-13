@@ -40,7 +40,7 @@ export function Collapsible({ title, summary, children, defaultOpen, collapsible
             <svg
               aria-hidden
               viewBox="0 0 16 16"
-              className="h-4 w-4 flex-none text-fg-muted transition-transform"
+              className="h-4 w-4 flex-none text-fg-muted"
               style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
             >
               <path

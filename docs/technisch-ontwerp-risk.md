@@ -81,7 +81,6 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 | `continents.json` | Continentbonussen |
 | `colors.json` (gedeeld, `data/colors.json`) | 7 spelerskleuren: `hex` (fill) + `onHex` (contrastkleur voor tekst/symbool erop) + kleurenblind-symbolen |
 | `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
-| `map-background-final.png` | Statische achtergrond voor de TV-kaart (hoort bij de projectie van deze variant) |
 | `roles.json` / `missions.json` / `events.json` | Rollen, missies en gebeurteniskaarten — datamodel én content ingevuld (FO §13) |
 
 De engine bevat **geen** kaart-, kleur- of kaartkennis in code; alles komt uit deze bestanden. Dat is de kern van "data-driven" uit het FO: een nieuwe kaart of extra gebied = andere data, geen codewijziging.
@@ -216,24 +215,28 @@ SignalR's automatische reconnect + een `sessionToken` in `localStorage`. Bij her
 
 TV en telefoon zijn twee views/routes binnen dezelfde React-app, met gedeelde SignalR-client en typedefinities. De TV is read-only (rendert state, stuurt nooit commando's); de telefoon is de enige input-bron.
 
-### 7.2 De kaartlaag (hybride, zoals uitgewerkt)
+### 7.2 De kaartlaag (glas-laag, sinds 2026-08-07)
 
 ```
-z-0: <img> map-background-final.png        (statische artwork-achtergrond)
+z-0: gedeelde stage-illustratie (TvStageBackground) + eigen map-scrim  (sfeerbeeld, geen kaartartwork)
 z-1: <svg> gebieden uit territories.geo.json  (per-eigenaar-kleurbaar, klikbaar/highlightbaar)
 z-2: legertellers + labels op de centroids
 z-3: transiënte animaties (dobbelstenen, aanvalspijlen, veroveringen)
 ```
 
-**Cruciaal (uit de kaart-look-iteraties):** de SVG-gebiedenlaag moet exact **dezelfde projectie** gebruiken als waarmee `map-background-final.png` is gegenereerd — het v4-silhouet met lengtegraadbereik **−180° tot 191°** (i.p.v. de standaard −180°/180°), nodig om Kamchatka's oostpunt aaneengesloten te houden. Wijkt de overlay-projectie hiervan af, dan schuiven de klikbare gebieden en de achtergrond uit elkaar. De projectieformule staat in `build_silhouette_v4.py` en is de basis voor de frontend; sinds 2026-08-03 zijn de vier venstergrenzen in `projection.ts` (`LON_MIN`/`LON_MAX`/`LAT_MIN`/`LAT_MAX`) echter gefit op de daadwerkelijke `map-background-final.png` in plaats van 1-op-1 uit het script overgenomen (zie hieronder) — vervang je de asset, dan moet die fit herhaald worden.
+**Wat dit niet verandert:** de projectieformule (`build_silhouette_v4.py`, lengtegraadbereik
+**−180° tot 191°** i.p.v. de standaard −180°/180°, nodig om Kamchatka's oostpunt aaneengesloten
+te houden) blijft ongewijzigd in `projection.ts` (`LON_MIN`/`LON_MAX`/`LAT_MIN`/`LAT_MAX`) — die
+bepaalt de vorm/continuïteit van de polygonen zelf, niet een uitlijning met een artwork-asset.
 
-Bekende, geaccepteerde cosmetische afwijkingen tussen achtergrond en overlay: Indonesië/Filipijnen en een lichte schim langs de onderrand. De klik-detectie blijft correct (die volgt de geodata); alleen valt de geschilderde kust daar niet exact samen met het klikvlak.
+**Vervallen (historisch, niet meer van toepassing):** de asset-specifieke venster-fit en
+IoU-metingen van 2026-08-03 (overlay-tegen-artwork-overlap, Kamtsjatka-dekking van de
+PNG, de cosmetische Indonesië/Filipijnen-afwijkingen) kalibreerden de overlay tegen de
+pixels van `map-background-final.png`. Zonder die achtergrond vervalt het "overlay vs.
+artwork"-vergelijkingspunt volledig; er is geen equivalente meting nodig omdat er geen
+tweede, onafhankelijke kaartweergave meer is om tegen uit te lijnen.
 
-**Meting 2026-08-03 (asset-wissel + venster-fit):** met de huidige `map-background-final.png` en een IoU-grid-search over het projectievenster is het codeplafond voor overlay/artwork-overlap **IoU ≈ 0,825** (was 0,709 met de vorige asset en het nominale −180/191-venster). Een losse translatie per continent bovenop de globale venster-fit levert geen extra winst op (+0,000 voor elk continent) — het restverschil is een vormverschil tussen de 43 vereenvoudigde gebiedspolygonen en de geschilderde kustlijn, niet een resterende positiefout, en is dus niet met een transform te dichten. Vertaald naar scherm-pixels op 1920×1080 is de mediane afwijking 2,1 px (p75 6,0 px, p90 18,4 px) — kleiner dan wat met het blote oog opvalt op de meeste plekken.
-
-`map-background-final.png` schildert Kamtsjatka's oostpunt nog altijd niet volledig — dit is bevestigd met twee kandidaat-vervangingen (een 4096×2132-herexport en een los gegenereerde afbeelding) die het schiereiland allebei ófwel niet vollediger, ófwel (de herexport) juist met 23-41% minder land tekenen dan de huidige asset. Geen combinatie van venster/schaal/translatie kan dit compenseren zonder de wereldwijde IoU elders te laten instorten (geverifieerd met een sweep van `LON_MAX`). Dit is een tekortkoming van de artwork zelf, niet van de projectie of de geodata, en blijft openstaan tot er een asset is die het schiereiland wél volledig bevat.
-
-De gebiedenlaag hangt sinds 2026-08-03 in het `atlasRough`-SVG-filter uit het oorspronkelijke TV-design (`feTurbulence`+`feDisplacementMap`, "roughened for organic coastlines") — dit roughened de polygoonrand zodat de resterende vormafwijking visueel als handgetekende kustlijn oogt in plaats van als net-niet-kloppende uitlijning. De prestatie-impact van dit filter op de daadwerkelijke TV-hardware (zwakke GPU, zie frontend/CLAUDE.md) is nog niet gemeten.
+De gebiedenlaag hangt sinds 2026-08-03 in het `atlasRough`-SVG-filter uit het oorspronkelijke TV-design (`feTurbulence`+`feDisplacementMap`, "roughened for organic coastlines") — dit roughened de polygoonrand zodat de vormvereenvoudiging van de 43 gebiedspolygonen visueel als handgetekende kustlijn oogt. De prestatie-impact van dit filter op de daadwerkelijke TV-hardware (zwakke GPU, zie frontend/CLAUDE.md) is nog niet gemeten.
 
 ### 7.3 Gebiedsselectie
 
@@ -302,6 +305,6 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 2. **Event sourcing eromheen** (Marten) — ✅ gedaan. `RiskGame.Persistence`: commando's → events → inline `GameProjection`, met round-trip-tests in `RiskGame.Persistence.Tests`.
 3. **Minimal API + SignalR-hub** — ✅ gedaan. `RiskGame.Api`: `GameEndpoints`/`HubEndpoints`, `GameHub` + `IGameClient`, commandohandlers per fase, `TurnTimerBackgroundService`; getest incl. `PostgresFixture`.
 4. **Frontend met placeholder-kaart** (rechthoeken) — 🔶 gedeeltelijk. Lobby, joinen, kleur-/rolkeuze en order-roll staan (met i18n en TV-motion); het speelbord zelf (versterken/aanvallen/verplaatsen, ook als placeholder) is nog niet gebouwd.
-5. **Echte kaartlaag**: `map-background-final.png` + SVG-overlay met de v4-projectie — ⬜ nog niet gestart. `frontend/src/map/` bevat alleen een `.gitkeep`.
+5. **Echte kaartlaag**: SVG-overlay met de v4-projectie over de gedeelde stage-illustratie (zie §7.2) — ⬜ nog niet gestart. `frontend/src/map/` bevat alleen een `.gitkeep`.
 6. **Reconnect & randgevallen** — 🔶 serverzijde aanwezig (sessietoken, groepen, auto-pass in de rules/API-laag), end-to-end-verificatie via de frontend nog te doen.
 

@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next'
+import { GlassPanel } from '../../../components/ui/GlassPanel'
+import { PhoneScreen } from '../../../components/ui/PhoneScreen'
 
 /**
  * Het scherm voor een fase die deze bundel (nog) niet kent: de nog niet gebouwde fases
@@ -10,8 +12,11 @@ export function PhonePlaceholderScreen() {
   const { t } = useTranslation('lobby')
 
   return (
-    <div className="flex h-full items-center justify-center p-5 text-center text-fg-muted">
-      {t('placeholder.phone')}
-    </div>
+    <PhoneScreen className="items-center justify-center text-center">
+      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
+      <GlassPanel elevation="base" context="phone" padding="none" className="rounded-2xl px-4 py-2 text-fg-muted">
+        {t('placeholder.phone')}
+      </GlassPanel>
+    </PhoneScreen>
   )
 }

@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { GamePhaseDto, TurnPhaseDto, type GameStateDto, type PendingCombatDto } from '../../../types/GameState'
+import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
 import { fixtureState, fixtureProps } from './phoneScreenFixture'
 import { PhoneAttackScreen } from './PhoneAttackScreen'
 import { resolveAttackRole } from './resolveAttackRole'
@@ -84,7 +86,7 @@ describe('PhoneAttackScreen', () => {
 
     render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
 
-    expect(screen.getByText(/Veroverd! Kamtsjatka/)).toBeInTheDocument()
+    expect(screen.getByText(/Kamtsjatka veroverd!/)).toBeInTheDocument()
   })
 
   it('rendert de omstander-weergave voor een niet-betrokken speler', () => {
@@ -98,6 +100,94 @@ describe('PhoneAttackScreen', () => {
 
     render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'carol', me: carol })} />)
 
-    expect(screen.getByText('· Aanvallen')).toBeInTheDocument()
+    expect(screen.getByText('Aanvallen')).toBeInTheDocument()
+  })
+
+  it('houdt het eigen verdedigingsresultaat zichtbaar nadat ChooseDefenseDice de rol naar bystander laat kantelen, en dismisst het automatisch bij een nieuwe aanval', async () => {
+    // Bevinding: `ChooseDefenseDice` maakt `pendingCombat` leeg in dezelfde snapshot als het
+    // resultaat, waardoor `resolveAttackRole` meteen naar 'bystander' kantelt — zonder de
+    // `heldDefend`-fix in `PhoneAttackScreen` zou `DefendStep` hier meteen verdwijnen vóórdat de
+    // speler zijn eigen worp heeft gezien (alleen op TV zichtbaar).
+    const user = userEvent.setup()
+    const bob = fixtureState.players[1]
+    const defendingState = attackState({ activePlayerId: 'alice', pendingCombat, toTerritoryOwnerId: 'bob' })
+    const resolvedState = attackState({ activePlayerId: 'alice', pendingCombat: null, toTerritoryOwnerId: 'bob' })
+    const chooseDefenseDice = vi.fn().mockResolvedValue({
+      attackerRolls: [4],
+      defenderRolls: [6],
+      attackerLosses: 1,
+      defenderLosses: 0,
+      conquered: false,
+      state: resolvedState,
+    })
+    const combatAfterChoice: CombatBroadcastState = { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], narrated: null }
+
+    const { rerender } = render(
+      <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />,
+    )
+
+    expect(screen.getByText('Je wordt aangevallen')).toBeInTheDocument()
+
+    await user.click(screen.getByText('2'))
+
+    expect(chooseDefenseDice).toHaveBeenCalledWith(2)
+    expect(await screen.findByText('Je verslaat 1 leger')).toBeInTheDocument()
+
+    // De ouder (`useGameState` in het echt) past `resolvedState` toe en levert de nieuwe
+    // `combat`-broadcast — precies het moment waarop de rol zonder de fix al was omgeslagen.
+    rerender(
+      <PhoneAttackScreen {...fixtureProps({ state: resolvedState, playerId: 'bob', me: bob, chooseDefenseDice, combat: combatAfterChoice })} />,
+    )
+
+    expect(resolveAttackRole(resolvedState, 'bob')).toBe('bystander')
+    expect(screen.getByText('Je verslaat 1 leger')).toBeInTheDocument()
+
+    // Een nieuwe aanval van dezelfde aanvaller op hetzelfde gebied (een verse 'defending'-sessie
+    // na een tussenliggende bystander-render) moet het oude resultaat automatisch wegklikken en
+    // de normale keuze-UI teruggeven.
+    const secondCombat: CombatBroadcastState = { correlationId: 'combat-2', attackerRolls: null, defenderRolls: null, narrated: null }
+    rerender(
+      <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: secondCombat })} />,
+    )
+
+    expect(screen.queryByText('Je verslaat 1 leger')).not.toBeInTheDocument()
+    expect(screen.getByText('Verdedig dit gebied.')).toBeInTheDocument()
+  })
+
+  it('laat het verdedigingsresultaat los zodra de beurt zonder nieuwe aanval doorschuift naar een andere speler', () => {
+    // Zonder deze guard zou een verdediger die nooit op "Terug naar het spel" klikt, bij zijn
+    // eigen volgende aanvalsbeurt nog steeds het oude resultaatscherm zien i.p.v. `AttackFlowStep`.
+    const bob = fixtureState.players[1]
+    const defendingState = attackState({ activePlayerId: 'alice', pendingCombat, toTerritoryOwnerId: 'bob' })
+    const resolvedState = attackState({ activePlayerId: 'alice', pendingCombat: null, toTerritoryOwnerId: 'bob' })
+    const chooseDefenseDice = vi.fn().mockResolvedValue({
+      attackerRolls: [4],
+      defenderRolls: [6],
+      attackerLosses: 1,
+      defenderLosses: 0,
+      conquered: false,
+      state: resolvedState,
+    })
+
+    const { rerender } = render(
+      <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />,
+    )
+    rerender(
+      <PhoneAttackScreen
+        {...fixtureProps({
+          state: resolvedState,
+          playerId: 'bob',
+          me: bob,
+          chooseDefenseDice,
+          combat: { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], narrated: null },
+        })}
+      />,
+    )
+
+    // Bob's eigen beurt begint (Attack-fase, geen pendingCombat): resolveAttackRole geeft 'attacker'.
+    const bobsTurnState = attackState({ activePlayerId: 'bob', pendingCombat: null, toTerritoryOwnerId: null })
+    rerender(<PhoneAttackScreen {...fixtureProps({ state: bobsTurnState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />)
+
+    expect(screen.queryByText('Je wordt aangevallen')).not.toBeInTheDocument()
   })
 })

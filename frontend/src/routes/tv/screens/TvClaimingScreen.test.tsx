@@ -58,7 +58,7 @@ describe('TvClaimingScreen', () => {
     // "Bob" staat twee keer: gemerged met "Aan de beurt" als actieve claimer in de topbar,
     // én los in het rechterpaneel — beide horen er te zijn (uit het oorspronkelijke design),
     // niet dubbel geteld als bug.
-    expect(screen.getByText(/Aan de beurt Bob/)).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt: Bob/)).toBeInTheDocument()
     expect(screen.getByText('Bob', { selector: 'div.font-display.text-2xl.font-extrabold' })).toBeInTheDocument()
   })
 

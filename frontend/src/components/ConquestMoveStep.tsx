@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
+import { GlassPanel } from './ui/GlassPanel'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface ConquestMoveStepProps {
   fromTerritoryId: string
@@ -37,71 +39,86 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4 pt-0.5">
-      <div className="mt-1.5 text-center font-display text-[28px] font-black">
-        {t('conquest.captured')} {tDynamic(toTerritoryId, 'territories')}
-      </div>
+    <PhoneScreen>
+      {/* BEVINDING, opgelost (2026-08-10): headline + inhoud stonden kaal op de stage-
+          achtergrond — zie OrderRollWaitStep.tsx. Eén paneel i.p.v. losse chips per regel:
+          leesbaarder dan een reeks losse plakkaatjes rond elk bijschrift afzonderlijk. */}
+      {/* Vier rijen met één ritme (`gap-[22px]`), i.p.v. een kop plus een verticaal gecentreerd
+          restblok: het paneel is nu zo hoog als zijn inhoud en elke rij krijgt dezelfde ruimte
+          (2026-08-13, op verzoek). `flex-1` stond hier omdat het gecentreerde blok iets moest
+          vullen — dat is met een grid niet meer nodig. */}
+      {/* `my-auto`: de vrije ruimte valt gelijk boven en onder het paneel, dus het staat gecentreerd
+          in wat de CTA onderaan overlaat. Geen `flex-1` — dat zou het paneel weer uitrekken. */}
+      <GlassPanel elevation="base" context="phone" padding="none" className="my-auto grid gap-[22px] rounded-2xl p-4 text-center">
+        <div className="font-display text-[28px] font-black leading-[1.15] text-fg">
+          {t('conquest.captured', { territory: tDynamic(toTerritoryId, 'territories') })}
+        </div>
 
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[22px]">
-        <div className="flex items-center gap-3.5">
-          <div className="text-center">
+        {/* Herkomst en doel krijgen elk een gelijke 1fr-kolom, met de pijl in een auto-kolom
+            ertussen. Zo staat de pijl op de middenlijn en verspringt er niets bij een lange
+            gebiedsnaam — die wikkelt binnen zijn eigen kolom. */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-start justify-items-center gap-3">
+          <div>
             <div
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-[26px]"
               style={{ background: myColor?.hex, color: myColor?.onHex }}
             >
               {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
             </div>
-            <div className="mt-[5px] font-body text-xs text-fg-muted">{tDynamic(fromTerritoryId, 'territories')}</div>
+            <div className="mt-[5px] font-body text-sm text-fg-secondary">{tDynamic(fromTerritoryId, 'territories')}</div>
           </div>
-          <span className="text-2xl text-pitch-400">→</span>
-          <div className="text-center">
+          <span className="self-center text-2xl text-pitch-400">→</span>
+          <div>
             <div
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-[26px]"
               style={{ background: myColor?.hex, color: myColor?.onHex, boxShadow: myColor ? `0 0 20px ${myColor.hex}` : undefined }}
             >
               {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
             </div>
-            <div className="mt-[5px] font-body text-xs text-fg-muted">{tDynamic(toTerritoryId, 'territories')}</div>
+            <div className="mt-[5px] font-body text-sm text-fg-secondary">{tDynamic(toTerritoryId, 'territories')}</div>
           </div>
         </div>
 
-        <div className="text-center font-body text-sm text-fg-muted">{t('conquest.moveHowMany')}</div>
+        <div className="font-body text-body text-fg-secondary">{t('conquest.moveHowMany')}</div>
 
-        <div className="flex items-center gap-[18px]">
+        {/* Drie gelijke kolommen: de teller staat daardoor op de middenlijn van het paneel en de
+            twee knoppen hangen symmetrisch aan weerszijden, ongeacht hoeveel cijfers de teller heeft. */}
+        <div className="grid grid-cols-3 items-center gap-[18px]">
           <button
             type="button"
             disabled={clamped <= minArmies}
             onClick={() => setMoveN((current) => Math.max(minArmies, current - 1))}
-            className="h-15 w-15 rounded-2xl border border-border-strong bg-[var(--atlas-t05)] text-[30px] font-black text-fg disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-15 w-15 items-center justify-center justify-self-end rounded-2xl border-2 text-[30px] font-black text-fg disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ borderColor: 'var(--border-strong)' }}
           >
             −
           </button>
-          <div className="min-w-[70px] text-center">
-            <div className="font-display text-[52px] font-black leading-none">{clamped}</div>
-            <div className="font-body text-[11px] text-fg-muted">{t('armiesWord')}</div>
+          <div>
+            <div className="font-display text-[52px] font-black leading-none text-fg">{clamped}</div>
+            <div className="font-body text-[16px] text-fg-muted">{t('armiesWord')}</div>
           </div>
           <button
             type="button"
             disabled={clamped >= maxArmies}
             onClick={() => setMoveN((current) => Math.min(maxArmies, current + 1))}
-            className="h-15 w-15 rounded-2xl border-none bg-pitch-500 text-[30px] font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-15 w-15 justify-self-start rounded-2xl border-none bg-pitch-500 text-[30px] font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             +
           </button>
         </div>
 
-        <div className="font-body text-xs text-silver-400">{t('conquest.minNote', { min: minArmies })}</div>
-      </div>
+        <div className="font-body text-sm text-fg-muted">{t('conquest.minNote', { min: minArmies })}</div>
+      </GlassPanel>
 
       <button
         type="button"
         disabled={submitting}
         onClick={confirm}
-        className="mt-[11px] flex min-h-16 w-full items-center justify-center gap-2.5 rounded-2xl border-none font-display text-lg font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-auto flex min-h-16 w-full items-center justify-center gap-2.5 rounded-2xl border-none font-display text-lg font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-60"
         style={{ background: 'var(--pitch-500)', boxShadow: 'var(--shadow-glow-pitch)' }}
       >
         {t('conquest.confirm')}
       </button>
-    </div>
+    </PhoneScreen>
   )
 }

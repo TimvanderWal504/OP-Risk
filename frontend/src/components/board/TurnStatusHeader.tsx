@@ -3,6 +3,7 @@ import type { PlayerDto } from '../../types/Player'
 import type { PlayerColorDto, TurnPhaseDto, TurnTimerDto } from '../../types/GameState'
 import { TurnPhaseDto as TurnPhase } from '../../types/GameState'
 import { ColorSymbol } from '../ui/ColorSymbol'
+import { GlassPanel } from '../ui/GlassPanel'
 import { useCountdown } from '../../hooks/useCountdown'
 import { tvAnimations } from '../../styles/motion'
 
@@ -47,7 +48,12 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
   const isLow = !isPaused && remainingMs < TIMER_LOW_THRESHOLD_MS
 
   return (
-    <div className="col-span-full flex items-center justify-between px-3.5">
+    <GlassPanel
+      elevation="base"
+      context="tv"
+      padding="none"
+      className="col-span-full flex items-center justify-between px-3.5 py-3"
+    >
       <div key={activePlayer.id} className="flex items-center gap-4.5" style={{ animation: tvAnimations.turnChipSwap }}>
         {activeColor && (
           <div
@@ -58,7 +64,11 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           </div>
         )}
         <div className="font-display text-[34px] font-black leading-none">
-          {t('turnOf')} {activePlayer.name}{' '}
+          {/* Dubbele punt zoals op de telefoon (ActivePlayerBanner, 2026-08-13): "Aan de beurt
+              Henk" is geen lopend Nederlands. De volgorde-omkering van dat scherm geldt hier
+              niet — daar staat een fasenaam achter de naam (de kop van dat scherm), hier de
+              kleurnaam, en de fase heeft op de TV al zijn eigen pillenrij rechts. */}
+          {t('turnOf')}: {activePlayer.name}{' '}
           {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
         </div>
       </div>
@@ -85,7 +95,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
       </div>
 
       <div className="flex flex-row items-end">
-        <span className="mr-1 self-center font-body text-sm font-extrabold uppercase tracking-[.16em] text-fg-muted">
+        <span className="mr-1 self-center font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('timerLabel')}
         </span>
         {isPaused ? (
@@ -115,6 +125,6 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           </div>
         )}
       </div>
-    </div>
+    </GlassPanel>
   )
 }

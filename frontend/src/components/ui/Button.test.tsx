@@ -26,9 +26,11 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('gebruikt de pitch-CTA-styling bij variant="primary"', () => {
+  it('gebruikt de glas-surface met pitch-gloed bij variant="primary"', () => {
     render(<Button variant="primary">Gooien</Button>)
 
-    expect(screen.getByRole('button', { name: 'Gooien' })).toHaveClass('bg-pitch-500')
+    const button = screen.getByRole('button', { name: 'Gooien' })
+    expect(button).toHaveClass('glass-panel')
+    expect(button).toHaveAttribute('data-glass-filter', 'on')
   })
 })

@@ -3,6 +3,7 @@ import type { PlayerColorDto, TerritoryDto } from '../types/GameState'
 import { ArmyStepperRow } from './ui/ArmyStepperRow'
 import { StatHeaderCard } from './ui/StatHeaderCard'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface PlaceInitialArmyStepProps {
   myTerritories: TerritoryDto[]
@@ -28,15 +29,18 @@ export function PlaceInitialArmyStep({
   const canPlace = armiesLeft > 0
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4">
+    <PhoneScreen>
+      {/* De uitleg zat tot 2026-08-13 in een eigen glas-chip onder de kop: twee panelen voor één
+          kop, terwijl de regel niets anders doet dan de teller erboven toelichten. Nu de `hint`-
+          slot van StatHeaderCard, binnen hetzelfde glas. */}
       <StatHeaderCard
         title={t('place.title')}
         statValue={armiesLeft}
         statLabel={t('place.armiesLeft')}
         paddingY={12}
+        hint={t('place.hint')}
       />
-      <div className="mt-3 mb-2 font-body text-[13px] text-fg-muted">{t('place.hint')}</div>
-      <div className="flex min-h-0 flex-1 flex-col gap-[9px] overflow-y-auto">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col gap-[9px] overflow-y-auto">
         {myTerritories.map((territory) => (
           <ArmyStepperRow
             key={territory.territoryId}
@@ -49,6 +53,6 @@ export function PlaceInitialArmyStep({
           />
         ))}
       </div>
-    </div>
+    </PhoneScreen>
   )
 }

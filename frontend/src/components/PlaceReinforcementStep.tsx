@@ -4,7 +4,11 @@ import type { PlayerColorDto, ReinforcementBreakdownDto, TerritoryDto } from '..
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import { ArmyStepperRow } from './ui/ArmyStepperRow'
 import { Collapsible } from './ui/Collapsible'
+import { GlassPanel } from './ui/GlassPanel'
+import { StatHeaderCard } from './ui/StatHeaderCard'
+import { shadowGlowPitch } from '../styles/design-tokens'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface PlaceReinforcementStepProps {
   myTerritories: TerritoryDto[]
@@ -102,77 +106,81 @@ export function PlaceReinforcementStep({
     : []
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4 pt-0.5">
-      <div
-        className="flex items-center justify-between rounded-[14px] border border-pitch-700 px-3.5 py-[11px]"
-        style={{ background: 'linear-gradient(90deg, rgba(132,173,40,.16), rgba(132,173,40,0))' }}
-      >
-        <div className="font-display text-[17px] font-extrabold">{t('distribute')}</div>
-        <div className="text-right">
-          <div className="font-display text-[32px] font-black leading-none text-pitch-300">{remainingToStage}</div>
-          <div className="font-body text-[11px] text-fg-muted">{t('toPlace')}</div>
-        </div>
-      </div>
+    <PhoneScreen>
+      <StatHeaderCard
+        title={t('distribute')}
+        statValue={remainingToStage}
+        statLabel={t('toPlace')}
+        paddingY={12}
+        accentColor="pitch"
+      />
 
       <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
         {breakdown && (
-          <div className="rounded-[14px] border border-border bg-[var(--atlas-t03)] px-[13px] py-[11px]">
-            <div className="mb-2 font-body text-xs font-extrabold uppercase tracking-[.1em] text-fg-muted">
+          <GlassPanel elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
+            <div className="mb-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
               {t('buildup')}
             </div>
             {breakdownRows.map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1">
-                <span className="font-body text-sm text-fg-secondary">{row.label}</span>
+                <span className="font-body text-[16px] text-fg-secondary">{row.label}</span>
                 <span
-                  className={`font-display text-[15px] font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
+                  className={`font-display text-[16px] font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
                 >
                   +{row.value}
                 </span>
               </div>
             ))}
-          </div>
+          </GlassPanel>
         )}
 
         {continentGroups.map((group) => {
           const stagedInGroup = group.territoryIds.reduce((sum, id) => sum + (staged[id] ?? 0), 0)
 
           return (
-            <Collapsible
-              key={group.continent}
-              collapsible={continentGroups.length >= 2}
-              defaultOpen={continentGroups.length < 2}
-              title={
-                <span className="font-body text-[11px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
-                  {tDynamic(group.continent, 'continents')}
-                </span>
-              }
-              summary={
-                <span className="font-body text-[11px] text-fg-muted">
-                  {group.territoryIds.length}/{group.totalInContinent}
-                  {stagedInGroup > 0 && ` · +${stagedInGroup}`}
-                </span>
-              }
-            >
-              {group.territoryIds.map((territoryId) => {
-                const territory = myTerritories.find((t) => t.territoryId === territoryId)!
+            // BEVINDING, opgelost (2026-08-10): zelfde "kaal op de stage-achtergrond"-patroon als
+            // elders op dit scherm (zie de BUILD-UP-paneel-fix hierboven) — `Collapsible` is bewust
+            // achtergrondloos (generiek, geen kennis van de aanroeper), dus de continent-kicker en
+            // -teller stonden zonder paneel rechtstreeks op de telefoon-illustratie: onleesbaar op
+            // lichtere delen van de foto. Paneel eromheen i.p.v. in `Collapsible` zelf, zodat het
+            // component generiek blijft.
+            <GlassPanel key={group.continent} elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
+              <Collapsible
+                collapsible={continentGroups.length >= 2}
+                defaultOpen={continentGroups.length < 2}
+                title={
+                  <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                    {tDynamic(group.continent, 'continents')}
+                  </span>
+                }
+                summary={
+                  <span className="font-body text-[16px] text-fg-muted">
+                    {group.territoryIds.length}/{group.totalInContinent}
+                    {stagedInGroup > 0 && ` · +${stagedInGroup}`}
+                  </span>
+                }
+              >
+                {group.territoryIds.map((territoryId) => {
+                  const territory = myTerritories.find((t) => t.territoryId === territoryId)!
 
-                return (
-                  <ArmyStepperRow
-                    key={territoryId}
-                    incrementOnly={false}
-                    color={myColor}
-                    label={tDynamic(territoryId, 'territories')}
-                    baseArmyCount={territory.armyCount}
-                    armyCount={territory.armyCount + (staged[territoryId] ?? 0)}
-                    delta={staged[territoryId] ?? 0}
-                    canIncrement={canStageMore}
-                    canDecrement={(staged[territoryId] ?? 0) > 0}
-                    onIncrement={() => inc(territoryId)}
-                    onDecrement={() => dec(territoryId)}
-                  />
-                )
-              })}
-            </Collapsible>
+                  return (
+                    <ArmyStepperRow
+                      key={territoryId}
+                      incrementOnly={false}
+                      color={myColor}
+                      label={tDynamic(territoryId, 'territories')}
+                      baseArmyCount={territory.armyCount}
+                      armyCount={territory.armyCount + (staged[territoryId] ?? 0)}
+                      delta={staged[territoryId] ?? 0}
+                      canIncrement={canStageMore}
+                      canDecrement={(staged[territoryId] ?? 0) > 0}
+                      onIncrement={() => inc(territoryId)}
+                      onDecrement={() => dec(territoryId)}
+                    />
+                  )
+                })}
+              </Collapsible>
+            </GlassPanel>
           )
         })}
       </div>
@@ -181,14 +189,15 @@ export function PlaceReinforcementStep({
         type="button"
         disabled={!buttonEnabled}
         onClick={buttonAction}
-        className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black text-[var(--on-pitch)] disabled:cursor-not-allowed"
+        className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black disabled:cursor-not-allowed"
         style={{
           background: buttonEnabled ? 'var(--pitch-500)' : 'var(--border-strong)',
-          boxShadow: buttonEnabled ? '0 8px 22px color-mix(in srgb, var(--pitch-500) 35%, transparent)' : 'none',
+          color: buttonEnabled ? 'var(--on-pitch)' : 'var(--fg-muted)',
+          boxShadow: buttonEnabled ? shadowGlowPitch : 'none',
         }}
       >
         {buttonLabel}
       </button>
-    </div>
+    </PhoneScreen>
   )
 }

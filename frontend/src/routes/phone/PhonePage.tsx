@@ -5,7 +5,7 @@ import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { PhoneShell } from '../../components/ui/PhoneShell'
-import { resolvePhoneScreen } from './screens/phoneScreens'
+import { resolvePhoneScreen, resolveStageScrimLevel } from './screens/phoneScreens'
 import { takenColorIds } from './screens/takenColorIds'
 
 /**
@@ -40,12 +40,13 @@ export function PhonePage() {
   const displayPhase = useHeldPhase(state?.phase)
 
   const me = state?.players.find((player) => player.id === playerId)
+  const scrimLevel = resolveStageScrimLevel(displayPhase)
 
   // Nog geen speler: de naam+kleur-stap draait op de read-only state uit WatchGame, dus
   // vóórdat er een playerId is.
   if (!state || !playerId || !me) {
     return (
-      <PhoneShell>
+      <PhoneShell scrimLevel={scrimLevel}>
         <JoinNameColorStep
           onSubmit={joinGameWithColor}
           colors={state?.colors ?? []}
@@ -64,7 +65,7 @@ export function PhonePage() {
     const myColor = state.colors.find((color) => color.id === me.colorId) ?? null
 
     return (
-      <PhoneShell>
+      <PhoneShell scrimLevel={scrimLevel}>
         <PlayerEliminatedScreen myColor={myColor} />
       </PhoneShell>
     )
@@ -74,7 +75,7 @@ export function PhonePage() {
   // referentie komt uit het module-level register, dus binnen één fase is hij stabiel (geen
   // remount); bij een fasewissel hóórt het scherm te wisselen.
   return (
-    <PhoneShell>
+    <PhoneShell scrimLevel={scrimLevel}>
       {createElement(resolvePhoneScreen(displayPhase), {
         state,
         playerId,

@@ -14,9 +14,16 @@ export const attackTv = {
   attackerLabel: { nl: 'Aanvaller', en: 'Attacker' },
   defenderLabel: { nl: 'Verdediger', en: 'Defender' },
   captured: { nl: 'VEROVERD', en: 'CAPTURED' },
+  // Verhalend, altijd vanuit de aanvaller (2026-08-13, op verzoek): de TV heeft geen "jij" — meerdere
+  // spelers kijken mee — dus staan hier kleurnamen i.p.v. spelersrollen, en begint elke zin met de
+  // aanvallende kleur, ook bij een gemengde uitkomst. Zelfde `_one`/`_other`-mechanisme als
+  // `attack.resultLine` (telefoonkant); `both` is vast op 1-om-1, zie de toelichting daar.
   resultLine: {
-    nl: 'Verdediger verliest {{defenderLosses}} legers · Aanvaller verliest {{attackerLosses}}',
-    en: 'Defender loses {{defenderLosses}} armies · Attacker loses {{attackerLosses}}',
+    won_one: { nl: '{{attacker}} verslaat {{count}} leger', en: '{{attacker}} defeats {{count}} army' },
+    won_other: { nl: '{{attacker}} verslaat {{count}} legers', en: '{{attacker}} defeats {{count}} armies' },
+    lost_one: { nl: '{{attacker}} verliest {{count}} leger', en: '{{attacker}} loses {{count}} army' },
+    lost_other: { nl: '{{attacker}} verliest {{count}} legers', en: '{{attacker}} loses {{count}} armies' },
+    both: { nl: '{{attacker}} en {{defender}} verliezen beide 1 leger', en: '{{attacker}} and {{defender}} both lose 1 army' },
   },
   moveIn: {
     nl: 'Aanvaller verplaatst {{armies}} legers naar {{territory}}',

@@ -1,26 +1,16 @@
 import { useState } from 'react'
-import type { SyntheticEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
-import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
+import { marker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
+import { InstructionKicker } from '../../../components/ui/InstructionKicker'
+import { GlassPanel } from '../../../components/ui/GlassPanel'
+import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import type { TvScreenProps } from './tvScreens'
-
-const MAP_ID = 'standaard-43'
-
-function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
-  const img = event.currentTarget
-  if (img.naturalWidth !== MAP_WIDTH_PX || img.naturalHeight !== MAP_HEIGHT_PX) {
-    console.error(
-      `Kaartachtergrond heeft onverwachte afmetingen (${img.naturalWidth}x${img.naturalHeight}, verwacht ${MAP_WIDTH_PX}x${MAP_HEIGHT_PX}) — projection.ts en de PNG lopen niet meer synchroon (TO §7.2).`,
-    )
-  }
-}
 
 /**
  * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Geen letterlijke exportsectie —
@@ -69,7 +59,7 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <div className="col-span-full flex items-center justify-between px-3.5">
+      <GlassPanel elevation="base" context="tv" padding="none" className="col-span-full flex items-center justify-between px-3.5 py-3">
         {activePlayer && activeColor ? (
           <div className="flex items-center gap-4.5">
             <div
@@ -79,7 +69,8 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
               <ColorSymbol symbol={activeColor.symbol} />
             </div>
             <div className="font-display text-[34px] font-black leading-none">
-              {t('board:turnOf')} {activePlayer.name}{' '}
+              {/* Dubbele punt, zelfde grammaticafix als TurnStatusHeader/ActivePlayerBanner. */}
+              {t('board:turnOf')}: {activePlayer.name}{' '}
               <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>
             </div>
           </div>
@@ -87,140 +78,93 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
           <div className="font-display text-[34px] font-black leading-none">{t('placeEveryoneAtOnce')}</div>
         )}
 
-        <div className="rounded-xl border border-pitch-700 bg-[color-mix(in_srgb,var(--pitch-400)_12%,transparent)] px-6.5 py-3 font-display text-[22px] font-black tracking-[.02em] text-pitch-300">
-          {t('placeTitle')}
-        </div>
-      </div>
+        <InstructionKicker>{t('placeTitle')}</InstructionKicker>
+      </GlassPanel>
 
-      <div
-        className="relative col-start-1 row-start-2 min-w-0 overflow-hidden rounded-[14px] border border-[var(--atlas-map-border)] bg-[var(--atlas-map-bg)]"
-        style={{ boxShadow: 'inset 0 0 120px rgba(0,0,0,.75), inset 0 0 0 3px rgba(120,96,56,.18)' }}
-      >
-        <img
-          src={`/maps/${MAP_ID}/map-background.png`}
-          onLoad={checkBackgroundDimensions}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <svg
-          viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-        >
-          <defs>
-            <filter id="atlasRough">
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency={atlasRough.baseFrequency}
-                numOctaves={atlasRough.numOctaves}
-                seed={atlasRough.seed}
-                result="n"
+      <TvBoardMap
+        geometry={geometry}
+        filterId="atlasRough"
+        getTerritoryVisual={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owner = entry?.owner
+          const color = entry?.color
+          // Zonder actieve speler (SetupMode.Random) is er geen eigen/vijand-perspectief:
+          // elk geclaimd gebied krijgt zijn eigen kleur op volle `own`-opaciteit (bouwplan
+          // Belangrijk 8), niet de gedimde `enemy`-stijl. Mét actieve speler (SetupMode.
+          // Claiming) geldt het gewone eigen/vijand-onderscheid, zoals op het Hoofdscherm.
+          const isOwn = !activePlayer || owner?.id === activePlayer.id
+          const fillHex = color?.hex ?? boardTok.neutral
+          const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
+          const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
+          const strokeWidth = color ? (isOwn ? territoryStroke.own : territoryStroke.enemy) : territoryStroke.neutral
+          const glowPx = color ? (isOwn ? territoryGlow.own : territoryGlow.enemy) : undefined
+
+          return { fillHex, fillOpacity, strokeHex: fillHex, strokeOpacity, strokeWidth, glowPx }
+        }}
+        renderMarker={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owned = entry?.owned
+          if (!owned) return null
+
+          const owner = entry?.owner
+          const color = entry?.color
+          const ringColor = color?.hex ?? boardTok.neutral
+          const isOwn = !activePlayer || owner?.id === activePlayer.id
+          const ringSw = isOwn ? marker.ringSwOwn : marker.ringSwEnemy
+
+          const wasArmy = prevArmy[territory.id]
+          const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
+
+          return (
+            <g key={territory.id}>
+              <circle
+                cx={territory.centroidPx.x}
+                cy={territory.centroidPx.y}
+                r={marker.discR}
+                fill={boardTok.disc}
+                fillOpacity={boardTok.discOp}
+                stroke={ringColor}
+                strokeWidth={ringSw}
               />
-              <feDisplacementMap
-                in="SourceGraphic"
-                in2="n"
-                scale={atlasRough.scale}
-                xChannelSelector="R"
-                yChannelSelector="G"
-              />
-            </filter>
-          </defs>
-
-          <g filter="url(#atlasRough)">
-            {geometry?.map((territory) => {
-              const entry = ownership.get(territory.id)
-              const owner = entry?.owner
-              const color = entry?.color
-              // Zonder actieve speler (SetupMode.Random) is er geen eigen/vijand-perspectief:
-              // elk geclaimd gebied krijgt zijn eigen kleur op volle `own`-opaciteit (bouwplan
-              // Belangrijk 8), niet de gedimde `enemy`-stijl. Mét actieve speler (SetupMode.
-              // Claiming) geldt het gewone eigen/vijand-onderscheid, zoals op het Hoofdscherm.
-              const isOwn = !activePlayer || owner?.id === activePlayer.id
-              const fillHex = color?.hex ?? boardTok.neutral
-              const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
-              const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
-              const strokeWidth = color ? (isOwn ? territoryStroke.own : territoryStroke.enemy) : territoryStroke.neutral
-
-              return (
-                <path
-                  key={territory.id}
-                  d={territory.pathD}
-                  fill={fillHex}
-                  fillOpacity={fillOpacity}
-                  stroke={fillHex}
-                  strokeOpacity={strokeOpacity}
-                  strokeWidth={strokeWidth}
-                  strokeLinejoin="round"
-                />
-              )
-            })}
-          </g>
-
-          {geometry?.map((territory) => {
-            const entry = ownership.get(territory.id)
-            const owned = entry?.owned
-            if (!owned) return null
-
-            const owner = entry?.owner
-            const color = entry?.color
-            const ringColor = color?.hex ?? boardTok.neutral
-            const isOwn = !activePlayer || owner?.id === activePlayer.id
-            const ringSw = isOwn ? marker.ringSwOwn : marker.ringSwEnemy
-
-            const wasArmy = prevArmy[territory.id]
-            const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
-
-            return (
-              <g key={territory.id}>
-                <circle
-                  cx={territory.centroidPx.x}
-                  cy={territory.centroidPx.y}
-                  r={marker.discR}
-                  fill={boardTok.disc}
-                  fillOpacity={boardTok.discOp}
-                  stroke={ringColor}
-                  strokeWidth={ringSw}
-                />
-                <text
-                  x={territory.centroidPx.x}
-                  y={territory.centroidPx.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontFamily="Archivo, sans-serif"
-                  fontWeight={700}
-                  fontSize={marker.armyFontSize}
-                  fill={boardTok.numFg}
-                  style={{
-                    fontVariantNumeric: 'tabular-nums',
-                    transformBox: 'fill-box',
-                    transformOrigin: 'center',
-                    animation: dir !== 0 ? tvAnimations.countTick(dir) : 'none',
-                  }}
-                >
-                  {owned.armyCount}
-                </text>
-                <text
-                  x={territory.centroidPx.x}
-                  y={territory.centroidPx.y + marker.nameOffsetY}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontFamily="Archivo, sans-serif"
-                  fontWeight={700}
-                  fontSize={marker.nameFontSize}
-                  fill={boardTok.numFg}
-                  stroke={boardTok.disc}
-                  strokeWidth={marker.nameStrokeWidth}
-                  strokeOpacity={marker.nameStrokeOpacity}
-                  strokeLinejoin="round"
-                  style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
-                >
-                  {tDynamic(territory.id, 'territories')}
-                </text>
-              </g>
-            )
-          })}
-        </svg>
-      </div>
+              <text
+                x={territory.centroidPx.x}
+                y={territory.centroidPx.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontFamily="Archivo, sans-serif"
+                fontWeight={700}
+                fontSize={marker.armyFontSize}
+                fill={boardTok.numFg}
+                style={{
+                  fontVariantNumeric: 'tabular-nums',
+                  transformBox: 'fill-box',
+                  transformOrigin: 'center',
+                  animation: dir !== 0 ? tvAnimations.countTick(dir) : 'none',
+                }}
+              >
+                {owned.armyCount}
+              </text>
+              <text
+                x={territory.centroidPx.x}
+                y={territory.centroidPx.y + marker.nameOffsetY}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily="Archivo, sans-serif"
+                fontWeight={700}
+                fontSize={marker.nameFontSize}
+                fill={boardTok.numFg}
+                stroke={boardTok.disc}
+                strokeWidth={marker.nameStrokeWidth}
+                strokeOpacity={marker.nameStrokeOpacity}
+                strokeLinejoin="round"
+                style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
+              >
+                {tDynamic(territory.id, 'territories')}
+              </text>
+            </g>
+          )
+        }}
+      />
     </div>
   )
 }

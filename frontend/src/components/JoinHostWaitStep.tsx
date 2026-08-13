@@ -5,7 +5,9 @@ import { ColorSymbol } from './ui/ColorSymbol'
 import { Button } from './ui/Button'
 import { Footer } from './ui/Footer'
 import { RemovablePlayerRow } from './ui/RemovablePlayerRow'
+import { GlassPanel } from './ui/GlassPanel'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface JoinHostWaitStepProps {
   players: PlayerDto[]
@@ -37,64 +39,80 @@ export function JoinHostWaitStep({
   const { t } = useTranslation('join')
 
   return (
-    <div className="flex flex-1 flex-col p-[16px_18px]">
-      <div className="flex items-center gap-2.5">
-        <p className="font-display text-[26px] font-black">{t('hostWait.title')}</p>
-        <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
-          {t('hostWait.hostBadge')}
-        </span>
-      </div>
+    <PhoneScreen>
+      {/* Titel + QR-hint in één paneel: de hint is de ondertitel van "wachten op spelers"
+          (waaróm je wacht en wat de anderen moeten doen), niet een los bericht. Zelfde vorm als de
+          titelkaart van JoinRoleStep (kop + `text-fg-secondary`-regel eronder).
+          De hint was hiervóór een losse div met een dekkende `secondaryWashBg`-vulling — een vlakke
+          marineblauwe doos tussen twee glaspanelen (gebruiker gescreenshot 2026-08-13). Die vulling
+          is vervallen: bij alpha .92 deed de blur eronder niets meer, en samengevoegd draagt het
+          gedeelde paneel de omkadering. */}
+      <GlassPanel elevation="base" context="phone" className="rounded-2xl">
+        <div className="flex items-center gap-2.5">
+          <p className="font-display text-[26px] font-black">{t('hostWait.title')}</p>
+          <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+            {t('hostWait.hostBadge')}
+          </span>
+        </div>
+        <p className="mt-1.5 text-sm text-fg-secondary">{t('hostWait.qrHint')}</p>
+      </GlassPanel>
 
-      <div className="mt-3.5 rounded-card border border-secondary bg-[rgba(33,92,156,.14)] p-3.5">
-        <span className="text-sm text-fg-secondary">{t('hostWait.qrHint')}</span>
-      </div>
+      {/* Kop + spelerslijst in één paneel, precies zoals de TV-tegenhanger (`LobbyPlayerList`):
+          "AANGESLOTEN n/max" is een label ván deze lijst, geen los zwevend chip-paneel. De rijen
+          blijven genest — de nesting-guard zet hun eigen blur uit, hun rand blijft, zodat ze als
+          rijen op één rustig vlak lezen i.p.v. als losse geblurde eilandjes. */}
+      {/* Geen `flex-1`: het paneel is zo hoog als zijn inhoud, niet zo hoog als het scherm (een
+          lobby met één speler hoort geen paneel tot aan de voettekst te tekenen). Wél `min-h-0` +
+          shrink, zodat het bij een volle lobby krimpt en de lijst erbinnen gaat scrollen i.p.v.
+          de startknop weg te duwen — `Footer` staat sowieso op `mt-auto` en blijft onderaan. */}
+      <GlassPanel elevation="base" context="phone" className="mt-[18px] flex min-h-0 flex-col rounded-2xl">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
+            {t('hostWait.joinedLabel')}
+          </span>
+          <span className="font-display text-[18px] font-black text-pitch-400">
+            {players.length} / {maxPlayers}
+          </span>
+        </div>
 
-      <div className="mt-[18px] mb-2 flex items-center justify-between px-0.5">
-        <span className="font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
-          {t('hostWait.joinedLabel')}
-        </span>
-        <span className="font-display text-[18px] font-black text-pitch-400">
-          {players.length} / {maxPlayers}
-        </span>
-      </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+          {players.map((player) => {
+            const color = colors.find((c) => c.id === player.colorId)
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-        {players.map((player) => {
-          const color = colors.find((c) => c.id === player.colorId)
-
-          return (
-            <RemovablePlayerRow
-              key={player.id}
-              removable={!player.isHost}
-              onRemove={() => onRemovePlayer(player.id)}
-            >
-              <div className="flex items-center gap-3 rounded-card border border-border bg-[var(--atlas-t03)] p-[11px_13px]">
-                <span
-                  className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-[19px]"
-                  style={{ background: color?.hex ?? 'var(--surface-3)', color: color?.onHex }}
-                >
-                  {color?.symbol && <ColorSymbol symbol={color.symbol} />}
-                </span>
-                <span className="flex-1 font-display text-[17px] font-extrabold">{player.name}</span>
-                <span className="text-xs text-fg-muted">
-                  {color ? tDynamic(color.id, 'colors') : ''}
-                </span>
-                {player.isHost && (
-                  <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
-                    {t('hostWait.hostBadge')}
+            return (
+              <RemovablePlayerRow
+                key={player.id}
+                removable={!player.isHost}
+                onRemove={() => onRemovePlayer(player.id)}
+              >
+                <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-3 rounded-card p-[11px_13px]">
+                  <span
+                    className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-[19px]"
+                    style={{ background: color?.hex ?? 'var(--surface-3)', color: color?.onHex }}
+                  >
+                    {color?.symbol && <ColorSymbol symbol={color.symbol} />}
                   </span>
-                )}
-              </div>
-            </RemovablePlayerRow>
-          )
-        })}
-      </div>
+                  <span className="flex-1 font-display text-[17px] font-extrabold">{player.name}</span>
+                  <span className="text-xs text-fg-muted">
+                    {color ? tDynamic(color.id, 'colors') : ''}
+                  </span>
+                  {player.isHost && (
+                    <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+                      {t('hostWait.hostBadge')}
+                    </span>
+                  )}
+                </GlassPanel>
+              </RemovablePlayerRow>
+            )
+          })}
+        </div>
+      </GlassPanel>
 
       <Footer error={error} hint={!canStart ? t('hostWait.waitingForPlayers') : undefined}>
         <Button disabled={!canStart} onClick={onStart}>
           {canStart ? t('hostWait.startGame') : t('hostWait.startGameWait')}
         </Button>
       </Footer>
-    </div>
+    </PhoneScreen>
   )
 }

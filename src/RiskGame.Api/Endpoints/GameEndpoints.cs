@@ -24,8 +24,8 @@ public static class GameEndpoints
             return Results.Ok(presets);
         });
 
-        // Kaartlaag-bestanden (TO §7.2): verbatim, bevroren data/*-bestanden, geen DTO/parsing.
-        // Bewust twee naam-specifieke routes en geen generieke static-file-hosting op
+        // Kaartlaag-bestand (TO §7.2): verbatim, bevroren data/*-bestand, geen DTO/parsing.
+        // Bewust een naam-specifieke route en geen generieke static-file-hosting op
         // data/maps/{mapId}/ — die map bevat ook missions.json/events.json (FO §6.1/§9), die
         // niet vooraf opvraagbaar mogen zijn. Cache-Control: bevroren data, maar geen
         // "immutable"/oneindige waarde, zodat een toekomstige asset-vervanging op dezelfde url
@@ -33,6 +33,10 @@ public static class GameEndpoints
         // {mapId} wordt eerst tegen mapsRoot gevalideerd (geen "..", geen padscheidingstekens),
         // anders resolvet Path.Combine hier zonder controle naar willekeurige bestanden buiten
         // de kaartvariant-map, inclusief de zojuist genoemde missions.json/events.json.
+        //
+        // De vroegere `/maps/{mapId}/map-background.png`-route (statische kaartartwork) is op
+        // 2026-08-07 verwijderd: de kaart gebruikt sindsdien de gedeelde TV-stage-illustratie +
+        // een eigen scrim i.p.v. een per-kaart achtergrondasset (zie TO §7.2).
         app.MapGet("/maps/{mapId}/territories.geo.json", (string mapId, HttpContext context) =>
         {
             if (!TryResolveMapFilePath(mapsRoot, mapId, "territories.geo.json", out var filePath))
@@ -43,18 +47,6 @@ public static class GameEndpoints
             context.Response.Headers.CacheControl = "public, max-age=3600";
 
             return Results.File(filePath, contentType: "application/json");
-        });
-
-        app.MapGet("/maps/{mapId}/map-background.png", (string mapId, HttpContext context) =>
-        {
-            if (!TryResolveMapFilePath(mapsRoot, mapId, "map-background-final.png", out var filePath))
-            {
-                return Results.NotFound();
-            }
-
-            context.Response.Headers.CacheControl = "public, max-age=3600";
-
-            return Results.File(filePath, contentType: "image/png");
         });
 
         var games = app.MapGroup("/games");

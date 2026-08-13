@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-05T00:00:00Z",
+  "generatedAt": "2026-08-11T00:00:00Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -17,44 +17,67 @@
       "field-ink-800": { "role": "neutral", "displayName": "Field Ink 800 (surface)", "canonical": "#1b2738" },
       "field-ink-700": { "role": "neutral", "displayName": "Field Ink 700 (surface-3)", "canonical": "#243246" },
       "field-ink-400": { "role": "neutral", "displayName": "Field Ink 400 (muted text)", "canonical": "#6f7e97" },
-      "field-ink-100": { "role": "neutral", "displayName": "Field Ink 100 (primary text)", "canonical": "#eef2f8" }
+      "field-ink-100": { "role": "neutral", "displayName": "Field Ink 100 (primary text)", "canonical": "#eef2f8" },
+      "glass-surface-base-opaque": { "role": "glass-fallback", "displayName": "Glass Surface Base (opaque fallback only)", "canonical": "#1b2738", "note": "Not a tint. GlassPanel has no background color in the normal (blurred) case — this hex is used only when backdrop-filter can't run (nested, unsupported browser, prefers-reduced-transparency)." },
+      "glass-surface-raised-opaque": { "role": "glass-fallback", "displayName": "Glass Surface Raised (opaque fallback only)", "canonical": "#243246", "note": "Same fallback-only caveat as glass-surface-base-opaque." },
+      "glass-surface-overlay-opaque": { "role": "glass-fallback", "displayName": "Glass Surface Overlay (opaque fallback only)", "canonical": "#243246", "note": "Same fallback-only caveat as glass-surface-base-opaque." },
+      "glass-surface-recessed-opaque": { "role": "glass-fallback", "displayName": "Glass Surface Recessed (opaque fallback only)", "canonical": "#080c14", "note": "Same fallback-only caveat as glass-surface-base-opaque." },
+      "glass-border": { "role": "glass", "displayName": "Glass Border", "canonical": "rgba(255, 255, 255, 0.14)" },
+      "glass-fg": { "role": "glass-text", "displayName": "Glass Text Primary", "canonical": "#eef2f8" },
+      "glass-fg-secondary": { "role": "glass-text", "displayName": "Glass Text Secondary", "canonical": "color-mix(in srgb, #eef2f8 80%, transparent)" },
+      "glass-fg-muted": { "role": "glass-text", "displayName": "Glass Text Muted", "canonical": "color-mix(in srgb, #eef2f8 60%, transparent)" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "Hero numerals, big scores, phase headlines. Lexend via the swappable 'Brand Font' @font-face alias." },
       "h1": { "displayName": "H1", "purpose": "Screen/page titles." },
       "body": { "displayName": "Body", "purpose": "Default UI copy. Gilroy via the swappable 'Body Font' @font-face alias." },
-      "label": { "displayName": "Label", "purpose": "Kickers, badges, meta text. Always uppercase, 0.08em tracking." },
+      "label": { "displayName": "Label", "purpose": "Kickers, badges, meta text. Always uppercase, 16px extrabold, 0.1em tracking." },
       "mono": { "displayName": "Mono", "purpose": "Tabular data: dice rolls, codes." }
     },
     "shadows": [
-      { "name": "pitch-glow", "value": "0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)", "purpose": "The single primary-CTA glow. Reserved for Button primary only." },
-      { "name": "card", "value": "0 1px 2px rgba(10,14,23,.06), 0 4px 16px -6px rgba(10,14,23,.12)", "purpose": "Optional raised-card elevation; tonal overlay is preferred by default." },
-      { "name": "raised", "value": "0 8px 30px -8px rgba(10,14,23,.22)", "purpose": "Stronger raise for floating elements." },
-      { "name": "sheet", "value": "0 -8px 40px -12px rgba(10,14,23,.35)", "purpose": "Bottom-sheet/modal separation from the page behind it." },
-      { "name": "glow-live", "value": "0 0 0 1px rgba(216,38,43,.5), 0 6px 24px -8px rgba(216,38,43,.45)", "purpose": "Live/urgent-state emphasis." }
+      { "name": "pitch-glow", "value": "0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)", "purpose": "The single primary-CTA glow, composited as the primary button's --glass-shadow over its clear glass surface. Reserved for Button primary only." },
+      { "name": "glass-base", "value": "0 8px 24px -10px rgba(0, 0, 0, 0.50)", "purpose": "Default GlassPanel/Button elevation shadow (side panels, secondary actions)." },
+      { "name": "glass-raised", "value": "0 16px 40px -12px rgba(0, 0, 0, 0.55)", "purpose": "Active-player/CTA-block GlassPanel elevation shadow." },
+      { "name": "glass-overlay", "value": "0 24px 64px -16px rgba(0, 0, 0, 0.65)", "purpose": "Modal/event-card GlassPanel elevation shadow — heaviest tier, detaches the modal from the entire TV stage." },
+      { "name": "glass-recessed", "value": "inset 0 2px 6px rgba(0, 0, 0, 0.45)", "purpose": "Sunken/inactive glass panel shading." },
+      { "name": "glass-inner-highlight", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.16)", "purpose": "Top-edge bevel highlight on every glass surface, paired with glass-border." },
+      { "name": "card", "value": "0 1px 2px rgba(10,14,23,.06), 0 4px 16px -6px rgba(10,14,23,.12)", "purpose": "Legacy flat-card shadow, superseded by the glass shadows above; retained for reference only." },
+      { "name": "sheet", "value": "0 -8px 40px -12px rgba(10,14,23,.35)", "purpose": "Legacy bottom-sheet shadow, superseded by glass-overlay." },
+      { "name": "glow-live", "value": "0 0 0 1px rgba(216,38,43,.5), 0 6px 24px -8px rgba(216,38,43,.45)", "purpose": "Live/urgent-state emphasis." },
+      { "name": "glass-text-shadow", "value": "0 1px 3px rgba(4, 6, 11, 0.55)", "purpose": "Contrast floor for text rendered directly on ANY glass surface (base/raised/overlay, no exceptions) — since glass carries no background tint of its own, this shadow plus the --glass-fg-* opacity steps are the entire legibility mechanism. Same dark ink triplet as --on-pitch/the stage scrim, not a new color. See The On-Glass Text Rule." }
     ],
     "motion": [
       { "name": "atlas-ease", "value": "cubic-bezier(.2,.7,.3,1)", "purpose": "Default entrance/reveal easing used across nearly every TV and phone animation (chip-in, card reveal, overlay-in, badge swap)." },
       { "name": "atlas-ease-brisk", "value": "cubic-bezier(.2,.8,.3,1)", "purpose": "Slightly snappier variant used for dice-roll/tumble animations." },
-      { "name": "atlas-duration-reveal", "value": "300ms-500ms", "purpose": "Typical duration band for state-driven reveals (chip-in, panel-in, stage-in)." }
+      { "name": "atlas-duration-reveal", "value": "300ms-500ms", "purpose": "Typical duration band for state-driven reveals (chip-in, panel-in, stage-in)." },
+      { "name": "atlas-overlay-in", "value": "atlasOverlayIn .3s ease-out both", "purpose": "Stage-scrim crossfade-in when the persistent illustration background changes phase level." },
+      { "name": "atlas-overlay-out", "value": "atlasOverlayOut .32s ease-out both", "purpose": "Stage-scrim crossfade-out counterpart to atlas-overlay-in." }
     ]
   },
   "components": [
     {
+      "name": "Glass Panel",
+      "kind": "card",
+      "refersTo": "glass-panel-base",
+      "description": "Shared clear-glass surface primitive: blur + saturate + hairline border + inner highlight + tier shadow, no background color of its own. Elevation (base/raised/overlay) and context (tv/phone blur scale) compose independently; nested panels drop their own backdrop-filter.",
+      "html": "<div class=\"ds-glass-panel\">GEBIED: NOORD-AFRIKA</div>",
+      "css": ".ds-glass-panel { border-radius: 16px; padding: 16px; background: transparent; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 8px 24px -10px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.16); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); color: #eef2f8; text-shadow: 0 1px 3px rgba(4,6,11,0.55); font-family: 'Gilroy', sans-serif; }"
+    },
+    {
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Full-width, glowing brand CTA (Start spel, Gooien, confirm actions).",
+      "description": "Full-width clear-glass CTA (Start spel, Gooien, confirm actions) — no tint; distinguished from Secondary only by border color and the system's one signature glow.",
       "html": "<button class=\"ds-btn-primary\">START SPEL</button>",
-      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: #84ad28; color: #04060b; font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; box-shadow: 0 8px 22px rgba(132,173,40,0.35); border: none; transition: opacity 0.2s; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:focus-visible { outline: 2px solid #4f8fd4; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
+      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: transparent; backdrop-filter: blur(8px) saturate(1.4); -webkit-backdrop-filter: blur(8px) saturate(1.4); color: #eef2f8; text-shadow: 0 1px 3px rgba(4,6,11,0.55); font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 8px 22px rgba(132,173,40,0.35), inset 0 1px 0 rgba(255,255,255,0.16); transition: opacity 0.2s; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:focus-visible { outline: 2px solid #6ba2d8; outline-offset: 2px; } .ds-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Quiet, non-glowing action button for less prominent actions.",
+      "description": "Quiet, non-glowing clear-glass action button for less prominent actions — identical surface to Primary, just a neutral border and no glow.",
       "html": "<button class=\"ds-btn-secondary\">ANNULEREN</button>",
-      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: rgba(255,255,255,0.05); color: #eef2f8; border: 1px solid #33425a; font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; transition: opacity 0.2s; } .ds-btn-secondary:hover { opacity: 0.85; } .ds-btn-secondary:focus-visible { outline: 2px solid #4f8fd4; outline-offset: 2px; }"
+      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: center; min-height: 64px; width: 100%; border-radius: 16px; background: transparent; backdrop-filter: blur(8px) saturate(1.4); -webkit-backdrop-filter: blur(8px) saturate(1.4); color: #eef2f8; text-shadow: 0 1px 3px rgba(4,6,11,0.55); border: 1px solid #33425a; font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 18px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16); transition: opacity 0.2s; } .ds-btn-secondary:hover { opacity: 0.85; } .ds-btn-secondary:focus-visible { outline: 2px solid #6ba2d8; outline-offset: 2px; }"
     },
     {
       "name": "Text Field",
@@ -89,33 +112,43 @@
     }
   ],
   "narrative": {
-    "northStar": "The Broadcast War Room",
-    "overview": "Operatie Atlas puts a shared TV screen at the center of the room and hands every player a private phone controller — the visual language borrows from sports broadcast graphics (scoreboards, lower-thirds, on-screen tickers) rather than board-game skeuomorphism, because the product's own framing is a command center the whole table watches together, not a tabletop replica. Bold, black-weight display type reads at a distance on a TV across a living room; tight uppercase label text and tabular numerals borrow directly from scorebug conventions; primary actions carry a soft glow rather than a hard shadow, the way a live broadcast highlights the active element on screen. The mood is confident and high-contrast: black-weight headlines, a saturated green CTA that glows rather than sits flat, and dark canvases that make map territory colors and player seat colors read clearly. Both the TV and phone shells force dark mode regardless of the device's OS theme preference — this is a deliberate, hard invariant, because the product is built to be read across a room on a TV. A complete light theme exists in the token layer in parallel for any surface that isn't the TV/phone game shells themselves.",
+    "northStar": "Frosted Front Line",
+    "overview": "Operatie Atlas puts a shared TV screen at the center of the room and hands every player a private phone controller. The system's original framing — sports broadcast graphics (scoreboards, lower-thirds, on-screen tickers) rather than board-game skeuomorphism — still holds for type, color, and motion, but the surface material has evolved: every TV and phone shell now renders a persistent, full-bleed war-room illustration behind the UI, and every card, panel, button, and modal is a pane of clear glass set over it. Clear, deliberately: a glass surface carries no background color or tint of its own — only backdrop-filter blur/saturate, a hairline border, an inner highlight, and a shadow. Its apparent color is entirely whatever's blurred behind it. The room the player is standing in didn't change; the walls did, and the walls are actual glass, not smoked glass. Because there's no tint to lean on, legibility on glass is carried entirely by a shared text-shadow plus opacity-stepped light text (see The On-Glass Text Rule) and by the shell's own stage scrim sitting behind everything. Contrast is spent only where state needs to register from across a room, and everywhere else the design steps back. Glass earns its place under the same restraint: a GlassPanel never nests inside another GlassPanel with its own backdrop-filter, because a second blur pass would just be cost without a legible difference. Both the TV and phone shells force dark mode regardless of the device's OS theme preference; the glass layer itself is dark-only today.",
     "keyCharacteristics": [
       "Black-weight (800), display-font headlines and scores; body copy stays lighter and calmer.",
-      "Dark-forced game shells; a parallel light theme exists in tokens but isn't wired to any current screen.",
-      "Primary actions glow (soft ambient shadow) instead of using hard elevation shadows.",
+      "Dark-forced game shells; a parallel light theme exists in tokens but isn't wired to any current screen, and doesn't extend to the glass layer.",
+      "A persistent, full-bleed illustration + directional scrim sits behind every TV and phone screen, crossfading its intensity per phase.",
+      "Nearly every surface — cards, panels, buttons, modals — is clear glass (blur + saturate + hairline border + inner highlight + shadow, no background tint) floating over that illustration, not a flat tonal layer.",
+      "The primary CTA still carries the system's one signature glow, now composited as the --glass-shadow on top of its clear glass surface.",
       "Uppercase, wide-tracked eyebrow/label text throughout (kickers, badges, stat headers).",
       "Tabular numerals everywhere a value could change in place (timers, scores, dice results).",
-      "Seven colorblind-safe player seat colors (data/colors.json) sit outside this brand palette."
+      "Seven colorblind-safe player seat colors (data/colors.json) sit outside this brand palette; a derived player.glass.*/player.diceFace.* layer exists for translucent player-color surfaces."
     ],
     "rules": [
-      { "name": "The One Glow Rule", "body": "Only the primary CTA gets shadow-glow-pitch. No other element glows — that's what keeps the primary action findable at a glance from across a room.", "section": "colors" },
+      { "name": "The One Glow Rule", "body": "Only the primary CTA gets shadow-glow-pitch, expressed as that button's --glass-shadow riding on top of its clear glass surface. No other element glows — that's what keeps the primary action findable at a glance from across a room.", "section": "elevation" },
+      { "name": "The Glass-By-Default Rule", "body": "Raised surfaces are glass at rest: blur, hairline border, inner highlight, and a tier-appropriate shadow, together — never a flat tonal wash, never a shadow alone, and never a background tint (glass is clear). A surface only goes flat/opaque under one of three fallback conditions (nested glass, unsupported browser, prefers-reduced-transparency), never by stylistic choice. Supersedes the former Flat-By-Default Rule.", "section": "elevation" },
+      { "name": "The No-Nested-Blur Rule", "body": "A GlassPanel (or glass button) rendered inside another glass surface never applies its own backdrop-filter — a React context guard forces it flat/opaque. Stacking blur passes is a GPU cost with no legible benefit.", "section": "elevation" },
       { "name": "The Tabular Numerals Rule", "body": "Any number that can change in place — timers, dice results, army counts, scores — uses font-variant-numeric: tabular-nums so digit width never shifts.", "section": "typography" },
-      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Depth comes from a translucent tint layer or a border, not a shadow — shadows are reserved for the one CTA glow and sheet/modal separation.", "section": "elevation" }
+      { "name": "The On-Glass Text Rule", "body": "Text directly on any glass surface (base/raised/overlay, no exceptions) never uses the standard --fg/--fg-secondary/--fg-muted gray scale — since glass has no tint of its own, a mid-tone gray has nothing but the raw stage illustration to sit on and loses against its brightest patches no matter how far up the scale it sits. Instead it stays on one light color (--fg1) at three opacity steps (--glass-fg 100% / --glass-fg-secondary 80% / --glass-fg-muted 60%), paired with a shared dark text-shadow that supplies the actual contrast floor. Applied automatically via CSS to any glass surface, never opted into per component and never limited to a subset of tiers — overlay (full-screen modals) needs it exactly as much as base/raised.", "section": "typography" }
     ],
     "dos": [
-      "Do reserve the glow shadow (shadow-glow-pitch) for the single primary CTA on a screen — it's a scarcity signal, not decoration.",
+      "Do build new raised surfaces on GlassPanel (or its shared CSS class) rather than a flat tonal background.",
+      "Do reserve the glow shadow (shadow-glow-pitch) for the single primary CTA on a screen, expressed as its --glass-shadow — it's a scarcity signal, not decoration.",
+      "Do let a GlassPanel (or glass button) inside another glass surface render flat via the nesting context — never force a second backdrop-filter pass.",
+      "Do use the on-glass text treatment (--glass-fg-* opacity steps + shared text-shadow) for any text on any glass surface, including overlay, instead of the standard gray scale.",
       "Do use tabular numerals for any value that updates in place.",
-      "Do keep uppercase + wide letter-spacing (0.08em) for kicker/label/eyebrow text at the 11-13px sizes.",
-      "Do treat data/colors.json player seat colors as a separate system from this palette.",
+      "Do keep uppercase + wide letter-spacing (0.1em) for kicker/label/eyebrow text at 16px, extrabold weight.",
+      "Do treat data/colors.json player seat colors as a separate system from this palette; derive translucent seat-color surfaces via deriveGlassTint, never a hand-picked per-seat rgba literal.",
       "Do rely on the SelectableOption border/background change as the only selected-state signal — no redundant checkmark on top.",
       "Do drop a phase-name kicker above a heading that already states the action; merge into one line instead when the heading alone isn't complete."
     ],
     "donts": [
       "Don't reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04). Caution Amber is the one exception, since it's a functional status color, not decoration.",
-      "Don't add box-shadow-based elevation to cards or rows by default — use a tonal overlay or a border instead.",
-      "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today.",
+      "Don't reach for the legacy flat tonal overlay (--atlas-t0X) as a first choice for a new card/panel/row — that's the retired default; glass is. Valid only as a defined fallback route, never a stylistic alternative.",
+      "Don't apply a backdrop-filter/blur value outside glassBlur's three steps (8/16/28px) or invent a new elevation tier beyond base/raised/overlay — extend glass-tokens.ts, don't hardcode a one-off.",
+      "Don't add a background color or tint to a GlassPanel/glass Button — glass is clear by design; the glass-surface-*-opaque hexes exist only for the three defined fallback cases, never as a stylistic tint.",
+      "Don't try to fix on-glass legibility by picking a different/darker gray or lightening one further up the standard gray scale — use the opacity-stepped --glass-fg-* + text-shadow treatment instead.",
+      "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today; the glass layer has no light-mode tints at all yet.",
       "Don't use a decorative unicode emoji or glyph as a stand-in icon. ColorSymbol's player-seat glyphs are the one exception — accessibility data, not decoration."
     ]
   }

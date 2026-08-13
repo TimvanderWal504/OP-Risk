@@ -11,4 +11,7 @@ export const board = {
   phaseReinforce: { nl: 'Versterken', en: 'Reinforce' },
   phaseAttack: { nl: 'Aanvallen', en: 'Attack' },
   phaseFortify: { nl: 'Verplaatsen', en: 'Fortify' },
+  playersTitle: { nl: 'Spelers', en: 'Players' },
+  territoriesCount: { nl: '{{count}} gebieden', en: '{{count}} territories' },
+  armiesLabel: { nl: 'Legers', en: 'Armies' },
 } satisfies LocaleTree

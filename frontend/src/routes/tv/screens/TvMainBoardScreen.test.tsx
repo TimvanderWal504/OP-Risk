@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
 import { atlasRoughTok } from '../../../styles/design-tokens'
@@ -52,19 +52,28 @@ describe('TvMainBoardScreen', () => {
   it('toont de beurtstatus-header voor de actieve speler', () => {
     render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
-    expect(screen.getByText(/Aan de beurt Alice/)).toBeInTheDocument()
+    expect(screen.getByText(/Aan de beurt: Alice/)).toBeInTheDocument()
   })
 
   it('rendert een gebiedsvorm en het legeraantal per territorium zodra de geometrie geladen is', async () => {
-    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
-    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
-    expect(screen.getByText('5')).toBeInTheDocument()
+    // Gescoped op de SVG: het zijpaneel toont sinds 2026-08-10 ook legertotalen per speler, en
+    // bij deze fixture (één gebied per speler) vallen die toevallig samen met de
+    // gebieds-legeraantallen (3/5) — zonder scope zou getByText dubbel matchen.
+    // `within()` verwacht HTMLElement-typing; de SVG-wortel is hier functioneel identiek
+    // (querySelector/getByText werken erop), alleen TypeScript's DOM-lib maakt onderscheid.
+    const svg = container.querySelector('svg')! as unknown as HTMLElement
+    await waitFor(() => expect(within(svg).getByText('3')).toBeInTheDocument())
+    expect(within(svg).getByText('5')).toBeInTheDocument()
   })
 
   it('hangt de gebiedenlaag in het atlasRough-filter (zoals in het oorspronkelijke design)', async () => {
     const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
-    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
+    // `within()` verwacht HTMLElement-typing; de SVG-wortel is hier functioneel identiek
+    // (querySelector/getByText werken erop), alleen TypeScript's DOM-lib maakt onderscheid.
+    const svg = container.querySelector('svg')! as unknown as HTMLElement
+    await waitFor(() => expect(within(svg).getByText('3')).toBeInTheDocument())
 
     const filter = container.querySelector('filter#atlasRough')
     expect(filter).not.toBeNull()
@@ -81,16 +90,23 @@ describe('TvMainBoardScreen', () => {
     expect(path?.closest('g')?.getAttribute('filter')).toBe('url(#atlasRough)')
   })
 
-  it('meldt een console-fout als de achtergrondafbeelding niet de verwachte afmeting heeft', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+  it('toont het spelerspaneel met gebieds- en legertotalen per speler', () => {
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
-    const img = container.querySelector('img') as HTMLImageElement
-    Object.defineProperty(img, 'naturalWidth', { value: 1500, configurable: true })
-    Object.defineProperty(img, 'naturalHeight', { value: 790, configurable: true })
-    img.dispatchEvent(new Event('load'))
+    expect(screen.getByText('Spelers')).toBeInTheDocument()
+    // Beide spelers bezitten in deze fixture precies 1 gebied.
+    expect(screen.getAllByText('1 gebieden')).toHaveLength(2)
+    expect(screen.getAllByText('Legers')).toHaveLength(2)
+  })
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('onverwachte afmetingen'))
-    errorSpy.mockRestore()
+  it('dimt een uitgeschakelde speler in het spelerspaneel', () => {
+    const stateWithElimination = {
+      ...stateInProgress,
+      players: stateInProgress.players.map((player) => (player.id === 'bob' ? { ...player, isEliminated: true } : player)),
+    }
+    render(<TvMainBoardScreen state={stateWithElimination} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    const bobRow = screen.getByText('Bob').closest('div[style*="opacity"]')
+    expect(bobRow).toHaveStyle({ opacity: '0.5' })
   })
 })

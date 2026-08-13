@@ -15,6 +15,7 @@ import { SelectableOption } from './ui/SelectableOption'
 import { SegmentedControl } from './ui/SegmentedControl'
 import { Footer } from './ui/Footer'
 import { Button } from './ui/Button'
+import { GlassPanel } from './ui/GlassPanel'
 import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
 import { tDynamic } from '../i18n/useT'
@@ -108,18 +109,22 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
-      <div className="flex-none px-4 pt-4 pb-3">
+      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
+      <GlassPanel elevation="base" context="phone" padding="none" className="mx-gutter mt-gutter flex-none rounded-2xl px-4 py-3">
         <h1 className="font-display text-h1 font-black">{t('header.title')}</h1>
         <p className="mt-1 text-sm text-fg-muted">{t('map.summary')}</p>
-      </div>
+      </GlassPanel>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+      {/* Geen `PhoneScreen`: dit scherm is een `<form>` met een vaste kop, een scrollend
+          midden en een footer — het frame zit daarom per sectie, op dezelfde
+          `--spacing-gutter` als elk ander telefoonscherm. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-gutter pb-gutter">
         <div>
           <div className="mb-2 font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
             {t('section.rules')}
           </div>
           <div className="flex flex-col gap-2.5">
-            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-2 font-display text-base font-extrabold">{t('winCondition.title')}</div>
               <SegmentedControl
                 value={settings.winCondition}
@@ -136,9 +141,9 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
                 ]}
               />
               <p className="mt-2 text-xs text-fg-muted">{winConditionDescription}</p>
-            </div>
+            </GlassPanel>
 
-            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('setupMode.title')}</div>
               <div className="mb-2.5 text-xs text-fg-muted">{t('setupMode.description')}</div>
               <SegmentedControl
@@ -149,9 +154,9 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
                   { value: SetupModeDto.Claiming, label: t('setupMode.claiming') },
                 ]}
               />
-            </div>
+            </GlassPanel>
 
-            <div className="rounded-card border border-border bg-[var(--atlas-t03)] px-3.5 py-3">
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('startingArmies.title')}</div>
               <div className="mb-2.5 text-xs text-fg-muted">{t('startingArmies.description')}</div>
               <div role="radiogroup" aria-label={t('startingArmies.title')} className="flex flex-col gap-2">
@@ -171,7 +176,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
                   </SelectableOption>
                 ))}
               </div>
-            </div>
+            </GlassPanel>
 
             <Stepper
               label={t('turnTimer.label')}

@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { TvShell } from './TvShell'
 
 describe('TvShell', () => {
-  it('draait altijd in het donkere thema, ongeacht OS-voorkeur', () => {
+  it('rendert children binnen de shell-wrapper', () => {
     render(
       <TvShell>
         <p>Inhoud</p>
       </TvShell>,
     )
 
-    expect(screen.getByText('Inhoud').parentElement).toHaveClass('dark')
+    expect(screen.getByText('Inhoud').parentElement).toHaveClass('relative')
   })
 })

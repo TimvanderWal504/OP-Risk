@@ -1,43 +1,32 @@
 import { useState } from 'react'
-import type { SyntheticEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
+import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../../map/projection'
-import { atlasRough, marker, territoryStroke } from '../../../map/boardVisualTokens'
+import { marker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
+import { ColorSymbol } from '../../../components/ui/ColorSymbol'
+import { GlassPanel } from '../../../components/ui/GlassPanel'
 import type { TvScreenProps } from './tvScreens'
-
-const MAP_ID = 'standaard-43'
-
-/**
- * Vangnet voor TO §7.2: `projection.ts` gaat uit van een vaste achtergrondgrootte
- * (`MAP_WIDTH_PX`×`MAP_HEIGHT_PX`, momenteel 4096×2132 — zie projection.ts voor waarom dat niet
- * het nominale 1920×1000-canvas uit `build_silhouette_v4.py` is). Een toekomstige asset-vervanging
- * op dezelfde url die niet aan die afmeting voldoet, zou de SVG-overlay stilzwijgend laten
- * verschuiven t.o.v. de kustlijn — dit meldt dat hardop i.p.v. het pas maanden later als "de
- * kaart staat een beetje scheef" te ontdekken.
- */
-function checkBackgroundDimensions(event: SyntheticEvent<HTMLImageElement>) {
-  const img = event.currentTarget
-  if (img.naturalWidth !== MAP_WIDTH_PX || img.naturalHeight !== MAP_HEIGHT_PX) {
-    console.error(
-      `Kaartachtergrond heeft onverwachte afmetingen (${img.naturalWidth}x${img.naturalHeight}, verwacht ${MAP_WIDTH_PX}x${MAP_HEIGHT_PX}) — projection.ts en de PNG lopen niet meer synchroon (TO §7.2).`,
-    )
-  }
-}
 
 /**
  * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (state "Main board" in het oorspronkelijke design,
  * `isBoard`-tak L257-312). Read-only weergave (FO §7.3/§2.3: de telefoon is de enige
  * invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen (z-3) horen bij
- * Attack en zijn hier bewust niet gebouwd; idem het spelerspaneel en de gebeurtenis-feed
- * (rechterkolom/onderrand in de export) — geen deliverable in het goedgekeurde plan voor deze
- * taak, en voor de feed bestaat sowieso nog geen server-databron.
+ * Attack en zijn hier bewust niet gebouwd; idem de gebeurtenis-feed (onderrand in de export) —
+ * blijft buiten scope tot er een server-databron voor is (2026-08-10, met de gebruiker
+ * afgesproken: apart, later op te pakken).
+ *
+ * Zijpaneel (spelerslijst) sinds 2026-08-10: zelfde `GlassPanel`-patroon als
+ * `TvClaimingScreen`, nu met territorium- én legertotaal per speler (`state.territories` is
+ * hier al client-side beschikbaar — geen nieuwe server-databron nodig, in tegenstelling tot de
+ * gebeurtenis-feed hierboven).
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
+  const { t } = useTranslation('board')
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
 
@@ -63,6 +52,14 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
 
   const activeColor = state.colors.find((c) => c.id === activePlayer.colorId)
 
+  const territoryCountByPlayer: Record<string, number> = {}
+  const armyTotalByPlayer: Record<string, number> = {}
+  state.territories.forEach((territory) => {
+    if (!territory.ownerPlayerId) return
+    territoryCountByPlayer[territory.ownerPlayerId] = (territoryCountByPlayer[territory.ownerPlayerId] ?? 0) + 1
+    armyTotalByPlayer[territory.ownerPlayerId] = (armyTotalByPlayer[territory.ownerPlayerId] ?? 0) + territory.armyCount
+  })
+
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
       <TurnStatusHeader
@@ -72,136 +69,136 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
         timer={turnState.timer}
       />
 
-      <div
-        className="relative col-start-1 row-start-2 min-w-0 overflow-hidden rounded-[14px] border border-[var(--atlas-map-border)] bg-[var(--atlas-map-bg)]"
-        style={{ boxShadow: 'inset 0 0 120px rgba(0,0,0,.75), inset 0 0 0 3px rgba(120,96,56,.18)' }}
-      >
-        <img
-          src={`/maps/${MAP_ID}/map-background.png`}
-          onLoad={checkBackgroundDimensions}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <svg
-          viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-        >
-          <defs>
-            <filter id="atlasRough">
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency={atlasRough.baseFrequency}
-                numOctaves={atlasRough.numOctaves}
-                seed={atlasRough.seed}
-                result="n"
+      <TvBoardMap
+        geometry={geometry}
+        filterId="atlasRough"
+        getTerritoryVisual={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owner = entry?.owner
+          const color = entry?.color
+          const isOwn = owner?.id === activePlayer.id
+          const fillHex = color?.hex ?? boardTok.neutral
+          const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
+          const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
+          const strokeWidth = color ? (isOwn ? territoryStroke.own : territoryStroke.enemy) : territoryStroke.neutral
+          const glowPx = color ? (isOwn ? territoryGlow.own : territoryGlow.enemy) : undefined
+
+          return { fillHex, fillOpacity, strokeHex: fillHex, strokeOpacity, strokeWidth, glowPx }
+        }}
+        renderMarker={(territory) => {
+          const entry = ownership.get(territory.id)
+          const owned = entry?.owned
+          if (!owned) return null
+
+          const owner = entry?.owner
+          const color = entry?.color
+          const ringColor = color?.hex ?? boardTok.neutral
+          // Oorspronkelijk design: `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
+          // bij de nog niet gebouwde selectiestaat.
+          const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
+
+          const wasArmy = prevArmy[territory.id]
+          const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
+
+          return (
+            <g key={territory.id}>
+              <circle
+                cx={territory.centroidPx.x}
+                cy={territory.centroidPx.y}
+                r={marker.discR}
+                fill={boardTok.disc}
+                fillOpacity={boardTok.discOp}
+                stroke={ringColor}
+                strokeWidth={ringSw}
               />
-              <feDisplacementMap
-                in="SourceGraphic"
-                in2="n"
-                scale={atlasRough.scale}
-                xChannelSelector="R"
-                yChannelSelector="G"
-              />
-            </filter>
-          </defs>
+              <text
+                x={territory.centroidPx.x}
+                y={territory.centroidPx.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontFamily="Archivo, sans-serif"
+                fontWeight={700}
+                fontSize={marker.armyFontSize}
+                fill={boardTok.numFg}
+                style={{
+                  fontVariantNumeric: 'tabular-nums',
+                  transformBox: 'fill-box',
+                  transformOrigin: 'center',
+                  animation: dir !== 0 ? tvAnimations.countTick(dir) : 'none',
+                }}
+              >
+                {owned.armyCount}
+              </text>
+              <text
+                x={territory.centroidPx.x}
+                y={territory.centroidPx.y + marker.nameOffsetY}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily="Archivo, sans-serif"
+                fontWeight={700}
+                fontSize={marker.nameFontSize}
+                fill={boardTok.numFg}
+                stroke={boardTok.disc}
+                strokeWidth={marker.nameStrokeWidth}
+                strokeOpacity={marker.nameStrokeOpacity}
+                strokeLinejoin="round"
+                style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
+              >
+                {tDynamic(territory.id, 'territories')}
+              </text>
+            </g>
+          )
+        }}
+      />
 
-          <g filter="url(#atlasRough)">
-            {geometry?.map((territory) => {
-              const entry = ownership.get(territory.id)
-              const owner = entry?.owner
-              const color = entry?.color
-              const isOwn = owner?.id === activePlayer.id
-              const fillHex = color?.hex ?? boardTok.neutral
-              const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
-              const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
-              const strokeWidth = color
-                ? isOwn
-                  ? territoryStroke.own
-                  : territoryStroke.enemy
-                : territoryStroke.neutral
+      <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
+        <div className="mb-3 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+          {t('playersTitle')}
+        </div>
+        <div className="flex flex-col gap-3">
+          {state.turnOrder.map((playerId) => {
+            const player = state.players.find((p) => p.id === playerId)
+            const color = state.colors.find((c) => c.id === player?.colorId)
+            if (!player || !color) return null
 
-              return (
-                <path
-                  key={territory.id}
-                  d={territory.pathD}
-                  fill={fillHex}
-                  fillOpacity={fillOpacity}
-                  stroke={fillHex}
-                  strokeOpacity={strokeOpacity}
-                  strokeWidth={strokeWidth}
-                  strokeLinejoin="round"
-                />
-              )
-            })}
-          </g>
-
-          {geometry?.map((territory) => {
-            const entry = ownership.get(territory.id)
-            const owned = entry?.owned
-            if (!owned) return null
-
-            const owner = entry?.owner
-            const color = entry?.color
-            const ringColor = color?.hex ?? boardTok.neutral
-            // Oorspronkelijk design: `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
-            // bij de nog niet gebouwde selectiestaat.
-            const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
-
-            const wasArmy = prevArmy[territory.id]
-            const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
+            const isCurrent = playerId === activePlayer.id
 
             return (
-              <g key={territory.id}>
-                <circle
-                  cx={territory.centroidPx.x}
-                  cy={territory.centroidPx.y}
-                  r={marker.discR}
-                  fill={boardTok.disc}
-                  fillOpacity={boardTok.discOp}
-                  stroke={ringColor}
-                  strokeWidth={ringSw}
-                />
-                <text
-                  x={territory.centroidPx.x}
-                  y={territory.centroidPx.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontFamily="Archivo, sans-serif"
-                  fontWeight={700}
-                  fontSize={marker.armyFontSize}
-                  fill={boardTok.numFg}
-                  style={{
-                    fontVariantNumeric: 'tabular-nums',
-                    transformBox: 'fill-box',
-                    transformOrigin: 'center',
-                    animation: dir !== 0 ? tvAnimations.countTick(dir) : 'none',
-                  }}
+              <div
+                key={playerId}
+                className="relative flex items-center gap-4 overflow-hidden rounded-[14px] border p-3.5"
+                style={{
+                  background: isCurrent ? 'color-mix(in srgb, var(--color-silver-400) 10%, transparent)' : 'var(--atlas-row)',
+                  borderColor: isCurrent ? 'var(--color-silver-600)' : 'var(--border)',
+                  opacity: player.isEliminated ? 0.5 : 1,
+                }}
+              >
+                {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-silver-400" />}
+                <div
+                  className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-[28px]"
+                  style={{ background: color.hex, color: color.onHex }}
                 >
-                  {owned.armyCount}
-                </text>
-                <text
-                  x={territory.centroidPx.x}
-                  y={territory.centroidPx.y + marker.nameOffsetY}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontFamily="Archivo, sans-serif"
-                  fontWeight={700}
-                  fontSize={marker.nameFontSize}
-                  fill={boardTok.numFg}
-                  stroke={boardTok.disc}
-                  strokeWidth={marker.nameStrokeWidth}
-                  strokeOpacity={marker.nameStrokeOpacity}
-                  strokeLinejoin="round"
-                  style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
-                >
-                  {tDynamic(territory.id, 'territories')}
-                </text>
-              </g>
+                  <ColorSymbol symbol={color.symbol} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
+                  <div className="mt-0.75 font-body text-body text-fg-secondary">
+                    {t('territoriesCount', { count: territoryCountByPlayer[playerId] ?? 0 })}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="font-display text-[34px] font-black tabular-nums text-fg">
+                    {armyTotalByPlayer[playerId] ?? 0}
+                  </div>
+                  <div className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                    {t('armiesLabel')}
+                  </div>
+                </div>
+              </div>
             )
           })}
-        </svg>
-      </div>
+        </div>
+      </GlassPanel>
     </div>
   )
 }

@@ -1,18 +1,17 @@
 import { useTranslation } from 'react-i18next'
 import { Dice, type DiceValue } from './ui/Dice'
 import { Button } from './ui/Button'
+import { GlassPanel } from './ui/GlassPanel'
 import { phoneAnimations } from '../styles/motion'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface OrderRollWaitStepProps {
   myDice: number[] | undefined
   colorHex: string
-  colorOnHex: string
   canRoll: boolean
   onRoll: () => void
   error?: string | null
 }
-
-const DICE_BOX_SHADOW = '0 14px 34px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.25)'
 
 /**
  * Order-roll-stap op de telefoon (FO §2.1): een
@@ -20,48 +19,62 @@ const DICE_BOX_SHADOW = '0 14px 34px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,2
  * niet leeg) — de server wijst een ongeldige poging af, de client repliceert de
  * tie-break-regel niet (frontend/CLAUDE.md, server-authoritative).
  */
-export function OrderRollWaitStep({ myDice, colorHex, colorOnHex, canRoll, onRoll, error = null }: OrderRollWaitStepProps) {
+export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = null }: OrderRollWaitStepProps) {
   const { t } = useTranslation('orderRoll')
 
   return (
-    <div className="flex flex-1 flex-col items-center gap-1 p-5 pt-6 text-center">
-      <p className="font-display text-[26px] font-black">{t('title')}</p>
-      <p className="max-w-[280px] text-body text-fg-muted">{t('sub')}</p>
+    <PhoneScreen className="items-center gap-1 text-center">
+      {/* BEVINDING, opgelost (2026-08-10): titel/subtitel stonden kaal op de stage-achtergrond
+          — zonder eigen surface kon geen scrim-intensiteit ze tegen een helder illustratiepunt
+          op 4,5:1 houden (zie glass-tokens.ts §Telefoon-stage-achtergrond). Zelfde
+          chip-idioom als de bestaande kicker-/badge-stijl (DESIGN.md § Components, "badge-
+          silver-outline"), hergebruikt i.p.v. een nieuw patroon: een strak op de tekst
+          gesneden plaat, geen volle kaart. */}
+      <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-1 rounded-2xl px-4 py-2.5">
+        <p className="font-display text-[26px] font-black">{t('title')}</p>
+        <p className="max-w-[280px] text-body text-fg-muted">{t('sub')}</p>
+      </GlassPanel>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-[22px]">
-        {myDice ? (
-          <div className="flex gap-3">
-            <Dice
-              value={myDice[0] as DiceValue}
-              colorHex={colorHex}
-              colorOnHex={colorOnHex}
-              size={104}
-              radius={22}
-              padding={15}
-              gap={6}
-              pipSize={17}
-              boxShadow={DICE_BOX_SHADOW}
-              animation={phoneAnimations.waitDie}
-            />
-            <Dice
-              value={myDice[1] as DiceValue}
-              colorHex={colorHex}
-              colorOnHex={colorOnHex}
-              size={104}
-              radius={22}
-              padding={15}
-              gap={6}
-              pipSize={17}
-              boxShadow={DICE_BOX_SHADOW}
-              animation={phoneAnimations.waitDie}
-            />
-          </div>
-        ) : (
-          <div className="flex gap-3" aria-label={t('notRolledYet')}>
-            <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
-            <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
-          </div>
-        )}
+        {/* Gedeeld paneel onder de worp — BEVINDING opgelost (2026-08-13, gebruiker gescreenshot):
+            de dobbelstenen stonden als enige element van dit scherm rechtstreeks op de
+            stage-illustratie, precies boven het drukste stuk (de tactische kaart). Zelfde ingreep
+            als de dobbelsteen-picker in AttackFlowStep: één rustig vlak onder de hele worp.
+            Omvat bewust ook de nog-niet-gegooid-staat, anders zweven de streepjes-placeholders
+            alsnog kaal op de foto. */}
+        <GlassPanel elevation="base" context="phone" className="flex w-full justify-center rounded-2xl">
+          {myDice ? (
+            <div className="flex gap-3">
+              <Dice
+                value={myDice[0] as DiceValue}
+                colorHex={colorHex}
+                context="phone"
+                size={104}
+                radius={22}
+                padding={15}
+                gap={6}
+                pipSize={17}
+                animation={phoneAnimations.waitDie}
+              />
+              <Dice
+                value={myDice[1] as DiceValue}
+                colorHex={colorHex}
+                context="phone"
+                size={104}
+                radius={22}
+                padding={15}
+                gap={6}
+                pipSize={17}
+                animation={phoneAnimations.waitDie}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-3" aria-label={t('notRolledYet')}>
+              <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
+              <div className="h-[104px] w-[104px] rounded-[22px] border-2 border-dashed border-border-strong" />
+            </div>
+          )}
+        </GlassPanel>
       </div>
 
       {error && <p className="text-loss">{error}</p>}
@@ -73,6 +86,6 @@ export function OrderRollWaitStep({ myDice, colorHex, colorOnHex, canRoll, onRol
       ) : (
         <p className="w-full pt-1.5 text-sm text-fg-muted">{t('waitingForOthers')}</p>
       )}
-    </div>
+    </PhoneScreen>
   )
 }

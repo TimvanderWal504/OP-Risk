@@ -1,5 +1,6 @@
 import type { PlayerColorDto } from '../../types/GameState'
 import { ColorAvatar } from './ColorAvatar'
+import { GlassPanel } from './GlassPanel'
 
 export interface ArmyStepperRowProps {
   color: PlayerColorDto | null
@@ -41,7 +42,7 @@ export function ArmyStepperRow({
 }: ArmyStepperRowProps) {
   if (incrementOnly) {
     return (
-      <div className="flex items-center gap-3 rounded-[14px] border border-border bg-[var(--atlas-t04)] px-3 py-[9px]">
+      <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-3 rounded-[14px] px-3 py-[9px]">
         <ColorAvatar color={color} variant="row" />
         <div className="min-w-0 flex-1">
           <div className="font-display text-[16px] font-extrabold">{label}</div>
@@ -53,17 +54,20 @@ export function ArmyStepperRow({
           type="button"
           disabled={!canIncrement}
           onClick={onIncrement}
-          className="flex h-[46px] w-[46px] flex-none items-center justify-center rounded-xl font-display text-2xl font-black text-[var(--on-pitch)] disabled:cursor-not-allowed"
-          style={{ background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)' }}
+          className="flex h-[46px] w-[46px] flex-none items-center justify-center rounded-xl font-display text-2xl font-black disabled:cursor-not-allowed"
+          style={{
+            background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)',
+            color: canIncrement ? 'var(--on-pitch)' : 'var(--fg-muted)',
+          }}
         >
           {'+'}
         </button>
-      </div>
+      </GlassPanel>
     )
   }
 
   return (
-    <div className="flex items-center gap-[10px] rounded-[14px] border border-border bg-[var(--atlas-t04)] px-[10px] py-2">
+    <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-[10px] rounded-[14px] px-[10px] py-2">
       <ColorAvatar color={color} variant="reinforce" />
       <div className="min-w-0 flex-1">
         <div className="font-display text-[15px] font-extrabold">{label}</div>
@@ -71,24 +75,37 @@ export function ArmyStepperRow({
           {baseArmyCount} {'→'} <b className="text-pitch-300">{armyCount}</b>
         </div>
       </div>
-      <button
-        type="button"
-        disabled={!canDecrement}
-        onClick={onDecrement}
-        className="flex h-11 w-11 flex-none items-center justify-center rounded-[11px] border border-border-strong bg-[var(--atlas-t05)] font-black text-xl text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      {/* Genest in de bovenstaande GlassPanel: eigen achtergrond wordt via de nesting-guard
+          automatisch niet-geblurd. */}
+      <GlassPanel
+        elevation="raised"
+        context="phone"
+        padding="none"
+        className="h-11 w-11 flex-none rounded-[11px]"
+        style={{ borderColor: 'var(--border-strong)' }}
       >
-        {'−'}
-      </button>
+        <button
+          type="button"
+          disabled={!canDecrement}
+          onClick={onDecrement}
+          className="flex h-full w-full items-center justify-center font-black text-xl text-fg disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {'−'}
+        </button>
+      </GlassPanel>
       <span className="min-w-6 text-center font-display text-xl font-black">{delta}</span>
       <button
         type="button"
         disabled={!canIncrement}
         onClick={onIncrement}
-        className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] font-black text-xl text-[var(--on-pitch)] disabled:cursor-not-allowed"
-        style={{ background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)' }}
+        className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] font-black text-xl disabled:cursor-not-allowed"
+        style={{
+          background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)',
+          color: canIncrement ? 'var(--on-pitch)' : 'var(--fg-muted)',
+        }}
       >
         {'+'}
       </button>
-    </div>
+    </GlassPanel>
   )
 }

@@ -8,7 +8,10 @@ import { ActivePlayerBanner } from './ui/ActivePlayerBanner'
 import { StatHeaderCard } from './ui/StatHeaderCard'
 import { Footer } from './ui/Footer'
 import { Button } from './ui/Button'
+import { GlassPanel } from './ui/GlassPanel'
+import { selectedSilverBg, secondaryWashBg } from '../styles/glass-tokens'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface ClaimTerritoryStepProps {
   territories: TerritoryDto[]
@@ -68,7 +71,7 @@ export function ClaimTerritoryStep({
     }))
 
     return (
-      <div className="flex flex-1 flex-col min-h-0 p-4">
+      <PhoneScreen>
         <StatHeaderCard
           title={t('claim.title')}
           statValue={claimFree}
@@ -87,20 +90,30 @@ export function ClaimTerritoryStep({
                   const selected = pendingTerritoryId === territoryId
 
                   return (
-                    <button
+                    // 'selected' blijft de dekkende `selectedSilverBg` (bewuste nadrukkleur, geen
+                    // glas-tint) via een inline override die de class-based achtergrond wint.
+                    <GlassPanel
                       key={territoryId}
-                      type="button"
-                      onClick={() => setPendingTerritoryId(territoryId)}
-                      className="flex min-h-[58px] w-full items-center gap-3 rounded-[14px] border-2 px-3.5 text-left text-fg"
+                      elevation="base"
+                      context="phone"
+                      padding="none"
+                      className="rounded-[14px]"
                       style={{
-                        background: selected ? 'rgba(156,176,202,.14)' : 'var(--atlas-t04)',
+                        background: selected ? selectedSilverBg : undefined,
+                        borderWidth: 2,
                         borderColor: selected ? 'var(--silver-400)' : 'var(--border)',
                       }}
                     >
-                      <span className="flex-1 font-display text-h3 font-extrabold">
-                        {tDynamic(territoryId, 'territories')}
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingTerritoryId(territoryId)}
+                        className="flex min-h-[58px] w-full items-center gap-3 px-3.5 text-left text-fg"
+                      >
+                        <span className="flex-1 font-display text-h3 font-extrabold">
+                          {tDynamic(territoryId, 'territories')}
+                        </span>
+                      </button>
+                    </GlassPanel>
                   )
                 })}
               </div>
@@ -123,7 +136,7 @@ export function ClaimTerritoryStep({
             </div>
           )}
         </Footer>
-      </div>
+      </PhoneScreen>
     )
   }
 
@@ -142,7 +155,7 @@ export function ClaimTerritoryStep({
   })
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4">
+    <PhoneScreen>
       <ActivePlayerBanner
         turnOfLabel={t('idle.nowPlaying')}
         playerName={activePlayer?.name ?? ''}
@@ -150,16 +163,26 @@ export function ClaimTerritoryStep({
         subtitle={t('claim.confirm')}
         stat={{ value: claimFree, label: t('claim.left') }}
       />
-      <div className="mt-4 mb-2 font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase">
+      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
+      <GlassPanel
+        elevation="base"
+        context="phone"
+        padding="none"
+        className="mt-4 mb-2 inline-block self-start rounded-2xl px-3.5 py-1.5 font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase"
+      >
         {t('claim.claimedBy')}
-      </div>
+      </GlassPanel>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {claimBoard.map(({ player, color, count, isMe }) => (
-          <div
+          // 'isMe' blijft de dekkende `secondaryWashBg` (bewuste nadrukkleur) als inline override.
+          <GlassPanel
             key={player.id}
-            className="flex items-center gap-3 rounded-[14px] border px-3.5 py-[11px]"
+            elevation="base"
+            context="phone"
+            padding="none"
+            className="flex items-center gap-3 rounded-[14px] px-3.5 py-[11px]"
             style={{
-              background: isMe ? 'rgba(33,92,156,.16)' : 'var(--atlas-t03)',
+              background: isMe ? secondaryWashBg : undefined,
               borderColor: isMe ? 'var(--secondary)' : 'var(--border)',
             }}
           >
@@ -169,12 +192,17 @@ export function ClaimTerritoryStep({
             </span>
             <span className="font-display text-h2 font-black tabular-nums">{count}</span>
             <span className="font-body text-xs text-fg-muted">{t('claim.colTerr')}</span>
-          </div>
+          </GlassPanel>
         ))}
       </div>
-      <div className="mt-2.5 mb-3 text-center font-body text-sm text-fg-muted">
+      <GlassPanel
+        elevation="base"
+        context="phone"
+        padding="none"
+        className="mt-2.5 mb-3 self-center rounded-2xl px-4 py-1.5 text-center font-body text-sm text-fg-muted"
+      >
         {t('claim.yourTurnSoon')}
-      </div>
-    </div>
+      </GlassPanel>
+    </PhoneScreen>
   )
 }

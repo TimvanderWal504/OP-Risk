@@ -18,7 +18,7 @@
 /** Daadwerkelijke breedte van `data/maps/standaard-43/map-background-final.png`. */
 export const MAP_WIDTH_PX = 4096
 /** Daadwerkelijke hoogte van `data/maps/standaard-43/map-background-final.png`. */
-export const MAP_HEIGHT_PX = 2132
+export const MAP_HEIGHT_PX = 1832
 /**
  * `build_silhouette_v4.py:8` — bewust niet het standaard -180/180-bereik, zie TO §7.2.
  *
@@ -30,7 +30,7 @@ export const MAP_HEIGHT_PX = 2132
 export const LON_MIN = -180.5
 export const LON_MAX = 192
 export const LAT_MAX = 88.5
-export const LAT_MIN = -88.5
+export const LAT_MIN = -58.5
 
 export interface ProjectedPoint {
   x: number

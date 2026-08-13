@@ -1,44 +1,47 @@
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import lobbyBattlefield from '../../../styles/assets/lobby-battlefield.png'
 import { tvAnimations } from '../../../styles/motion'
+import {
+  glassBadgeBorder,
+  glassBlur,
+  glassSaturate,
+  glassSurfaceOpaque,
+  lobbyPanelScrim,
+} from '../../../styles/glass-tokens'
 import { LobbyPlayerList } from '../../../components/LobbyPlayerList'
 import { LobbyQrPanel } from '../../../components/LobbyQrPanel'
 import { LobbySettingsSummary } from '../../../components/LobbySettingsSummary'
 import type { TvScreenProps } from './tvScreens'
 
 /**
- * Het lobbyscherm op de TV: cinematische veldslag-achtergrond met de titel links en een
- * compacte rail rechts (joinen via QR, wie er binnen is, de gekozen instellingen).
+ * Het lobbyscherm op de TV: titel links en een compacte rail rechts (joinen via QR, wie er
+ * binnen is, de gekozen instellingen), over de persistente stage-achtergrond uit `TvShell`
+ * (cinematische veldslag-illustratie + gedeelde verticale scrim, zie `TvStageBackground`).
+ * Dit scherm voegt zelf alleen nog de links/rechts-wash toe die bij de eigen paneelindeling
+ * hoort — geen andere fase heeft deze titel-links/rail-rechts-split, dus die laag blijft hier
+ * lokaal i.p.v. in de gedeelde achtergrond (zie `lobbyPanelScrim` in glass-tokens.ts).
  */
 export function TvLobbyScreen({ state }: TvScreenProps) {
   const { t } = useTranslation('lobby')
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <img
-        src={lobbyBattlefield}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover object-[center_42%]"
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(90deg,rgba(4,6,11,.82) 0%,rgba(4,6,11,.5) 26%,rgba(4,6,11,.12) 48%,rgba(4,6,11,.22) 62%,rgba(4,6,11,.72) 100%)',
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(180deg,rgba(4,6,11,.55) 0%,rgba(4,6,11,.12) 30%,rgba(4,6,11,.25) 70%,rgba(4,6,11,.8) 100%)',
-        }}
-      />
+      <div className="absolute inset-0" style={{ background: lobbyPanelScrim }} />
 
       <div className="relative flex flex-1 items-stretch gap-12 p-[64px_66px]">
         {/* Links: titel bij het kasteel */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="self-start rounded-chip border border-[rgba(194,205,221,.55)] bg-[rgba(4,6,11,.34)] px-[18px] py-[9px] font-body text-h3 font-extrabold tracking-[.16em] text-[#c2cddd] uppercase backdrop-blur-[6px]">
+          <span
+            className="glass-panel self-start rounded-chip px-[18px] py-[9px] font-body text-h3 font-extrabold tracking-[.16em] text-[#c2cddd] uppercase"
+            data-glass-filter="on"
+            style={
+              {
+                '--glass-bg-opaque': glassSurfaceOpaque.raised,
+                '--glass-border': glassBadgeBorder,
+                '--glass-filter': `blur(${glassBlur.sm}px) saturate(${glassSaturate})`,
+              } as CSSProperties
+            }
+          >
             {t('header.badge')}
           </span>
           <div className="mt-[26px]">
@@ -51,7 +54,7 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
           </div>
           <div className="mt-[26px] flex items-center gap-4">
             <span className="inline-block h-[5px] w-16 rounded-full bg-pitch-500" />
-            <span className="font-mono text-[20px] tracking-[.14em] text-[rgba(247,249,252,.82)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
+            <span className="font-body text-[20px] tracking-[.14em] text-[rgba(247,249,252,.82)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
               CAMPAGNE-TERMINAL
             </span>
           </div>

@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { JoinProgressHeader } from './ui/JoinProgressHeader'
+import { GlassPanel } from './ui/GlassPanel'
 import { phoneAnimations } from '../styles/motion'
 import { tDynamic } from '../i18n/useT'
 import { QuoteCard } from './ui/QuoteCard'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 const QUOTE_COUNT = 300
 const QUOTE_INTERVAL_MS = 7000
@@ -41,11 +43,14 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
   }, [])
 
   return (
-    <div className="flex flex-1 flex-col p-5">
+    <PhoneScreen>
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
       <div className="flex min-h-0 flex-1 flex-col items-center pt-2.5 text-center">
         <div className="flex w-full flex-1 flex-col items-center justify-center">
-          <div className="flex-1">
+          {/* BEVINDING, opgelost (2026-08-10): titelblok + wacht-/tellingregels stonden kaal op
+              de stage-achtergrond — zie dezelfde fix in OrderRollWaitStep.tsx. Chip-idioom,
+              geen volle kaart; QuoteCard blijft ongewijzigd (draagt al zijn eigen achtergrond). */}
+          <GlassPanel elevation="base" context="phone" padding="none" className="flex-1 rounded-2xl px-4 py-2.5">
             <p className="font-display text-[26px] font-black">{t('wait.title')}</p>
             <p className="mt-1.5 font-body text-h3 text-fg-muted">
               {me.name} · {color ? tDynamic(color.id, 'colors') : t('wait.noColor')}
@@ -55,7 +60,7 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
                 {tDynamic(`${role.id}.name`, 'roles')} · {tDynamic(role.originTerritory, 'territories')}
               </p>
             )}
-          </div>
+          </GlassPanel>
           <div className="flex flex-[11] flex-col items-center justify-center">
             <QuoteCard
               quoteKicker={t('wait.quoteKicker')}
@@ -65,18 +70,29 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
               animationStyle={{ animation: phoneAnimations.popImmediate }}
             />
           </div>
-          <div className="flex flex-1 items-center gap-2.5 font-body text-body text-fg-muted">
-            <span
-              className="h-[11px] w-[11px] rounded-full"
-              style={{ background: 'var(--pitch-400)', animation: phoneAnimations.waitingDot }}
-            />
-            {t('wait.waitingForHost')}
-          </div>
+          {/* Wachtregel + spelerstelling in één paneel (2026-08-13): twee losse chips onder elkaar
+              zeggen hetzelfde ("waar wacht je op, en met hoeveel") en lazen als twee losstaande
+              berichten. De telling staat als secundaire regel onder de wachtregel; ze deelden al
+              dezelfde `text-fg-muted`-behandeling. */}
+          <GlassPanel
+            elevation="base"
+            context="phone"
+            padding="none"
+            className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-4 py-2"
+          >
+            <span className="flex items-center gap-2.5 font-body text-body text-fg-muted">
+              <span
+                className="h-[11px] w-[11px] rounded-full"
+                style={{ background: 'var(--pitch-400)', animation: phoneAnimations.waitingDot }}
+              />
+              {t('wait.waitingForHost')}
+            </span>
+            <span className="font-body text-sm text-fg-muted">
+              {t('wait.playersPresent', { count: joinedCount })}
+            </span>
+          </GlassPanel>
         </div>
-        <p className="pt-1.5 font-mono text-sm text-fg-muted">
-          {t('wait.playersPresent', { count: joinedCount })}
-        </p>
       </div>
-    </div>
+    </PhoneScreen>
   )
 }

@@ -8,8 +8,8 @@ describe('ActivePlayerBanner', () => {
   it('toont naam en subtitle', () => {
     render(<ActivePlayerBanner turnOfLabel="Nu aan zet" playerName="Bob" color={color} subtitle="Claim" />)
 
-    expect(screen.getByText(/Nu aan zet Bob/)).toBeInTheDocument()
-    expect(screen.getByText(/· Claim/)).toBeInTheDocument()
+    expect(screen.getByText(/Nu aan zet: Bob/)).toBeInTheDocument()
+    expect(screen.getByText('Claim')).toBeInTheDocument()
   })
 
   it('toont de teller alleen als stat is meegegeven', () => {

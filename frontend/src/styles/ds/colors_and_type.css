@@ -10,7 +10,7 @@
    see README "Typography". Swap the @import for self-hosted woff2 in prod.
    ============================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 
 /* ----------------------------------------------------------------------------
    MERK-FONT (swapbaar) — brand-font.ttf is het referentiebestand.
@@ -39,7 +39,6 @@
   --font-display: var(--font-brand); /* headlines, scores, ranks — nu de merk-font */
   --font-body:    "Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif; /* UI + prose — nu de swapbare body-font */
   --font-sans:    var(--font-body); /* fallback voor body-font, ook voor Tailwind */
-  --font-mono:    "Geist Mono", ui-monospace, monospace; /* FIFA codes, kickoff, tabular data */
 
   /* ---- Type scale (mobile-first; px in comments) ---- */
   --text-display: 2.5rem;   /* 40 — hero numerals, big scores  */
@@ -71,7 +70,7 @@
   --pitch-50:#f4f8e6; --pitch-100:#e6f0c6; --pitch-200:#d2e394; --pitch-300:#bbd45f;
   --pitch-400:#a1c23a; --pitch-500:#84ad28; --pitch-600:#6b8f1f; --pitch-700:#536f1b;
   --pitch-800:#41571a; --pitch-900:#36481a; --pitch-950:#1b2709;
-  --on-pitch:#04060b; /* tekstkleur op een pitch-fill (light: zie [data-theme="light"]) */
+  --on-pitch:#04060b; /* tekstkleur op een pitch-fill */
 
   /* Broadcast blue (secondary) */
   --blue-50:#eaf2fa; --blue-100:#cfe0f1; --blue-200:#a1c2e3; --blue-300:#6ba2d8;
@@ -95,31 +94,33 @@
   --ink-800:#222c3c; --ink-850:#1a2230; --ink-900:#121925; --ink-950:#0a0e17;
 
   /* ===========================================================================
-     SEMANTIC — light mode (default)
+     SEMANTIC — premium broadcast ink
      =========================================================================== */
-  color-scheme: light;
+  color-scheme: dark;
 
-  --bg:           #eef1f6;
-  --bg-elevated:  #ffffff;
-  --surface:      #ffffff;
-  --surface-2:    #f4f6fa;
-  --surface-3:    #e8edf4;
+  --bg:           #080c14;
+  --bg-elevated:  #111927;
+  --surface:      #141d2c;
+  --surface-2:    #1b2738;
+  --surface-3:    #243246;
 
-  --border:        #e1e7f0;
-  --border-strong: #cdd6e3;
-  --ring:          #215990;
+  --border:        #243044;
+  --border-strong: #33425a;
+  --ring:          #4f8fd4;
 
-  --fg1: #111826;   /* primary text   */
-  --fg2: #475064;   /* secondary text */
-  --fg3: #7a869c;   /* muted / meta   */
+  --fg1: #eef2f8;   /* primary text   */
+  --fg2: #a9b6cb;   /* secondary text */
+  --fg3: #6f7e97;   /* muted / meta   */
 
-  --primary:   #6b8f1f;  --primary-fill:   #84ad28;
-  --secondary: #215990;  --secondary-fill: #215990;
-  --accent:    #627798;  --accent-fill:    #9cb0ca;
-  --link:      #1c4a78;
+  --primary:   #a1c23a;  --primary-fill:   #84ad28;
+  --secondary: #6ba2d8;  --secondary-fill: #2e6aa8;
+  --accent:    #c2cddd;  --accent-fill:    #9cb0ca;
+  --link:      #7fb1e3;
 
-  --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
-  --podium-gold:#d4a017; --podium-silver:#9aa7b8; --podium-bronze:#b06b2c;
+  --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
+  --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
+
+  --shadow-glow-pitch: 0 8px 22px color-mix(in srgb, var(--pitch-500) 35%, transparent);
 
   /* ===========================================================================
      PLAYER COLORS — Operatie Atlas seats (7 max)
@@ -134,62 +135,6 @@
   --player-purple:#6a00f4; --player-purple-on:#ffd6a5; /* ✚ Paars  */
   --player-cyan:#34e0a1;   --player-cyan-on:#000000;   /* ⬡ Turquoise  */
   --player-orange:#fc6c26; --player-orange-on:#fff4dc; /* ◆ Oranje */
-}
-
-/* ===========================================================================
-   SEMANTIC — dark mode (premium broadcast ink)
-   =========================================================================== */
-.dark, [data-theme="dark"] {
-  color-scheme: dark;
-
-  --bg:           #080c14;
-  --bg-elevated:  #111927;
-  --surface:      #141d2c;
-  --surface-2:    #1b2738;
-  --surface-3:    #243246;
-
-  --border:        #243044;
-  --border-strong: #33425a;
-  --ring:          #4f8fd4;
-
-  --fg1: #eef2f8;
-  --fg2: #a9b6cb;
-  --fg3: #6f7e97;
-
-  --primary:   #a1c23a;  --primary-fill:   #84ad28;
-  --secondary: #6ba2d8;  --secondary-fill: #2e6aa8;
-  --accent:    #c2cddd;  --accent-fill:    #9cb0ca;
-  --link:      #7fb1e3;
-
-  --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
-  --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
-
-  --shadow-glow-pitch: 0 8px 22px color-mix(in srgb, var(--pitch-500) 35%, transparent);
-}
-
-/* Explicit light override — makes [data-theme="light"] deterministic even on a
-   dark-OS (beats the prefers-color-scheme:dark block below). Mirrors :root. */
-[data-theme="light"] {
-  color-scheme: light;
-  --bg:#eef1f6; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#e8edf4;
-  --border:#e1e7f0; --border-strong:#cdd6e3; --ring:#215990;
-  --fg1:#111826; --fg2:#475064; --fg3:#7a869c;
-  --primary:#6b8f1f; --primary-fill:#84ad28; --secondary:#215990; --secondary-fill:#215990; --accent:#627798; --accent-fill:#9cb0ca; --link:#1c4a78;
-  --live:#d8262b; --win:#2f8f3e; --loss:#c43c3c; --draw:#7a869c; --warning:#b5790a;
-  --podium-gold:#d4a017; --podium-silver:#9aa7b8; --podium-bronze:#b06b2c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg:#080c14; --bg-elevated:#111927; --surface:#141d2c; --surface-2:#1b2738; --surface-3:#243246;
-    --border:#243044; --border-strong:#33425a; --ring:#4f8fd4;
-    --fg1:#eef2f8; --fg2:#a9b6cb; --fg3:#6f7e97;
-    --primary:#a1c23a; --primary-fill:#84ad28; --secondary:#6ba2d8; --secondary-fill:#2e6aa8;
-    --accent:#c2cddd; --accent-fill:#9cb0ca; --link:#7fb1e3;
-    --live:#ff4d52; --win:#56c96a; --loss:#ff6b6b; --draw:#6f7e97; --warning:#f2c14e;
-    --podium-gold:#f2c14e; --podium-silver:#c2cddd; --podium-bronze:#cf8a4f;
-  }
 }
 
 /* ===========================================================================
@@ -259,7 +204,7 @@ h3, .twc-h3 {
   color: var(--fg1);
 }
 code, .twc-code {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.875em;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
@@ -272,43 +217,73 @@ code, .twc-code {
    App-specifieke oppervlakken voor de host-/TV-componenten (paneel-gradients,
    kaart-achtergrond, stage-scrim, feed/bar/overlay, sheen/track). Los van de
    semantische merk-tokens hierboven; alleen relevant voor componenten die deze
-   surfaces echt gebruiken. Beide thema's zodat de light-styling gedeeld is.
+   surfaces echt gebruiken.
    =========================================================================== */
-:root, [data-theme="light"] {
-  --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #eef1f6 55%, #e2e7f0 100%);
-  --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.08), rgba(255,255,255,0) 62%), repeating-linear-gradient(135deg, rgba(17,24,38,.02) 0 2px, transparent 2px 30px), linear-gradient(#f6f8fb,#eaeef5);
-  --atlas-panel:linear-gradient(#ffffff,#f4f6fa); --atlas-panel-2:linear-gradient(#ffffff,#f1f4f9);
-  --atlas-map-bg:#dbe3e6; --atlas-map-border:#c2cfd4; --atlas-map-scrim:rgba(238,241,246,.22);
-  --atlas-map-fade:linear-gradient(transparent,rgba(240,243,248,.92));
-  --atlas-row:rgba(17,24,38,.035); --atlas-row-2:rgba(17,24,38,.06);
-  --atlas-feed:rgba(255,255,255,.72); --atlas-bar:rgba(245,247,250,.96);
-  --atlas-overlay:rgba(226,231,240,.78); --atlas-card:linear-gradient(#ffffff,#f2f5fa);
-  --atlas-sheen:rgba(17,24,38,.05); --atlas-track:rgba(17,24,38,.08);
-  --atlas-t02:rgba(17,24,38,.025); --atlas-t03:rgba(17,24,38,.035); --atlas-t04:rgba(17,24,38,.05); --atlas-t05:rgba(17,24,38,.06); --atlas-t06:rgba(17,24,38,.07); --atlas-t10:rgba(17,24,38,.10); --atlas-t12:rgba(17,24,38,.12);
-  /* Lobby glass: translucent panel op de veldslag-illustratie (thema-afhankelijk, beeld blijft zichtbaar) */
-  --atlas-glass:rgba(255,255,255,.58); --atlas-glass-row:rgba(17,24,38,.05); --atlas-glass-border:rgba(17,24,38,.14);
-}
-.dark, [data-theme="dark"] {
+:root {
   --atlas-app-bg:radial-gradient(120% 90% at 50% -10%, #0d1626 0%, #05070d 60%, #04060b 100%);
   --atlas-stage-bg:radial-gradient(90% 70% at 50% 22%, rgba(33,89,144,.14), rgba(4,6,11,0) 62%), repeating-linear-gradient(135deg, rgba(255,255,255,.016) 0 2px, transparent 2px 30px), linear-gradient(#070b13,#05080f);
   --atlas-panel:linear-gradient(#0e1626,#0a111e); --atlas-panel-2:linear-gradient(#0c1421,#090f1a);
-  --atlas-map-bg:#0b1d22; --atlas-map-border:#2a3b34; --atlas-map-scrim:rgba(4,10,14,.35);
+  --atlas-map-bg:#0b1d22; --atlas-map-border:#2a3b34;
   --atlas-map-fade:linear-gradient(transparent,rgba(4,10,14,.92));
   --atlas-row:rgba(255,255,255,.035); --atlas-row-2:rgba(255,255,255,.06);
   --atlas-feed:rgba(8,12,20,.7); --atlas-bar:rgba(8,11,18,.94);
-  --atlas-overlay:rgba(4,6,11,.72); --atlas-card:linear-gradient(#0f1826,#0b131f);
+  --atlas-card:linear-gradient(#0f1826,#0b131f);
   --atlas-sheen:rgba(255,255,255,.08); --atlas-track:rgba(255,255,255,.08);
-  --atlas-t02:rgba(255,255,255,.02); --atlas-t03:rgba(255,255,255,.03); --atlas-t04:rgba(255,255,255,.04); --atlas-t05:rgba(255,255,255,.05); --atlas-t06:rgba(255,255,255,.06); --atlas-t10:rgba(255,255,255,.10); --atlas-t12:rgba(255,255,255,.12);
+  /* --atlas-t12 blijft bestaan: `Switch.tsx` gebruikt 'm als vlakke *off*-track-kleur (geen
+     tekst erop, geen contrasteis, geen paneel om als GlassPanel te migreren). */
+  --atlas-t12:rgba(4,6,11,.98);
   --atlas-glass:rgba(8,11,19,.54); --atlas-glass-row:rgba(255,255,255,.07); --atlas-glass-border:rgba(255,255,255,.14);
 }
 
-/* Light thema: pitch-green ramp verwijst naar de broadcast-blue ramp.
-   Dark ([data-theme="dark"]/.dark) houdt de groene :root-waarden. */
-[data-theme="light"] {
-  --pitch-50:var(--blue-50);   --pitch-100:var(--blue-100); --pitch-200:var(--blue-200);
-  --pitch-300:var(--blue-300); --pitch-400:var(--blue-400); --pitch-500:var(--blue-500);
-  --pitch-600:var(--blue-600); --pitch-700:var(--blue-700); --pitch-800:var(--blue-800);
-  --pitch-900:var(--blue-900); --pitch-950:var(--blue-950);
-  --on-pitch:var(--color-silver-100);  
-  --shadow-glow-pitch: 0 8px 22px color-mix(in srgb, var(--blue-500) 35%, transparent); /* zilver ipv zwart op de nu-blauwe fills */
+/* ===========================================================================
+   GLASSMORPHISM TOKEN-LAAG (--glass-*) — VOORSTEL, NOG NIET TOEGEPAST
+   ---------------------------------------------------------------------------
+   Nieuwe, aanvullende groep naast --atlas-glass* (lobby-glas, hierboven,
+   ongewijzigd). Startwaarden, spiegelt frontend/src/styles/glass-tokens.ts
+   1-op-1 — zie dat bestand voor de afleidingsformule van --player-*-glass.
+   Nog geen consument in components/screens; wijzig hier en in glass-tokens.ts
+   samen zodra de startwaarden getuned zijn.
+   =========================================================================== */
+:root {
+  --glass-blur-sm: 8px; --glass-blur-md: 16px; --glass-blur-lg: 28px;
+  --glass-saturate: 1.4;
+  --glass-surface-recessed: rgba(4, 6, 11, 0.55);
+  --glass-surface-base: rgba(20, 29, 44, 0.46);
+  --glass-surface-raised: rgba(36, 50, 70, 0.38);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --glass-shadow-recessed: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  --glass-shadow-base: 0 8px 24px -10px rgba(0, 0, 0, 0.50);
+  --glass-shadow-raised: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+  --glass-scrim: linear-gradient(to top, rgba(4, 6, 11, 0.85), rgba(4, 6, 11, 0) 60%);
+
+  /* player.glass.* — afgeleid van --player-* (playerColors), alpha 0.22 /
+     saturatie behouden 55%, zie GLASS_FILL_ALPHA/GLASS_SATURATE_KEEP in
+     glass-tokens.ts. Literal hier omdat CSS geen HSL-afleiding runtime doet;
+     bron van waarheid is de TS-functie, dit is de berekende uitkomst. */
+  --player-red-glass: rgba(165, 87, 74, 0.22);
+  --player-blue-glass: rgba(57, 105, 198, 0.22);
+  --player-green-glass: rgba(197, 224, 147, 0.22);
+  --player-yellow-glass: rgba(207, 188, 95, 0.22);
+  --player-purple-glass: rgba(113, 55, 189, 0.22);
+  --player-cyan-glass: rgba(91, 185, 151, 0.22);
+  --player-orange-glass: rgba(204, 125, 86, 0.22);
+
+  /* player.diceFace.* — DICE_FACE_ALPHA (0.6) + GLASS_TARGET_LIGHTNESS (0.42)
+     genormaliseerd, zie deriveGlassTint()/playerDiceFaceColors in
+     glass-tokens.ts. Los van --player-*-glass (paneel-tint, geen lightness-
+     override) — de dobbelsteen heeft een hogere, dekkendere alpha nodig om
+     als spelerskleur herkenbaar te blijven. */
+  --player-red-dice-face: rgba(148, 78, 66, 0.6);
+  --player-blue-dice-face: rgba(48, 88, 166, 0.6);
+  --player-green-dice-face: rgba(125, 166, 48, 0.6);
+  --player-yellow-dice-face: rgba(164, 146, 50, 0.6);
+  --player-purple-dice-face: rgba(99, 48, 166, 0.6);
+  --player-cyan-dice-face: rgba(64, 150, 119, 0.6);
+  --player-orange-dice-face: rgba(164, 87, 50, 0.6);
+
+  /* dice.pip.* — constant per speler, alleen de surface-tint varieert. */
+  --dice-pip-fill: rgba(255, 255, 255, 0.92);
+  --dice-pip-highlight: rgba(255, 255, 255, 0.98);
+  --dice-pip-shadow: rgba(4, 6, 11, 0.55);
 }

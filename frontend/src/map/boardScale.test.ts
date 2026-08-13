@@ -9,14 +9,14 @@ describe('designToMap', () => {
   })
 
   it('gebruikt de hoogte als bindende as, zoals `slice` in de export doet', () => {
-    expect(DESIGN_UNIT_PX).toBeCloseTo(2132 / 790, 5)
+    expect(DESIGN_UNIT_PX).toBeCloseTo(1832 / 790, 5)
 
-    // De breedte bindt niet: de achtergrond is in de export 4096 × (790/2132) = 1517,75
+    // De breedte bindt niet: de achtergrond is in de export 4096 × (790/1832) = 1766,29
     // design-eenheden breed en dus bréder dan de 1500-eenheden-box, waardoor `slice` er links
-    // en rechts 8,87 eenheid van wegknipt. Omgekeerd dekken 1500 design-eenheden daarom mínder
+    // en rechts 133,14 eenheid van wegknipt. Omgekeerd dekken 1500 design-eenheden daarom mínder
     // dan de volle viewBox-breedte, en is het gat precies die weggeknipte rand.
     expect(designToMap(boardViewBox.w)).toBeLessThan(MAP_WIDTH_PX)
-    expect(MAP_WIDTH_PX - designToMap(boardViewBox.w)).toBeCloseTo(2 * designToMap(8.874), 1)
+    expect(MAP_WIDTH_PX - designToMap(boardViewBox.w)).toBeCloseTo(2 * designToMap(133.1441), 1)
   })
 
   it('schaalt lineair vanaf nul', () => {

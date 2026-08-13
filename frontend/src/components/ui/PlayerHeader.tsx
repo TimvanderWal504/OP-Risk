@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { PlayerAvatar } from './PlayerAvatar'
+import { GlassPanel } from './GlassPanel'
 
 export interface PlayerHeaderAction {
   icon: string
@@ -53,7 +54,7 @@ export function PlayerHeader({
 
   return (
     <div className="flex flex-col mt-4">
-      <div className="flex items-center gap-[11px] rounded-card border border-border bg-[var(--atlas-t03)] px-3 py-2.5">
+      <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-[11px] rounded-card px-3 py-2.5">
         <div className="relative flex-none">
           <PlayerAvatar colorHex={colorHex} colorOnHex={colorOnHex} colorSymbol={colorSymbol} />
           {isHost && (
@@ -94,26 +95,37 @@ export function PlayerHeader({
         >
           ⚙
         </button>
-      </div>
+      </GlassPanel>
 
       <div className="mt-[9px] flex gap-[7px]">
-        {resolvedActions.map((action) => (
-          <button
-            key={action.label}
-            type="button"
-            onClick={action.onClick}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-[12px] border px-1 py-2 text-xs font-bold ${
-              action.active
-                ? 'border-silver-600 bg-silver-400/12 text-silver-300'
-                : 'border-border bg-[var(--atlas-t03)] text-fg-secondary'
-            }`}
-          >
-            <span className="text-h3" aria-hidden>
-              {action.icon}
-            </span>
-            {action.label}
-          </button>
-        ))}
+        {resolvedActions.map((action) =>
+          action.active ? (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className="flex flex-1 flex-col items-center gap-1 rounded-[12px] border border-silver-600 bg-silver-400/12 px-1 py-2 text-xs font-bold text-silver-300"
+            >
+              <span className="text-h3" aria-hidden>
+                {action.icon}
+              </span>
+              {action.label}
+            </button>
+          ) : (
+            <GlassPanel key={action.label} elevation="base" context="phone" padding="none" className="flex-1 rounded-[12px]">
+              <button
+                type="button"
+                onClick={action.onClick}
+                className="flex w-full flex-col items-center gap-1 px-1 py-2 text-xs font-bold text-fg-secondary"
+              >
+                <span className="text-h3" aria-hidden>
+                  {action.icon}
+                </span>
+                {action.label}
+              </button>
+            </GlassPanel>
+          ),
+        )}
       </div>
     </div>
   )

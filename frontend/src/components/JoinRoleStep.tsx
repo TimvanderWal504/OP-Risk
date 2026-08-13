@@ -5,7 +5,9 @@ import { SelectableOption } from './ui/SelectableOption'
 import { JoinProgressHeader } from './ui/JoinProgressHeader'
 import { Footer } from './ui/Footer'
 import { Button } from './ui/Button'
+import { GlassPanel } from './ui/GlassPanel'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface JoinRoleStepProps {
   roles: RoleSummaryDto[]
@@ -35,12 +37,13 @@ export function JoinRoleStep({
   const [pendingRoleId, setPendingRoleId] = useState<string | null>(null)
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-5">
+    <PhoneScreen className="gap-4">
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
-      <div>
+      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
+      <GlassPanel elevation="base" context="phone" padding="none" className="rounded-2xl px-4 py-2.5">
         <h1 className="font-display text-[26px] font-extrabold">{t('role.title')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('role.sub')}</p>
-      </div>
+      </GlassPanel>
       <div
         role="radiogroup"
         aria-label={t('role.ariaLabel')}
@@ -83,6 +86,6 @@ export function JoinRoleStep({
           )}
         </div>
       </Footer>
-    </div>
+    </PhoneScreen>
   )
 }

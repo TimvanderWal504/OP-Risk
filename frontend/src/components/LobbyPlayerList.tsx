@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
 import type { PlayerColorDto, RoleSummaryDto } from '../types/GameState'
 import { PlayerAvatar } from './ui/PlayerAvatar'
+import { GlassPanel } from './ui/GlassPanel'
 import { tDynamic } from '../i18n/useT'
 import { tvAnimations } from '../styles/motion'
 
@@ -18,9 +19,9 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
   const hasOpenSlot = players.length < maxPlayers
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-[var(--atlas-glass-border)] bg-[var(--atlas-glass)] p-[22px_22px_20px] shadow-[0_24px_60px_rgba(0,0,0,.4)]">
+    <GlassPanel elevation="raised" context="tv" className="flex min-h-0 flex-1 flex-col">
       <div className="mb-[14px] flex items-center justify-between">
-        <span className="font-body text-h3 font-extrabold tracking-[.14em] text-pitch-500 uppercase">
+        <span className="font-body text-h3 font-extrabold tracking-[.14em] text-pitch-400 uppercase">
           {t('players.title')}
         </span>
         <span className="font-display text-[24px] font-black text-pitch-400">
@@ -69,6 +70,6 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
           </div>
         )}
       </div>
-    </div>
+    </GlassPanel>
   )
 }

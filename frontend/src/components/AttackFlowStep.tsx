@@ -6,8 +6,13 @@ import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import type { CombatBroadcastState } from '../hooks/useCombatBroadcast'
 import { Dice, type DiceValue } from './ui/Dice'
 import { ColorSymbol } from './ui/ColorSymbol'
+import { GlassPanel } from './ui/GlassPanel'
+import { Button } from './ui/Button'
+import { Footer } from './ui/Footer'
 import { phoneAnimations } from '../styles/motion'
+import { selectedSilverBg } from '../styles/glass-tokens'
 import { tDynamic } from '../i18n/useT'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface AttackFlowStepProps {
   playerId: string
@@ -109,6 +114,21 @@ export function AttackFlowStep({
     setPhase('dice')
   }
 
+  // Terugstappen binnen de picker. Puur lokaal: tot `roll()` is er nog geen `DeclareAttack` naar
+  // de server gegaan, dus er valt niets af te breken (anders dan bij `otherFight` hieronder, dat
+  // een al aangekondigd gevecht opgeeft en daarom wél `onAbandonAttack` nodig heeft). De keuze
+  // die je loslaat wordt gewist, zodat een half ingevulde selectie niet blijft hangen.
+  const backToSrc = () => {
+    setFromTerritoryId(null)
+    setToTerritoryId(null)
+    setPhase('src')
+  }
+
+  const backToTgt = () => {
+    setToTerritoryId(null)
+    setPhase('tgt')
+  }
+
   const roll = async () => {
     if (!fromTerritoryId || !toTerritoryId) return
 
@@ -137,7 +157,7 @@ export function AttackFlowStep({
   const steps = [t('pickSrc.title'), t('pickTgt.title'), t('pickDice.title'), t('roll')]
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4 pt-0.5">
+    <PhoneScreen>
       <div className="mb-2.5 flex gap-1.5">
         {steps.map((label, index) => (
           <div key={label} className="flex flex-1 flex-col gap-1">
@@ -151,34 +171,43 @@ export function AttackFlowStep({
 
       {phase === 'src' && (
         <>
-          <div className="mb-[3px] font-display text-xl font-extrabold">{t('pickSrc.title')}</div>
-          <div className="mb-3 font-body text-sm text-fg-muted">{t('pickSrc.subtitle')}</div>
+          {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
+          <GlassPanel elevation="base" context="phone" padding="none" className="mb-3 inline-block self-start rounded-2xl px-4 py-2">
+            <div className="font-display text-xl font-extrabold">{t('pickSrc.title')}</div>
+            <div className="font-body text-sm text-fg-muted">{t('pickSrc.subtitle')}</div>
+          </GlassPanel>
           <div className="flex min-h-0 flex-1 flex-col gap-[9px] overflow-y-auto">
             {attackableSources.length === 0 && (
               <div className="font-body text-sm text-fg-muted">{t('pickSrc.empty')}</div>
             )}
             {attackableSources.map((territory) => (
-              <button
-                key={territory.territoryId}
-                type="button"
-                onClick={() => pickSrc(territory.territoryId)}
-                className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-border bg-[var(--atlas-t04)] px-3.5 text-left text-fg"
-              >
-                <span
-                  className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] text-h3"
-                  style={{ background: myColor?.hex, color: myColor?.onHex }}
+              <GlassPanel key={territory.territoryId} elevation="base" context="phone" padding="none" className="rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => pickSrc(territory.territoryId)}
+                  className="flex min-h-16 w-full items-center gap-3 px-3.5 text-left text-fg"
                 >
-                  {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
-                </span>
-                <div className="flex-1">
-                  <div className="font-display text-h3 font-extrabold">{tDynamic(territory.territoryId, 'territories')}</div>
-                  <div className="font-body text-xs text-fg-muted">
-                    {territory.armyCount} {t('armiesWord')} ·{' '}
-                    {neighborsOf(territory.territoryId).filter((n) => ownerOf(n) !== null && ownerOf(n) !== playerId).length}{' '}
-                    {t('targetsWord')}
+                  <span
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] text-h3"
+                    style={{ background: myColor?.hex, color: myColor?.onHex }}
+                  >
+                    {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-display text-h3 font-extrabold">{tDynamic(territory.territoryId, 'territories')}</div>
+                    {/* `text-sm` (13px, "secondary / labels") i.p.v. `text-xs` (11px, "meta,
+                        badge text"): dit is de enige inhoudelijke data van de rij — hoeveel
+                        legers en hoeveel doelen — waarop je je keuze baseert, geen meta-label.
+                        Gemeld door de gebruiker (2026-08-13); zelfde trede als de subtitel van
+                        de kop erboven. */}
+                    <div className="font-body text-sm text-fg-muted">
+                      {territory.armyCount} {t('armiesWord')} ·{' '}
+                      {neighborsOf(territory.territoryId).filter((n) => ownerOf(n) !== null && ownerOf(n) !== playerId).length}{' '}
+                      {t('targetsWord')}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </GlassPanel>
             ))}
           </div>
         </>
@@ -186,76 +215,106 @@ export function AttackFlowStep({
 
       {phase === 'tgt' && fromTerritoryId && (
         <>
-          <div className="mb-[3px] font-display text-xl font-extrabold">{t('pickTgt.title')}</div>
-          <div className="mb-3 font-body text-sm text-fg-muted">
-            {t('pickTgt.from')} <b className="text-fg">{tDynamic(fromTerritoryId, 'territories')}</b>
-          </div>
+          <GlassPanel elevation="base" context="phone" padding="none" className="mb-3 inline-block self-start rounded-2xl px-4 py-2">
+            <div className="font-display text-xl font-extrabold">{t('pickTgt.title')}</div>
+            <div className="font-body text-sm text-fg-muted">
+              {t('pickTgt.from')} <b className="text-fg">{tDynamic(fromTerritoryId, 'territories')}</b>
+            </div>
+          </GlassPanel>
           <div className="flex min-h-0 flex-1 flex-col gap-[9px] overflow-y-auto">
             {targets.map((target) => (
-              <button
-                key={target.territoryId}
-                type="button"
-                onClick={() => pickTgt(target.territoryId)}
-                className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-border bg-[var(--atlas-t04)] px-3.5 text-left text-fg"
-              >
-                <span
-                  className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] text-h3"
-                  style={{ background: target.ownerColor?.hex, color: target.ownerColor?.onHex }}
+              <GlassPanel key={target.territoryId} elevation="base" context="phone" padding="none" className="rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => pickTgt(target.territoryId)}
+                  className="flex min-h-16 w-full items-center gap-3 px-3.5 text-left text-fg"
                 >
-                  {target.ownerColor?.symbol && <ColorSymbol symbol={target.ownerColor.symbol} />}
-                </span>
-                <div className="flex-1">
-                  <div className="font-display text-h3 font-extrabold">{tDynamic(target.territoryId, 'territories')}</div>
-                  <div className="font-body text-xs text-fg-muted">
-                    {target.ownerName} · {target.armyCount} {t('armiesWord')}
+                  <span
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] text-h3"
+                    style={{ background: target.ownerColor?.hex, color: target.ownerColor?.onHex }}
+                  >
+                    {target.ownerColor?.symbol && <ColorSymbol symbol={target.ownerColor.symbol} />}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-display text-h3 font-extrabold">{tDynamic(target.territoryId, 'territories')}</div>
+                    {/* Zelfde trede als de bronlijst hierboven: rij-data, geen meta-label. */}
+                    <div className="font-body text-sm text-fg-muted">
+                      {target.ownerName} · {target.armyCount} {t('armiesWord')}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </GlassPanel>
             ))}
           </div>
+          {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): vanaf de doelwitkeuze was er geen
+              weg terug — je zat vast aan het brongebied tot je daadwerkelijk had gegooid, waarna
+              pas "Ander gevecht" beschikbaar kwam (en dat geeft een al aangekondigd gevecht op). */}
+          <Button variant="secondary" onClick={backToSrc} className="mt-3 min-h-[46px] text-sm">
+            {t('pickTgt.back')}
+          </Button>
         </>
       )}
 
       {phase === 'dice' && fromTerritoryId && toTerritoryId && (
         <>
-          <div className="mb-[3px] font-display text-xl font-extrabold">{t('pickDice.title')}</div>
-          <div className="mb-2 font-body text-sm text-fg-muted">
-            <b className="text-fg">{tDynamic(fromTerritoryId, 'territories')}</b> → <b className="text-fg">{tDynamic(toTerritoryId, 'territories')}</b>
-          </div>
+          <GlassPanel elevation="base" context="phone" padding="none" className="mb-2 inline-block self-start rounded-2xl px-4 py-2">
+            <div className="font-display text-xl font-extrabold">{t('pickDice.title')}</div>
+            <div className="font-body text-sm text-fg-muted">
+              <b className="text-fg">{tDynamic(fromTerritoryId, 'territories')}</b> → <b className="text-fg">{tDynamic(toTerritoryId, 'territories')}</b>
+            </div>
+          </GlassPanel>
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
-            <div className="flex gap-[11px]">
-              {[1, 2, 3].map((n) => {
-                const disabled = n > maxDice
-                const selected = diceN === n && !disabled
+            {/* Eén gedeeld glaspaneel om de hele picker (kaarten + hint), i.p.v. elke kaart zijn
+                eigen backdrop-filter te geven — BEVINDING opgelost (2026-08-11): drie losse,
+                naast elkaar geblurde GlassPanels vangen elk een ander stukje van de drukke
+                stage-illustratie, waardoor ze niet meer als één samenhangende keuzeset oogden
+                (gebruiker gescreenshot). Genest binnen dit paneel schakelt de nesting-guard hun
+                eigen blur automatisch uit (zelfde mechanisme als DefendStep in ModalShell) — nog
+                altijd losse kaarten qua rand/tint, nu op één gedeelde, rustige achtergrond. */}
+            <GlassPanel elevation="base" context="phone" className="rounded-2xl">
+              <div className="flex gap-[11px]">
+                {[1, 2, 3].map((n) => {
+                  const disabled = n > maxDice
+                  const selected = diceN === n && !disabled
 
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setDiceN(n)}
-                    className="flex flex-1 flex-col items-center gap-[7px] rounded-2xl border-2 py-4"
-                    style={{
-                      borderColor: selected ? 'var(--silver-400)' : 'var(--border)',
-                      background: selected ? 'rgba(156,176,202,.14)' : disabled ? 'var(--atlas-t02)' : 'var(--atlas-t04)',
-                    }}
-                  >
-                    <span
-                      className="font-display text-h1 font-black"
-                      style={{ color: disabled ? 'var(--fg3)' : selected ? 'var(--silver-300)' : 'var(--fg1)' }}
+                  return (
+                    // 'selected' blijft de dekkende `selectedSilverBg` als inline override.
+                    <GlassPanel
+                      key={n}
+                      elevation={disabled ? 'raised' : 'base'}
+                      context="phone"
+                      padding="none"
+                      className="flex-1 rounded-2xl"
+                      style={{
+                        borderWidth: 2,
+                        borderColor: selected ? 'var(--silver-400)' : 'var(--border)',
+                        background: selected ? selectedSilverBg : undefined,
+                      }}
                     >
-                      {n}
-                    </span>
-                    <span className="font-body text-xs" style={{ color: disabled ? 'var(--fg3)' : 'var(--fg2)' }}>
-                      {n === 1 ? t('pickDice.diceWord1') : t('pickDice.diceWord2')}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            <div className="text-center font-body text-sm text-fg-muted">
-              {t('pickDice.hint', { max: maxDice, armies: fromArmyCount, territory: tDynamic(fromTerritoryId, 'territories') })}
-            </div>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setDiceN(n)}
+                        className="flex w-full flex-col items-center gap-[7px] py-4"
+                      >
+                        <span
+                          className={`font-display text-h1 font-black ${disabled ? 'text-fg-muted' : 'text-fg'}`}
+                          style={selected ? { color: 'var(--silver-300)' } : undefined}
+                        >
+                          {n}
+                        </span>
+                        <span className={`font-body text-xs ${disabled ? 'text-fg-muted' : 'text-fg-secondary'}`}>
+                          {n === 1 ? t('pickDice.diceWord1') : t('pickDice.diceWord2')}
+                        </span>
+                      </button>
+                    </GlassPanel>
+                  )
+                })}
+              </div>
+              <div className="mt-3 text-center font-body text-sm text-fg-muted">
+                {t('pickDice.hint', { max: maxDice, armies: fromArmyCount, territory: tDynamic(fromTerritoryId, 'territories') })}
+              </div>
+            </GlassPanel>
           </div>
           <button
             type="button"
@@ -265,7 +324,10 @@ export function AttackFlowStep({
           >
             {t('roll')}
           </button>
-          <div className="mt-2 text-center font-body text-xs text-fg-muted">{t('rollIsConfirm')}</div>
+          {/* Zelfde ontsnapping als op de doelwitstap: ook hier is nog niets naar de server. */}
+          <Button variant="secondary" onClick={backToTgt} className="mt-2.5 min-h-[46px] text-sm">
+            {t('pickDice.back')}
+          </Button>
         </>
       )}
 
@@ -281,7 +343,7 @@ export function AttackFlowStep({
           onEndPhase={onEndPhase}
         />
       )}
-    </div>
+    </PhoneScreen>
   )
 }
 
@@ -294,6 +356,18 @@ interface AttackRolledResultProps {
   onAttackAgain: () => void
   onOtherFight: () => Promise<void>
   onEndPhase: () => Promise<void>
+}
+
+/**
+ * Kiest de verhalende uitkomstregel bij twee servergetallen (2026-08-13, op verzoek). Puur
+ * presentatie: er wordt niets herberekend, alleen benoemd wat de server al beslist heeft.
+ * Beide kanten verliezen iets → altijd 1-om-1, zie de toelichting bij `resultLine.both`.
+ */
+function resultLine(attackerLosses: number, defenderLosses: number) {
+  if (attackerLosses > 0 && defenderLosses > 0) return ['resultLine.both'] as const
+  if (attackerLosses > 0) return ['resultLine.lost', { count: attackerLosses }] as const
+
+  return ['resultLine.won', { count: defenderLosses }] as const
 }
 
 /**
@@ -324,39 +398,56 @@ function AttackRolledResult({
   const canAttackAgain = narrated !== null && (territories.find((t) => t.territoryId === narrated.fromTerritoryId)?.armyCount ?? 0) >= 2
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-      <span className="font-body text-xs font-extrabold uppercase tracking-[.16em] text-fg-muted">{t('resultShort')}</span>
-      <div className="flex gap-2.5">
-        {attackerRolls.map((value, index) => (
-          <Dice
-            key={index}
-            value={value as DiceValue}
-            colorHex={myColor?.hex ?? 'var(--surface-3)'}
-            colorOnHex={myColor?.onHex ?? '#fff'}
-            size={58}
-            radius={13}
-            padding={8}
-            gap={3}
-            pipSize={9}
-            boxShadow="0 8px 18px rgba(0,0,0,.5)"
-          />
-        ))}
-      </div>
-      {waitingForDefense ? (
-        <div className="flex items-center gap-2.5 font-body text-sm text-fg-muted">
-          <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />
-        </div>
-      ) : (
-        narrated && (
-          <div className="font-display text-2xl font-black">
-            {t('resultLine.lost', { attackerLosses: narrated.attackerLosses, defenderLosses: narrated.defenderLosses })}
+    <div className="flex flex-1 flex-col text-center">
+      {/* De uitkomst blijft gecentreerd in de vrije ruimte; de acties zakken naar de onderbalk
+          (2026-08-13, op verzoek). `flex-1` op deze wikkel i.p.v. `my-auto` op het paneel: `Footer`
+          duwt zichzelf al met `mt-auto` omlaag, en twee concurrerende auto-marges zouden de
+          resterende ruimte in drieën delen i.p.v. het paneel te centreren. */}
+      <div className="flex flex-1 items-center justify-center">
+        {/* BEVINDING, opgelost (2026-08-10): resultaatblok stond kaal op de stage-achtergrond,
+            zie OrderRollWaitStep.tsx. Eén paneel i.p.v. losse chips per regel. */}
+        <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-4 rounded-2xl px-5 py-4">
+          <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{t('resultShort')}</span>
+          {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): de uitkomst verscheen zonder
+              beweging, terwijl `motion.ts` er een keyframe voor kent — `combatDie` staat er
+              letterlijk als "Kleine aanval/verdedig-dobbelstenen, gestaggerd" en had nul
+              consumenten. Geen nieuwe timing verzonnen: dit is dezelfde `phDice`-tumble als de
+              order-roll, alleen korter (.8s) en per dobbelsteen 0,12s gestaggerd. Gedraaid wordt
+              er pas als de server de worp heeft geleverd (`attackerRolls`), dus de animatie loopt
+              niet op de uitkomst vooruit. */}
+          <div className="flex gap-2.5">
+            {attackerRolls.map((value, index) => (
+              <Dice
+                key={index}
+                value={value as DiceValue}
+                colorHex={myColor?.hex ?? 'var(--surface-3)'}
+                context="phone"
+                size={58}
+                radius={13}
+                padding={8}
+                gap={3}
+                pipSize={9}
+                animation={phoneAnimations.combatDie(index)}
+              />
+            ))}
           </div>
-        )
-      )}
-      <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
+          {waitingForDefense ? (
+            <div className="flex items-center gap-2.5 font-body text-sm text-fg-muted">
+              <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />
+            </div>
+          ) : (
+            narrated && (
+              <div className="font-display text-2xl font-black">
+                {t(...resultLine(narrated.attackerLosses, narrated.defenderLosses))}
+              </div>
+            )
+          )}
+          <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
+        </GlassPanel>
+      </div>
 
       {narrated && (
-        <div className="flex w-full flex-col gap-[9px]">
+        <Footer>
           {canAttackAgain && (
             <button
               type="button"
@@ -367,22 +458,25 @@ function AttackRolledResult({
             </button>
           )}
           <div className="flex gap-[9px]">
-            <button
-              type="button"
-              onClick={onOtherFight}
-              className="flex min-h-14 flex-1 items-center justify-center rounded-2xl border border-border-strong bg-[var(--atlas-t05)] font-display text-body font-extrabold text-fg"
-            >
+            {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): dit was een handgebouwde
+                `GlassPanel` om een kale `<button>`, terwijl `Button variant="secondary"` exact
+                dezelfde surface al op het knop-element zelf zet. Verschil was zichtbaar naast de
+                terugknoppen: `raised` i.p.v. `base` (zwaardere schaduw + meer blur) en een extra
+                DOM-laag die DESIGN.md § Components/Buttons expliciet afraadt. */}
+            <Button variant="secondary" onClick={onOtherFight} className="min-h-14 flex-1 text-body">
               {t('otherFight')}
-            </button>
+            </Button>
+            {/* `font-black` i.p.v. `font-extrabold`: gelijk aan de `Button` ernaast, die zijn
+                gewicht uit het component haalt en zich niet per class laat overschrijven. */}
             <button
               type="button"
               onClick={onEndPhase}
-              className="flex min-h-14 flex-1 items-center justify-center rounded-2xl border-none bg-pitch-500 font-display text-body font-extrabold text-[var(--on-pitch)]"
+              className="flex min-h-14 flex-1 items-center justify-center rounded-2xl border-none bg-pitch-500 font-display text-body font-black text-[var(--on-pitch)]"
             >
               {t('toFortify')}
             </button>
           </div>
-        </div>
+        </Footer>
       )}
     </div>
   )

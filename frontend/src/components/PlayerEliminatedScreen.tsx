@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { phoneAnimations } from '../styles/motion'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface PlayerEliminatedScreenProps {
   myColor: PlayerColorDto | null
@@ -17,15 +18,23 @@ export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps)
   const { t } = useTranslation('attack')
 
   return (
-    <div
-      className="flex flex-1 flex-col items-center justify-center gap-5 px-[26px] py-10 text-center"
+    <PhoneScreen
+      className="items-center justify-center gap-5 text-center"
       style={{ background: 'radial-gradient(90% 60% at 50% 30%, var(--silver), var(--bg))' }}
     >
-      <div
-        className="flex h-24 w-24 items-center justify-center rounded-[24px] text-[52px] opacity-50 grayscale-[.5]"
-        style={{ background: myColor?.hex, color: myColor?.onHex }}
-      >
-        {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
+      {/* BEVINDING, opgelost (glasmorfisme-audit, 2026-08-10): opacity-50/grayscale zat eerst op
+          de hele badge, inclusief het ColorSymbol-glyph erin — dat glyph is een INFORMATION-
+          primitief (kleurenblind-symbool) en moet altijd volledig dekkend blijven. De dimming
+          zit nu alleen op een losse achtergrondlaag; het glyph zelf blijft op volle opaciteit. */}
+      <div className="relative flex h-24 w-24 items-center justify-center rounded-[24px] text-[52px]">
+        <div
+          aria-hidden
+          className="absolute inset-0 rounded-[24px] opacity-50 grayscale-[.5]"
+          style={{ background: myColor?.hex }}
+        />
+        <div className="relative" style={{ color: myColor?.onHex }}>
+          {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
+        </div>
       </div>
       <div>
         <div className="font-display text-[34px] font-black tracking-[.02em]">{t('elim.title')}</div>
@@ -35,6 +44,6 @@ export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps)
         <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />
         {t('elim.gameContinues')}
       </div>
-    </div>
+    </PhoneScreen>
   )
 }

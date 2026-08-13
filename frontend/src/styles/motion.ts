@@ -69,12 +69,21 @@ export const tvAnimations = {
   waitingDot: 'atlasDot 1.4s infinite',
   /** Order-roll: 1 dobbelsteen per speler, gestaggerd (L813). idx = spelerindex. */
   orderRollDie: (idx: number) => `atlasTumble .95s cubic-bezier(.2,.8,.3,1) ${(idx * 0.13).toFixed(2)}s both`,
-  /** Aanvaller-dobbelstenen, vliegen van links in (L823). idx = dobbelsteenindex. */
-  attackerDie: (idx: number) =>
-    `atlasRollL .9s cubic-bezier(.2,.8,.3,1) ${(idx * 0.16).toFixed(2)}s both, atlasSettle .9s ${(idx * 0.16).toFixed(2)}s both`,
-  /** Verdediger-dobbelstenen, vliegen van rechts in, starten 0.5s later (L824). */
-  defenderDie: (idx: number) =>
-    `atlasRollR .9s cubic-bezier(.2,.8,.3,1) ${(0.5 + idx * 0.16).toFixed(2)}s both, atlasSettle .9s ${(0.5 + idx * 0.16).toFixed(2)}s both`,
+  /**
+   * Aanvaller-/verdediger-dobbelstenen, vliegen van links resp. rechts in (L823/L824);
+   * de verdediger start 0.5s later. idx = dobbelsteenindex.
+   *
+   * De `atlasSettle`-schaduwanimatie die hier in de export naast stond is eruit gehaald
+   * (2026-08-13, op verzoek van de gebruiker). Twee redenen: `atlasSettle` animeert
+   * `box-shadow`, wat frontend/CLAUDE.md §Animatie uitsluit (paint per frame op een zwakke
+   * TV-GPU); en sinds de iOS-fix van 2026-08-10 landt de animatie op `Dice`'s niet-filterende
+   * buiten-`<div>` — een transparante, hoekige wrapper zonder border-radius. De schaduw
+   * (plus de `inset 0 3px 0` witte lijn erin) werd daar als vierkante laag rondom elke
+   * dobbelsteen zichtbaar. De diepte van de dobbelsteen komt van `glassShadow.raised` op de
+   * surface zelf, die er al onder zat.
+   */
+  attackerDie: (idx: number) => `atlasRollL .9s cubic-bezier(.2,.8,.3,1) ${(idx * 0.16).toFixed(2)}s both`,
+  defenderDie: (idx: number) => `atlasRollR .9s cubic-bezier(.2,.8,.3,1) ${(0.5 + idx * 0.16).toFixed(2)}s both`,
   /** Vlaggen/flare-burst-ring om winnend territorium (L190, L279 — twee losse duraties in export). */
   burstShort: 'atlasBurst 1s ease-out infinite',
   burstLong: 'atlasBurst 1.1s ease-out infinite',

@@ -6,6 +6,7 @@ import {
   type GameSettingsDto,
 } from '../types/GameSettings'
 import { tDynamic } from '../i18n/useT'
+import { GlassPanel } from './ui/GlassPanel'
 
 export interface LobbySettingsSummaryProps {
   settings: GameSettingsDto
@@ -46,7 +47,7 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
 
   const rows: [string, string, string][] = [
     [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
-    [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--silver-400)'],
+    [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--color-silver-400)'],
     [
       t('settings.roles'),
       settings.rolesEnabled ? roleAssignmentLabels[settings.roleAssignment] : t('settings.off'),
@@ -67,8 +68,8 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
   ]
 
   return (
-    <div className="flex-none rounded-[22px] border border-[var(--atlas-glass-border)] bg-[var(--atlas-glass)] p-[20px_22px] shadow-[0_24px_60px_rgba(0,0,0,.4)]">
-      <p className="mb-2 text-[16px] font-extrabold tracking-[.14em] text-pitch-500 uppercase">
+    <GlassPanel elevation="base" context="tv" className="flex-none">
+      <p className="mb-2 text-[16px] font-extrabold tracking-[.14em] text-pitch-400 uppercase">
         {t('settings.title')}
       </p>
       <dl className="grid grid-cols-2 gap-x-[26px] gap-y-[2px]">
@@ -84,6 +85,6 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
           </div>
         ))}
       </dl>
-    </div>
+    </GlassPanel>
   )
 }

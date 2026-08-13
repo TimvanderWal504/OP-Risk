@@ -17,7 +17,7 @@ import { GamePhaseDto } from '../types/GameState'
  * vooruitgelopen. Zou de reveal-duur een echte spelregel worden, dan is dat eerst een
  * FO-aanvulling en daarna een serverfase met eigen timer.
  */
-const ORDER_ROLL_REVEAL_HOLD_MS = 8000
+const ORDER_ROLL_REVEAL_HOLD_MS = 5000
 
 /**
  * Houdt `GamePhaseDto.OrderRoll` nog even als weergavefase vast nadat de server al naar

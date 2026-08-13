@@ -1,3 +1,5 @@
+import { transitions } from '../../styles/motion'
+
 export interface SwitchProps {
   on: boolean
   onToggle: () => void
@@ -21,9 +23,10 @@ export function Switch({ on, onToggle, disabled = false, label }: SwitchProps) {
       } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
-        className={`absolute top-[3px] left-0 h-6 w-6 rounded-full bg-white transition-transform ${
+        className={`absolute top-[3px] left-0 h-6 w-6 rounded-full bg-white ${
           on ? 'translate-x-[25px]' : 'translate-x-[3px]'
         }`}
+        style={{ transition: transitions.switchKnob }}
       />
     </button>
   )

@@ -1,3 +1,5 @@
+import { GlassPanel } from './GlassPanel'
+
 export interface TextFieldProps {
   value: string
   onChange: (value: string) => void
@@ -18,15 +20,15 @@ export function TextField({
   ariaLabel,
 }: TextFieldProps) {
   return (
-    <input
-      autoFocus={autoFocus}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      placeholder={placeholder}
-      aria-label={ariaLabel}
-      className={`rounded-input border border-silver-600 bg-[var(--atlas-t05)] p-4 font-display text-h3 font-bold ${
-        uppercase ? 'uppercase' : ''
-      }`}
-    />
+    <GlassPanel elevation="raised" context="phone" padding="none" className="rounded-input" style={{ borderColor: 'var(--silver-600)' }}>
+      <input
+        autoFocus={autoFocus}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        className={`w-full bg-transparent p-4 font-display text-h3 font-bold outline-none ${uppercase ? 'uppercase' : ''}`}
+      />
+    </GlassPanel>
   )
 }

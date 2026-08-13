@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Switch } from './Switch'
+import { GlassPanel } from './GlassPanel'
 
 export interface ToggleRowProps {
   label: string
@@ -25,8 +26,11 @@ export function ToggleRow({
   const { t } = useTranslation('common')
 
   return (
-    <div
-      className={`flex items-center gap-3 rounded-[14px] border border-border bg-[var(--atlas-t03)] px-3.5 py-3 ${disabled ? 'opacity-50' : ''}`}
+    <GlassPanel
+      elevation="base"
+      context="phone"
+      padding="none"
+      className={`flex items-center gap-3 rounded-[14px] px-3.5 py-3 ${disabled ? 'opacity-50' : ''}`}
     >
       {icon && <span className="text-[22px]">{icon}</span>}
       <div className="min-w-0 flex-1">
@@ -41,6 +45,6 @@ export function ToggleRow({
         <div className="text-[11.5px] text-fg-muted">{sub}</div>
       </div>
       <Switch on={on} onToggle={onToggle} disabled={disabled} label={label} />
-    </div>
+    </GlassPanel>
   )
 }

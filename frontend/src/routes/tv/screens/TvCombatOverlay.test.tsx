@@ -67,8 +67,38 @@ describe('TvCombatOverlay', () => {
 
     render(<TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
 
-    expect(screen.getByText('Verdediger verliest 2 legers · Aanvaller verliest 0')).toBeInTheDocument()
+    expect(screen.getByText('Rood verslaat 2 legers')).toBeInTheDocument()
     expect(screen.getByText('VEROVERD')).toBeInTheDocument()
+  })
+
+  // Altijd vanuit de aanvaller (Rood/alice), ook bij de gemengde 1-om-1-uitkomst — zie de
+  // toelichting bij `attackTv.resultLine`. Zelfde drie vormen als `AttackFlowStep.test.tsx`.
+  it.each([
+    [1, 0, 'Rood verliest 1 leger'],
+    [2, 0, 'Rood verliest 2 legers'],
+    [1, 1, 'Rood en Blauw verliezen beide 1 leger'],
+  ])('schrijft uitkomst %i-om-%i verhalend uit, vanuit de aanvaller', (attackerLosses, defenderLosses, expected) => {
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [5, 4],
+      defenderRolls: [6, 6],
+      narrated: {
+        correlationId: 'c1',
+        attackerId: 'alice',
+        defenderId: 'bob',
+        fromTerritoryId: 'alaska',
+        toTerritoryId: 'ukraine',
+        attackerLosses,
+        defenderLosses,
+        conquered: false,
+        eliminatedPlayerId: null,
+        stateVersion: 4,
+      },
+    }
+
+    render(<TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
+
+    expect(screen.getByText(expected)).toBeInTheDocument()
   })
 
   it('wisselt na 2000ms naar de eliminatie-weergave zodra er een eliminatedPlayerId gemeld is', () => {

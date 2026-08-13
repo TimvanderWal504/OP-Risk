@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { ActivePlayerBanner } from './ui/ActivePlayerBanner'
+import { GlassPanel } from './ui/GlassPanel'
+import { PhoneScreen } from './ui/PhoneScreen'
 
 export interface NotYourTurnStepProps {
   activePlayerName: string
@@ -23,16 +25,25 @@ export function NotYourTurnStep({ activePlayerName, activeColor, subtitle }: Not
   const { t } = useTranslation('setup')
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 p-4">
+    <PhoneScreen>
       <ActivePlayerBanner
         turnOfLabel={t('idle.nowPlaying')}
         playerName={activePlayerName}
         color={activeColor}
         subtitle={subtitle}
       />
-      <div className="mt-auto pt-3 text-center font-body text-[12.5px] text-fg-muted">
+      {/* BEVINDING, opgelost (2026-08-13, gebruiker gescreenshot): deze regel stond als enige
+          element van dit scherm kaal op de stage-illustratie, precies op de onderrand waar de
+          scrim wél randalpha zet maar de foto het lichtst is. Chip-idioom (strak op de tekst
+          gesneden), zelfde vorm als de voetnoot op HomePage. */}
+      <GlassPanel
+        elevation="base"
+        context="phone"
+        padding="none"
+        className="mt-auto self-center rounded-2xl px-4 py-1.5 text-center font-body text-[12.5px] text-fg-muted"
+      >
         {t('idle.turnComesToYou')}
-      </div>
-    </div>
+      </GlassPanel>
+    </PhoneScreen>
   )
 }

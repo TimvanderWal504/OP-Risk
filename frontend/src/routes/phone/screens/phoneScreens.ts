@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
+import type { StageScrimLevel } from '../../../styles/glass-tokens'
 import type { PlayerDto } from '../../../types/Player'
 import type { TerritoryCatalogDto } from '../../../types/TerritoryCatalog'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
@@ -72,4 +73,29 @@ export const phoneScreens: Record<GamePhaseDto, PhoneScreen> = {
  */
 export function resolvePhoneScreen(phase: GamePhaseDto | undefined): PhoneScreen {
   return (phase !== undefined && phoneScreens[phase]) || PhonePlaceholderScreen
+}
+
+/**
+ * Fase → scrim-intensiteit van de persistente stage-achtergrond (`PhoneStageBackground`,
+ * tokens in `styles/glass-tokens.ts`) — de telefoon-tegenhanger van `tvStageScrimLevels` in
+ * `routes/tv/screens/tvScreens.ts`. Bewust een eigen `Record` i.p.v. die van TV te importeren:
+ * zelfde fasesemantiek nu (elke fase betekent op beide toestellen hetzelfde), maar losse,
+ * per-device tunbare as — het bordscherm dekt op de telefoon bijvoorbeeld geen groot deel van
+ * het frame met een ondoorzichtige kaart-PNG zoals op TV, dus "board" hier lager zetten dan op
+ * TV zou de illustratie ten koste van de leesbaarheid laten domineren. Startwaarden: identiek
+ * aan de TV-mapping, te herzien na de contrastaudit (frontend/CLAUDE.md-afwijkingenlijst) als
+ * tekst rechtstreeks op de illustratie (buiten een glaspaneel) de 4.5:1-drempel niet haalt.
+ */
+export const phoneStageScrimLevels: Record<GamePhaseDto, StageScrimLevel> = {
+  [GamePhaseDto.Lobby]: 'lobby',
+  [GamePhaseDto.OrderRoll]: 'setup',
+  [GamePhaseDto.Claiming]: 'board',
+  [GamePhaseDto.InitialPlacement]: 'board',
+  [GamePhaseDto.InProgress]: 'board',
+  [GamePhaseDto.Finished]: 'end',
+}
+
+/** Zelfde vangnet-opzet als `resolvePhoneScreen`: onbekende/ontbrekende fase valt terug op het lobby-niveau. */
+export function resolveStageScrimLevel(phase: GamePhaseDto | undefined): StageScrimLevel {
+  return (phase !== undefined && phoneStageScrimLevels[phase]) || 'lobby'
 }

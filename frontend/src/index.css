@@ -276,6 +276,80 @@ select:focus-visible,
   background: var(--atlas-stage-bg);
 }
 
+/* GlassPanel (components/ui/GlassPanel.tsx) — de daadwerkelijke backdrop-filter/fallback-CSS
+   hoort hier (runtime-CSS, niet een los stylesheet — zie frontend/CLAUDE.md § Styling), het
+   component zet alleen custom properties + data-attributen. Drie onafhankelijke fallback-
+   routes naar dezelfde ondoorzichtige surface, geen van drieën optioneel:
+   - geneste GlassPanel: het component zelf laat data-glass-filter op "off" staan (React
+     Context-guard in GlassPanel.tsx), dus --glass-filter is hier al "none" — geen CSS nodig.
+   - browser zonder backdrop-filter-support (óók niet met -webkit-prefix): @supports not hieronder.
+   - prefers-reduced-transparency: reduce hieronder.
+   `-webkit-backdrop-filter` staat vóór de onprefixte property (iOS Safari < 18 kent alleen de
+   geprefixte vorm; Dice.tsx zet 'm inline al zo — hier ontbrak hij nog, BEVINDING tijdens de
+   telefoon-glasmigratie 2026-08-10, nu rechtgetrokken i.p.v. gemeld: zelfde toepassing als de
+   al bestaande inline stijl, geen nieuwe waarde). */
+.glass-panel {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inner-highlight);
+}
+.glass-panel[data-glass-filter='on'] {
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+.glass-panel[data-glass-filter='on'][data-glass-animated='true'] {
+  will-change: backdrop-filter;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel {
+    background: var(--glass-bg-opaque) !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-panel {
+    background: var(--glass-bg-opaque) !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* On-glass tekstbehandeling — BEVINDING opgelost (2026-08-11): text-fg-muted/
+   text-fg-secondary (--fg-muted #6f7e97 / --fg-secondary #a9b6cb) zijn getuned
+   voor een vlakke, donkere kaart, niet voor de vervaagde/verzadigde
+   stage-illustratie erachter (backdrop-filter: saturate(1.4) maakt het probleem
+   erger, niet beter). Een lichtere grijstint binnen dezelfde schaal lost dit niet
+   op: elke middentoon-grijs verliest het tegen de helderste stukken van een
+   foto, ongeacht hoe ver "omhoog" op de schaal je gaat. Oplossing: op glas geen
+   aparte, donkerdere grijstinten meer — alle tekst gebruikt hetzelfde lichte
+   --fg1-wit, hiërarchie zit voortaan in opacity (100/80/60%) i.p.v. hue-lightness,
+   en een gedeelde text-shadow (dezelfde donkere ink-triplet als --on-pitch/
+   glassScrim, geen nieuwe kleur) geeft de eigenlijke contrastvloer — ongeacht wat
+   er precies achter het glas doorschemert. Geldt voor alle drie de tiers, óók
+   `overlay`: `--glass-bg` (de tint) is bewust niet gezet — GlassPanel is "clear
+   glass" (blur/saturate/rand/schaduw, geen kleurwas), dus geen enkele tier heeft
+   een donkere achtergrond om op te leunen. Eerdere aanname dat `overlay`
+   (rgba(4,6,11,.62)) al donker genoeg zou zijn was dus onjuist — bevestigd bij de
+   gebruiker (2026-08-11) na een onleesbare volledig-scherm combat-overlay
+   ("GEVECHT"/"AANVALLER"/"VERDEDIGER" bijna onzichtbaar op de rauwe illustratie). */
+:root {
+  --glass-fg: var(--fg1);
+  --glass-fg-secondary: color-mix(in srgb, var(--fg1) 80%, transparent);
+  --glass-fg-muted: color-mix(in srgb, var(--fg1) 60%, transparent);
+  --glass-text-shadow: 0 1px 3px rgba(4, 6, 11, 0.55);
+}
+.glass-panel[data-glass-filter='on'] {
+  & .text-fg {
+    color: var(--glass-fg);
+    text-shadow: var(--glass-text-shadow);
+  }
+  & .text-fg-secondary {
+    color: var(--glass-fg-secondary);
+    text-shadow: var(--glass-text-shadow);
+  }
+  & .text-fg-muted {
+    color: var(--glass-fg-muted);
+    text-shadow: var(--glass-text-shadow);
+  }
+}
+
 /* twc-theme.css (frozen, imported above) al zet animation-/transition-duration
    op 0.001ms onder reduced-motion, maar reset infinite-lussen (atlasDot, phLow,
    .animate-timer-low) niet — die blijven anders oneindig micro-loopen. Alleen

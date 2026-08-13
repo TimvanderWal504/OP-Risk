@@ -67,21 +67,21 @@ export const radius = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Shadows — twc-theme.css @theme --shadow-*
-// ---------------------------------------------------------------------------
-export const shadow = {
-  card: '0 1px 2px rgba(10, 14, 23, 0.06), 0 4px 16px -6px rgba(10, 14, 23, 0.12)',
-  raised: '0 8px 30px -8px rgba(10, 14, 23, 0.22)',
-  sheet: '0 -8px 40px -12px rgba(10, 14, 23, 0.35)',
-  glowLive: '0 0 0 1px rgba(216, 38, 43, 0.5), 0 6px 24px -8px rgba(216, 38, 43, 0.45)',
-} as const;
-
-// ---------------------------------------------------------------------------
 // App layout metrics — twc-theme.css @theme --spacing-*
 // ---------------------------------------------------------------------------
 export const layout = {
   tabbar: 68, // 4.25rem
-  gutter: 16, // 1rem
+  gutter: 20, // 1.25rem — telefoon-schermframe, afgedwongen door `PhoneScreen`
+  /**
+   * Interne padding van een `GlassPanel` zonder `padding="none"`. Stond tot
+   * 2026-08-13 niet als eigen token in dit bestand: `glassPanelPadding` leende
+   * `gutter` als benadering (zie de doc-comment in `glass-tokens.ts`, die daar
+   * expliciet om een preciezere kaart-padding-token vroeg). Toen `gutter` naar
+   * de bedoelde 20px ging — het frame ván een scherm, niet de padding ín een
+   * paneel — zou dat lenen 7 panelen hebben meeverschoven, waarvan 6 op de TV.
+   * Vandaar losgetrokken op de waarde die die panelen altijd al hadden.
+   */
+  panelPadding: 16, // 1rem
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -116,46 +116,12 @@ export const palette = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Tekst-op-pitch-fill / glow-schaduw — colors_and_type.css :root en
-// [data-theme="light"] (--on-pitch, --shadow-glow-pitch)
+// Tekst-op-pitch-fill / glow-schaduw — colors_and_type.css :root
+// (--on-pitch, --shadow-glow-pitch)
 // ---------------------------------------------------------------------------
-export const onPitch = {
-  dark: '#04060b',
-  light: '#e4e9f0', // = palette.silver[100], licht-thema wijst pitch naar de blauwe ramp
-} as const;
+export const onPitch = '#04060b';
 
-export const shadowGlowPitch = {
-  dark: '0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)', // pitch-500
-  light: '0 8px 22px color-mix(in srgb, #215990 35%, transparent)', // blue-500 (licht-thema)
-} as const;
-
-// ---------------------------------------------------------------------------
-// Semantic — light (colors_and_type.css :root) / dark (.dark, [data-theme=dark])
-// ---------------------------------------------------------------------------
-export const semantic = {
-  light: {
-    bg: '#eef1f6', bgElevated: '#ffffff', surface: '#ffffff', surface2: '#f4f6fa', surface3: '#e8edf4',
-    border: '#e1e7f0', borderStrong: '#cdd6e3', ring: '#215990',
-    fg1: '#111826', fg2: '#475064', fg3: '#7a869c',
-    primary: '#6b8f1f', primaryFill: '#84ad28',
-    secondary: '#215990', secondaryFill: '#215990',
-    accent: '#627798', accentFill: '#9cb0ca',
-    link: '#1c4a78',
-    live: '#d8262b', win: '#2f8f3e', loss: '#c43c3c', draw: '#7a869c', warning: '#b5790a',
-    podiumGold: '#d4a017', podiumSilver: '#9aa7b8', podiumBronze: '#b06b2c',
-  },
-  dark: {
-    bg: '#080c14', bgElevated: '#111927', surface: '#141d2c', surface2: '#1b2738', surface3: '#243246',
-    border: '#243044', borderStrong: '#33425a', ring: '#4f8fd4',
-    fg1: '#eef2f8', fg2: '#a9b6cb', fg3: '#6f7e97',
-    primary: '#a1c23a', primaryFill: '#84ad28',
-    secondary: '#6ba2d8', secondaryFill: '#2e6aa8',
-    accent: '#c2cddd', accentFill: '#9cb0ca',
-    link: '#7fb1e3',
-    live: '#ff4d52', win: '#56c96a', loss: '#ff6b6b', draw: '#6f7e97', warning: '#f2c14e',
-    podiumGold: '#f2c14e', podiumSilver: '#c2cddd', podiumBronze: '#cf8a4f',
-  },
-} as const;
+export const shadowGlowPitch = '0 8px 22px color-mix(in srgb, #84ad28 35%, transparent)'; // pitch-500
 
 // ---------------------------------------------------------------------------
 // Spelerskleuren — data/colors.json (hex/onHex) is bevroren bron van waarheid.
@@ -187,21 +153,27 @@ export const playerColors: Record<PlayerColorId, { hex: string; onHex: string; s
 
 // ---------------------------------------------------------------------------
 // TV-bord (Main board / Region select / Combat) — `atlasTok()` in het
-// oorspronkelijke TV-design, alleen de donkere-thema-tak.
-// De app heeft geen runtime theme-toggle (geverifieerd: geen `data-theme`,
-// `useTheme` of `prefers-color-scheme`-lezing elders in de al gebouwde TV-code) —
-// de export se theme-toggle is demo-only, dus de lichte tak wordt hier bewust
-// niet overgenomen.
+// oorspronkelijke TV-design. De app heeft geen runtime theme-toggle en
+// gebruikt maar één, dark-only tokenset (zie ds/twc-theme.css) — de export
+// se theme-toggle was demo-only.
 // ---------------------------------------------------------------------------
 export const boardTok = {
-  ownFill: 0.12,
+  // ownFill/enFill/neuFill: opgehoogd van 0.12/0.08/0.05 → 0.25/0.18/0.12 op 2026-08-07,
+  // bewuste, expliciet opgedragen wijziging (glas-laag-migratie van de kaart, niet uit
+  // het oorspronkelijke design-exportwaarde). Reden: de gebiedsvulling is de enige
+  // spelerskleur-drager die zelf géén volledige opacity heeft (in tegenstelling tot de
+  // rand-stroke en de eigendomsring); nu de kaart op de gedeelde, sterk gevarieerde
+  // stage-illustratie ligt i.p.v. een eigen vlakke kaart-PNG, houdt een hogere fill-
+  // opacity de spelerskleur beter herkenbaar. Vraagt om een `/impeccable document`-
+  // regeneratie van DESIGN.md (frontend/CLAUDE.md, bevroren-tokens-regel).
+  ownFill: 0.25,
   ownStroke: 1,
   ownSw: 2.5,
-  enFill: 0.08,
+  enFill: 0.18,
   enStroke: 0.75,
   enSw: 2,
   neutral: '#6f7e97',
-  neuFill: 0.05,
+  neuFill: 0.12,
   neuStroke: 0.4,
   selHalo: 0.28,
   tgtHalo: 0.32,

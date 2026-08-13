@@ -33,6 +33,14 @@ export const setup = {
   },
   idle: {
     nowPlaying: { nl: 'Aan de beurt', en: 'Now playing' },
+    /**
+     * Faseduiding in de "niet jouw beurt"-banner. Bewust niet `place.title`
+     * ("Plaats je legers"/"Place your armies") hergebruikt: dat is een opdracht aan de speler
+     * die aan zet is, en op dit scherm las het als een opdracht aan de lezer, die juist niets
+     * kan doen. Nu een fasenaam, net als `attack:bystander.subtitle` ("Aanvallen") en
+     * `reinforce:kicker` ("Versterken").
+     */
+    placingArmies: { nl: 'Legers plaatsen', en: 'Placing armies' },
     turnComesToYou: {
       nl: 'Je krijgt vanzelf bericht als jij aan zet bent.',
       en: "You'll be notified when it's your move.",

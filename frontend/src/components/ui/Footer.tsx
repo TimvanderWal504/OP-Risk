@@ -8,9 +8,9 @@ export interface FooterProps {
   error?: string | null
   /** Toelichting onder de knop(pen). */
   hint?: ReactNode
-  /** 'plain' (default): geen eigen chrome, leunt op de padding van het scherm
-   * (join-schermen). 'gradient': eigen padding + fade-uit-achtergrond erboven
-   * (instellingenscherm-CTA). */
+  /** 'plain' (default): geen eigen chrome, leunt op het frame van `PhoneScreen`
+   * (join-schermen). 'gradient': eigen padding op diezelfde `--spacing-gutter`
+   * + fade-uit-achtergrond erboven (instellingenscherm-CTA). */
   variant?: 'plain' | 'gradient'
 }
 
@@ -19,7 +19,7 @@ export interface FooterProps {
 export function Footer({ children, error = null, hint, variant = 'plain' }: FooterProps) {
   if (variant === 'gradient') {
     return (
-      <div className="relative mt-auto flex-none bg-gradient-to-t from-[var(--bg)] from-26% to-transparent px-[18px] pt-3 pb-4">
+      <div className="relative mt-auto flex-none bg-gradient-to-t from-[var(--bg)] from-26% to-transparent px-gutter pt-3 pb-4">
         {error && <p className="mb-2 text-loss">{error}</p>}
         <div className="flex flex-col gap-3">{children}</div>
         {hint && <p className="mt-2 text-xs text-fg-muted">{hint}</p>}

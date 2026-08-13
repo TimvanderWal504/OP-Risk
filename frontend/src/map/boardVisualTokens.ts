@@ -31,6 +31,19 @@ export const territoryStroke = {
 } as const
 
 /**
+ * Gloed-radius (CSS `drop-shadow`-blur) op de gebiedsrand, in spelerskleur — 2026-08-10,
+ * bewuste, expliciet opgedragen wijziging ("fellere gebiedsgrenzen") bovenop de kaart-glas-
+ * migratie. Startwaarden, tunable, nog niet visueel geverifieerd. Alleen toegepast op
+ * gebieden mét een eigenaarskleur (own/enemy/claimed) — een grijze gloed op een neutraal
+ * gebied voegt niets toe en zou het eigen/vijand-onderscheid vervuilen.
+ */
+export const territoryGlow = {
+  own: designToMap(3),
+  enemy: designToMap(2),
+  claimed: designToMap(2.5),
+} as const
+
+/**
  * `atlasRoughTok` omgerekend naar onze viewBox. `scale` is een verplaatsing in
  * viewBox-eenheden en gaat via `designToMap` mee met de rest van de kaart; `baseFrequency`
  * is cycli per eenheid en schaalt daarom omgekeerd (grotere eenheden op onze grotere

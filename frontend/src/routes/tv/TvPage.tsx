@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useTvGame } from '../../hooks/useTvGame'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { TvShell } from '../../components/ui/TvShell'
-import { resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
+import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
 
 /**
  * De host-route: verbindt met het spel en laat de fase bepalen welk scherm er hangt, met
@@ -38,7 +38,7 @@ export function TvPage() {
   // createElement en niet <Screen …/>: zie PhonePage — het schermtype is dynamisch, de
   // referentie komt uit het module-level register.
   return (
-    <TvShell>
+    <TvShell scrimLevel={resolveStageScrimLevel(displayPhase)}>
       {createElement(resolveTvScreen(displayPhase), screenProps)}
       {overlay && createElement(overlay, screenProps)}
     </TvShell>

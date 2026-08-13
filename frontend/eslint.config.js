@@ -49,8 +49,11 @@ export default defineConfig([
     // literale mock-tekst gebruiken).
     // PlayerHeader.tsx: nog ongebruikt component (zie docs/i18n-inventory.md
     // §1), wordt bij de eigen migratietaak meegenomen — niet hier.
+    // src/routes/dev/**: interne design-review-routes (bv. GlassPanelDemo),
+    // nooit aan een speler getoond — geen vertaalverplichting voor content
+    // die het spel zelf nooit bereikt.
     files: ['src/components/**/*.tsx', 'src/routes/**/*.tsx'],
-    ignores: ['**/*.test.tsx', 'src/components/ui/PlayerHeader.tsx'],
+    ignores: ['**/*.test.tsx', 'src/components/ui/PlayerHeader.tsx', 'src/routes/dev/**/*.tsx'],
     plugins: { i18next },
     rules: {
       'i18next/no-literal-string': 'error',
