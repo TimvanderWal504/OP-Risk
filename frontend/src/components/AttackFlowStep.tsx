@@ -34,13 +34,11 @@ export interface AttackFlowStepProps {
 type Phase = 'src' | 'tgt' | 'dice' | 'rolled'
 
 /**
- * Aanvallen · kern-flow (`isAttack`-fase in het oorspronkelijke design). Eén doorlopende lokale
- * substaat (`Phase`) i.p.v. losse rollen voor "picker"/"wachtend"/"resultaat" — zelfde opzet
- * als de export zelf (één `isAttack`-sectie met interne substappen `atkPickSrc→atkPickTgt→
- * atkPickDice→atkRolled`, zie het Attack-bouwplan). Legeraantallen worden bij elke render
- * opnieuw uit `myTerritories`/`territories` (props, dus altijd de verse server-state) gelezen —
- * nooit in lokale state gecached — zodat "opnieuw aanvallen" na een verloren worp niet op een
- * gedateerd legeraantal kan vertrouwen.
+ * Aanvallen · kern-flow. Eén lokale substaat (`Phase`) i.p.v. losse rollen voor
+ * "picker"/"wachtend"/"resultaat". Legeraantallen worden bij elke render vers uit
+ * `myTerritories`/`territories` (props, dus altijd de actuele server-state) gelezen — nooit
+ * lokaal gecached — zodat "opnieuw aanvallen" na een verloren worp niet op een gedateerd
+ * legeraantal kan vertrouwen.
  */
 export function AttackFlowStep({
   playerId,
@@ -62,13 +60,12 @@ export function AttackFlowStep({
     (combat?.narrated?.attackerId === playerId && !combat.narrated.conquered
       ? { fromTerritoryId: combat.narrated.fromTerritoryId, toTerritoryId: combat.narrated.toTerritoryId }
       : null)
-  // Start meteen op 'rolled' als er al een aangekondigde/net afgehandelde aanval van mij
-  // binnenkomt (reconnect/remount middenin of net na een aanval) — anders zou een verse mount
-  // de bron-/doelpicker tonen terwijl er allang een aanval loopt of net is opgelost. Een
-  // veroverd `narrated`-resultaat telt hier niet mee: die aanval is al volledig afgehandeld via
-  // `ConquestMoveStep` (meeverplaatsen) — na afronding daarvan wisselt de rol terug naar
-  // 'attacker' en zou deze fallback anders het "nog een keer aanvallen"-scherm van de zojuist
-  // veroverde aanval opnieuw tonen i.p.v. de bron-picker voor een nieuwe aanval.
+  // Start op 'rolled' als er al een aangekondigde/net afgehandelde aanval van mij binnenkomt
+  // (reconnect/remount tijdens of vlak na een aanval) — anders toont een verse mount de
+  // bron-/doelpicker terwijl er al een aanval loopt. Een veroverd `narrated`-resultaat telt niet
+  // mee: die aanval is al afgehandeld via `ConquestMoveStep`, en na afronding wisselt de rol
+  // terug naar 'attacker' — zonder deze uitzondering zou het net veroverde "aanval"-scherm
+  // opnieuw verschijnen i.p.v. de bron-picker voor een nieuwe aanval.
   const [phase, setPhase] = useState<Phase>(() => (myUnfinishedCombat ? 'rolled' : 'src'))
   const [fromTerritoryId, setFromTerritoryId] = useState<string | null>(myUnfinishedCombat?.fromTerritoryId ?? null)
   const [toTerritoryId, setToTerritoryId] = useState<string | null>(myUnfinishedCombat?.toTerritoryId ?? null)
@@ -171,7 +168,6 @@ export function AttackFlowStep({
 
       {phase === 'src' && (
         <>
-          {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
           <GlassPanel elevation="base" context="phone" padding="none" className="mb-3 inline-block self-start rounded-2xl px-4 py-2">
             <div className="font-display text-xl font-extrabold">{t('pickSrc.title')}</div>
             <div className="font-body text-sm text-fg-muted">{t('pickSrc.subtitle')}</div>
@@ -195,11 +191,9 @@ export function AttackFlowStep({
                   </span>
                   <div className="flex-1">
                     <div className="font-display text-h3 font-extrabold">{tDynamic(territory.territoryId, 'territories')}</div>
-                    {/* `text-sm` (13px, "secondary / labels") i.p.v. `text-xs` (11px, "meta,
-                        badge text"): dit is de enige inhoudelijke data van de rij — hoeveel
-                        legers en hoeveel doelen — waarop je je keuze baseert, geen meta-label.
-                        Gemeld door de gebruiker (2026-08-13); zelfde trede als de subtitel van
-                        de kop erboven. */}
+                    {/* `text-sm` (secundair/labels) i.p.v. `text-xs` (meta/badge-tekst): dit is de
+                        enige inhoudelijke data van de rij — legers en doelen — waarop de keuze
+                        gebaseerd wordt, geen meta-label. Zelfde trede als de subtitel erboven. */}
                     <div className="font-body text-sm text-fg-muted">
                       {territory.armyCount} {t('armiesWord')} ·{' '}
                       {neighborsOf(territory.territoryId).filter((n) => ownerOf(n) !== null && ownerOf(n) !== playerId).length}{' '}
@@ -246,9 +240,6 @@ export function AttackFlowStep({
               </GlassPanel>
             ))}
           </div>
-          {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): vanaf de doelwitkeuze was er geen
-              weg terug — je zat vast aan het brongebied tot je daadwerkelijk had gegooid, waarna
-              pas "Ander gevecht" beschikbaar kwam (en dat geeft een al aangekondigd gevecht op). */}
           <Button variant="secondary" onClick={backToSrc} className="mt-3 min-h-[46px] text-sm">
             {t('pickTgt.back')}
           </Button>
@@ -264,13 +255,11 @@ export function AttackFlowStep({
             </div>
           </GlassPanel>
           <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
-            {/* Eén gedeeld glaspaneel om de hele picker (kaarten + hint), i.p.v. elke kaart zijn
-                eigen backdrop-filter te geven — BEVINDING opgelost (2026-08-11): drie losse,
-                naast elkaar geblurde GlassPanels vangen elk een ander stukje van de drukke
-                stage-illustratie, waardoor ze niet meer als één samenhangende keuzeset oogden
-                (gebruiker gescreenshot). Genest binnen dit paneel schakelt de nesting-guard hun
-                eigen blur automatisch uit (zelfde mechanisme als DefendStep in ModalShell) — nog
-                altijd losse kaarten qua rand/tint, nu op één gedeelde, rustige achtergrond. */}
+            {/* Eén gedeeld glaspaneel om de hele picker (kaarten + hint) i.p.v. elke kaart een
+                eigen backdrop-filter: drie los geblurde panelen naast elkaar oogden niet als één
+                samenhangende keuzeset. Genest schakelt de nesting-guard hun eigen blur uit
+                (zelfde mechanisme als DefendStep in ModalShell) — nog altijd losse kaarten qua
+                rand/tint, op één gedeelde achtergrond. */}
             <GlassPanel elevation="base" context="phone" className="rounded-2xl">
               <div className="flex gap-[11px]">
                 {[1, 2, 3].map((n) => {
@@ -359,9 +348,9 @@ interface AttackRolledResultProps {
 }
 
 /**
- * Kiest de verhalende uitkomstregel bij twee servergetallen (2026-08-13, op verzoek). Puur
- * presentatie: er wordt niets herberekend, alleen benoemd wat de server al beslist heeft.
- * Beide kanten verliezen iets → altijd 1-om-1, zie de toelichting bij `resultLine.both`.
+ * Verhalende uitkomstregel bij twee servergetallen. Puur presentatie: er wordt niets
+ * herberekend, alleen benoemd wat de server al beslist heeft. Beide kanten verliezen iets →
+ * altijd 1-om-1.
  */
 function resultLine(attackerLosses: number, defenderLosses: number) {
   if (attackerLosses > 0 && defenderLosses > 0) return ['resultLine.both'] as const
@@ -371,11 +360,9 @@ function resultLine(attackerLosses: number, defenderLosses: number) {
 }
 
 /**
- * `atkRolled` (L604-643). De export toont dobbelstenen + resultaat in één keer (client-only
- * demo, geen server-round-trip); hier verschijnt het resultaat pas zodra `CombatNarrated`
- * binnen is — de tussenliggende wachttoestand (eigen worp al zichtbaar, verdediger nog bezig)
- * is een noodzakelijk gevolg van de echte server-round-trip, geen letterlijke exportsectie.
- * Reroll-blok (L617-635, Generaal-rol) bewust weggelaten — buiten scope, zie het bouwplan.
+ * Toont het resultaat pas zodra `CombatNarrated` binnen is; de tussenliggende wachttoestand
+ * (eigen worp al zichtbaar, verdediger nog bezig) is een gevolg van de echte server-round-trip.
+ * Reroll-blok (Generaal-rol) bewust weggelaten — buiten scope, zie het Attack-bouwplan.
  */
 function AttackRolledResult({
   myColor,
@@ -392,29 +379,22 @@ function AttackRolledResult({
   const narrated = combat?.narrated && combat.narrated.attackerId === playerId ? combat.narrated : null
   const waitingForDefense = pendingCombat !== null && narrated === null
   // Aanvallen vereist minstens 2 legers op het brongebied (1 moet altijd achterblijven) — na
-  // verliezen bij deze worp kan dat brongebied nog maar 1 leger over hebben, waarmee "nog een
-  // keer aanvallen" vanuit ditzelfde gebied ongeldig is. Actuele legerstand, niet lokaal
-  // gecached, om dezelfde reden als `fromArmyCount` in `AttackFlowStep`.
+  // verliezen kan het brongebied nog maar 1 leger over hebben, waarmee "nog een keer aanvallen"
+  // ongeldig wordt. Actuele legerstand, niet lokaal gecached — zelfde reden als `fromArmyCount`.
   const canAttackAgain = narrated !== null && (territories.find((t) => t.territoryId === narrated.fromTerritoryId)?.armyCount ?? 0) >= 2
 
   return (
     <div className="flex flex-1 flex-col text-center">
-      {/* De uitkomst blijft gecentreerd in de vrije ruimte; de acties zakken naar de onderbalk
-          (2026-08-13, op verzoek). `flex-1` op deze wikkel i.p.v. `my-auto` op het paneel: `Footer`
-          duwt zichzelf al met `mt-auto` omlaag, en twee concurrerende auto-marges zouden de
-          resterende ruimte in drieën delen i.p.v. het paneel te centreren. */}
+      {/* De uitkomst blijft gecentreerd in de vrije ruimte; de acties zakken naar de onderbalk.
+          `flex-1` op deze wikkel i.p.v. `my-auto` op het paneel: `Footer` duwt zichzelf al met
+          `mt-auto` omlaag, en twee concurrerende auto-marges zouden de ruimte in drieën delen
+          i.p.v. het paneel te centreren. */}
       <div className="flex flex-1 items-center justify-center">
-        {/* BEVINDING, opgelost (2026-08-10): resultaatblok stond kaal op de stage-achtergrond,
-            zie OrderRollWaitStep.tsx. Eén paneel i.p.v. losse chips per regel. */}
         <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-4 rounded-2xl px-5 py-4">
           <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{t('resultShort')}</span>
-          {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): de uitkomst verscheen zonder
-              beweging, terwijl `motion.ts` er een keyframe voor kent — `combatDie` staat er
-              letterlijk als "Kleine aanval/verdedig-dobbelstenen, gestaggerd" en had nul
-              consumenten. Geen nieuwe timing verzonnen: dit is dezelfde `phDice`-tumble als de
-              order-roll, alleen korter (.8s) en per dobbelsteen 0,12s gestaggerd. Gedraaid wordt
-              er pas als de server de worp heeft geleverd (`attackerRolls`), dus de animatie loopt
-              niet op de uitkomst vooruit. */}
+          {/* Zelfde `phDice`-tumble als de order-roll (`combatDie` in motion.ts), korter (.8s) en
+              per dobbelsteen 0,12s gestaggerd. Draait pas zodra de server de worp heeft
+              geleverd (`attackerRolls`), dus de animatie loopt niet op de uitkomst vooruit. */}
           <div className="flex gap-2.5">
             {attackerRolls.map((value, index) => (
               <Dice
@@ -458,11 +438,9 @@ function AttackRolledResult({
             </button>
           )}
           <div className="flex gap-[9px]">
-            {/* BEVINDING, opgelost (2026-08-13, gebruiker gemeld): dit was een handgebouwde
-                `GlassPanel` om een kale `<button>`, terwijl `Button variant="secondary"` exact
-                dezelfde surface al op het knop-element zelf zet. Verschil was zichtbaar naast de
-                terugknoppen: `raised` i.p.v. `base` (zwaardere schaduw + meer blur) en een extra
-                DOM-laag die DESIGN.md § Components/Buttons expliciet afraadt. */}
+            {/* `Button variant="secondary"` zet dezelfde surface al op het knop-element zelf —
+                geen handgebouwde `GlassPanel` omheen nodig (extra DOM-laag die DESIGN.md
+                § Components/Buttons afraadt). */}
             <Button variant="secondary" onClick={onOtherFight} className="min-h-14 flex-1 text-body">
               {t('otherFight')}
             </Button>

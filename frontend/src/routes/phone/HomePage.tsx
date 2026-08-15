@@ -43,9 +43,9 @@ export function HomePage() {
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
           <PhoneScreen className="gap-4">
             {/* Kop en invoerveld in één paneel — de kop is het label ván dit veld, geen los
-                zwevend pil-paneel ernaast (zelfde ingreep als JoinNameColorStep, 2026-08-13).
-                Het TextField blijft genest: de nesting-guard zet zijn eigen blur uit, zijn
-                `--silver-600`-rand blijft, zodat het nog steeds als invoerveld leest. */}
+                zwevend pil-paneel ernaast (zelfde ingreep als JoinNameColorStep). Het TextField
+                blijft genest: de nesting-guard zet zijn eigen blur uit, zijn `--silver-600`-rand
+                blijft zichtbaar. */}
             <GlassPanel elevation="base" context="phone" className="rounded-2xl">
               <h1 className="mb-3 font-display text-h1 font-bold">{t('home:joinCode.title')}</h1>
               <TextField
@@ -57,9 +57,6 @@ export function HomePage() {
                 ariaLabel={t('home:joinCode.title')}
               />
             </GlassPanel>
-            {/* Stond tot 2026-08-13 als sibling búiten het padded blok, waardoor deze
-                knop als enige in de app de schermranden raakte. Binnen het frame, net
-                als de Footer op elk ander telefoonscherm. */}
             <Footer>
               <Button type="submit" disabled={!joinCode.trim()}>
                 {t('common:actions.join')}
@@ -79,7 +76,6 @@ export function HomePage() {
   return (
     <PhoneShell>
       <PhoneScreen>
-        {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
         <GlassPanel elevation="base" context="phone" padding="none" className="self-center rounded-2xl px-5 py-2.5 text-center">
           <h1 className="font-display text-h1 font-black tracking-[var(--tracking-wide)]">{t('home:title')}</h1>
         </GlassPanel>

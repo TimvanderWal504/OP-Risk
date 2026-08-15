@@ -13,27 +13,23 @@ import { GlassPanel } from '../../../components/ui/GlassPanel'
 import type { TvScreenProps } from './tvScreens'
 
 /**
- * TV-hoofdbord tijdens `GamePhaseDto.InProgress` (state "Main board" in het oorspronkelijke design,
- * `isBoard`-tak L257-312). Read-only weergave (FO §7.3/§2.3: de telefoon is de enige
- * invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen (z-3) horen bij
- * Attack en zijn hier bewust niet gebouwd; idem de gebeurtenis-feed (onderrand in de export) —
- * blijft buiten scope tot er een server-databron voor is (2026-08-10, met de gebruiker
- * afgesproken: apart, later op te pakken).
+ * TV-hoofdbord tijdens `GamePhaseDto.InProgress`. Read-only weergave (FO §7.3/§2.3: de telefoon
+ * is de enige invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen horen
+ * bij Attack en zijn hier bewust niet gebouwd; idem de gebeurtenis-feed — blijft buiten scope
+ * tot er een server-databron voor is.
  *
- * Zijpaneel (spelerslijst) sinds 2026-08-10: zelfde `GlassPanel`-patroon als
- * `TvClaimingScreen`, nu met territorium- én legertotaal per speler (`state.territories` is
- * hier al client-side beschikbaar — geen nieuwe server-databron nodig, in tegenstelling tot de
- * gebeurtenis-feed hierboven).
+ * Zijpaneel (spelerslijst): zelfde `GlassPanel`-patroon als `TvClaimingScreen`, met
+ * territorium- én legertotaal per speler (`state.territories` is al client-side beschikbaar).
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { t } = useTranslation('board')
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
 
-  // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen
-  // voor de A1-teldemo-animatie (uit het oorspronkelijke design). Bijgewerkt tijdens render
-  // (niet via een ref of effect, react-hooks/refs staat geen ref-mutatie tijdens render toe):
-  // zelfde "vergelijk en pas aan"-patroon als `useHeldPhase.ts`.
+  // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen voor de
+  // A1-teldemo-animatie. Bijgewerkt tijdens render (niet via een ref of effect,
+  // react-hooks/refs staat geen ref-mutatie tijdens render toe): zelfde "vergelijk en pas
+  // aan"-patroon als `useHeldPhase.ts`.
   const [prevArmy, setPrevArmy] = useState<Record<string, number>>({})
   const currentArmy: Record<string, number> = {}
   state.territories.forEach((territory) => {
@@ -93,8 +89,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
           const owner = entry?.owner
           const color = entry?.color
           const ringColor = color?.hex ?? boardTok.neutral
-          // Oorspronkelijk design: `ringSw = isOwn ? 1.5 : 1.25`; de derde tak (1.75) hoort
-          // bij de nog niet gebouwde selectiestaat.
+          // De derde ringSw-tak (1.75) hoort bij de nog niet gebouwde selectiestaat.
           const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
 
           const wasArmy = prevArmy[territory.id]

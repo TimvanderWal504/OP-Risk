@@ -64,17 +64,13 @@ function pipBevelShadow(pipSize: number): string {
  * achtergrondillustratie. De pips zelf (`dice.pip.*`) blijven volledig ondoorzichtig
  * en dragen geen eigen blur — alleen de surface eronder is vervaagd.
  *
- * BEVINDING, opgelost (2026-08-10): `animation` (transform/opacity, bv. `phDice` — de
- * worp-entree op `OrderRollWaitStep`) stond eerst rechtstreeks op dit element, samen met
- * `backdrop-filter` — precies het patroon dat frontend/CLAUDE.md §Mobiele randvoorwaarden
- * uitsluit ("geen backdrop-filter op elementen die tijdens... transitie bewegen"). WebKit/
- * iOS Safari herrekent de achterliggende vervaging niet consequent per animatieframe van
- * hetzelfde element — zichtbaar gevolg: sommige worpen "animeerden niet" (de dobbelsteen
- * verschijnt meteen in eindstand, geen tumble). Fix: de animatie verhuist naar een niet-
- * filterende buiten-`<div>`; de gefilterde surface zelf staat stil en beweegt alleen mee als
- * onderdeel van die ouder — het element met `backdrop-filter` heeft dus zelf nooit een eigen
- * transform/opacity-animatie. Zonder `animation`-prop (combat-/verdedig-dobbelstenen) blijft
- * de DOM ongewijzigd: geen extra wrapper, `role="img"` staat op hetzelfde element als voorheen.
+ * De animatie zit op een niet-filterende buiten-`<div>`, nooit op het element met
+ * `backdrop-filter` zelf (frontend/CLAUDE.md §Mobiele randvoorwaarden): WebKit/iOS Safari
+ * herrekent de achterliggende vervaging niet consequent per animatieframe wanneer
+ * `transform`/`opacity` en `backdrop-filter` op hetzelfde element staan — zichtbaar gevolg:
+ * sommige worpen "animeerden niet" (dobbelsteen verschijnt meteen in eindstand, geen tumble).
+ * Zonder `animation`-prop (combat-/verdedig-dobbelstenen) blijft de DOM ongewijzigd: geen
+ * extra wrapper.
  */
 export function Dice({ value, colorHex, context, size, radius, padding, gap, pipSize, animation }: DiceProps) {
   const { t } = useTranslation('common')

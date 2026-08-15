@@ -23,11 +23,9 @@ export interface PlaceReinforcementStepProps {
 }
 
 /**
- * Versterken · Legers verdelen (`isReinf`-fase in het oorspronkelijke design). Stage-then-confirm
- * (design se `-`/`+`-stepper, `reinfExtra`/`reinfPool` L1483-1484): decrement raakt nooit de
- * server, één `PlaceReinforcements`-call per gebied bij bevestigen (niet N losse calls van 1 —
- * zie het Reinforce-plan). De "Kaarteninleg"-blok uit de export (L519-526) ontbreekt bewust,
- * zie `locales/reinforce.ts`.
+ * Versterken · Legers verdelen. Stage-then-confirm: decrement raakt nooit de server, één
+ * `PlaceReinforcements`-call per gebied bij bevestigen (niet N losse calls van 1 — zie het
+ * Reinforce-plan). Het "Kaarteninleg"-blok ontbreekt bewust, zie `locales/reinforce.ts`.
  */
 export function PlaceReinforcementStep({
   myTerritories,
@@ -138,12 +136,8 @@ export function PlaceReinforcementStep({
           const stagedInGroup = group.territoryIds.reduce((sum, id) => sum + (staged[id] ?? 0), 0)
 
           return (
-            // BEVINDING, opgelost (2026-08-10): zelfde "kaal op de stage-achtergrond"-patroon als
-            // elders op dit scherm (zie de BUILD-UP-paneel-fix hierboven) — `Collapsible` is bewust
-            // achtergrondloos (generiek, geen kennis van de aanroeper), dus de continent-kicker en
-            // -teller stonden zonder paneel rechtstreeks op de telefoon-illustratie: onleesbaar op
-            // lichtere delen van de foto. Paneel eromheen i.p.v. in `Collapsible` zelf, zodat het
-            // component generiek blijft.
+            // `Collapsible` is bewust achtergrondloos (generiek); paneel eromheen zodat de
+            // continent-kicker leesbaar blijft op de stage-achtergrond.
             <GlassPanel key={group.continent} elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
               <Collapsible
                 collapsible={continentGroups.length >= 2}

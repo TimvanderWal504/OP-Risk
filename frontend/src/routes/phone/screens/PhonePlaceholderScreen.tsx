@@ -13,7 +13,6 @@ export function PhonePlaceholderScreen() {
 
   return (
     <PhoneScreen className="items-center justify-center text-center">
-      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="rounded-2xl px-4 py-2 text-fg-muted">
         {t('placeholder.phone')}
       </GlassPanel>

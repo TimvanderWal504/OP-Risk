@@ -20,12 +20,9 @@ export interface JoinHostWaitStepProps {
 }
 
 /**
- * Host-lobbyscherm op de telefoon (`isWaiting`-fase in het oorspronkelijke design) —
- * losstaand van de "0 JOIN"-chrome die de andere join-stappen delen (dit is
- * geen host-variant van {@link JoinWaitStep}, maar een eigen design-sectie
- * met eigen HOST-badge). Geen QR/URL op dit scherm — alleen een hint dat de
- * QR-code op de TV staat (`tvUrlPanel`-achtige weergave heeft hier geen
- * design-instantie, zie de plan-context).
+ * Host-lobbyscherm op de telefoon — losstaand van de "0 JOIN"-chrome die de andere join-stappen
+ * delen (geen host-variant van {@link JoinWaitStep}, een eigen sectie met HOST-badge). Geen
+ * QR/URL op dit scherm — alleen een hint dat de QR-code op de TV staat.
  */
 export function JoinHostWaitStep({
   players,
@@ -40,13 +37,10 @@ export function JoinHostWaitStep({
 
   return (
     <PhoneScreen>
-      {/* Titel + QR-hint in één paneel: de hint is de ondertitel van "wachten op spelers"
-          (waaróm je wacht en wat de anderen moeten doen), niet een los bericht. Zelfde vorm als de
-          titelkaart van JoinRoleStep (kop + `text-fg-secondary`-regel eronder).
-          De hint was hiervóór een losse div met een dekkende `secondaryWashBg`-vulling — een vlakke
-          marineblauwe doos tussen twee glaspanelen (gebruiker gescreenshot 2026-08-13). Die vulling
-          is vervallen: bij alpha .92 deed de blur eronder niets meer, en samengevoegd draagt het
-          gedeelde paneel de omkadering. */}
+      {/* Titel + QR-hint in één paneel: de hint is de ondertitel van "wachten op spelers", niet
+          een los bericht. Zelfde vorm als de titelkaart van JoinRoleStep. Geen aparte dekkende
+          achtergrondvulling op de hint: bij hoge alpha deed de blur eronder niets meer, en
+          samengevoegd draagt het gedeelde paneel de omkadering. */}
       <GlassPanel elevation="base" context="phone" className="rounded-2xl">
         <div className="flex items-center gap-2.5">
           <p className="font-display text-[26px] font-black">{t('hostWait.title')}</p>
@@ -58,9 +52,8 @@ export function JoinHostWaitStep({
       </GlassPanel>
 
       {/* Kop + spelerslijst in één paneel, precies zoals de TV-tegenhanger (`LobbyPlayerList`):
-          "AANGESLOTEN n/max" is een label ván deze lijst, geen los zwevend chip-paneel. De rijen
-          blijven genest — de nesting-guard zet hun eigen blur uit, hun rand blijft, zodat ze als
-          rijen op één rustig vlak lezen i.p.v. als losse geblurde eilandjes. */}
+          "AANGESLOTEN n/max" is een label ván deze lijst, geen los zwevend chip-paneel. Rijen
+          blijven genest — de nesting-guard zet hun eigen blur uit, hun rand blijft. */}
       {/* Geen `flex-1`: het paneel is zo hoog als zijn inhoud, niet zo hoog als het scherm (een
           lobby met één speler hoort geen paneel tot aan de voettekst te tekenen). Wél `min-h-0` +
           shrink, zodat het bij een volle lobby krimpt en de lijst erbinnen gaat scrollen i.p.v.

@@ -12,14 +12,13 @@ export interface NotYourTurnStepProps {
 }
 
 /**
- * Generiek "niet jouw beurt"-scherm (`isIdle`-fase in het oorspronkelijke design), gedeeld over
- * setup/reinf/attack/fortify (`inGame`-statemachine, L1554-1557) — `subtitle` i.p.v. een
- * fase-specifieke prop, zodat latere fases dit component hergebruiken i.p.v. een duplicaat.
+ * Generiek "niet jouw beurt"-scherm, gedeeld over setup/reinf/attack/fortify — `subtitle` i.p.v.
+ * een fase-specifieke prop, zodat latere fases dit component hergebruiken i.p.v. een duplicaat.
  *
- * Afwijking: het design toont hier ook een "recent gebeurd"-feed (`idleFeed`, L478-486) en
- * "terwijl je wacht"-snelkoppelingen naar regels/missie/kaarten (`tabCards`, L487-496). Beide
- * hebben geen backend-tegenhanger in deze plak (geen activiteiten-log, geen missie-/
- * regelpaneel) — weggelaten i.p.v. met verzonnen inhoud gevuld; volgt zodra die data bestaat.
+ * Afwijking: geen "recent gebeurd"-feed en geen "terwijl je wacht"-snelkoppelingen naar
+ * regels/missie/kaarten. Beide hebben geen backend-tegenhanger in deze plak (geen
+ * activiteiten-log, geen missie-/regelpaneel) — weggelaten i.p.v. met verzonnen inhoud gevuld;
+ * volgt zodra die data bestaat.
  */
 export function NotYourTurnStep({ activePlayerName, activeColor, subtitle }: NotYourTurnStepProps) {
   const { t } = useTranslation('setup')
@@ -32,10 +31,8 @@ export function NotYourTurnStep({ activePlayerName, activeColor, subtitle }: Not
         color={activeColor}
         subtitle={subtitle}
       />
-      {/* BEVINDING, opgelost (2026-08-13, gebruiker gescreenshot): deze regel stond als enige
-          element van dit scherm kaal op de stage-illustratie, precies op de onderrand waar de
-          scrim wél randalpha zet maar de foto het lichtst is. Chip-idioom (strak op de tekst
-          gesneden), zelfde vorm als de voetnoot op HomePage. */}
+      {/* Chip-idioom (strak op de tekst gesneden), zelfde vorm als de voetnoot op HomePage — deze
+          regel staat als enig element van het scherm op de stage-illustratie. */}
       <GlassPanel
         elevation="base"
         context="phone"

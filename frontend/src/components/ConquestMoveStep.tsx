@@ -18,9 +18,9 @@ export interface ConquestMoveStepProps {
 }
 
 /**
- * "6 CONQUEST" (`isConquest`-fase in het oorspronkelijke design). `moveN` klemt lokaal tussen
- * `minArmies`/`maxArmies` — beide servergetallen (`pendingCombat.attackDice` resp. de verse
- * bronlegerstand), geen herberekende spelregel.
+ * "6 CONQUEST"-scherm. `moveN` klemt lokaal tussen `minArmies`/`maxArmies` — beide
+ * servergetallen (`pendingCombat.attackDice` resp. de verse bronlegerstand), geen
+ * herberekende spelregel.
  */
 export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minArmies, maxArmies, onConfirm }: ConquestMoveStepProps) {
   const { t } = useTranslation('attack')
@@ -40,15 +40,10 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
 
   return (
     <PhoneScreen>
-      {/* BEVINDING, opgelost (2026-08-10): headline + inhoud stonden kaal op de stage-
-          achtergrond — zie OrderRollWaitStep.tsx. Eén paneel i.p.v. losse chips per regel:
-          leesbaarder dan een reeks losse plakkaatjes rond elk bijschrift afzonderlijk. */}
-      {/* Vier rijen met één ritme (`gap-[22px]`), i.p.v. een kop plus een verticaal gecentreerd
-          restblok: het paneel is nu zo hoog als zijn inhoud en elke rij krijgt dezelfde ruimte
-          (2026-08-13, op verzoek). `flex-1` stond hier omdat het gecentreerde blok iets moest
-          vullen — dat is met een grid niet meer nodig. */}
-      {/* `my-auto`: de vrije ruimte valt gelijk boven en onder het paneel, dus het staat gecentreerd
-          in wat de CTA onderaan overlaat. Geen `flex-1` — dat zou het paneel weer uitrekken. */}
+      {/* Grid met gelijk ritme (`gap-[22px]`) i.p.v. een kop plus gecentreerd restblok: het
+          paneel is zo hoog als zijn inhoud en elke rij krijgt evenveel ruimte. */}
+      {/* `my-auto`: de vrije ruimte valt gelijk boven en onder het paneel, gecentreerd in wat de
+          CTA onderaan overlaat. Geen `flex-1` — dat zou het paneel weer uitrekken. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="my-auto grid gap-[22px] rounded-2xl p-4 text-center">
         <div className="font-display text-[28px] font-black leading-[1.15] text-fg">
           {t('conquest.captured', { territory: tDynamic(toTerritoryId, 'territories') })}

@@ -31,14 +31,9 @@ export interface ClaimTerritoryStepProps {
 }
 
 /**
- * Startopstelling · Claimen (`isClaim`-fase in het oorspronkelijke design). Twee substaten uit het
- * design: `claimMine` (jouw beurt — per-continent gegroepeerde knoppenlijst + bevestigen) en
- * `claimMineNot` (niet jouw beurt — wie heeft al hoeveel geclaimd). Substaat volgt uit
- * `activePlayerId === playerId`, niet uit lokale state.
- *
- * Afwijking: de `claimSimRound`-knop ("Volgende ronde (demo)", L445) is designdemo-only —
- * simuleert andere spelers lokaal zonder server. Bestaat hier niet: de server drijft de
- * voortgang, geen client-side simulatie (frontend/CLAUDE.md).
+ * Startopstelling · Claimen. Twee substaten: `claimMine` (jouw beurt — per-continent
+ * gegroepeerde knoppenlijst + bevestigen) en `claimMineNot` (niet jouw beurt — wie heeft al
+ * hoeveel geclaimd). Substaat volgt uit `activePlayerId === playerId`, niet uit lokale state.
  */
 export function ClaimTerritoryStep({
   territories,
@@ -163,7 +158,6 @@ export function ClaimTerritoryStep({
         subtitle={t('claim.confirm')}
         stat={{ value: claimFree, label: t('claim.left') }}
       />
-      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
       <GlassPanel
         elevation="base"
         context="phone"

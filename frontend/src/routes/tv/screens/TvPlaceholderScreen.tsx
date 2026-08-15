@@ -5,15 +5,10 @@ import { GlassPanel } from '../../../components/ui/GlassPanel'
  * Het host-scherm voor een fase die deze bundel (nog) niet toont: de nog niet gebouwde
  * spelfases en de versie-skew-fallback uit `resolveTvScreen`.
  *
- * BEVINDING, opgelost (2026-08-11): stond eerder als kale tekst direct op de
- * stage-illustratie, gecentreerd — precies de "ademband" waar de gedeelde
- * verticale scrim (`TvStageBackground`) bewust géén randalpha zet (zie DESIGN.md
- * § Layout). Zonder paneel eromheen kreeg deze tekst dus geen enkele bescherming
- * tegen de foto erachter — enige TV-scherm zonder `GlassPanel` en zonder eigen
- * scrim/text-shadow-behandeling (elk ander TV-scherm heeft er wél een, zie
- * TvLobbyScreen/TvClaimingScreen/etc.). Nu net als de rest van het systeem op een
- * `GlassPanel` (Glass-By-Default Rule); `text-fg-muted` erin krijgt daarmee
- * automatisch de on-glass tekstbehandeling (index.css, The On-Glass Text Rule).
+ * Staat in een `GlassPanel` (Glass-By-Default Rule), zoals elk ander TV-scherm — zonder paneel
+ * valt deze tekst in de "ademband" waar `TvStageBackground`'s scrim geen randalpha zet
+ * (DESIGN.md § Layout) en heeft ze geen bescherming tegen de foto erachter. `text-fg-muted`
+ * erin krijgt daarmee automatisch de on-glass tekstbehandeling (index.css).
  */
 export function TvPlaceholderScreen() {
   const { t } = useTranslation('lobby')

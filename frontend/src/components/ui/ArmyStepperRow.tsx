@@ -6,12 +6,10 @@ export interface ArmyStepperRowProps {
   color: PlayerColorDto | null
   label: string
   /**
-   * `true`: alleen een +-knop, onomkeerbaar — matcht Startopstelling-plaatsen
-   * (`setupAddBg`/`setupCursor` in het oorspronkelijke design). `false`: volwaardige
-   * +/− stepper — matcht Versterken (L528-536). De twee fases hebben bewust verschillend
-   * gedrag in het design (FO §5.1: setup is 1-richting, Versterken mag je bijstellen vóór
-   * bevestigen); deze vlag houdt één component bruikbaar voor beide zonder het design van de
-   * ene fase in de andere te lekken.
+   * `true`: alleen een +-knop, onomkeerbaar — matcht Startopstelling-plaatsen. `false`:
+   * volwaardige +/− stepper — matcht Versterken. De twee fases hebben bewust verschillend
+   * gedrag (FO §5.1: setup is 1-richting, Versterken mag je bijstellen vóór bevestigen); deze
+   * vlag houdt één component bruikbaar voor beide.
    */
   incrementOnly: boolean
   /** Setup: huidig aantal legers op dit gebied. Versterken: het totaal ná de pending delta (`r.total`). */

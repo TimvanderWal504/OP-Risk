@@ -109,7 +109,6 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
-      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="mx-gutter mt-gutter flex-none rounded-2xl px-4 py-3">
         <h1 className="font-display text-h1 font-black">{t('header.title')}</h1>
         <p className="mt-1 text-sm text-fg-muted">{t('map.summary')}</p>

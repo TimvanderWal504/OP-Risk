@@ -14,11 +14,9 @@ export interface RemovablePlayerRowProps {
 }
 
 /**
- * Swipe-to-delete-rij op het host-wachtscherm (`waitList`-sectie in het oorspronkelijke design,
- * L244-262 na de export-update, plus de `rowDown`/`rowMove`/`rowUp`-handlers en
- * `SWIPE_W`-constante in de bijbehorende class-component). Naar links slepen
- * onthult een verwijderknop eronder; loslaat voorbij de helft houdt de rij open
- * tot een volgende tik. Alleen `transform`/`opacity` animeren (frontend/CLAUDE.md).
+ * Swipe-to-delete-rij op het host-wachtscherm. Naar links slepen onthult een verwijderknop
+ * eronder; loslaten voorbij de helft houdt de rij open tot een volgende tik. Alleen
+ * `transform`/`opacity` animeren (frontend/CLAUDE.md).
  */
 export function RemovablePlayerRow({ children, onRemove, removable }: RemovablePlayerRowProps) {
   const { t } = useTranslation('common')

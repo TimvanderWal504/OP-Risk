@@ -8,15 +8,13 @@ import { tDynamic } from '../../../i18n/useT'
 import type { TvScreenProps } from './tvScreens'
 
 /**
- * Combat-/eliminatie-overlay ("C9 combat overlay" / "C11 elimination overlay" in het oorspronkelijke design
- * L326-367 en L462-469+). Verplichte eerste stap gelezen: L20-62 (keyframes) en L326-469
- * (markup), plus `motion.ts` (`tvAnimations.attackerDie/defenderDie/resultPop`,
- * `overlayIn`/`combatStageIn`). Rechterspelerpaneel/feed-strip (C12) en de reroll-chip
- * (Generaal-rol, L334-338) blijven buiten scope — zelfde afbakening als `TvMainBoardScreen`
- * resp. het Attack-bouwplan. `t.elimKicker` (L465) heeft geen brontekst in de export (zie
- * `locales/attackTv.ts`) — weggelaten, niet zelf ingevuld. "VEROVERD"-badge toont geen
- * meeverplaats-detail (`moveIn`, L363): daarvoor bestaat geen narratief server-event
- * (`ArmiesMovedAfterConquest` broadcast niets) — bevinding, geen invulruimte.
+ * Combat-/eliminatie-overlay. `motion.ts` levert `tvAnimations.attackerDie/defenderDie/
+ * resultPop`, `overlayIn`/`combatStageIn`. Rechterspelerpaneel/feed-strip en de reroll-chip
+ * (Generaal-rol) blijven buiten scope — zelfde afbakening als `TvMainBoardScreen` resp. het
+ * Attack-bouwplan. `t.elimKicker` heeft geen brontekst (zie `locales/attackTv.ts`) — weggelaten,
+ * niet zelf ingevuld. "VEROVERD"-badge toont geen meeverplaats-detail: daarvoor bestaat geen
+ * narratief server-event (`ArmiesMovedAfterConquest` broadcast niets) — bevinding, geen
+ * invulruimte.
  *
  * De volgorde resultaat → eliminatie (resultPop vóór atlasSlam) is hier wél JS-gestuurd
  * (2000ms na het narratief-event), omdat het geen CSS-stagger binnen één scherm is maar een
@@ -27,11 +25,11 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
   const { t } = useTranslation('attackTv')
 
   /**
-   * Kiest de verhalende uitkomstregel, altijd vanuit de aanvallende kleur (2026-08-13, op
-   * verzoek). Sluit over `t` i.p.v. een tuple terug te geven zoals `resultLine()` in
-   * `AttackFlowStep.tsx`: de "both"-tak heeft hier een ander optiesvorm (`attacker`+`defender`
-   * i.p.v. `count`), waardoor de teruggegeven tuple-union niet meer op één i18next-overload
-   * paste (TS2345) — een directe `t(...)`-aanroep per tak omzeilt dat.
+   * Kiest de verhalende uitkomstregel, altijd vanuit de aanvallende kleur. Sluit over `t` i.p.v.
+   * een tuple terug te geven zoals `resultLine()` in `AttackFlowStep.tsx`: de "both"-tak heeft
+   * hier een ander optiesvorm (`attacker`+`defender` i.p.v. `count`), waardoor de teruggegeven
+   * tuple-union niet meer op één i18next-overload paste (TS2345) — een directe `t(...)`-aanroep
+   * per tak omzeilt dat.
    */
   function resultLine(attackerName: string, defenderName: string, attackerLosses: number, defenderLosses: number) {
     if (attackerLosses > 0 && defenderLosses > 0) return t('resultLine.both', { attacker: attackerName, defender: defenderName })
@@ -187,8 +185,7 @@ interface CombatSideProps {
 
 /**
  * De drie cellen van één zijde. Geen eigen wrapper-element: de cellen zijn directe kinderen van
- * het gedeelde gevechtsraster, anders zouden links en rechts weer elk hun eigen rijhoogtes
- * krijgen (de oorzaak van de scheve naam-/labelregels vóór 2026-08-13).
+ * het gedeelde gevechtsraster, anders zouden links en rechts elk hun eigen rijhoogtes krijgen.
  */
 function CombatSide({ side, name, color, label, dice }: CombatSideProps) {
   const { column, die } = SIDE_LAYOUT[side]

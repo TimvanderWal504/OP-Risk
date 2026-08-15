@@ -13,19 +13,17 @@ import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import type { TvScreenProps } from './tvScreens'
 
 /**
- * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Geen letterlijke exportsectie —
- * bevestigde bevinding (de TV-`states`-lijst in het oorspronkelijke design kende geen aparte staat
- * voor deze fase), afgestemd met de gebruiker: hergebruikt het Hoofdscherm-grid-patroon van
- * `TvMainBoardScreen.tsx`, 3-rijen grid, geen rechterpaneel/feed-strip (zelfde scope-afspraak
- * als daar).
+ * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Hergebruikt het Hoofdscherm-grid-patroon
+ * van `TvMainBoardScreen.tsx`, 3-rijen grid, geen rechterpaneel/feed-strip (zelfde
+ * scope-afspraak als daar).
  *
  * `state.setupState.activePlayerId` kan hier, anders dan bij `TvClaimingScreen`, wél `null`
  * zijn (`SetupMode.Random`: iedereen plaatst gelijktijdig, geen actieve speler — TO/FO §5.1).
  * Topbar en kaartkleuring hebben dus elk twee paden: met een actieve speler (SetupMode.Claiming,
  * beurt-gebaseerd) gedraagt dit scherm zich als `TvMainBoardScreen`; zonder actieve speler is er
  * geen zinvol eigen/vijand-perspectief, dus toont elk gebied zijn eigen kleur op volle
- * `own`-opaciteit in plaats van een gedimde "iedereen is vijand"-weergave (geen exportwaarde,
- * bewuste designkeuze — zie de afwijkingenlijst).
+ * `own`-opaciteit in plaats van een gedimde "iedereen is vijand"-weergave (bewuste designkeuze,
+ * zie de afwijkingenlijst).
  *
  * Read-only (FO §7.3/§2.3) — geen `onClick` op de gebiedslagen.
  */

@@ -13,11 +13,9 @@ export interface PlaceInitialArmyStepProps {
 }
 
 /**
- * Startopstelling · Legers plaatsen (`isSetup`-fase in het oorspronkelijke design): lijst van eigen
- * gebieden met een +-knop per rij, via de gedeelde `ArmyStepperRow` (`incrementOnly`, zie
- * de doc-comment daar voor waarom setup geen decrement heeft). `setupAddBg`/`setupCursor`
- * volgen uit `armiesLeft > 0` (L1701-1702) — bij 0 is de knop uitgeschakeld i.p.v. verborgen
- * (fase rondt zelf af via de server zodra iedereen klaar is).
+ * Startopstelling · Legers plaatsen: lijst van eigen gebieden met een +-knop per rij via
+ * `ArmyStepperRow` (`incrementOnly` — zie de doc-comment daar voor de reden). De knop is
+ * uitgeschakeld bij `armiesLeft === 0` i.p.v. verborgen; de fase rondt zelf af via de server.
  */
 export function PlaceInitialArmyStep({
   myTerritories,
@@ -30,9 +28,6 @@ export function PlaceInitialArmyStep({
 
   return (
     <PhoneScreen>
-      {/* De uitleg zat tot 2026-08-13 in een eigen glas-chip onder de kop: twee panelen voor één
-          kop, terwijl de regel niets anders doet dan de teller erboven toelichten. Nu de `hint`-
-          slot van StatHeaderCard, binnen hetzelfde glas. */}
       <StatHeaderCard
         title={t('place.title')}
         statValue={armiesLeft}

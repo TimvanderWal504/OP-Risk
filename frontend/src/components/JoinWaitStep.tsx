@@ -22,12 +22,10 @@ export interface JoinWaitStepProps {
 }
 
 /**
- * Laatste join-stap voor een niet-host speler (uit het oorspronkelijke design,
- * `joinWait`): wachten tot de host start. Geen kleur-symbooltegel — de export
- * toont alleen titel, `naam · kleur` en (indien gekozen) `rol · herkomstland`,
+ * Laatste join-stap voor een niet-host speler: wachten tot de host start. Geen
+ * kleur-symbooltegel — alleen titel, `naam · kleur` en (indien gekozen) `rol · herkomstland`,
  * daaronder de roterende quote-kaart. De host krijgt een eigen scherm
- * ({@link JoinHostWaitStep}, `isWaiting`, L232-263) — geen host/niet-host-
- * variant van dit component, twee losse design-secties.
+ * ({@link JoinHostWaitStep}) — geen host/niet-host-variant van dit component.
  */
 export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCount }: JoinWaitStepProps) {
   const { t } = useTranslation('join')
@@ -47,9 +45,8 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
       <div className="flex min-h-0 flex-1 flex-col items-center pt-2.5 text-center">
         <div className="flex w-full flex-1 flex-col items-center justify-center">
-          {/* BEVINDING, opgelost (2026-08-10): titelblok + wacht-/tellingregels stonden kaal op
-              de stage-achtergrond — zie dezelfde fix in OrderRollWaitStep.tsx. Chip-idioom,
-              geen volle kaart; QuoteCard blijft ongewijzigd (draagt al zijn eigen achtergrond). */}
+          {/* Chip-idioom, geen volle kaart; `QuoteCard` blijft ongewijzigd (draagt al zijn eigen
+              achtergrond). */}
           <GlassPanel elevation="base" context="phone" padding="none" className="flex-1 rounded-2xl px-4 py-2.5">
             <p className="font-display text-[26px] font-black">{t('wait.title')}</p>
             <p className="mt-1.5 font-body text-h3 text-fg-muted">
@@ -70,10 +67,9 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
               animationStyle={{ animation: phoneAnimations.popImmediate }}
             />
           </div>
-          {/* Wachtregel + spelerstelling in één paneel (2026-08-13): twee losse chips onder elkaar
-              zeggen hetzelfde ("waar wacht je op, en met hoeveel") en lazen als twee losstaande
-              berichten. De telling staat als secundaire regel onder de wachtregel; ze deelden al
-              dezelfde `text-fg-muted`-behandeling. */}
+          {/* Wachtregel + spelerstelling in één paneel: twee losse chips onder elkaar zeiden
+              hetzelfde ("waar wacht je op, en met hoeveel") en lazen als twee losstaande
+              berichten. */}
           <GlassPanel
             elevation="base"
             context="phone"

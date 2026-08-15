@@ -5,15 +5,12 @@ export interface StatHeaderCardProps {
   title: string
   statValue: number | string
   statLabel: string
-  /** Verticale padding in px — 11 bij Claim (L396), 12 bij Startopstelling/Versterken (L453). */
+  /** Verticale padding in px — 11 bij Claim, 12 bij Startopstelling/Versterken. */
   paddingY: 11 | 12
   /** Randkleur — `silver` (Claim/Startopstelling) of `pitch` (Versterken, volgt de speler-/legerkleur). */
   accentColor?: 'silver' | 'pitch'
-  /**
-   * Uitlegregel onder de titel/teller-rij, binnen hetzelfde paneel. Optioneel: alleen
-   * Startopstelling heeft er vandaag een. Stond daar tot 2026-08-13 als eigen glas-chip
-   * eronder — twee panelen voor één kop, zie de doc-comment hieronder.
-   */
+  /** Uitlegregel onder de titel/teller-rij, binnen hetzelfde paneel. Optioneel: alleen
+   *  Startopstelling heeft er vandaag een. */
   hint?: ReactNode
 }
 
@@ -23,13 +20,10 @@ const PADDING_Y = {
 } as const
 
 /**
- * Alleen nog de randkleur. De teller had hier tot 2026-08-13 een eigen accentkleur
- * (`text-silver-300`/`text-pitch-300`) en droeg daarmee als enige element van de kaart een
- * derde kleur; op verzoek van de gebruiker volgt hij nu de titel (`--fg`). De spelerskleur —
- * het alternatief dat de gebruiker openliet — is bewust niet gekozen: die is er niet voor alle
- * drie de consumenten (Claim telt vrije gebieden, niet iets van één speler), en de solide
- * `--player-*`-waarden zijn getuned als vulkleur, niet als tekst op donker glas (blauw
- * `#0057ff` en paars halen daar geen leesbaar contrast).
+ * Alleen de randkleur draagt een accent; de teller zelf volgt de titelkleur (`--fg`), geen derde
+ * kleur op de kaart. Spelerskleur is bewust niet gebruikt: niet elke consument heeft een eigen
+ * speler (Claim telt vrije gebieden), en de solide `--player-*`-waarden zijn getuned als
+ * vulkleur, niet als tekst op donker glas (blauw/paars halen daar geen leesbaar contrast).
  */
 const ACCENT = {
   silver: 'var(--silver-700)',
@@ -37,9 +31,8 @@ const ACCENT = {
 } as const
 
 /**
- * Kop met titel links en een teller + label naast elkaar rechts (`isClaim/claimMine`-,
- * `isSetup`- en `isReinf`-substaten in het oorspronkelijke design) — identiek op layout,
- * gradient en radius voor alle drie schermen; alleen de verticale padding en accentkleur
+ * Kop met titel links en een teller + label naast elkaar rechts — identiek op layout, gradient
+ * en radius voor alle schermen die 'm gebruiken; alleen verticale padding en accentkleur
  * verschillen per scherm.
  */
 export function StatHeaderCard({
@@ -57,18 +50,15 @@ export function StatHeaderCard({
       elevation="base"
       context="phone"
       padding="none"
-      // BEVINDING, opgelost (2026-08-10): achtergrond faded van 14% alpha naar 0% — rechts, waar
-      // statValue/statLabel staan, was dus letterlijk GEEN achtergrond. Buiten de destijds
-      // gemigreerde componenten, dus gemist door die eerdere tokenfix.
       className={`rounded-[14px] px-3.5 ${PADDING_Y[paddingY]}`}
       style={{ borderColor }}
     >
-      {/* De titel/teller-rij was tot 2026-08-13 het paneel zelf; nu een rij binnen het paneel,
-          zodat `hint` eronder in hetzelfde glas past i.p.v. in een tweede chip eronder. */}
+      {/* Titel/teller staat in een eigen rij binnen het paneel, zodat `hint` eronder in hetzelfde
+          glas past i.p.v. in een aparte chip. */}
       <div className="flex items-center justify-between">
-        {/* Geen eigen marge meer op de titel: die zette 'm 8px verder naar binnen dan de
-            hint eronder, dus de twee tekstblokken begonnen niet op dezelfde lijn. De rijhoogte
-            verandert er niet merkbaar door — die wordt gezet door de 34px-teller ernaast. */}
+        {/* Geen eigen marge op de titel: zou 'm verder naar binnen zetten dan de hint eronder,
+            dus niet op dezelfde lijn beginnen. Rijhoogte wordt toch gezet door de 34px-teller
+            ernaast. */}
         <div className="min-w-0">
           <div className="font-display text-h2 font-extrabold">{title}</div>
         </div>
@@ -77,10 +67,9 @@ export function StatHeaderCard({
           <div className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{statLabel}</div>
         </div>
       </div>
-      {/* Typografie van de ondertitel op OrderRollWaitStep (`text-body`/`text-fg-muted`, geen
-          extra letterafstand) i.p.v. de 16px + `tracking-[.1em]` die deze regel overhield aan zijn
-          tijd als losse chip — een hele zin op chip-letterafstand leest als een label, niet als
-          uitleg. Op verzoek van de gebruiker (2026-08-13). */}
+      {/* Typografie volgt de ondertitel op OrderRollWaitStep (`text-body`/`text-fg-muted`, geen
+          extra letterafstand): een hele zin op chip-letterafstand (`tracking-[.1em]`) leest als
+          een label, niet als uitleg. */}
       {hint && <div className="mt-3 font-body text-body text-fg-muted">{hint}</div>}
     </GlassPanel>
   )

@@ -19,19 +19,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // verschijnt, is dat een bevinding, geen aanname vooraf.
 const BUTTON_BLUR_PX = glassPanelBlurPx('base', 'phone')
 
-/** Grote actieknop. `variant` wisselt tussen de brand-knop (primary, bv.
- * "Start spel", "Gooien") en een neutrale outline-knop (secondary);
- * `disabled` grijst 'm uit (bv. een nog niet-uitvoerbare actie zoals "Claim
- * een gebied"). Neemt alle native button-props over (`onClick`, `type`,
- * `disabled`, …).
+/**
+ * Grote actieknop. `variant` wisselt tussen de brand-knop (primary, bv. "Start spel", "Gooien")
+ * en een neutrale outline-knop (secondary); `disabled` grijst 'm uit. Neemt alle native
+ * button-props over (`onClick`, `type`, `disabled`, …).
  *
- * Fase 3b (CHROME): beide varianten op de gedeelde glas-surface — dezelfde
- * tokens/CSS-klasse als `GlassPanel`, rechtstreeks op het `<button>`-element
- * (geen `<GlassPanel>` genest in een knop, dat zou alleen een overbodige
- * DOM-laag toevoegen). Het onderscheid tussen de varianten zit nu in de
- * kleurtint over die surface: `primary` krijgt een pitch-getinte 
- * plus de merkkleur-gloed (DESIGN.md's "one glow"); `secondary` blijft de
- * neutrale, ongetinte glas-tint zonder gloed.
+ * Beide varianten delen dezelfde glas-surface-tokens/CSS-klasse als `GlassPanel`, rechtstreeks
+ * op het `<button>`-element (geen genest `<GlassPanel>` — overbodige DOM-laag). Het onderscheid
+ * zit in de kleurtint: `primary` krijgt een pitch-getinte surface plus de merkkleur-gloed
+ * (DESIGN.md's "one glow"); `secondary` blijft neutraal en ongetint, zonder gloed.
  */
 export function Button({
   variant = 'primary',
@@ -56,15 +52,12 @@ export function Button({
       type={type}
       data-glass-filter="on"
       data-glass-elevation="base"
-      // `--on-pitch` (bijna zwart) is bedoeld voor tekst op een vólledig dekkend
-      // pitch-vlak — op de translucente glas-tint hierboven (`buttonPrimaryGlassTint`)
-      // is de achtergrond zelf al donker, dus bijna-zwarte tekst erop was vrijwel
-      // onleesbaar (BEVINDING 2026-08-07, gebruiker gevraagd op te lossen). Beide
-      // varianten delen daarom dezelfde lichte `--fg`-tekstkleur; het onderscheid
-      // tussen primary/secondary blijft zitten in de achtergrondtint en de glow-shadow.
-      // Geen `transition-opacity`: er bestaat geen motion.ts-token voor een disabled-fade
-      // (glasmorfisme-audit, 2026-08-10) — instant staatwissel i.p.v. een zelfverzonnen duur,
-      // zelfde regel als Collapsible's chevron.
+      // `--on-pitch` (bijna zwart) is bedoeld voor tekst op een vólledig dekkend pitch-vlak — op
+      // de translucente glas-tint hierboven is de achtergrond zelf al donker, dus bijna-zwarte
+      // tekst erop was vrijwel onleesbaar. Beide varianten delen daarom dezelfde lichte
+      // `--fg`-tekstkleur; het onderscheid blijft zitten in achtergrondtint en glow-shadow.
+      // Geen `transition-opacity`: er bestaat geen motion.ts-token voor een disabled-fade —
+      // instant staatwissel i.p.v. een zelfverzonnen duur, zelfde regel als Collapsible's chevron.
       className={`glass-panel min-h-16 w-full rounded-card font-display text-lg font-black text-fg disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       style={{ ...glassVars, ...style }}
       {...rest}

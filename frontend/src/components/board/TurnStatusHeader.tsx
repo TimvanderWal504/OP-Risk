@@ -15,10 +15,8 @@ export interface TurnStatusHeaderProps {
 }
 
 /**
- * De low-drempel (60s) stond niet in het oorspronkelijke design: dat doorliep
- * `normal/low/paused` puur als demo-cyclus, zonder numerieke aanleiding. Productbeslissing,
- * expliciet nagevraagd en vastgelegd bij het bouwen van dit component (zelfde status als
- * `ORDER_ROLL_REVEAL_HOLD_MS` in `useHeldPhase.ts`) — geen waarde uit `motion.ts`/de export.
+ * Productbeslissing, geen designwaarde: er bestaat geen brontabel voor deze drempel (zelfde
+ * status als `ORDER_ROLL_REVEAL_HOLD_MS` in `useHeldPhase.ts`).
  */
 const TIMER_LOW_THRESHOLD_MS = 60_000
 
@@ -37,9 +35,8 @@ const PHASE_LABEL_KEY: Record<TurnPhaseDto, 'phaseReinforce' | 'phaseAttack' | '
 }
 
 /**
- * Topbalk van het TV-hoofdbord ("Main board"-state, `isBoard`, uit het oorspronkelijke design):
- * beurt-chip, fasepillen en beurttimer. Markup/tokens 1-op-1 uit die sectie, `atlasTok()` via
- * `boardTok` (design-tokens.ts) voor het speler-symbool-blok.
+ * Topbalk van het TV-hoofdbord: beurt-chip, fasepillen en beurttimer. Speler-symbool-blok via
+ * `boardTok` (design-tokens.ts).
  */
 export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }: TurnStatusHeaderProps) {
   const { t } = useTranslation('board')
@@ -64,10 +61,9 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           </div>
         )}
         <div className="font-display text-[34px] font-black leading-none">
-          {/* Dubbele punt zoals op de telefoon (ActivePlayerBanner, 2026-08-13): "Aan de beurt
-              Henk" is geen lopend Nederlands. De volgorde-omkering van dat scherm geldt hier
-              niet — daar staat een fasenaam achter de naam (de kop van dat scherm), hier de
-              kleurnaam, en de fase heeft op de TV al zijn eigen pillenrij rechts. */}
+          {/* Dubbele punt zoals op de telefoon (ActivePlayerBanner): "Aan de beurt Henk" is geen
+              lopend Nederlands. Hier staat de kleurnaam achter de naam, niet een fasenaam — de
+              fase heeft op de TV al zijn eigen pillenrij rechts. */}
           {t('turnOf')}: {activePlayer.name}{' '}
           {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
         </div>

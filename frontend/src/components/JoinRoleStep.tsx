@@ -19,11 +19,10 @@ export interface JoinRoleStepProps {
   error?: string | null
 }
 
-/** Tweede join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen.
- * Select-dan-bevestig (uit het oorspronkelijke design): een klik
- * zet alleen de lokale keuze; zonder keuze toont de knopplek een placeholder-tekst
- * i.p.v. een knop. De footer is een rij van twee knoppen: `onBack` (naar de
- * naam+kleur-stap) en de bevestigknop die `onPick` aanroept. */
+/** Tweede join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen. Select-dan-
+ *  bevestig: een klik zet alleen de lokale keuze; zonder keuze toont de knopplek een
+ *  placeholder-tekst i.p.v. een knop. Footer: `onBack` (naar naam+kleur) en de bevestigknop
+ *  die `onPick` aanroept. */
 export function JoinRoleStep({
   roles,
   takenRoleIds,
@@ -39,7 +38,6 @@ export function JoinRoleStep({
   return (
     <PhoneScreen className="gap-4">
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
-      {/* BEVINDING, opgelost (2026-08-10): kaal op de stage-achtergrond, zie OrderRollWaitStep.tsx. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="rounded-2xl px-4 py-2.5">
         <h1 className="font-display text-[26px] font-extrabold">{t('role.title')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('role.sub')}</p>

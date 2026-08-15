@@ -3,8 +3,8 @@ import { ColorSymbol } from './ColorSymbol'
 
 export interface ColorAvatarProps {
   color: PlayerColorDto | null | undefined
-  /** `banner`: 46px/radius 12px/tekst 24px. `row`: 34px/radius 9px/tekst 16px
-   * (L437,461). `reinforce`: 32px/radius 9px/tekst 15px (L530, Versterken-rij). */
+  /** `banner`: 46px/radius 12px/tekst 24px. `row`: 34px/radius 9px/tekst 16px.
+   *  `reinforce`: 32px/radius 9px/tekst 15px (Versterken-rij). */
   variant: 'banner' | 'row' | 'reinforce'
 }
 

@@ -24,24 +24,20 @@ export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = n
 
   return (
     <PhoneScreen className="items-center gap-1 text-center">
-      {/* BEVINDING, opgelost (2026-08-10): titel/subtitel stonden kaal op de stage-achtergrond
-          — zonder eigen surface kon geen scrim-intensiteit ze tegen een helder illustratiepunt
-          op 4,5:1 houden (zie glass-tokens.ts §Telefoon-stage-achtergrond). Zelfde
-          chip-idioom als de bestaande kicker-/badge-stijl (DESIGN.md § Components, "badge-
-          silver-outline"), hergebruikt i.p.v. een nieuw patroon: een strak op de tekst
-          gesneden plaat, geen volle kaart. */}
+      {/* Zonder eigen surface kan geen scrim-intensiteit titel/subtitel tegen een helder
+          illustratiepunt houden (zie glass-tokens.ts §Telefoon-stage-achtergrond). Hergebruikt
+          het bestaande chip-idioom (DESIGN.md § Components, "badge-silver-outline") i.p.v. een
+          nieuw patroon. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-1 rounded-2xl px-4 py-2.5">
         <p className="font-display text-[26px] font-black">{t('title')}</p>
         <p className="max-w-[280px] text-body text-fg-muted">{t('sub')}</p>
       </GlassPanel>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-[22px]">
-        {/* Gedeeld paneel onder de worp — BEVINDING opgelost (2026-08-13, gebruiker gescreenshot):
-            de dobbelstenen stonden als enige element van dit scherm rechtstreeks op de
-            stage-illustratie, precies boven het drukste stuk (de tactische kaart). Zelfde ingreep
-            als de dobbelsteen-picker in AttackFlowStep: één rustig vlak onder de hele worp.
-            Omvat bewust ook de nog-niet-gegooid-staat, anders zweven de streepjes-placeholders
-            alsnog kaal op de foto. */}
+        {/* Gedeeld paneel onder de worp, zelfde ingreep als de dobbelsteen-picker in
+            AttackFlowStep: één rustig vlak i.p.v. dobbelstenen kaal op de illustratie. Omvat ook
+            de nog-niet-gegooid-staat, anders zweven de streepjes-placeholders alsnog kaal op de
+            foto. */}
         <GlassPanel elevation="base" context="phone" className="flex w-full justify-center rounded-2xl">
           {myDice ? (
             <div className="flex gap-3">

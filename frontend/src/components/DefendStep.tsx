@@ -26,26 +26,21 @@ export interface DefendStepProps {
 }
 
 /**
- * "7 DEFEND" (`isDefend`-fase in het oorspronkelijke design). Toont bij de keuzeknoppen bewust geen
- * aanvallerdobbelstenen (de export doet dat ook niet — een verdediger reconnect'end vlak
- * vóór zijn keuze kan gewoon kiezen zonder de gemiste `attack`-broadcast, zie het bouwplan).
- * Het resultaat komt rechtstreeks uit de `ChooseDefenseDice`-invoke-respons, geen
- * `CombatNarrated`-broadcast nodig voor de eigen weergave.
+ * "7 DEFEND"-scherm. Toont bewust geen aanvallerdobbelstenen bij de keuzeknoppen: een verdediger
+ * die vlak vóór zijn keuze reconnect zonder de `attack`-broadcast te hebben gezien, kan zo
+ * alsnog gewoon kiezen. Resultaat komt rechtstreeks uit de `ChooseDefenseDice`-respons, geen
+ * `CombatNarrated`-broadcast nodig.
  *
- * Blijft na het resultaat gewoon gemount: `PendingCombat` wordt door de server al leeggemaakt
- * (of van eigenaar gewisseld bij verovering) in dezelfde snapshot als dit resultaat, waardoor de
- * rolbepaling in `PhoneAttackScreen` meteen naar 'bystander' zou omslaan — dit component zelf
- * hoeft daar niets voor te doen, `PhoneAttackScreen` houdt het scherm vast tot `onDismiss`.
+ * Blijft na het resultaat gemount: de server maakt `PendingCombat` al leeg in dezelfde snapshot
+ * als dit resultaat, waardoor `PhoneAttackScreen` anders meteen naar de 'bystander'-rol zou
+ * omslaan. Het scherm blijft dus staan tot `onDismiss`.
  */
 
 /**
- * Kiest de verhalende uitkomstregel vanuit de verdediger (zelfde behandeling als `resultLine()`
- * in `AttackFlowStep.tsx`, 2026-08-13, op verzoek — de vorige tekst noemde alleen de
- * aanvaller-verliezen en was daarmee feitelijk nog de aanvallerskant van het verhaal). Vier
- * uitkomsten i.p.v. drie: verovering krijgt een eigen regel, want "je verliest N legers" alleen
- * verdoezelt dat het hele gebied weg is — de andere drie zijn wiskundig uitputtend zolang het
- * gebied overeind blijft (zie de toelichting bij `resultLine.both`: een gemengde uitslag is
- * altijd 1-om-1, en kan dus nooit samenvallen met een volledige verovering).
+ * Verhalende uitkomstregel vanuit de verdediger — vier uitkomsten i.p.v. drie: verovering
+ * krijgt een eigen regel, want "je verliest N legers" alleen verdoezelt dat het hele gebied weg
+ * is. De andere drie zijn wiskundig uitputtend zolang het gebied overeind blijft (een gemengde
+ * uitslag is altijd 1-om-1, zie `resultLine.both`, en kan dus nooit met verovering samenvallen).
  */
 function resultKey(attackerLosses: number, defenderLosses: number, conquered: boolean) {
   if (conquered) return ['defend.result.conquered'] as const
@@ -85,20 +80,15 @@ export function DefendStep({
     <ModalShell
       context="phone"
       animated
-      // Geen `PhoneScreen`: dit is een full-screen overlay (`absolute inset-0`) en geen
-      // scherm binnen de kolom van `PhoneShell`. Zijkanten en onderkant volgen wél
-      // dezelfde `--spacing-gutter` als elk ander telefoonscherm; `pt-[52px]` is
-      // bestaande bovenclearance en bleef buiten de frame-gelijktrekking (2026-08-13).
+      // Geen `PhoneScreen`: dit is een full-screen overlay (`absolute inset-0`), geen scherm
+      // binnen de kolom van `PhoneShell`. Zijkanten/onderkant volgen wel dezelfde `--spacing-gutter`.
       className="absolute inset-0 z-[60] flex flex-col px-gutter pt-[52px] pb-gutter"
       style={{ borderRadius: 0 }}
     >
-      {/* BEVINDING, opgelost (2026-08-13, gebruiker gescreenshot): de hele kop stond kaal op de
-          stage-illustratie. `ModalShell` is "clear glass" (blur, geen tint), dus vervaagt de
-          illustratie wel maar verdonkert 'm niet — en dit blok valt precies in de ademband waar
-          `stageScrim` bewust geen randalpha zet. Eén gedeeld paneel eromheen, zelfde idioom als
-          `TvPlaceholderScreen`/`OrderRollWaitStep`; de nesting-guard laat de blur eraf (No-Nested-
-          Blur Rule), rand + schaduw blijven. De contrastvloer komt van de on-glass tekstbehandeling,
-          die alleen `.text-fg*` herkent — vandaar dat de losse inline-kleuren hieronder eruit zijn. */}
+      {/* `ModalShell` is "clear glass" (blur, geen tint) en dit blok valt in de ademband waar
+          `stageScrim` geen randalpha zet — zonder paneel te kaal op de illustratie. De
+          nesting-guard schakelt de blur van het geneste paneel uit (No-Nested-Blur Rule);
+          on-glass tekst komt uit `.text-fg*`-classes, vandaar geen losse inline-kleuren hieronder. */}
       <div className="flex min-h-0 flex-1 flex-col justify-center">
         <GlassPanel elevation="raised" context="phone" className="flex flex-col items-center gap-3.5 text-center">
           <span
@@ -129,9 +119,9 @@ export function DefendStep({
           {result === null && (
             <>
               <div className="font-body text-[15px] text-fg-secondary">{t('defend.choose')}</div>
-              {/* Kleuridentiteit van de chip zit in tint + rand, niet in de tekst: `var(--pitch-400)`
-                  als tekstkleur omzeilt de on-glass behandeling (zelfde bugklasse als de
-                  dobbelsteen-picker van AttackFlowStep, 2026-08-11). */}
+              {/* Kleuridentiteit zit in tint + rand, niet in de tekst: `var(--pitch-400)` als
+                  tekstkleur zou de on-glass tekstbehandeling omzeilen (zelfde valkuil als de
+                  dobbelsteen-picker in AttackFlowStep). */}
               <div
                 className="flex items-center gap-2 rounded-full border px-4 py-[7px] font-body text-sm text-fg-muted"
                 style={{ background: noTimerChipTint, borderColor: 'var(--pitch-400)' }}

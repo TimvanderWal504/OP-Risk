@@ -24,10 +24,9 @@ export interface JoinNameColorStepProps {
 }
 
 /**
- * Samengevoegde eerste join-stap (FO §3): naam én kleur op één scrollbare stap
- * (`joinNameColor`-sectie in het oorspronkelijke design). Select-
- * dan-bevestig voor de kleur, net als het losse kleur-kiezen daarvoor: één klik zet
- * de lokale keuze, `onSubmit` (de server-call) gaat pas bij de bevestigingsknop.
+ * Samengevoegde eerste join-stap (FO §3): naam én kleur op één scrollbare stap. Select-
+ * dan-bevestig voor de kleur: één klik zet de lokale keuze, `onSubmit` (de server-call) gaat pas
+ * bij de bevestigingsknop.
  */
 export function JoinNameColorStep({
   onSubmit,
@@ -48,14 +47,10 @@ export function JoinNameColorStep({
   return (
     <PhoneScreen>
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
-      {/* Twee secties, elk één glaspaneel dat de kop én zijn bediening omsluit — BEVINDING
-          opgelost (2026-08-13, gebruiker gescreenshot): de koppen hadden hun eigen zwevende
-          pil-paneel los van het veld/raster eronder, waardoor drie los geblurde vlakken elk een
-          ander stuk van de stage-illustratie vingen en de kop niet zichtbaar bij zijn bediening
-          hoorde. Nu draagt het paneel de groepering; de nesting-guard schakelt de blur van het
-          genestelde TextField/naamveld automatisch uit (rand blijft, zodat het invoerveld nog
-          steeds als invoerveld leest). Zelfde principe als de dobbelsteen-picker in
-          AttackFlowStep: één rustig vlak per samenhangende set, niet per element. */}
+      {/* Elke sectie is één glaspaneel dat de kop én zijn bediening omsluit, i.p.v. losse
+          zwevende koppen naast het veld/raster — één rustig vlak per samenhangende set, zelfde
+          principe als de dobbelsteen-picker in AttackFlowStep. De nesting-guard schakelt de blur
+          van het geneste TextField uit; de rand blijft, zodat het nog als invoerveld leest. */}
       <div className="flex flex-1 flex-col gap-0 overflow-y-auto pr-0.5">
         <GlassPanel elevation="base" context="phone" className="rounded-2xl">
           <h1 className="mb-3 font-display text-[24px] font-extrabold">{t('join:name.title')}</h1>

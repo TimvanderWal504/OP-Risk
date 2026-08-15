@@ -59,8 +59,8 @@ export function PhonePage() {
     )
   }
 
-  // Geldt door élke fase heen zolang de speler is uitgeschakeld — vóór de fase-dispatch,
-  // want eliminatie is geen speleigenschap van één fase (`isElim`-fase in het oorspronkelijke design).
+  // Geldt door élke fase heen zolang de speler is uitgeschakeld — vóór de fase-dispatch, want
+  // eliminatie is geen speleigenschap van één fase.
   if (me.isEliminated) {
     const myColor = state.colors.find((color) => color.id === me.colorId) ?? null
 

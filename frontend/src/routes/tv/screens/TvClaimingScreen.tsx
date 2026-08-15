@@ -11,20 +11,18 @@ import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import type { TvScreenProps } from './tvScreens'
 
 /**
- * TV tijdens `GamePhaseDto.Claiming` (`isClaim`-fase, state-index 2, uit het oorspronkelijke design).
- * `state.setupState.activePlayerId` is tijdens Claiming per constructie nooit `null`
- * (`GameProjection.Apply(TurnOrderDetermined)` stapt alleen bij `SetupMode.Claiming` naar
- * deze fase — bij `SetupMode.Random` gaat de state rechtstreeks naar `InitialPlacement`, deze
- * fase wordt dan nooit bereikt), dus geen defensieve null-branch nodig zoals bij
- * `TvInitialPlacementScreen`.
+ * TV tijdens `GamePhaseDto.Claiming`. `state.setupState.activePlayerId` is tijdens Claiming per
+ * constructie nooit `null` (`GameProjection.Apply(TurnOrderDetermined)` stapt alleen bij
+ * `SetupMode.Claiming` naar deze fase — bij `SetupMode.Random` gaat de state rechtstreeks naar
+ * `InitialPlacement`, deze fase wordt dan nooit bereikt), dus geen defensieve null-branch nodig
+ * zoals bij `TvInitialPlacementScreen`.
  *
- * 3-rijen grid (`96px_1fr_146px`), niet de letterlijke 2-rijen-vorm uit de export: anders
- * herberekent `boardScale.ts` de kaartviewport bij elke fase-overgang en springt de kaart
- * zichtbaar van formaat op een TV. De 146px-rij blijft leeg, zelfde scope-afspraak als het
- * ontbrekende spelerspaneel/de feed-strip op `TvMainBoardScreen`. Continent-labels, zee-scrim
- * en de onderrand-bijschriftbalk staan wél letterlijk in de export (L211-213, L231-233) maar
- * zijn hier bewust weggelaten, consistent met diezelfde bestaande omissie op `TvMainBoardScreen`
- * — gemelde bevinding, niet in deze taak opgelost.
+ * 3-rijen grid (`96px_1fr_146px`): anders herberekent `boardScale.ts` de kaartviewport bij elke
+ * fase-overgang en springt de kaart zichtbaar van formaat op een TV. De 146px-rij blijft leeg,
+ * zelfde scope-afspraak als het ontbrekende spelerspaneel/de feed-strip op `TvMainBoardScreen`.
+ * Continent-labels, zee-scrim en de onderrand-bijschriftbalk zijn hier bewust weggelaten,
+ * consistent met diezelfde bestaande omissie op `TvMainBoardScreen` — gemelde bevinding, niet
+ * in deze taak opgelost.
  *
  * "Laatst geclaimd" komt uit het `TerritoryClaimed`-narratief-event (`useTvGame.tsx`,
  * `lastClaimedTerritoryId`), niet uit het vergelijken van twee `territories`-snapshots — zie
@@ -34,8 +32,8 @@ import type { TvScreenProps } from './tvScreens'
  * gebiedslagen.
  */
 export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProps) {
-  // 'board' erbij voor `turnOf` (zoals in het oorspronkelijke design) — dezelfde tekst als op het
-  // Hoofdscherm, geen dubbele sleutel in twee namespaces (bouwplan Belangrijk 7).
+  // 'board' erbij voor `turnOf` — dezelfde tekst als op het Hoofdscherm, geen dubbele sleutel
+  // in twee namespaces (bouwplan Belangrijk 7).
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)

@@ -20,12 +20,11 @@ function formatSeconds(seconds: number): string {
 }
 
 /**
- * Instellingen-samenvatting op de TV (FO §10; `settingsRows` uit het oorspronkelijke design
- * L807-815). Rijvolgorde en per-rij accentkleur zijn letterlijk uit de export overgenomen:
- * winconditie in silver-400, "aan"-waarden in pitch-400, overige in fg1.
+ * Instellingen-samenvatting op de TV (FO §10). Rijvolgorde en per-rij accentkleur: winconditie
+ * in silver-400, "aan"-waarden in pitch-400, overige in fg1.
  *
- * De export toont maar één timer-rij ("Beurttimer") — geen aparte fortify-timer-rij, dus
- * `fortifyTimerSeconds` wordt hier niet getoond (wel elders, in `CreateGameForm`).
+ * Toont geen aparte fortify-timer-rij, alleen "Beurttimer" — `fortifyTimerSeconds` wordt hier
+ * niet getoond (wel elders, in `CreateGameForm`).
  */
 export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
   const { t } = useTranslation('lobby')
