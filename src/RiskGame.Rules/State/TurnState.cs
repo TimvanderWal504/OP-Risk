@@ -20,10 +20,18 @@ namespace RiskGame.Rules.State;
 /// nadien bijgewerkt door <c>ArmiesReinforced</c> (aftrek) en <c>CardsTraded</c> (optelling
 /// van de setwaarde). Buiten Versterken ongebruikt (0).
 /// </param>
+/// <param name="HasFortified">
+/// Of deze beurt al een <c>Fortified</c> is toegepast (FO §5.2 Kernregel: "één verplaatsing").
+/// Gezet door <see cref="Fortify.FortifyGuards.CanFortify"/> afgedwongen, niet alleen
+/// geregistreerd — een tweede <c>Fortify</c>-aanroep binnen dezelfde fase is ongeldig zolang dit
+/// waar is. Start op <see langword="false"/> bij elke nieuwe fase-intrede, want <c>PhaseChanged</c>
+/// bouwt altijd een geheel nieuwe <see cref="TurnState"/> op (nooit een <c>with</c> op de oude).
+/// </param>
 public sealed record TurnState(
     string ActivePlayerId,
     TurnPhase TurnPhase,
     PhaseTimer? Timer,
     PendingCombat? PendingCombat,
     AttackEngagement? PausedAttackTarget = null,
-    int ArmiesRemaining = 0);
+    int ArmiesRemaining = 0,
+    bool HasFortified = false);

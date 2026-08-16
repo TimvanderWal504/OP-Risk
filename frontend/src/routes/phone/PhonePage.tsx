@@ -36,6 +36,8 @@ export function PhonePage() {
     chooseDefenseDice,
     moveAfterConquest,
     abandonAttack,
+    fortify,
+    endTurn,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
 
@@ -97,6 +99,8 @@ export function PhonePage() {
         chooseDefenseDice,
         moveAfterConquest,
         abandonAttack,
+        fortify,
+        endTurn,
       })}
     </PhoneShell>
   )

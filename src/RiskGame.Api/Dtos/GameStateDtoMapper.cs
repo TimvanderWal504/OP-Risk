@@ -1,3 +1,4 @@
+using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
@@ -45,9 +46,13 @@ public static class GameStateDtoMapper
                 state.TurnState.ArmiesRemaining,
                 ToDto(state.TurnState.PendingCombat),
                 ToDto(state.TurnState.Timer, timeProvider),
+                state.TurnState.TurnPhase == TurnPhase.Fortify
+                    ? FortifyGuards.ReachableComponents(state, state.TurnState.ActivePlayerId)
+                    : [],
                 state.TurnState.TurnPhase == TurnPhase.Reinforce
                     ? ToDto(ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId))
-                    : null);
+                    : null,
+                state.TurnState.HasFortified);
 
         var colors = state.Map.Colors
             .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))

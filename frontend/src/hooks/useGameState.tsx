@@ -340,6 +340,34 @@ export function useGameState(gameId: string) {
     if (updated) applyState(updated)
   }, [invoke, gameId, playerId])
 
+  // Anders dan de fire-and-forget-acties hierboven: `FortifyFlowStep` moet synchroon weten of de
+  // aanroep lukte om te beslissen of ze op de foutmelding moet blijven staan (i.p.v. door te gaan
+  // naar de volgende stap) — vandaar `Promise<boolean>` i.p.v. `Promise<void>`. `invoke` vangt elke
+  // fout zelf af en geeft dan `undefined` terug (nooit een reject), dus dit hoeft geen eigen
+  // try/catch te hebben.
+  const fortify = useCallback(
+    async (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number): Promise<boolean> => {
+      if (!playerId) return false
+
+      const updated = await invoke<GameStateDto>('Fortify', gameId, playerId, fromTerritoryId, toTerritoryId, armiesToMove)
+
+      if (updated) applyState(updated)
+
+      return updated !== undefined
+    },
+    [invoke, gameId, playerId],
+  )
+
+  const endTurn = useCallback(async (): Promise<boolean> => {
+    if (!playerId) return false
+
+    const updated = await invoke<GameStateDto>('EndTurn', gameId, playerId)
+
+    if (updated) applyState(updated)
+
+    return updated !== undefined
+  }, [invoke, gameId, playerId])
+
   const combat = useCombatBroadcast(connection)
 
   return {
@@ -364,5 +392,7 @@ export function useGameState(gameId: string) {
     moveAfterConquest,
     abandonAttack,
     endPhase,
+    fortify,
+    endTurn,
   }
 }

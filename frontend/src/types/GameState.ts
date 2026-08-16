@@ -78,6 +78,14 @@ export interface TurnStateDto {
   pendingCombat: PendingCombatDto | null
   timer: TurnTimerDto | null
   reinforcementBreakdown: ReinforcementBreakdownDto | null
+  /** Of deze beurt al een Fortify-verplaatsing is toegepast (FO §5.2 Kernregel: "één verplaatsing"). */
+  hasFortified: boolean
+  /**
+   * Alleen gevuld tijdens `TurnPhaseDto.Fortify` (leeg daarbuiten): de eigen gebieden van de
+   * actieve speler, verdeeld in samenhangende groepen (`FortifyGuards.ReachableComponents`).
+   * Bereikbaarheid is symmetrisch, dus "bereikbaar vanuit gebied X" is de rest van X's groep.
+   */
+  reachableFortifyGroups: string[][]
 }
 
 /** Spiegelt RiskGame.Api.Dtos.OrderRollStateDto — wie er nog mag gooien voor de volgorde. */

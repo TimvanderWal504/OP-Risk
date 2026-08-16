@@ -2,13 +2,13 @@ import { TurnPhaseDto } from '../../../types/GameState'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
 import { PhoneReinforceScreen } from './PhoneReinforceScreen'
 import { PhoneAttackScreen } from './PhoneAttackScreen'
+import { PhoneFortifyScreen } from './PhoneFortifyScreen'
 import type { PhoneScreen } from './phoneScreens'
 
 /**
  * Sub-dispatch binnen `GamePhaseDto.InProgress` op `TurnStateDto.turnPhase` — tweede
  * `Record` naast de fase-as in `phoneScreens.ts`, zelfde motivatie: een gemiste
- * `TurnPhaseDto` geeft een compilefout in plaats van een stille placeholder. Reinforce en
- * Attack hebben een echt scherm; Fortify volgt in een latere taak.
+ * `TurnPhaseDto` geeft een compilefout in plaats van een stille placeholder.
  *
  * Losstaand van `PhoneInProgressScreen.tsx` (i.p.v. co-located) zodat dat bestand alleen
  * de component exporteert — een bestand dat naast een component ook losse constanten
@@ -17,7 +17,7 @@ import type { PhoneScreen } from './phoneScreens'
 const turnPhaseScreens: Record<TurnPhaseDto, PhoneScreen> = {
   [TurnPhaseDto.Reinforce]: PhoneReinforceScreen,
   [TurnPhaseDto.Attack]: PhoneAttackScreen,
-  [TurnPhaseDto.Fortify]: PhonePlaceholderScreen,
+  [TurnPhaseDto.Fortify]: PhoneFortifyScreen,
 }
 
 /**

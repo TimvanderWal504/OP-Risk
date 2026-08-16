@@ -6,6 +6,7 @@ import { PhoneInProgressScreen } from './PhoneInProgressScreen'
 import { resolvePhoneTurnPhaseScreen } from './phoneTurnPhaseScreens'
 import { PhoneReinforceScreen } from './PhoneReinforceScreen'
 import { PhoneAttackScreen } from './PhoneAttackScreen'
+import { PhoneFortifyScreen } from './PhoneFortifyScreen'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
 
 const baseTurnState = {
@@ -14,6 +15,8 @@ const baseTurnState = {
   pendingCombat: null,
   timer: null,
   reinforcementBreakdown: null,
+  hasFortified: false,
+  reachableFortifyGroups: [],
 }
 
 describe('resolvePhoneTurnPhaseScreen', () => {
@@ -25,8 +28,11 @@ describe('resolvePhoneTurnPhaseScreen', () => {
     expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Attack)).toBe(PhoneAttackScreen)
   })
 
-  it('valt terug op de placeholder voor Fortify (nog niet gebouwd) en een onbekende/ontbrekende fase', () => {
-    expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Fortify)).toBe(PhonePlaceholderScreen)
+  it('koppelt Fortify aan PhoneFortifyScreen', () => {
+    expect(resolvePhoneTurnPhaseScreen(TurnPhaseDto.Fortify)).toBe(PhoneFortifyScreen)
+  })
+
+  it('valt terug op de placeholder voor een onbekende/ontbrekende fase', () => {
     expect(resolvePhoneTurnPhaseScreen(undefined)).toBe(PhonePlaceholderScreen)
     expect(resolvePhoneTurnPhaseScreen(99 as TurnPhaseDto)).toBe(PhonePlaceholderScreen)
   })

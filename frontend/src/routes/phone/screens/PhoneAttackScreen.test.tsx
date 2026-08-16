@@ -27,6 +27,8 @@ const attackState = (options: {
     pendingCombat: options.pendingCombat,
     timer: { remainingMs: 60_000, isPaused: options.pendingCombat !== null },
     reinforcementBreakdown: null,
+    hasFortified: false,
+    reachableFortifyGroups: [],
   },
 })
 

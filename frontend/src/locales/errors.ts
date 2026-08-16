@@ -194,6 +194,10 @@ export const errors = {
       nl: "Er is geen aaneengesloten pad van eigen gebieden tussen '{{fromTerritoryId}}' en '{{toTerritoryId}}'.",
       en: "There is no unbroken path of own territories between '{{fromTerritoryId}}' and '{{toTerritoryId}}'.",
     },
+    alreadyMoved: {
+      nl: 'Je hebt deze beurt al verplaatst; dat kan maar één keer per beurt.',
+      en: 'You have already moved this turn; that can only happen once per turn.',
+    },
   },
   reinforce: {
     mustPlaceAtLeastOneArmy: {

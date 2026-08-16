@@ -320,9 +320,18 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             },
         });
 
-    /// <summary>Eén vrije verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant).</summary>
-    public GameState Apply(GameState state, Fortified @event) =>
-        MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
+    /// <summary>
+    /// Eén vrije verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant). Zet naast de
+    /// legerverplaatsing ook <see cref="TurnState.HasFortified"/> — de Kernregel "één
+    /// verplaatsing" wordt daarmee afgedwongen door <see cref="Fortify.FortifyGuards.CanFortify"/>,
+    /// niet alleen geregistreerd.
+    /// </summary>
+    public GameState Apply(GameState state, Fortified @event)
+    {
+        state = MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
+
+        return state.WithTurnState(state.TurnState! with { HasFortified = true });
+    }
 
     /// <summary>Haalt de genoemde kaart uit de trekstapel naar de hand van de speler (FO §5.2).</summary>
     public GameState Apply(GameState state, CardDrawn @event)

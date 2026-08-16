@@ -12,6 +12,7 @@ import { board } from './board'
 import { reinforce } from './reinforce'
 import { attack } from './attack'
 import { attackTv } from './attackTv'
+import { fortify } from './fortify'
 import { colors } from './colors'
 import { roles } from './roles'
 import { territories } from './territories'
@@ -36,6 +37,7 @@ export const trees = {
   reinforce,
   attack,
   attackTv,
+  fortify,
   colors,
   roles,
   territories,

@@ -107,13 +107,23 @@ public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int
 /// <see cref="ArmiesRemaining"/> voor het eerst werd gezet. Openbaar zoals <c>ArmiesRemaining</c>
 /// zelf al is (geen nieuwe privacy-grens, TO §6.1 blijft ongemoeid).
 /// </param>
+/// <param name="ReachableFortifyGroups">
+/// Alleen gevuld tijdens <see cref="TurnPhaseDto.Fortify"/> (leeg daarbuiten): de eigen gebieden
+/// van de actieve speler, verdeeld in samenhangende groepen
+/// (<see cref="RiskGame.Rules.Fortify.FortifyGuards.ReachableComponents"/>). Bereikbaarheid is
+/// symmetrisch, dus "bereikbaar vanuit gebied X" is simpelweg de rest van X's groep — de client
+/// filtert de doellijst hiermee zonder zelf een pad-/effectregel na te bouwen
+/// (frontend/CLAUDE.md: geen spelregels client-side).
+/// </param>
 public sealed record TurnStateDto(
     string ActivePlayerId,
     TurnPhaseDto TurnPhase,
     int ArmiesRemaining,
     PendingCombatDto? PendingCombat,
     TurnTimerDto? Timer,
-    ReinforcementBreakdownDto? ReinforcementBreakdown = null);
+    IReadOnlyList<IReadOnlyList<string>> ReachableFortifyGroups,
+    ReinforcementBreakdownDto? ReinforcementBreakdown = null,
+    bool HasFortified = false);
 
 /// <summary>
 /// Draad-representatie van <see cref="RiskGame.Rules.Reinforcement.ReinforcementBreakdown"/> —

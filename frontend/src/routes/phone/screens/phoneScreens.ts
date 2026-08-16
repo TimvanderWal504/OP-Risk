@@ -45,6 +45,11 @@ export interface PhoneScreenProps {
   moveAfterConquest: (armiesToMove: number) => Promise<void>
   /** "Ander gevecht" (FO §5.4): stopt de huidige belegering handmatig, hervat de beurttimer. */
   abandonAttack: () => Promise<void>
+  /** Verplaatsen (FO §5.2). `Promise<boolean>` i.p.v. fire-and-forget: de aanroeper moet weten
+   *  of de move lukte om te beslissen of ze op de foutmelding moet blijven staan. */
+  fortify: (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number) => Promise<boolean>
+  /** Beëindigt de beurt vanuit Verplaatsen (FO §5.5) — zelfde `Promise<boolean>`-reden als `fortify`. */
+  endTurn: () => Promise<boolean>
 }
 
 export type PhoneScreen = (props: PhoneScreenProps) => ReactNode

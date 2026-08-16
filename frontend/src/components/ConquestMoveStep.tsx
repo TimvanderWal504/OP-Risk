@@ -55,7 +55,7 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
         <div className="grid grid-cols-[1fr_auto_1fr] items-start justify-items-center gap-3">
           <div>
             <div
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-[26px]"
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-h2"
               style={{ background: myColor?.hex, color: myColor?.onHex }}
             >
               {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
@@ -65,7 +65,7 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
           <span className="self-center text-2xl text-pitch-400">→</span>
           <div>
             <div
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-[26px]"
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-h2"
               style={{ background: myColor?.hex, color: myColor?.onHex, boxShadow: myColor ? `0 0 20px ${myColor.hex}` : undefined }}
             >
               {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
@@ -83,20 +83,20 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
             type="button"
             disabled={clamped <= minArmies}
             onClick={() => setMoveN((current) => Math.max(minArmies, current - 1))}
-            className="flex h-15 w-15 items-center justify-center justify-self-end rounded-2xl border-2 text-[30px] font-black text-fg disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-15 w-15 items-center justify-center justify-self-end rounded-2xl border-2 text-h1 font-black text-fg disabled:cursor-not-allowed disabled:opacity-40"
             style={{ borderColor: 'var(--border-strong)' }}
           >
             −
           </button>
           <div>
-            <div className="font-display text-[52px] font-black leading-none text-fg">{clamped}</div>
-            <div className="font-body text-[16px] text-fg-muted">{t('armiesWord')}</div>
+            <div className="font-display text-display font-black leading-none text-fg">{clamped}</div>
+            <div className="font-body text-body text-fg-muted">{t('armiesWord')}</div>
           </div>
           <button
             type="button"
             disabled={clamped >= maxArmies}
             onClick={() => setMoveN((current) => Math.min(maxArmies, current + 1))}
-            className="h-15 w-15 justify-self-start rounded-2xl border-none bg-pitch-500 text-[30px] font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-15 w-15 justify-self-start rounded-2xl border-none bg-pitch-500 text-h1 font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             +
           </button>
