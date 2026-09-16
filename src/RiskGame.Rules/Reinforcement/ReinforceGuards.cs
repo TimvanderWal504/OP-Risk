@@ -44,6 +44,13 @@ public static class ReinforceGuards
         return state.Player(playerId).Hand.Count >= MinHandSizeForMandatoryTrade;
     }
 
+    /// <summary>
+    /// Of <paramref name="cardIds"/> een geldige inleg vormt: drie verschillende kaarten die
+    /// de speler bezit, in een set die <see cref="CardSetEvaluator"/> goedkeurt. Wijst een
+    /// lijst met een herhaald id expliciet af (i.p.v. de dubbele kaart driemaal in de set op
+    /// te nemen) — anders zou één bezeten kaart als een geldige three-of-a-kind tellen en de
+    /// bezitsbonus meermaals opleveren.
+    /// </summary>
     public static ValidationResult CanTradeInCards(
         GameState state, string playerId, IReadOnlyList<string> cardIds)
     {
@@ -56,6 +63,12 @@ public static class ReinforceGuards
         if (!preconditions.IsSuccess)
         {
             return preconditions;
+        }
+
+        if (cardIds.Distinct(StringComparer.Ordinal).Count() != cardIds.Count)
+        {
+            return ValidationResult.Failure(
+                "reinforce.duplicateCardIds", new Dictionary<string, string> { ["playerId"] = playerId });
         }
 
         var hand = state.Player(playerId).Hand;

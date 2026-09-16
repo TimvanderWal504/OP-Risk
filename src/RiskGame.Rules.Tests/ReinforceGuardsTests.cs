@@ -125,6 +125,25 @@ public class ReinforceGuardsTests
     }
 
     [Fact]
+    public void CanTradeInCards_MetHerhaaldKaartId_IsOngeldig()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-1"),
+            Card("c3", "ontario", "symbol-1"),
+        };
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce);
+
+        var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c1", "c1"]);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("reinforce.duplicateCardIds", result.Errors.Single().Code);
+    }
+
+    [Fact]
     public void CanTradeInCards_BuitenDeVersterkingsfase_IsOngeldig()
     {
         var hand = new[]

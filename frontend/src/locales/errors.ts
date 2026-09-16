@@ -208,6 +208,10 @@ export const errors = {
       nl: "Speler '{{playerId}}' heeft kaart '{{cardId}}' niet in bezit.",
       en: "Player '{{playerId}}' does not own card '{{cardId}}'.",
     },
+    duplicateCardIds: {
+      nl: "Speler '{{playerId}}' probeert dezelfde kaart meerdere keren in te leveren.",
+      en: "Player '{{playerId}}' is trying to submit the same card more than once.",
+    },
     invalidCardSetSize: {
       nl: 'Een kaartenset bestaat uit precies {{expected}} kaarten, niet {{actual}}.',
       en: 'A card set consists of exactly {{expected}} cards, not {{actual}}.',
