@@ -31,8 +31,8 @@ in JSON) zodat content zonder codewijziging aangepast kan worden.
 
 ## Operating Context
 
-- Self-hosted server, LAN of remote via Tailscale; Azure-hosting is een
-  toekomstplan, geen huidige eis.
+- Publiek bereikbaar via Azure App Service (API + SignalR) en Vercel
+  (frontend); Neon levert de managed Postgres.
 - Alleen live sessies in v1 — geen opslaan/hervatten.
 - Joinen via QR-code op de TV → naam → kleur → (optioneel) rol → lobby.
 - TV-hardware is vaak verouderd (typische woonkamer-apparatuur); dit is een

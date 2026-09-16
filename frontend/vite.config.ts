@@ -31,6 +31,7 @@ export default defineConfig({
   customLogger: logger,
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   server: {
+    port: 5174,
     watch: {
       usePolling: true
     },

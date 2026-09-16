@@ -1,9 +1,9 @@
-# Plan B-opstelling (docs/plan-b-reisopstelling.md §2, §5, §7).
+# Lokale Postgres voor ontwikkeling (docs/azure-hosting-deployment.md: productie draait
+# op Neon, niet op deze compose-opstelling).
 #
-# Postgres is hier bewust NIET via `ports:` bereikbaar: hij hangt alleen aan het
-# interne compose-netwerk, zodat Tailscale Funnel uitsluitend de API-poort
-# publiceert en nooit de database (§2 en §4 van het hosting-plan).
-# Voor lokale ontwikkeling zie docker-compose.dev.yml.
+# Postgres is hier bewust NIET via `ports:` bereikbaar op de host zelf: hij hangt alleen
+# aan het interne compose-netwerk. Voor toegang vanaf de dev-machine (`dotnet test`) zie
+# docker-compose.dev.yml.
 
 services:
   db:

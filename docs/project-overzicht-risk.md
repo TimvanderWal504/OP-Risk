@@ -10,7 +10,7 @@
 
 - **Functioneel ontwerp** (`functioneel-ontwerp-risk.md`) staat vast: host-op-TV + spelers-op-telefoon, gebiedsselectie via hybride highlight+knoppenlijst, aanval/verdediging met zelf te kiezen dobbelstenen, harde beurttimer die pauzeert tijdens een gevecht, moderne fortify-regel, klassieke kaartenset-waardering, 7 spelers met 18 startlegers, geheime missies + werelddominantie als winconditie, en het kaart-datamodel (§4). Rollen, missies en gebeurteniskaarten zijn inmiddels ook **inhoudelijk ingevuld** (zie §1.4).
 - **Design** (`claude-design-prompts-risk.md`) is uitgevoerd in Claude Design; de TV- en telefoonschermen in `frontend/src/components/` volgen dat ontwerp (incl. een "pitch/silver"-restyle op basis van een bijgewerkte Host-scherm-export).
-- **Hosting-plan** (`plan-b-reisopstelling.md`): backend thuis op Proxmox via Tailscale Funnel, laptop als TV-scherm. Nog niet in praktijk uitgevoerd/getest, zie §2.
+- **Hosting-plan** (`azure-hosting-deployment.md`): Azure App Service (API + SignalR) + Neon (Postgres) + Vercel (frontend). Nog niet in praktijk uitgevoerd/getest, zie §2.
 
 ### 1.2 `RiskGame.Rules` — pure rules engine ✅ gebouwd
 
@@ -58,7 +58,7 @@ Nog te bouwen: het bord zelf (placeholder of echt) voor de fases na de lobby/ord
 Zodra het bord er is: `map-background-final.png` (aanwezig in `data/maps/standaard-43/`) als achtergrond met `territories.geo.json` als klikbare/kleurbare SVG-laag erboven, met dezelfde projectie (lengtegraadbereik −180° tot 191°, zie TO §7.2). Dit is stap 5 uit §3 en volledig nog te doen — er bestaat nog geen `map/`-code.
 
 ### 2.3 Hosting-plan in de praktijk beproeven
-`plan-b-reisopstelling.md` is uitgewerkt maar nog niet als daadwerkelijke deploy-/testronde doorlopen (Tailscale Funnel permanent vs. sessie-gebonden aanzetten, UPS-status Proxmox-host — zie het document §4/§5).
+`azure-hosting-deployment.md` is uitgewerkt maar nog niet als daadwerkelijke provisioning-/deployronde doorlopen (Azure App Service + Neon + Vercel daadwerkelijk aanmaken en de deploy-/testchecklist doorlopen — zie het document).
 
 ### 2.4 Reconnect & randgevallen hardmaken in de UI
 De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules/API-laag; of dit end-to-end via de frontend werkt (ander apparaat, tabblad sluiten tijdens iemands beurt) is nog niet apart geverifieerd. Dit is stap 6 uit §3.
@@ -83,7 +83,7 @@ De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules
 | `docs/functioneel-ontwerp-risk.md` | Volledig functioneel ontwerp, alle spelregels + datamodellen |
 | `docs/technisch-ontwerp-risk.md` | Technisch ontwerp: architectuur, stack, event sourcing, teststrategie |
 | `docs/claude-design-prompts-risk.md` | 3 design-prompts (TV, host-opzet, telefoon) — uitgevoerd |
-| `docs/plan-b-reisopstelling.md` | Hosting-plan: Tailscale Funnel + laptop-als-TV — nog te beproeven |
+| `docs/azure-hosting-deployment.md` | Hosting-plan: Azure App Service + Neon + Vercel — nog te beproeven |
 | `data/colors.json` | De 7 spelerskleuren, gedeeld over alle kaartvarianten |
 | `data/maps/standaard-43/territories.json` | 43 gebieden → atomaire regio's (groeperingsconfiguratie) |
 | `data/maps/standaard-43/territories.geo.json` | Diezelfde 43 gebieden met echte polygon-geometrie |

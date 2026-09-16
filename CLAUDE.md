@@ -31,6 +31,7 @@ zie frontend/CLAUDE.md voor hoe dat samenwerkt met de tokenbestanden.
 | Pad | Inhoud |
 | --- | --- |
 | [docs/](docs/) | Functioneel ontwerp (FO), technisch ontwerp (TO), projectoverzicht |
+| [docs/azure-hosting-deployment.md](docs/azure-hosting-deployment.md) | Runbook: Azure App Service + Neon + Vercel — provisioning, configuratie, deploy- en testchecklist (door de gebruiker zelf uit te voeren) |
 | [data/](data/) | Speeldata: territoria, adjacency, continenten, kleuren, kaarten, kaartachtergrond |
 | [src/RiskGame.Rules/](src/RiskGame.Rules/) | **Stap 1** — pure C# rules engine, geen I/O, geen framework-afhankelijkheden |
 | [src/RiskGame.Rules.Tests/](src/RiskGame.Rules.Tests/) | Unit tests op de rules engine |
