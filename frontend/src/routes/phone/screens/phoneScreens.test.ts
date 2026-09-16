@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GamePhaseDto } from '../../../types/GameState'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
+import { PhoneGameOverScreen } from './PhoneGameOverScreen'
 import { phoneScreens, resolvePhoneScreen } from './phoneScreens'
 
 describe('phoneScreens', () => {
@@ -8,6 +9,10 @@ describe('phoneScreens', () => {
     for (const phase of Object.values(GamePhaseDto)) {
       expect(phoneScreens[phase]).toBeTypeOf('function')
     }
+  })
+
+  it('koppelt Finished aan PhoneGameOverScreen, niet de placeholder', () => {
+    expect(phoneScreens[GamePhaseDto.Finished]).toBe(PhoneGameOverScreen)
   })
 
   it('valt terug op de placeholder zolang er nog geen fase bekend is', () => {

@@ -1,6 +1,11 @@
 import { vi } from 'vitest'
 import { GamePhaseDto, type GameStateDto, type SetupStateDto } from '../../../types/GameState'
-import { RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../../../types/GameSettings'
+import {
+  MissionWinTimingDto,
+  RoleAssignmentModeDto,
+  SetupModeDto,
+  WinConditionDto,
+} from '../../../types/GameSettings'
 import type { PhoneScreenProps } from './phoneScreens'
 
 /**
@@ -11,8 +16,8 @@ export const fixtureState: GameStateDto = {
   gameId: 'ABCD',
   phase: GamePhaseDto.Lobby,
   players: [
-    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false },
-    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false },
+    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null },
+    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, missionId: null },
   ],
   availableColorIds: ['green'],
   turnOrder: ['alice', 'bob'],
@@ -33,10 +38,13 @@ export const fixtureState: GameStateDto = {
     rolesEnabled: false,
     roleAssignment: RoleAssignmentModeDto.Random,
     eventsEnabled: false,
+    missionWinTiming: MissionWinTimingDto.EndOfTurn,
   },
   orderRollState: null,
   setupState: null,
   stateVersion: 1,
+  winners: [],
+  pendingWinnerPlayerId: null,
 }
 
 /** De door de server afgeleide setup-state; tests zetten alleen wat hun gedrag stuurt. */

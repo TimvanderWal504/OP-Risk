@@ -110,9 +110,14 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
 
       {order && order.length > 0 && (
         <div className="mt-6 w-full max-w-[1500px]">
-          <div className="mb-3.5 text-center font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+          <GlassPanel
+            elevation="base"
+            context="tv"
+            padding="none"
+            className="mb-3.5 inline-block px-4 py-1.5 text-center font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted"
+          >
             {t('turnOrder')}
-          </div>
+          </GlassPanel>
           <div className="flex justify-center gap-4">
             {order.map((playerId, rank) => {
               const player = players.find((p) => p.id === playerId)

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
+  MissionWinTimingDto,
   RoleAssignmentModeDto,
   SetupModeDto,
   WinConditionDto,
@@ -44,9 +45,23 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
     [RoleAssignmentModeDto.Choose]: t('roleAssignment.choose'),
   }
 
+  const missionWinTimingLabels: Record<MissionWinTimingDto, string> = {
+    [MissionWinTimingDto.EndOfTurn]: t('missionWinTiming.endOfTurn'),
+    [MissionWinTimingDto.StartOfNextTurn]: t('missionWinTiming.startOfNextTurn'),
+    [MissionWinTimingDto.FullRoundRevealed]: t('missionWinTiming.fullRoundRevealed'),
+  }
+
   const rows: [string, string, string][] = [
     [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
     [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--color-silver-400)'],
+    // Alleen relevant bij Geheime missies (FO §6.2) — betekenisloos bij Werelddominantie.
+    ...(settings.winCondition === WinConditionDto.SecretMissions
+      ? ([[t('settings.missionWinTiming'), missionWinTimingLabels[settings.missionWinTiming], 'var(--fg1)']] as [
+          string,
+          string,
+          string,
+        ][])
+      : []),
     [
       t('settings.roles'),
       settings.rolesEnabled ? roleAssignmentLabels[settings.roleAssignment] : t('settings.off'),

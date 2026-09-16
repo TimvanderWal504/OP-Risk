@@ -15,8 +15,8 @@ export function TvPlaceholderScreen() {
 
   return (
     <div className="flex h-full mx-auto max-w-[1550px] items-center justify-center">
-      <GlassPanel elevation="base" context="tv" className="text-h3 text-fg-muted">
-        {t('placeholder.tv')}
+      <GlassPanel elevation="base" context="tv">
+        <span className="text-h3 text-fg-muted">{t('placeholder.tv')}</span>
       </GlassPanel>
     </div>
   )

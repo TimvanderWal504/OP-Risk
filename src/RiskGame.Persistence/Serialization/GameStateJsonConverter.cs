@@ -39,7 +39,13 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
             root.GetProperty("turnState").Deserialize<TurnState?>(scoped),
             root.GetProperty("deck").Deserialize<DeckState>(scoped)!,
             root.GetProperty("activeEffects").Deserialize<IReadOnlyList<ActiveEffect>>(scoped)!,
-            root.GetProperty("winners").Deserialize<IReadOnlyList<string>>(scoped)!);
+            root.GetProperty("winners").Deserialize<IReadOnlyList<string>>(scoped)!,
+            // TryGetProperty, niet GetProperty: documenten geschreven vóór FO §6.2 (het
+            // laatste-kans-venster) hebben dit veld nog niet — dan is null (geen lopend
+            // venster) precies het juiste, geen fout.
+            root.TryGetProperty("pendingWin", out var pendingWinElement)
+                ? pendingWinElement.Deserialize<PendingWin?>(scoped)
+                : null);
     }
 
     public override void Write(Utf8JsonWriter writer, GameState value, JsonSerializerOptions options)
@@ -69,6 +75,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
         JsonSerializer.Serialize(writer, value.ActiveEffects, scoped);
         writer.WritePropertyName("winners");
         JsonSerializer.Serialize(writer, value.Winners, scoped);
+        writer.WritePropertyName("pendingWin");
+        JsonSerializer.Serialize(writer, value.PendingWin, scoped);
 
         writer.WriteEndObject();
     }

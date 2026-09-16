@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GamePhaseDto } from '../../../types/GameState'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
+import { TvGameOverScreen } from './TvGameOverScreen'
 import { TvCombatOverlay } from './TvCombatOverlay'
 import { resolveTvOverlay, resolveTvScreen, tvScreens } from './tvScreens'
 
@@ -9,6 +10,10 @@ describe('tvScreens', () => {
     for (const phase of Object.values(GamePhaseDto)) {
       expect(tvScreens[phase]).toBeTypeOf('function')
     }
+  })
+
+  it('koppelt Finished aan TvGameOverScreen, niet de placeholder', () => {
+    expect(tvScreens[GamePhaseDto.Finished]).toBe(TvGameOverScreen)
   })
 
   it('valt terug op de placeholder bij een onbekende of ontbrekende fase', () => {

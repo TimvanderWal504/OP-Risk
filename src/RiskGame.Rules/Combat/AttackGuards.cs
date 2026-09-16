@@ -155,6 +155,7 @@ public static class AttackGuards
     {
         var preconditions = ValidationResult.Combine(
             Guards.PlayerExists(state, playerId),
+            Guards.GameNotFinished(state),
             Guards.IsNotEliminated(state, playerId),
             Guards.IsInTurnPhase(state, TurnPhase.Attack));
 

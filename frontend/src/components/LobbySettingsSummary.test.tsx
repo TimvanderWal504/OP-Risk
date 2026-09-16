@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { LobbySettingsSummary } from './LobbySettingsSummary'
-import { RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../types/GameSettings'
+import { MissionWinTimingDto, RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../types/GameSettings'
 
 describe('LobbySettingsSummary', () => {
   it('vertaalt de instellingen naar leesbare rijen', () => {
@@ -16,6 +16,7 @@ describe('LobbySettingsSummary', () => {
           rolesEnabled: false,
           roleAssignment: RoleAssignmentModeDto.Random,
           eventsEnabled: false,
+          missionWinTiming: MissionWinTimingDto.EndOfTurn,
         }}
       />,
     )

@@ -13,11 +13,14 @@ import { reinforce } from './reinforce'
 import { attack } from './attack'
 import { attackTv } from './attackTv'
 import { fortify } from './fortify'
+import { gameOver } from './gameOver'
+import { gameOverTv } from './gameOverTv'
 import { colors } from './colors'
 import { roles } from './roles'
 import { territories } from './territories'
 import { continents } from './continents'
 import { missions } from './missions'
+import { missionPanel } from './missionPanel'
 import { events } from './events'
 import { cards } from './cards'
 import { quotes } from './quotes'
@@ -38,11 +41,14 @@ export const trees = {
   attack,
   attackTv,
   fortify,
+  gameOver,
+  gameOverTv,
   colors,
   roles,
   territories,
   continents,
   missions,
+  missionPanel,
   events,
   cards,
   quotes,

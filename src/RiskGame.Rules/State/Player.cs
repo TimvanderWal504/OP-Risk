@@ -13,7 +13,6 @@ namespace RiskGame.Rules.State;
 /// <param name="Hand">Territoriumkaarten in bezit. Alleen zichtbaar voor de speler zelf.</param>
 /// <param name="RoleId">Null als rollen uitstaan (FO §8).</param>
 /// <param name="Mission">Null bij winconditie Werelddominantie (FO §6).</param>
-/// <param name="IsAutoPass">Door de host gemarkeerd als blijvend afwezig (FO §11.2).</param>
 /// <param name="EliminatedByPlayerId">
 /// Wie deze speler uitschakelde; alleen betekenisvol als <paramref name="IsEliminated"/>
 /// waar is. Nodig om <c>EliminatePlayerMission</c> (FO §6.1) te kunnen toetsen: die missie
@@ -32,6 +31,5 @@ public sealed record Player(
     string? RoleId,
     IMission? Mission,
     bool IsEliminated,
-    bool IsAutoPass,
     string? EliminatedByPlayerId = null,
     bool IsHost = false);

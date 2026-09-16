@@ -12,8 +12,10 @@ import type {
 } from '../types/HubResponses'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
+import { apiUrl } from '../config/apiConfig'
 
 const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
+const sessionTokenKey = (gameId: string) => `game:${gameId}:sessionToken`
 
 /**
  * Speler-kant van de lobby-flow (telefoon, FO §3): join/kleur/rol/start via de hub,
@@ -22,7 +24,10 @@ const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
  *
  * playerId wordt in sessionStorage bewaard en na elke (re)connect via RejoinGame
  * teruggemeld aan de hub, want SignalR-groepslidmaatschap gaat verloren bij reconnect
- * én bij page refresh (nieuwe connection-id in beide gevallen).
+ * én bij page refresh (nieuwe connection-id in beide gevallen). sessionToken (TO §6.3,
+ * ontvangen bij JoinGame) gaat in dezelfde RejoinGame-aanroep mee: zonder dat token
+ * degradeert de hub naar de publieke weergave — met een geldig token krijgt deze speler
+ * z'n eigen Hand/MissionId weer terug (zie GameHub.RejoinGame).
  */
 export function useGameState(gameId: string) {
   const { connection, connectionState } = useSignalR()
@@ -110,7 +115,7 @@ export function useGameState(gameId: string) {
   useEffect(() => {
     let cancelled = false
 
-    fetch(`/games/${gameId}/territories`)
+    fetch(apiUrl(`/games/${gameId}/territories`))
       .then((response) => (response.ok ? (response.json() as Promise<TerritoryCatalogDto[]>) : []))
       .then((catalog) => {
         if (!cancelled) setTerritoryCatalog(catalog)
@@ -133,7 +138,7 @@ export function useGameState(gameId: string) {
     let cancelled = false
 
     connection
-      .invoke<GameStateDto>('RejoinGame', gameId, playerId)
+      .invoke<GameStateDto>('RejoinGame', gameId, playerId, sessionStorage.getItem(sessionTokenKey(gameId)) ?? '')
       .then((fresh) => {
         if (!cancelled) {
           applyState(fresh)
@@ -193,6 +198,7 @@ export function useGameState(gameId: string) {
       if (!joined) return
 
       persistPlayerId(joined.playerId)
+      sessionStorage.setItem(sessionTokenKey(gameId), joined.sessionToken)
       applyState(joined.state)
 
       const updated = await invoke<GameStateDto>('ChooseColor', gameId, joined.playerId, colorId)

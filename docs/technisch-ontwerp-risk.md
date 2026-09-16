@@ -44,7 +44,7 @@ Server-authoritative client-server-model. De server is de enige bron van waarhei
 | Event sourcing | Los project `RiskGame.Persistence` (Marten-events + `GameProjection`, `ProjectionLifecycle.Inline`) | Scheidt event-/projectiecode van zowel de pure rules engine als de API-laag; inline-projectie gekozen (zie §10.1, niet langer open) |
 | Frontend | React 19 + TypeScript + Vite + Tailwind | Consistent met de Claude Design-prototypes; snelle dev-loop |
 | Kaartweergave | SVG-overlay (`territories.geo.json`) bovenop de statische achtergrond (`map-background-final.png`) | Klikbare, per-eigenaar-kleurbare gebieden los van de artwork-laag |
-| Hosting | Proxmox (Plan B) via Tailscale Funnel; later optioneel Azure | Zie `plan-b-reisopstelling.md` |
+| Hosting | Azure App Service (Basic B1, Linux) voor API + SignalR, Neon (managed Postgres, directe/unpooled connectie) voor Marten, Vercel voor de frontend | Zie `docs/azure-hosting-deployment.md` |
 
 ---
 
@@ -197,7 +197,7 @@ Per spel drie logische doelgroepen binnen de SignalR-hub:
 - **`game-{id}-player-{playerId}`** — één telefoon; krijgt de publieke state **plus** die spelers privé-info (kaarten, geheime missie).
 - **`game-{id}-all`** — broadcast voor globale gebeurtenissen (event-kaart getrokken, winnaar).
 
-**Privacy-grens:** geheime missies en handkaarten worden **uitsluitend** naar de eigen speler-groep gepusht, nooit naar de TV-groep of een andere speler. Dit wordt server-side afgedwongen bij het samenstellen van de push, niet client-side verborgen.
+**Privacy-grens:** geheime missies en handkaarten worden **uitsluitend** naar de eigen speler-groep gepusht, nooit naar de TV-groep of een andere speler. Dit wordt server-side afgedwongen bij het samenstellen van de push, niet client-side verborgen. **Eén expliciete uitzondering:** zodra de spelfase `Finished` is, geeft de TV-groep wél ieders geheime missie mee — FO §7 eist dat de TV bij spelwinst "de missie-onthulling van alle spelers" toont. Handkaarten blijven ook dan buiten de TV-push; alleen missies worden op dat moment publiek. Vóór `Finished` geldt de regel hierboven onverkort.
 
 ### 6.2 State-synchronisatie
 
@@ -205,7 +205,7 @@ Na elke succesvolle commando-verwerking pusht de server een **delta** (of, bij t
 
 ### 6.3 Reconnect (FO §11.1)
 
-SignalR's automatische reconnect + een `sessionToken` in `localStorage`. Bij herverbinding: client stuurt token → server herkent de spelerspositie → stuurt de volledige actuele state. Bij een nieuw apparaat: naam invoeren → server koppelt aan de bestaande positie en invalideert het oude token.
+SignalR's automatische reconnect + een `sessionToken` in `sessionStorage` (per tab, zelfde schaal als `playerId` — bewust niet `localStorage`: dat zou gedeeld zijn tussen tabs en daarmee spelersidentiteiten door elkaar halen zodra iemand meerdere spelers vanaf één machine test/speelt). `JoinGame` geeft het token eenmalig terug aan de aanroepende connectie; `RejoinGame` vereist het om de eigen `Hand`/`MissionId` weer te mogen zien (§6.1) en om opnieuw aan `game-{id}-player-{playerId}` gekoppeld te worden. Zonder geldig token (nog geen sessie bekend, of een andere client die alleen de publieke `playerId` kent) degradeert `RejoinGame` naar de publieke, tv-achtige weergave — nooit een foutmelding. **Nog niet gebouwd:** bij een nieuw apparaat naam invoeren om aan een bestaande positie te koppelen en het oude token te invalideren — een apart vervolgstuk.
 
 ---
 
@@ -261,11 +261,11 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 
 ## 8. Beveiliging & integriteit
 
-- **Rate limiting** op join/lobby-endpoints (ASP.NET Core fixed-window per IP) tegen brute-forcen van de 6-teken gamecode — zie `plan-b-reisopstelling.md`.
-- **PostgreSQL uitsluitend intern**; Tailscale Funnel exposeert alleen de API-poort, nooit de database.
+- **Rate limiting** op `JoinGame` (fixed-window per IP, `JoinGameRateLimitFilter`) tegen brute-forcen van de 6-teken gamecode. Geen HTTP-middleware: joinen loopt uitsluitend via de SignalR-hub, geen apart endpoint — vandaar een `IHubFilter` i.p.v. ASP.NET Core's HTTP-rate-limiting. `Program.cs` vertrouwt via `UseForwardedHeaders` de front-end-hop van Azure App Service onvoorwaardelijk: de container heeft zelf geen publiek IP en is alleen via die hop bereikbaar, dus kan een client die niet omzeilen om zelf een `X-Forwarded-For` te vervalsen. Zie `docs/azure-hosting-deployment.md`.
+- **Neon (managed Postgres) is publiek bereikbaar over TLS**, niet netwerk-geïsoleerd zoals de eerder overwogen lokale compose-opstelling. De beveiligingsgrens is de connection string (credentials in App Service Application Settings, nooit in `appsettings.json` of git) plus TLS-verplichte verbinding en Neon's eigen toegangscontrole.
 - **Geen client-vertrouwen**: alle validatie en dobbelen server-side (§4, §4.2).
 - **Privacy-grens** op privé-info afgedwongen in de push-laag (§6.1).
-- **Sessietokens** invalideren bij apparaatwissel (§6.3).
+- **Sessietokens** (§6.3) bewijzen identiteit bij `RejoinGame`. Invalideren bij apparaatwissel is nog niet gebouwd (zie §6.3).
 
 ---
 
@@ -294,7 +294,7 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 
 ### 10.2 Nog open
 
-1. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat vermoedelijk "server handhaaft, client toont benadering" — nog niet apart getest tegen een trage/instabiele verbinding (relevant voor Plan B/Tailscale, zie project-overzicht §2.3).
+1. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat vermoedelijk "server handhaaft, client toont benadering" — nog niet apart getest tegen een trage/instabiele verbinding (relevant voor Azure App Service/Vercel, zie project-overzicht §2.3).
 2. **Delta-push alsnog nodig?** Blijft full-state-push (§10.1.2) presterend genoeg zodra de echte kaartlaag (§7.2) met SVG-animaties erbij komt? Pas heroverwegen als dat in de praktijk hapert.
 
 ---
@@ -306,5 +306,5 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 3. **Minimal API + SignalR-hub** — ✅ gedaan. `RiskGame.Api`: `GameEndpoints`/`HubEndpoints`, `GameHub` + `IGameClient`, commandohandlers per fase, `TurnTimerBackgroundService`; getest incl. `PostgresFixture`.
 4. **Frontend met placeholder-kaart** (rechthoeken) — 🔶 gedeeltelijk. Lobby, joinen, kleur-/rolkeuze en order-roll staan (met i18n en TV-motion); het speelbord zelf (versterken/aanvallen/verplaatsen, ook als placeholder) is nog niet gebouwd.
 5. **Echte kaartlaag**: SVG-overlay met de v4-projectie over de gedeelde stage-illustratie (zie §7.2) — ⬜ nog niet gestart. `frontend/src/map/` bevat alleen een `.gitkeep`.
-6. **Reconnect & randgevallen** — 🔶 serverzijde aanwezig (sessietoken, groepen, auto-pass in de rules/API-laag), end-to-end-verificatie via de frontend nog te doen.
+6. **Reconnect & randgevallen** — 🔶 grotendeels aanwezig: sessietoken + groepen zijn nu écht geverifieerd bij `RejoinGame` (§6.3), rate limiting op `JoinGame` staat (§8). Apparaatwissel (token invalideren bij een nieuw apparaat) en auto-pass (`SetAutoPass`, zie frontend/CLAUDE.md's bevinding) zijn nog niet gebouwd.
 

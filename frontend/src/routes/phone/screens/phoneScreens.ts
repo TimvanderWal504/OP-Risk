@@ -12,6 +12,7 @@ import { PhoneInProgressScreen } from './PhoneInProgressScreen'
 import { PhoneLobbyScreen } from './PhoneLobbyScreen'
 import { PhoneOrderRollScreen } from './PhoneOrderRollScreen'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
+import { PhoneGameOverScreen } from './PhoneGameOverScreen'
 
 /**
  * Wat elk telefoon-scherm van de route meekrijgt. Eén gedeeld contract, zodat de fase →
@@ -65,7 +66,7 @@ export const phoneScreens: Record<GamePhaseDto, PhoneScreen> = {
   [GamePhaseDto.Claiming]: PhoneClaimingScreen,
   [GamePhaseDto.InitialPlacement]: PhoneInitialPlacementScreen,
   [GamePhaseDto.InProgress]: PhoneInProgressScreen,
-  [GamePhaseDto.Finished]: PhonePlaceholderScreen,
+  [GamePhaseDto.Finished]: PhoneGameOverScreen,
 }
 
 /**

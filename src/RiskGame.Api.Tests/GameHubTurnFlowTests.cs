@@ -8,6 +8,7 @@ using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Missions;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Tests;
@@ -42,6 +43,13 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
     /// zelfde adjacency-paar als <see cref="GameHubAttackTests"/>), in de opgegeven
     /// <paramref name="turnPhase"/> voor p1, met p2 als tweede speler in de beurtvolgorde.
     /// </summary>
+    /// <param name="aliceMissionId">
+    /// Missie-id uit <c>missions.json</c>, niet een los <see cref="IMission"/>-object: net als
+    /// <see cref="Player.RoleId"/> komt een missie altijd uit de kaartcatalogus —
+    /// <c>MissionJsonConverter</c> slaat alleen de id op en zoekt 'm bij het lezen terug op in
+    /// <see cref="MapDefinition.Missions"/>, dus een zelfverzonnen id/object zou bij de eerste
+    /// <c>WatchGame</c>/reload al stuklopen.
+    /// </param>
     private static async Task<string> SetUpStateAsync(
         WebApplicationFactory<Program> factory,
         TurnPhase turnPhase,
@@ -49,7 +57,11 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         int albertaArmies,
         PendingCombat? pendingCombat = null,
         IReadOnlyList<string>? extraTerritoriesForP2 = null,
-        int armiesRemaining = 0)
+        int armiesRemaining = 0,
+        string? aliceMissionId = null,
+        bool aliceOwnsRestOfMap = false,
+        bool bobIsEliminated = false,
+        string? bobEliminatedByPlayerId = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -65,10 +77,13 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
             RoleAssignment: RoleAssignmentMode.Random,
             EventsEnabled: false);
 
+        var aliceMission = aliceMissionId is null ? null : map.Missions.Single(mission => mission.Id == aliceMissionId);
+
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: aliceMission, IsEliminated: false);
         var bob = new Player(
-            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null,
+            IsEliminated: bobIsEliminated, EliminatedByPlayerId: bobEliminatedByPlayerId);
 
         var extraForP2 = extraTerritoriesForP2 ?? [];
 
@@ -79,6 +94,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
                 "alberta" => new TerritoryOwnership(territory.Id, albertaOwnerId, albertaArmies),
                 _ when extraForP2.Contains(territory.Id) =>
                     new TerritoryOwnership(territory.Id, "p2", ArmyCount: 1),
+                _ when aliceOwnsRestOfMap => new TerritoryOwnership(territory.Id, "p1", ArmyCount: 1),
                 _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
             })
             .ToArray();
@@ -276,6 +292,50 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
         Assert.Equal(TurnPhaseDto.Attack, updated.TurnState!.TurnPhase);
         Assert.Equal(0, updated.TurnState.ArmiesRemaining);
+    }
+
+    /// <summary>
+    /// FO §6.1/§6.2: "de server controleert de missievoorwaarden na elke beurt" — een
+    /// onomkeerbare missie (<c>EliminatePlayer</c>, <c>RequiresLastChance = false</c>) die al
+    /// vervuld is op het moment dat de houder zijn beurt beëindigt, moet het spel meteen
+    /// afsluiten i.p.v. gewoon door te schuiven naar de volgende speler — ongeacht
+    /// <see cref="GameSettings.MissionWinTiming"/>. (Een bezit-missie zoals <c>territory-24</c>
+    /// doet dat sinds FO §6.2 alleen nog direct onder <see cref="MissionWinTiming.EndOfTurn"/>
+    /// — de standaardwaarde die <see cref="SettingsDto"/> hier ongewijzigd gebruikt — dekking
+    /// voor de laatste-kans-varianten staat in <c>GameHubLastChanceTests</c>.)
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_MetVervuldeDirecteMissie_BeeindigtHetSpel()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        // "eliminate-blue" (echte missie uit missions.json — missies komen altijd uit de
+        // kaartcatalogus, zie SetUpStateAsync's doc-comment) is vervuld zodra Bob (blauw) is
+        // uitgeschakeld dóór Alice zelf (FO §6.1) — onomkeerbaar, dus geen laatste-kans-venster.
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Fortify, albertaOwnerId: "p1", albertaArmies: 1,
+            aliceMissionId: "eliminate-blue", bobIsEliminated: true, bobEliminatedByPlayerId: "p1");
+
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+        var gameWonReceived = new TaskCompletionSource<GameWonMessage>();
+        spectator.On<GameWonMessage>("GameWon", message => gameWonReceived.TrySetResult(message));
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        Assert.Equal(GamePhaseDto.Finished, updated.Phase);
+        Assert.Equal(["p1"], updated.Winners);
+        // Geen doorschuif naar p2 — TurnEnded's PhaseChanged-naar-Reinforce wordt overgeslagen
+        // zodra er een winnaar is. GameProjection.Apply(state, GameWon) wist TurnState ook
+        // expliciet (incl. een eventuele PendingCombat, bevinding gebruiker 2026-08-18: anders
+        // blijft de combat-/eliminatie-overlay boven TvGameOverScreen hangen) — dus "geen
+        // doorschuif" toont zich hier als TurnState == null, niet als ActivePlayerId == "p1".
+        Assert.Null(updated.TurnState);
+
+        var gameWon = await gameWonReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(["p1"], gameWon.WinnerPlayerIds);
     }
 
     [Fact]

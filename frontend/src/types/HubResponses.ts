@@ -4,6 +4,7 @@ import type { GameStateDto } from './GameState'
 export interface JoinGameResponse {
   playerId: string
   state: GameStateDto
+  sessionToken: string
 }
 
 /** Spiegelt RiskGame.Api.Hubs.OrderRollResponse (src/RiskGame.Api/Hubs/GameHub.cs). */

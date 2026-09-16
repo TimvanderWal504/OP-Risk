@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  MissionWinTimingDto,
   RoleAssignmentModeDto,
   SetupModeDto,
   WinConditionDto,
@@ -19,6 +20,7 @@ import { GlassPanel } from './ui/GlassPanel'
 import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
 import { tDynamic } from '../i18n/useT'
+import { apiUrl } from '../config/apiConfig'
 
 /** FO §10-standaardwaarden. Roltoewijzing en verplaatsen-timer hebben geen bediening
  * in het design (Instellingen-scherm) en blijven daarom op hun default staan — geen
@@ -33,6 +35,7 @@ const DEFAULT_SETTINGS: GameSettingsDto = {
   rolesEnabled: true,
   roleAssignment: RoleAssignmentModeDto.Random,
   eventsEnabled: true,
+  missionWinTiming: MissionWinTimingDto.EndOfTurn,
 }
 
 const MIN_TIMER_SECONDS = 30
@@ -60,7 +63,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
   useEffect(() => {
     let cancelled = false
 
-    fetch(`/maps/${mapId}/starting-armies-presets`)
+    fetch(apiUrl(`/maps/${mapId}/starting-armies-presets`))
       .then((response) => (response.ok ? (response.json() as Promise<StartingArmiesPresetDto[]>) : []))
       .then((loaded) => {
         if (!cancelled) {
@@ -80,7 +83,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     setError(null)
 
     try {
-      const response = await fetch('/games', {
+      const response = await fetch(apiUrl('/games'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mapId, settings }),
@@ -107,6 +110,14 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
       ? t('winCondition.worldDomination.description')
       : t('winCondition.secretMissions.description')
 
+  // Record i.p.v. ternary: drie waarden, niet twee (i.t.t. winConditionDescription hierboven).
+  const missionWinTimingDescriptions: Record<MissionWinTimingDto, string> = {
+    [MissionWinTimingDto.EndOfTurn]: t('missionWinTiming.endOfTurn.description'),
+    [MissionWinTimingDto.StartOfNextTurn]: t('missionWinTiming.startOfNextTurn.description'),
+    [MissionWinTimingDto.FullRoundRevealed]: t('missionWinTiming.fullRoundRevealed.description'),
+  }
+  const missionWinTimingDescription = missionWinTimingDescriptions[settings.missionWinTiming]
+
   return (
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
       <GlassPanel elevation="base" context="phone" padding="none" className="mx-gutter mt-gutter flex-none rounded-2xl px-4 py-3">
@@ -119,9 +130,16 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
           `--spacing-gutter` als elk ander telefoonscherm. */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-gutter pb-gutter">
         <div>
-          <div className="mb-2 font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
-            {t('section.rules')}
-          </div>
+          <GlassPanel
+            elevation="base"
+            context="phone"
+            padding="none"
+            className="my-2 inline-block self-start rounded-2xl p-3.5 py-1.5"
+          >
+            <span className="font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
+              {t('section.rules')}
+            </span>
+          </GlassPanel>
           <div className="flex flex-col gap-2.5">
             <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-2 font-display text-base font-extrabold">{t('winCondition.title')}</div>
@@ -141,6 +159,24 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
               />
               <p className="mt-2 text-xs text-fg-muted">{winConditionDescription}</p>
             </GlassPanel>
+
+            {settings.winCondition === WinConditionDto.SecretMissions && (
+              <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
+                <div className="mb-2 font-display text-base font-extrabold">{t('missionWinTiming.title')}</div>
+                <div role="radiogroup" aria-label={t('missionWinTiming.title')}>
+                  <SegmentedControl
+                    value={settings.missionWinTiming}
+                    onChange={(missionWinTiming) => setSettings((s) => ({ ...s, missionWinTiming }))}
+                    options={[
+                      { value: MissionWinTimingDto.EndOfTurn, label: t('missionWinTiming.endOfTurn.title') },
+                      { value: MissionWinTimingDto.StartOfNextTurn, label: t('missionWinTiming.startOfNextTurn.title') },
+                      { value: MissionWinTimingDto.FullRoundRevealed, label: t('missionWinTiming.fullRoundRevealed.title') },
+                    ]}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-fg-muted">{missionWinTimingDescription}</p>
+              </GlassPanel>
+            )}
 
             <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-0.5 font-display text-base font-extrabold">{t('setupMode.title')}</div>
@@ -200,9 +236,16 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
         </div>
 
         <div>
-          <div className="mb-2 font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
-            {t('section.extras')}
-          </div>
+          <GlassPanel
+            elevation="base"
+            context="phone"
+            padding="none"
+            className="my-2 inline-block self-start rounded-2xl px-3.5 py-1.5"
+          >
+            <span className="font-body text-xs font-extrabold tracking-[var(--tracking-wide)] text-fg-muted uppercase">
+              {t('section.extras')}
+            </span>
+          </GlassPanel>
           <div className="flex flex-col gap-2.5">
             <ToggleRow
               label={t('roles.label')}

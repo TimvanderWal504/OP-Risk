@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { GameHubCtx } from './GameHubContext'
+import { apiUrl } from '../config/apiConfig'
 
 export function GameHubProvider({ children }: { children: ReactNode }) {
   const [connection] = useState(() =>
-    new HubConnectionBuilder().withUrl('/hubs/game').withAutomaticReconnect().build(),
+    new HubConnectionBuilder().withUrl(apiUrl('/hubs/game')).withAutomaticReconnect().build(),
   )
   const [connectionState, setConnectionState] = useState(connection.state)
   // houdt start/stop gescheiden over StrictMode-remounts heen

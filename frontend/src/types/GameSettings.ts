@@ -21,6 +21,17 @@ export const RoleAssignmentModeDto = {
 } as const
 export type RoleAssignmentModeDto = (typeof RoleAssignmentModeDto)[keyof typeof RoleAssignmentModeDto]
 
+/**
+ * Wanneer een vervulde bezit-missie daadwerkelijk wint (FO §6.2). Alleen relevant bij
+ * `WinConditionDto.SecretMissions` — bij WorldDomination is de waarde betekenisloos.
+ */
+export const MissionWinTimingDto = {
+  EndOfTurn: 0,
+  StartOfNextTurn: 1,
+  FullRoundRevealed: 2,
+} as const
+export type MissionWinTimingDto = (typeof MissionWinTimingDto)[keyof typeof MissionWinTimingDto]
+
 export interface GameSettingsDto {
   winCondition: WinConditionDto
   /**
@@ -35,6 +46,7 @@ export interface GameSettingsDto {
   rolesEnabled: boolean
   roleAssignment: RoleAssignmentModeDto
   eventsEnabled: boolean
+  missionWinTiming: MissionWinTimingDto
 }
 
 /** Spiegelt RiskGame.Api.Dtos.StartingArmiesPresetDto (src/RiskGame.Api/Dtos/GameSettingsDto.cs). */

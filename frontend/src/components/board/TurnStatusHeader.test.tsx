@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { TurnStatusHeader } from './TurnStatusHeader'
 import { TurnPhaseDto } from '../../types/GameState'
 
-const player = { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false }
+const player = { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null }
 const color = { id: 'red', name: 'Rood', hex: '#800020', onHex: '#f9a8a8', symbol: 'circle' }
 
 describe('TurnStatusHeader', () => {

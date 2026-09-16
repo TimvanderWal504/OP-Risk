@@ -14,5 +14,7 @@ public interface IGameClient
 
     Task TerritoryClaimed(TerritoryClaimedMessage message);
 
+    Task GameWon(GameWonMessage message);
+
     Task GameStateUpdated(GameStateDto state);
 }

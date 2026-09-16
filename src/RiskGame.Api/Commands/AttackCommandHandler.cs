@@ -3,6 +3,7 @@ using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Combat;
+using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
@@ -153,6 +154,30 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             {
                 session.Events.Append(gameId, new PlayerEliminated(gameId, defenderId, attackerId));
                 eliminatedPlayerId = defenderId;
+
+                // FO §6.1: schakelt een ándere speler dan de missiehouder het doelwit van
+                // diens EliminatePlayer-missie uit, dan vervalt die missie en komt de
+                // missiehouder automatisch op de fallback-missie uit.
+                var eliminatedColorId = state.Player(defenderId).ColorId!;
+                var fallbacks = MissionAssignmentCalculator.ResolveFallbacksAfterElimination(
+                    state.Players, eliminatedColorId, attackerId);
+
+                foreach (var (holderId, fallbackMissionId) in fallbacks)
+                {
+                    session.Events.Append(gameId, new MissionAssigned(gameId, holderId, fallbackMissionId));
+                }
+
+                // Werelddominantie kan alleen ontstaan door de laatste tegenstander uit te
+                // schakelen. Lokaal voorspeld i.p.v. herladen: de enige eigendomswijziging in
+                // deze methode is hierboven al bekend (het veroverde gebied), dus geen tweede
+                // save/round-trip nodig om de al-gevouwen state te kunnen controleren.
+                var predictedState = state.WithTerritory(
+                    state.Territory(pendingCombat.ToTerritoryId) with { OwnerPlayerId = attackerId });
+
+                if (WinConditionEvaluator.HasWorldDomination(predictedState, attackerId))
+                {
+                    session.Events.Append(gameId, new GameWon(gameId, [attackerId]));
+                }
             }
         }
 

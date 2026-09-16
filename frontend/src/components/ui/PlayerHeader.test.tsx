@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { PlayerHeader } from './PlayerHeader'
+import { CardsIcon, MissionIcon } from './icons'
 
 describe('PlayerHeader', () => {
   it('toont naam, status, timer en de standaard actieknoppen', () => {
@@ -21,23 +21,6 @@ describe('PlayerHeader', () => {
     expect(screen.getByRole('button', { name: 'Mijn kaarten' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mijn missie' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Spelinfo' })).toBeInTheDocument()
-  })
-
-  it('roept onSettings aan bij de tandwiel-knop', async () => {
-    const onSettings = vi.fn()
-    render(
-      <PlayerHeader
-        name="Tomas"
-        colorName="Blauw"
-        colorHex="#215C9C"
-        status="Jouw beurt"
-        timer="2:41"
-        onSettings={onSettings}
-      />,
-    )
-
-    await userEvent.click(screen.getByRole('button', { name: 'Instellingen' }))
-    expect(onSettings).toHaveBeenCalledTimes(1)
   })
 
   it('toont een kroonbadge voor de host', () => {
@@ -84,6 +67,12 @@ describe('PlayerHeader', () => {
     expect(screen.getByText('❚❚ Gepauzeerd')).toBeInTheDocument()
   })
 
+  it('toont geen beurttijd-kolom wanneer timer null is (Claiming/InitialPlacement, TO §4.2/§9)', () => {
+    render(<PlayerHeader name="Tomas" colorName="Blauw" colorHex="#215C9C" status="Startopstelling" timer={null} />)
+
+    expect(screen.queryByText('Beurttijd')).not.toBeInTheDocument()
+  })
+
   it('geeft de actieve actieknop de gold-styling, de rest niet', () => {
     render(
       <PlayerHeader
@@ -93,8 +82,8 @@ describe('PlayerHeader', () => {
         status="Jouw beurt"
         timer="2:41"
         actions={[
-          { icon: '🃏', label: 'Mijn kaarten', active: true },
-          { icon: '🎯', label: 'Mijn missie' },
+          { icon: <CardsIcon />, label: 'Mijn kaarten', active: true },
+          { icon: <MissionIcon />, label: 'Mijn missie' },
         ]}
       />,
     )

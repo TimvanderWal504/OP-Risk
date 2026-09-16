@@ -15,6 +15,17 @@ public static class Guards
             : ValidationResult.Failure("common.unknownPlayer", new Dictionary<string, string> { ["playerId"] = playerId });
 
     /// <summary>
+    /// Of het spel nog loopt. <see cref="GamePhase.Finished"/> betekent "er is een winnaar;
+    /// alleen herstart-acties zijn nog geldig" (FO §7) — een losse, herbruikbare guard omdat
+    /// niet elk commando via <see cref="IsActivePlayer"/> loopt (bv. <c>ChooseDefenseDice</c>,
+    /// een actie van de verdediger, niet de actieve beurtspeler).
+    /// </summary>
+    public static ValidationResult GameNotFinished(GameState state) =>
+        state.Phase != GamePhase.Finished
+            ? ValidationResult.Success()
+            : ValidationResult.Failure("common.gameFinished");
+
+    /// <summary>
     /// Of het deze spelers beurt is. Een uitgeschakelde of afwezige speler is dat nooit,
     /// ook niet als hij nog als actieve speler genoteerd staat — daarom loopt dit via
     /// <see cref="GameState.StatusOf"/> en niet direct langs <c>ActivePlayerId</c>.
@@ -26,6 +37,13 @@ public static class Guards
         if (!exists.IsSuccess)
         {
             return exists;
+        }
+
+        var notFinished = GameNotFinished(state);
+
+        if (!notFinished.IsSuccess)
+        {
+            return notFinished;
         }
 
         return state.StatusOf(playerId) == PlayerStatus.Active

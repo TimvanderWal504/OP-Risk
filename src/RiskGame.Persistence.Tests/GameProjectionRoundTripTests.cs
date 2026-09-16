@@ -196,7 +196,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var player = new Player(
             "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(
@@ -277,7 +277,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var player = new Player(
             "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(
@@ -339,7 +339,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var player = new Player(
             "p1", "Alice", "red", Hand: [],
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
@@ -394,10 +394,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var eliminated = new Player(
             "p2", "Bob", "blue", Hand: [eliminatedCard],
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
         var conqueror = new Player(
             "p1", "Alice", "red", Hand: [conquerorCard],
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
@@ -595,6 +595,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         Assert.Equal(GamePhase.Finished, result.Phase);
         Assert.Equal(["p1"], result.Winners);
+        Assert.Null(result.TurnState);
 
         await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
         await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
@@ -609,6 +610,154 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.NotNull(reloaded);
         Assert.Equal(GamePhase.Finished, reloaded!.Phase);
         Assert.Equal(["p1"], reloaded.Winners);
+    }
+
+    /// <summary>
+    /// FO §6.2: een directe winconditie tijdens een lopend laatste-kans-venster ruimt dat
+    /// venster op — <see cref="GameWon"/>'s vouwregel zet <see cref="GameState.PendingWin"/>
+    /// expliciet op <c>null</c>, ook als er bij het toepassen nog een venster openstond.
+    /// </summary>
+    [Fact]
+    public void GameWon_RuimtEenLopendLaatsteKansVensterOp()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories: map.Territories.Select(t => new TerritoryOwnership(t.Id, "p1", ArmyCount: 1)).ToArray(),
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState("p1", TurnPhase.Attack, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: [],
+            pendingWin: new PendingWin("p1", "territory-24", ["p2"]));
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new GameWon(gameId, ["p2"]));
+
+        Assert.Null(result.PendingWin);
+    }
+
+    /// <summary>
+    /// FO §6.2: opent het laatste-kans-venster en overleeft een Marten-round-trip, net als
+    /// <see cref="GameWon_VouwtFaseEnWinnaarsEnOverleeftEenMartenRoundTrip"/> hierboven.
+    /// </summary>
+    [Fact]
+    public async Task PendingWinOpened_VouwtHetVensterEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories: map.Territories.Select(t => new TerritoryOwnership(t.Id, OwnerPlayerId: null, ArmyCount: 0)).ToArray(),
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState("p2", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new PendingWinOpened(gameId, "p1", "territory-24", ["p2"]));
+
+        AssertPendingWinEqual(new PendingWin("p1", "territory-24", ["p2"]), result.PendingWin);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        AssertPendingWinEqual(new PendingWin("p1", "territory-24", ["p2"]), reloaded!.PendingWin);
+    }
+
+    /// <summary>Versmalt een reeds openstaand venster (FO §6.2) — dezelfde opzet als hierboven.</summary>
+    [Fact]
+    public void PendingWinNarrowed_VersmaltHetOpenstaandeVenster()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories: map.Territories.Select(t => new TerritoryOwnership(t.Id, OwnerPlayerId: null, ArmyCount: 0)).ToArray(),
+            turnOrder: ["p1", "p2", "p3"],
+            turnState: new TurnState("p2", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: [],
+            pendingWin: new PendingWin("p1", "territory-24", ["p2", "p3"]));
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new PendingWinNarrowed(gameId, "p1", "p2", ["p3"]));
+
+        AssertPendingWinEqual(new PendingWin("p1", "territory-24", ["p3"]), result.PendingWin);
+    }
+
+    /// <summary>Laat een openstaand venster vervallen (FO §6.2) — dezelfde opzet als hierboven.</summary>
+    [Fact]
+    public void PendingWinBroken_LaatHetOpenstaandeVensterVervallen()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [],
+            territories: map.Territories.Select(t => new TerritoryOwnership(t.Id, OwnerPlayerId: null, ArmyCount: 0)).ToArray(),
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState("p2", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: [],
+            pendingWin: new PendingWin("p1", "territory-24", ["p2"]));
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new PendingWinBroken(gameId, "p1", "territory-24", "p2"));
+
+        Assert.Null(result.PendingWin);
+    }
+
+    /// <summary>
+    /// <see cref="PendingWin.RemainingPlayerIds"/> is een <c>IReadOnlyList&lt;string&gt;</c> —
+    /// zelfde valkuil als bij <see cref="Player.Hand"/>/<see cref="DeckState"/> hierboven: de
+    /// record-gegenereerde <c>Equals</c> vergelijkt zo'n lijst via <c>object.Equals</c>
+    /// (referentie), niet inhoudelijk. Daarom hier per veld vergelijken in plaats van
+    /// <c>Assert.Equal</c> op het hele record.
+    /// </summary>
+    private static void AssertPendingWinEqual(PendingWin? expected, PendingWin? actual)
+    {
+        if (expected is null)
+        {
+            Assert.Null(actual);
+            return;
+        }
+
+        Assert.NotNull(actual);
+        Assert.Equal(expected.AchieverPlayerId, actual!.AchieverPlayerId);
+        Assert.Equal(expected.MissionId, actual.MissionId);
+        Assert.Equal(expected.RemainingPlayerIds, actual.RemainingPlayerIds);
     }
 
     /// <summary>
@@ -653,6 +802,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 EffectApplied effectApplied => projection.Apply(state!, effectApplied),
                 EffectExpired effectExpired => projection.Apply(state!, effectExpired),
                 MissionCompleted => state!,
+                PendingWinOpened pendingWinOpened => projection.Apply(state!, pendingWinOpened),
+                PendingWinNarrowed pendingWinNarrowed => projection.Apply(state!, pendingWinNarrowed),
+                PendingWinBroken pendingWinBroken => projection.Apply(state!, pendingWinBroken),
                 GameWon gameWon => projection.Apply(state!, gameWon),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
@@ -682,6 +834,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.TurnState, actual.TurnState);
         Assert.Equal(expected.ActiveEffects, actual.ActiveEffects);
         Assert.Equal(expected.Winners, actual.Winners);
+        AssertPendingWinEqual(expected.PendingWin, actual.PendingWin);
 
         Assert.Equal(expected.Deck.NextTradeValue, actual.Deck.NextTradeValue);
         Assert.Equal(expected.Deck.DrawPile, actual.Deck.DrawPile);
@@ -697,7 +850,6 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             Assert.Equal(expectedPlayer.RoleId, actualPlayer.RoleId);
             Assert.Equal(expectedPlayer.Mission, actualPlayer.Mission);
             Assert.Equal(expectedPlayer.IsEliminated, actualPlayer.IsEliminated);
-            Assert.Equal(expectedPlayer.IsAutoPass, actualPlayer.IsAutoPass);
             Assert.Equal(expectedPlayer.EliminatedByPlayerId, actualPlayer.EliminatedByPlayerId);
         }
 

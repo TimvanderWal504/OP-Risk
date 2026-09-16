@@ -25,6 +25,8 @@ export const lobby = {
     map: { nl: 'Kaart', en: 'Map' },
     mapValue: { nl: 'Standaard · 43 gebieden', en: 'Standard · 43 territories' },
     winCondition: { nl: 'Winconditie', en: 'Win condition' },
+    /** Alleen getoond wanneer winCondition === SecretMissions (FO §6.2). */
+    missionWinTiming: { nl: 'Missietiming', en: 'Mission timing' },
     setupMode: { nl: 'Startopstelling', en: 'Starting setup' },
     startingArmies: { nl: 'Startlegers', en: 'Starting armies' },
     turnTimer: { nl: 'Beurttimer', en: 'Turn timer' },
@@ -37,6 +39,12 @@ export const lobby = {
   winCondition: {
     worldDomination: { nl: 'Werelddominantie', en: 'World domination' },
     secretMissions: { nl: 'Geheime missies', en: 'Secret missions' },
+  },
+  /** Korte samenvattingswaarden — zelfde labels als de segment-titels in createGame.ts. */
+  missionWinTiming: {
+    endOfTurn: { nl: 'Einde beurt', en: 'End of turn' },
+    startOfNextTurn: { nl: 'Volgende beurt', en: 'Next turn' },
+    fullRoundRevealed: { nl: 'Volle ronde', en: 'Full round' },
   },
   setupMode: {
     random: { nl: 'Random', en: 'Random' },

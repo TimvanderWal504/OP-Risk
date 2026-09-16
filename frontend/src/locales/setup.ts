@@ -41,6 +41,10 @@ export const setup = {
      * `reinforce:kicker` ("Versterken").
      */
     placingArmies: { nl: 'Legers plaatsen', en: 'Placing armies' },
+    /** Zelfde soort fasenaam als `placingArmies` hierboven, nu voor `GamePhaseDto.Claiming` —
+     *  gebruikt door `PlayerHeader.status` (`resolvePhoneHeaderStatus.ts`), niet (nog) door een
+     *  eigen "niet jouw beurt"-banner in deze fase. */
+    claimingTerritories: { nl: 'Gebieden claimen', en: 'Claiming territories' },
     turnComesToYou: {
       nl: 'Je krijgt vanzelf bericht als jij aan zet bent.',
       en: "You'll be notified when it's your move.",

@@ -34,6 +34,17 @@ public class GuardsTests
     }
 
     [Fact]
+    public void DeSpelerAanDeBeurtInEenAfgelopenSpel_MagNietHandelen()
+    {
+        var state = TestGame.InProgress().WithPhase(GamePhase.Finished);
+
+        var result = Guards.IsActivePlayer(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("common.gameFinished", result.Errors.Single().Code);
+    }
+
+    [Fact]
     public void EenOnbekendeSpeler_MagNietHandelen()
     {
         var state = TestGame.InProgress();

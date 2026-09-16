@@ -2,6 +2,7 @@ using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
+using RiskGame.Persistence.Sessions;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Missions;
@@ -12,7 +13,7 @@ using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Commands;
 
-public sealed record JoinGameResult(string PlayerId, GameStateDto State);
+public sealed record JoinGameResult(string PlayerId, GameStateDto State, string SessionToken);
 
 /// <summary>
 /// Voert de TO §4-pijplijn uit voor de lobby-commando's: fase-check en regelvalidatie via
@@ -83,14 +84,16 @@ public sealed class LobbyCommandHandler(
         }
 
         var playerId = Guid.NewGuid().ToString();
+        var sessionToken = Guid.NewGuid().ToString();
         var isHost = state.Players.Count == 0;
         session.Events.Append(gameId, new PlayerJoined(gameId, playerId, playerName, isHost));
+        session.Store(new PlayerSessionToken(playerId, gameId, sessionToken));
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
 
         return Result<JoinGameResult>.Success(
-            new JoinGameResult(playerId, GameStateDtoMapper.ToDto(updated!, timeProvider)));
+            new JoinGameResult(playerId, GameStateDtoMapper.ToDto(updated!, timeProvider), sessionToken));
     }
 
     public async Task<Result<GameStateDto>> ChooseColorAsync(string gameId, string playerId, string colorId)

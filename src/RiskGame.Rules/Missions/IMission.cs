@@ -18,5 +18,14 @@ public interface IMission
     /// </summary>
     bool RequiresOwnTurn { get; }
 
+    /// <summary>
+    /// Of deze missie, bij winst, eerst nog een laatste-kans-venster krijgt voor de
+    /// overige spelers voordat het spel eindigt (FO §6.2) — instelbaar via de lobby-
+    /// instelling <see cref="GameSettings.MissionWinTiming"/>, maar alléén voor missies
+    /// waar dit `true` is; missies met `false` (onomkeerbaar, zoals <c>EliminatePlayer</c>)
+    /// blijven altijd direct beslissend, ongeacht die instelling.
+    /// </summary>
+    bool RequiresLastChance { get; }
+
     bool IsAchieved(GameState state, string playerId);
 }

@@ -210,8 +210,11 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         // Alice plaatst 3 van haar 7 legers, dan valt de verbinding weg (nieuwe tab/refresh).
         await connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, aliceId, aliceTerritoryId, 3);
 
+        // "" als sessionToken: SetUpToReinforceAsync geeft geen token terug (alleen PlayerId's),
+        // en dat is hier ook niet nodig — deze test bewijst turn-state-resync (publieke velden),
+        // niet identiteit/privacy, dus de publieke RejoinGame-weergave volstaat.
         await using var reconnected = await ConnectAsync(factory, client);
-        var rejoined = await reconnected.InvokeAsync<GameStateDto>("RejoinGame", gameId, aliceId);
+        var rejoined = await reconnected.InvokeAsync<GameStateDto>("RejoinGame", gameId, aliceId, "");
 
         Assert.Equal(GamePhaseDto.InProgress, rejoined.Phase);
         Assert.Equal(TurnPhaseDto.Reinforce, rejoined.TurnState!.TurnPhase);
@@ -302,7 +305,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
 
         var player = new Player(
             "p1", "Alice", "red", Hand: hand,
-            RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(

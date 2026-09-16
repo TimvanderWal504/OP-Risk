@@ -64,9 +64,9 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : 
         var map = mapSource.Load("standaard-43");
 
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
         var bob = new Player(
-            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => territory.Id switch
@@ -338,7 +338,7 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : 
         var map = mapSource.Load("standaard-43");
 
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))

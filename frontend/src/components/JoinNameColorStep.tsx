@@ -86,7 +86,7 @@ export function JoinNameColorStep({
                   selected={selected}
                   disabled={taken}
                   onSelect={() => setPendingColorId(color.id)}
-                  className="flex min-h-[58px] items-center gap-3 px-[14px]"
+                  className="flex min-h-[58px] items-center gap-3 px-[14px] py-2.5"
                   unselectedBorderVar="var(--border)"
                   disabledBorderVar="var(--border)"
                 >
@@ -96,8 +96,10 @@ export function JoinNameColorStep({
                   >
                     <ColorSymbol symbol={color.symbol} />
                   </span>
-                  <span className="font-display text-[16px] font-bold">{tDynamic(color.id, 'colors')}</span>
-                  {taken && <span className="absolute right-3 text-xs text-fg-muted">{t('join:color.taken')}</span>}
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-display text-[16px] font-bold">{tDynamic(color.id, 'colors')}</span>
+                    {taken && <span className="text-xs  text-left text-fg-muted">{t('join:color.taken')}</span>}
+                  </span>
                 </SelectableOption>
               )
             })}

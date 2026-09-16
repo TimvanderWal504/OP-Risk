@@ -27,4 +27,50 @@ describe('PhoneOrderRollScreen', () => {
 
     expect(screen.queryByRole('button', { name: 'Gooien' })).not.toBeInTheDocument()
   })
+
+  it('toont wachtstatus i.p.v. worpknop als de speler zelf niet meer hoeft te gooien', () => {
+    render(
+      <PhoneOrderRollScreen
+        {...fixtureProps({
+          state: { ...fixtureState, orderRollState: { playersStillToRoll: ['bob'] } },
+        })}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Gooien' })).not.toBeInTheDocument()
+    expect(screen.getByText('Wachten op andere spelers…')).toBeInTheDocument()
+  })
+
+  it('toont de worpknop weer zodra de speler in een herworp-ronde weer mag gooien', () => {
+    const { rerender } = render(
+      <PhoneOrderRollScreen
+        {...fixtureProps({
+          state: { ...fixtureState, orderRollState: { playersStillToRoll: ['bob'] } },
+        })}
+      />,
+    )
+    expect(screen.queryByRole('button', { name: 'Gooien' })).not.toBeInTheDocument()
+
+    rerender(
+      <PhoneOrderRollScreen
+        {...fixtureProps({
+          state: { ...fixtureState, orderRollState: { playersStillToRoll: ['alice', 'bob'] } },
+        })}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Gooien' })).toBeInTheDocument()
+  })
+
+  it('toont wachtstatus als niemand meer hoeft te gooien', () => {
+    render(
+      <PhoneOrderRollScreen
+        {...fixtureProps({
+          state: { ...fixtureState, orderRollState: { playersStillToRoll: [] } },
+        })}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Gooien' })).not.toBeInTheDocument()
+    expect(screen.getByText('Wachten op andere spelers…')).toBeInTheDocument()
+  })
 })

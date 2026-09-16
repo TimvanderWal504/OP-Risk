@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto, ReinforcementBreakdownDto, TerritoryDto } from '../types/GameState'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
@@ -71,13 +71,22 @@ export function PlaceReinforcementStep({
   const isDone = armiesLeft === 0
   const readyToConfirm = !isDone && remainingToStage === 0 && totalStaged > 0
 
-  const buttonLabel = isDone
-    ? t('doneLabel')
-    : readyToConfirm
-      ? t('confirmLabel')
-      : t('placeAllFirst', { count: remainingToStage })
-  const buttonEnabled = (isDone || readyToConfirm) && !submitting
-  const buttonAction = isDone ? onEndPhase : readyToConfirm ? handleConfirm : undefined
+  // Guard tegen dubbele `EndPhase`-calls (React StrictMode dubbelt effects in dev, en
+  // `EndPhase` vanuit Aanvallen zonder lopend gevecht is óók geldig — een tweede call zou dus
+  // niet falen maar in één klap doorschieten naar Verplaatsen, de Aanvalsfase overslaand).
+  const endPhaseFired = useRef(false)
+
+  useEffect(() => {
+    if (isDone && !endPhaseFired.current) {
+      endPhaseFired.current = true
+      onEndPhase()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDone])
+
+  const buttonLabel = readyToConfirm ? t('confirmLabel') : t('placeAllFirst', { count: remainingToStage })
+  const buttonEnabled = readyToConfirm && !submitting
+  const buttonAction = readyToConfirm ? handleConfirm : undefined
 
   const continentOf = (territoryId: string) =>
     territoryCatalog.find((entry) => entry.id === territoryId)?.continent ?? 'unknown'
@@ -179,19 +188,21 @@ export function PlaceReinforcementStep({
         })}
       </div>
 
-      <button
-        type="button"
-        disabled={!buttonEnabled}
-        onClick={buttonAction}
-        className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black disabled:cursor-not-allowed"
-        style={{
-          background: buttonEnabled ? 'var(--pitch-500)' : 'var(--border-strong)',
-          color: buttonEnabled ? 'var(--on-pitch)' : 'var(--fg-muted)',
-          boxShadow: buttonEnabled ? shadowGlowPitch : 'none',
-        }}
-      >
-        {buttonLabel}
-      </button>
+      {!isDone && (
+        <button
+          type="button"
+          disabled={!buttonEnabled}
+          onClick={buttonAction}
+          className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black disabled:cursor-not-allowed"
+          style={{
+            background: buttonEnabled ? 'var(--pitch-500)' : 'var(--border-strong)',
+            color: buttonEnabled ? 'var(--on-pitch)' : 'var(--fg-muted)',
+            boxShadow: buttonEnabled ? shadowGlowPitch : 'none',
+          }}
+        >
+          {buttonLabel}
+        </button>
+      )}
     </PhoneScreen>
   )
 }

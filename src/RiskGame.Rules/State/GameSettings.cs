@@ -23,6 +23,10 @@ namespace RiskGame.Rules.State;
 /// <param name="RoleAssignment">
 /// Random of Kiezen (FO §10); betekenisloos zolang <paramref name="RolesEnabled"/> uit staat.
 /// </param>
+/// <param name="MissionWinTiming">
+/// FO §6.2: wanneer een vervulde bezit-missie daadwerkelijk wint. Betekenisloos bij
+/// <see cref="State.WinCondition.WorldDomination"/> (er zijn dan geen missies).
+/// </param>
 public sealed record GameSettings(
     WinCondition WinCondition,
     SetupMode SetupMode,
@@ -31,4 +35,5 @@ public sealed record GameSettings(
     TimeSpan FortifyTimer,
     bool RolesEnabled,
     RoleAssignmentMode RoleAssignment,
-    bool EventsEnabled);
+    bool EventsEnabled,
+    MissionWinTiming MissionWinTiming = MissionWinTiming.EndOfTurn);

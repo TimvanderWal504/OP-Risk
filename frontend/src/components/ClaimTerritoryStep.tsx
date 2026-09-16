@@ -162,9 +162,11 @@ export function ClaimTerritoryStep({
         elevation="base"
         context="phone"
         padding="none"
-        className="mt-4 mb-2 inline-block self-start rounded-2xl px-3.5 py-1.5 font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase"
+        className="mt-4 mb-2 inline-block self-start rounded-2xl px-3.5 py-1.5"
       >
-        {t('claim.claimedBy')}
+        <span className="font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase">
+          {t('claim.claimedBy')}
+        </span>
       </GlassPanel>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {claimBoard.map(({ player, color, count, isMe }) => (

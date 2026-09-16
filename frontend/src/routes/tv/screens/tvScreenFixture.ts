@@ -1,13 +1,18 @@
 import { GamePhaseDto, type GameStateDto } from '../../../types/GameState'
-import { RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../../../types/GameSettings'
+import {
+  MissionWinTimingDto,
+  RoleAssignmentModeDto,
+  SetupModeDto,
+  WinConditionDto,
+} from '../../../types/GameSettings'
 
 /** Basis-state voor de host-schermtests; elke test overschrijft wat zijn gedrag stuurt. */
 export const fixtureState: GameStateDto = {
   gameId: 'ABCD',
   phase: GamePhaseDto.Lobby,
   players: [
-    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false },
-    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false },
+    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null },
+    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, missionId: null },
   ],
   availableColorIds: ['green'],
   turnOrder: ['alice', 'bob'],
@@ -28,8 +33,11 @@ export const fixtureState: GameStateDto = {
     rolesEnabled: false,
     roleAssignment: RoleAssignmentModeDto.Random,
     eventsEnabled: false,
+    missionWinTiming: MissionWinTimingDto.EndOfTurn,
   },
   orderRollState: null,
   setupState: null,
   stateVersion: 1,
+  winners: [],
+  pendingWinnerPlayerId: null,
 }

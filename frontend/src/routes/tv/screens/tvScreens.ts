@@ -9,6 +9,7 @@ import { TvClaimingScreen } from './TvClaimingScreen'
 import { TvInitialPlacementScreen } from './TvInitialPlacementScreen'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
+import { TvGameOverScreen } from './TvGameOverScreen'
 import { TvCombatOverlay } from './TvCombatOverlay'
 
 /** Wat elk host-scherm van de route meekrijgt; zie `PhoneScreenProps` voor dezelfde opzet. */
@@ -33,7 +34,7 @@ export const tvScreens: Record<GamePhaseDto, TvScreen> = {
   [GamePhaseDto.Claiming]: TvClaimingScreen,
   [GamePhaseDto.InitialPlacement]: TvInitialPlacementScreen,
   [GamePhaseDto.InProgress]: TvMainBoardScreen,
-  [GamePhaseDto.Finished]: TvPlaceholderScreen,
+  [GamePhaseDto.Finished]: TvGameOverScreen,
 }
 
 /** Versie-skew-vangnet, zie `resolvePhoneScreen` voor waarom dit náást het `Record` bestaat. */

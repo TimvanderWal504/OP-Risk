@@ -18,12 +18,13 @@ namespace RiskGame.Persistence.Projections;
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
 /// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het volledige
-/// gevechtsarsenaal, kaarttrekken, uitschakeling, de gebeurtenisronde-effecten en het
-/// spel-einde (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
-/// gebieden claimen/bijplaatsen, rol en missie toewijzen, fase-overgangen binnen een
-/// beurt, legers versterken, kaarten inleveren, aanvallen, veroveren, verplaatsen, kaart
-/// trekken, een speler uitschakelen, een gebeurteniseffect toepassen/laten verlopen, het
-/// spel winnen) — een achtste plak.
+/// gevechtsarsenaal, kaarttrekken, uitschakeling, de gebeurtenisronde-effecten, het
+/// laatste-kans-venster rond bezit-missies (FO §6.2) en het spel-einde (spel aanmaken,
+/// spelers joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen,
+/// rol en missie toewijzen, fase-overgangen binnen een beurt, legers versterken, kaarten
+/// inleveren, aanvallen, veroveren, verplaatsen, kaart trekken, een speler uitschakelen,
+/// een gebeurteniseffect toepassen/laten verlopen, een dreigende missie-overwinning
+/// openen/versmallen/laten vervallen, het spel winnen) — een achtste plak.
 /// <see cref="OrderRolled"/>, <see cref="TurnEnded"/>, <see cref="DiceRolled"/>,
 /// <see cref="EventCardDrawn"/> en <see cref="MissionCompleted"/> horen daar bewust niet
 /// bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die
@@ -74,7 +75,6 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             RoleId: null,
             Mission: null,
             IsEliminated: false,
-            IsAutoPass: false,
             IsHost: @event.IsHost));
 
     /// <summary>Zet de fase om naar de order-roll (FO §2.1); wie mag starten is al door
@@ -398,9 +398,34 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         state.WithActiveEffects(
             [.. state.ActiveEffects.Where(activeEffect => activeEffect.Effect.Id != @event.EventId)]);
 
-    /// <summary>Legt de winnaar(s) vast en sluit het spel af (FO §7).</summary>
+    /// <summary>
+    /// Legt de winnaar(s) vast en sluit het spel af (FO §7). Wist ook <see cref="GameState.TurnState"/>
+    /// (inclusief een eventuele <see cref="TurnState.PendingCombat"/>): bij wereldheerschappij via de
+    /// laatste eliminatie vuurt <see cref="GameWon"/> al binnen <c>ChooseDefenseDiceAsync</c>, vóórdat
+    /// <c>MoveAfterConquest</c> ooit aan de beurt komt (FO §5.3) — zonder deze reset blijft
+    /// <c>PendingCombat</c> voor altijd hangen in de DTO, wat op de TV `useHeldCombat`'s houd-timer
+    /// nooit laat starten (die wacht op `pendingCombat === null`) en zo de combat-/eliminatie-overlay
+    /// permanent boven <c>TvGameOverScreen</c> laat staan (bevinding, gebruiker gescreenshot 2026-08-18).
+    /// Ruimt ook <see cref="GameState.PendingWin"/> op: een directe winconditie (bv. eliminatie)
+    /// tijdens een lopend laatste-kans-venster wint altijd meteen (FO §6.2) — deze opruiming is
+    /// wat dat gratis laat werken, ook vanuit <c>AttackCommandHandler</c>'s mid-combat
+    /// werelddominantie-check, zonder dat die zelf iets van <c>PendingWin</c> hoeft te weten.
+    /// </summary>
     public GameState Apply(GameState state, GameWon @event) =>
-        state.WithPhase(GamePhase.Finished).WithWinners(@event.WinnerPlayerIds);
+        state.WithPhase(GamePhase.Finished).WithWinners(@event.WinnerPlayerIds).WithTurnState(null)
+            .WithPendingWin(null);
+
+    /// <summary>Opent het laatste-kans-venster (FO §6.2) — zie doc-comment op <see cref="PendingWinOpened"/>.</summary>
+    public GameState Apply(GameState state, PendingWinOpened @event) =>
+        state.WithPendingWin(new PendingWin(@event.AchieverPlayerId, @event.MissionId, @event.RemainingPlayerIds));
+
+    /// <summary>Versmalt het laatste-kans-venster (FO §6.2) — zie doc-comment op <see cref="PendingWinNarrowed"/>.</summary>
+    public GameState Apply(GameState state, PendingWinNarrowed @event) =>
+        state.WithPendingWin(state.PendingWin! with { RemainingPlayerIds = @event.RemainingPlayerIds });
+
+    /// <summary>Laat het laatste-kans-venster vervallen (FO §6.2) — zie doc-comment op <see cref="PendingWinBroken"/>.</summary>
+    public GameState Apply(GameState state, PendingWinBroken @event) =>
+        state.WithPendingWin(null);
 
     /// <summary>
     /// Gedeelde leger-verplaatsing tussen twee gebieden (bron −<paramref name="amount"/>,

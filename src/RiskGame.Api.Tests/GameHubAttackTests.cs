@@ -9,6 +9,7 @@ using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Missions;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Tests;
@@ -57,13 +58,17 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
     /// Bouwt een spel rechtstreeks op in de projectie-fase Attack, met "alaska" (p1) grenzend
     /// aan "alberta" (p2) — zelfde adjacency-paar als <c>AttackGuardsTests</c>. Optioneel een
     /// extra gebied voor p2 (<paramref name="extraBobTerritoryId"/>) om te bewijzen dat
-    /// verovering van niet-het-laatste-gebied geen <c>PlayerEliminated</c> oplevert.
+    /// verovering van niet-het-laatste-gebied geen <c>PlayerEliminated</c> oplevert, of juist
+    /// de rest van de kaart voor Alice (<paramref name="aliceOwnsRestOfMap"/>) om een
+    /// werelddominantie-scenario te kunnen zetten — <c>WinConditionEvaluator.HasWorldDomination</c>
+    /// controleert alle 43 gebieden, niet alleen het aanvals-/verdedigingspaar.
     /// </summary>
     private static async Task<string> SetUpAttackStateAsync(
         WebApplicationFactory<Program> factory,
         int aliceArmies,
         int bobArmies,
-        string? extraBobTerritoryId = null)
+        string? extraBobTerritoryId = null,
+        bool aliceOwnsRestOfMap = false)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -86,9 +91,9 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             EventsEnabled: false);
 
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
         var bob = new Player(
-            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
         var territories = map.Territories
             .Select(territory => territory.Id switch
@@ -96,6 +101,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
                 "alaska" => new TerritoryOwnership(territory.Id, "p1", aliceArmies),
                 "alberta" => new TerritoryOwnership(territory.Id, "p2", bobArmies),
                 _ when territory.Id == extraBobTerritoryId => new TerritoryOwnership(territory.Id, "p2", 1),
+                _ when aliceOwnsRestOfMap => new TerritoryOwnership(territory.Id, "p1", 1),
                 _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
             })
             .ToArray();
@@ -391,6 +397,172 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         var bob = combatResult.State.Players.Single(p => p.Id == "p2");
         Assert.True(bob.IsEliminated);
+    }
+
+    /// <summary>
+    /// Zelfde opstelling als <see cref="SetUpAttackStateAsync"/> (Alice/p1 tegen Bob/p2 op
+    /// "alaska"/"alberta"), met een derde speler Carol (p3, geen eigen gebied nodig — ze doet
+    /// niet mee aan dit gevecht) erbij. <paramref name="missionHolderId"/> ("p1" of "p3")
+    /// bepaalt wie <paramref name="mission"/> krijgt, zodat dezelfde helper zowel het
+    /// "een ándere speler elimineert het doelwit" - als het "de missiehouder elimineert het
+    /// doelwit zelf"-scenario kan opzetten (FO §6.1, <see cref="AttackCommandHandler"/>).
+    /// </summary>
+    private static async Task<string> SetUpAttackStateWithThirdMissionHolderAsync(
+        WebApplicationFactory<Program> factory, IMission mission, string missionHolderId)
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var map = mapSource.Load("standaard-43");
+        var timeProviderNow = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow();
+
+        var settings = new GameSettings(
+            WinCondition.SecretMissions,
+            SetupMode.Claiming,
+            SettingsDto.StartingArmiesPresetId,
+            TurnTimer: TimeSpan.FromSeconds(SettingsDto.TurnTimerSeconds),
+            FortifyTimer: TimeSpan.FromSeconds(SettingsDto.FortifyTimerSeconds),
+            RolesEnabled: false,
+            RoleAssignment: RoleAssignmentMode.Random,
+            EventsEnabled: false);
+
+        var alice = new Player(
+            "p1", "Alice", "red", Hand: [], RoleId: null,
+            Mission: missionHolderId == "p1" ? mission : null, IsEliminated: false);
+        var bob = new Player(
+            "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+        var carol = new Player(
+            "p3", "Carol", "green", Hand: [], RoleId: null,
+            Mission: missionHolderId == "p3" ? mission : null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => territory.Id switch
+            {
+                "alaska" => new TerritoryOwnership(territory.Id, "p1", ArmyCount: 4),
+                "alberta" => new TerritoryOwnership(territory.Id, "p2", ArmyCount: 2),
+                _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
+            })
+            .ToArray();
+
+        var state = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            settings,
+            players: [alice, bob, carol],
+            territories,
+            turnOrder: ["p1", "p2", "p3"],
+            turnState: new TurnState(
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+
+        await using var session = store.LightweightSession();
+        session.Store(state);
+        await session.SaveChangesAsync();
+
+        return gameId;
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_VeroveringDoorAndereSpelerDanDeMissiehouder_HerwijstDiensEliminatePlayerMissieOpDeFallback()
+    {
+        // Carol (p3) houdt "eliminate-blue" (Bob se kleur) — maar Alice (p1), niet Carol,
+        // elimineert Bob. FO §6.1: Carol se missie is dan niet vervuld en ze komt automatisch
+        // op de fallback-missie uit.
+        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var map = mapSource.Load("standaard-43");
+        var carolMission = (EliminatePlayerMission)map.Missions.Single(mission => mission.Id == "eliminate-blue");
+
+        var gameId = await SetUpAttackStateWithThirdMissionHolderAsync(factory, carolMission, missionHolderId: "p3");
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
+        var combatResult = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 2);
+
+        Assert.True(combatResult.Conquered);
+
+        // Niet combatResult.State: dat is het RPC-antwoord aan Bob (de aanroeper van
+        // ChooseDefenseDice) en wordt volgens TO §6.1 geredact naar diens eigen perspectief —
+        // Carol se MissionId hoort daar sowieso nooit in te staan, ongeacht deze regel. De
+        // fallback-toewijzing zelf bewijzen we daarom rechtstreeks op de opgeslagen GameState.
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+        await using var session = store.QuerySession();
+        var state = await session.LoadAsync<GameState>(gameId);
+        var carol = state!.Players.Single(p => p.Id == "p3");
+        Assert.Equal(carolMission.FallbackMissionId, carol.Mission?.Id);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_VeroveringDoorDeMissiehouderZelf_LaatDiensEliminatePlayerMissieOnveranderd()
+    {
+        // Alice (p1) houdt zelf "eliminate-blue" én elimineert Bob (p2) — geen fallback, haar
+        // missie blijft staan (telt mee bij de eerstvolgende EndTurn-controle, FO §6.1).
+        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var map = mapSource.Load("standaard-43");
+        var aliceMission = map.Missions.Single(mission => mission.Id == "eliminate-blue");
+
+        var gameId = await SetUpAttackStateWithThirdMissionHolderAsync(factory, aliceMission, missionHolderId: "p1");
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
+        var combatResult = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 2);
+
+        Assert.True(combatResult.Conquered);
+
+        // Zelfde reden als in de andere nieuwe test hierboven: combatResult.State is Bob se
+        // eigen, geredacte RPC-antwoord en zou Alice se MissionId sowieso nooit tonen — de
+        // opgeslagen GameState bewijst rechtstreeks dat haar missie ongewijzigd bleef.
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+        await using var session = store.QuerySession();
+        var state = await session.LoadAsync<GameState>(gameId);
+        var alice = state!.Players.Single(p => p.Id == "p1");
+        Assert.Equal("eliminate-blue", alice.Mission?.Id);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_VeroveringVanLaatsteTegenstander_BeeindigtHetSpelDoorWereldheerschappij()
+    {
+        // Zelfde worpen/opstelling als ChooseDefenseDice_VeroveringVanLaatsteGebied_SchakeltSpelerUit,
+        // maar Alice bezit nu ook de rest van de kaart: deze verovering maakt haar niet alleen
+        // Bobs enige overwinnaar, maar ook eigenaar van alle 43 gebieden (FO §6, werelddominantie).
+        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 4, bobArmies: 2, aliceOwnsRestOfMap: true);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var gameWonReceived = new TaskCompletionSource<GameWonMessage>();
+        spectator.On<GameWonMessage>("GameWon", message => gameWonReceived.TrySetResult(message));
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
+        var combatResult = await connection.InvokeAsync<CombatResultResponse>(
+            "ChooseDefenseDice", gameId, "p2", 2);
+
+        Assert.True(combatResult.Conquered);
+        Assert.Equal(GamePhaseDto.Finished, combatResult.State.Phase);
+        Assert.Equal(["p1"], combatResult.State.Winners);
+
+        // GameWon vuurt hier al binnen ChooseDefenseDice, vóórdat MoveAfterConquest ooit aan
+        // de beurt komt — TurnState (met zijn PendingCombat) moet dus mee weggevouwen worden,
+        // anders blijft PendingCombat voor altijd hangen en start `useHeldCombat` op de TV zijn
+        // houd-timer nooit (bevinding, gebruiker gescreenshot 2026-08-18).
+        Assert.Null(combatResult.State.TurnState);
+
+        var gameWon = await gameWonReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(["p1"], gameWon.WinnerPlayerIds);
+        Assert.Equal(combatResult.State.StateVersion, gameWon.StateVersion);
     }
 
     [Fact]

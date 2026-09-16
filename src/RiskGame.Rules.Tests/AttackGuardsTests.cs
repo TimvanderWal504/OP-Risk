@@ -259,6 +259,17 @@ public class AttackGuardsTests
     }
 
     [Fact]
+    public void Verdedigen_InEenAfgelopenSpel_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta(albertaArmies: 2).WithPhase(GamePhase.Finished);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("common.gameFinished", result.Errors.Single().Code);
+    }
+
+    [Fact]
     public void Verdedigen_MetTweeDobbelstenenBijEenLeger_IsOngeldig()
     {
         var state = PendingAlaskaVsAlberta(albertaArmies: 1);

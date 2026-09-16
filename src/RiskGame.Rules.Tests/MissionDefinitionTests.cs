@@ -147,4 +147,39 @@ public class MissionDefinitionTests
 
         Assert.False(mission.IsAchieved(state, "p1"));
     }
+
+    [Fact]
+    public void EliminatePlayerMission_RequiresLastChance_IsOnwaar()
+    {
+        var mission = new EliminatePlayerMission(
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+
+        Assert.False(mission.RequiresLastChance);
+    }
+
+    [Fact]
+    public void ConquerContinentsMission_RequiresLastChance_IsWaar()
+    {
+        var mission = new ConquerContinentsMission(
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, ["south-america"], ExtraAnyContinent: false);
+
+        Assert.True(mission.RequiresLastChance);
+    }
+
+    [Fact]
+    public void TerritoryCountMission_RequiresLastChance_IsWaar()
+    {
+        var mission = new TerritoryCountMission("m", "Naam", "Beschrijving", RequiresOwnTurn: false, Count: 1);
+
+        Assert.True(mission.RequiresLastChance);
+    }
+
+    [Fact]
+    public void TerritoryCountMinArmiesMission_RequiresLastChance_IsWaar()
+    {
+        var mission = new TerritoryCountMinArmiesMission(
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, Count: 1, MinArmies: 1);
+
+        Assert.True(mission.RequiresLastChance);
+    }
 }

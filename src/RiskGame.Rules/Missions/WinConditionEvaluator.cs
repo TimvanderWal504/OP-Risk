@@ -25,13 +25,16 @@ public static class WinConditionEvaluator
 
     /// <summary>
     /// De spelers die, na het afronden van <paramref name="turnEndedByPlayerId"/>'s beurt,
-    /// aan een winconditie voldoen (FO §6.1: "de server controleert de missievoorwaarden
-    /// na elke beurt"). Werelddominantie telt voor iedereen mee; bij winconditie Geheime
-    /// missies telt bovendien ieders eigen missie mee, met inachtneming van
-    /// <see cref="IMission.RequiresOwnTurn"/> — die missies tellen alleen mee voor de
-    /// speler wiens beurt zojuist eindigde.
+    /// meteen winnen (FO §6.1/§6.2) — zonder laatste-kans-venster. Werelddominantie telt
+    /// altijd mee. Bij winconditie Geheime missies telt bovendien elke missie mee die
+    /// onomkeerbaar is (<see cref="IMission.RequiresLastChance"/> = <c>false</c>, zoals
+    /// <c>EliminatePlayer</c>), plus — als <see cref="GameSettings.MissionWinTiming"/> op
+    /// <see cref="MissionWinTiming.EndOfTurn"/> staat — ook de bezit-missies, want dan is er
+    /// nooit een laatste-kans-venster (zie <see cref="LastChanceEligibleWinners"/>, die onder
+    /// die instelling altijd leeg blijft omdat deze methode ze al claimt). Respecteert
+    /// <see cref="IMission.RequiresOwnTurn"/> zoals altijd.
     /// </summary>
-    public static IReadOnlyList<string> Winners(GameState state, string turnEndedByPlayerId)
+    public static IReadOnlyList<string> DirectWinners(GameState state, string turnEndedByPlayerId)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentException.ThrowIfNullOrWhiteSpace(turnEndedByPlayerId);
@@ -57,6 +60,52 @@ public static class WinConditionEvaluator
                 continue;
             }
 
+            var isDirect = !mission.RequiresLastChance
+                || state.Settings.MissionWinTiming == MissionWinTiming.EndOfTurn;
+
+            if (!isDirect || (mission.RequiresOwnTurn && player.Id != turnEndedByPlayerId))
+            {
+                continue;
+            }
+
+            if (mission.IsAchieved(state, player.Id))
+            {
+                winners.Add(player.Id);
+            }
+        }
+
+        return winners;
+    }
+
+    /// <summary>
+    /// De spelers die, na het afronden van <paramref name="turnEndedByPlayerId"/>'s beurt,
+    /// een bezit-missie vervuld hebben maar (nog) niet direct winnen — ze moeten eerst een
+    /// laatste-kans-venster doorstaan (FO §6.2). Levert altijd een lege lijst op wanneer
+    /// <see cref="GameSettings.MissionWinTiming"/> op <see cref="MissionWinTiming.EndOfTurn"/>
+    /// staat: die missies zijn dan al meegenomen door <see cref="DirectWinners"/> hierboven,
+    /// dus hier is dan niets meer te vinden. Zelfde <see cref="IMission.RequiresOwnTurn"/>-
+    /// gating als <see cref="DirectWinners"/>.
+    /// </summary>
+    public static IReadOnlyList<string> LastChanceEligibleWinners(GameState state, string turnEndedByPlayerId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentException.ThrowIfNullOrWhiteSpace(turnEndedByPlayerId);
+
+        var winners = new List<string>();
+
+        if (state.Settings.WinCondition != WinCondition.SecretMissions
+            || state.Settings.MissionWinTiming == MissionWinTiming.EndOfTurn)
+        {
+            return winners;
+        }
+
+        foreach (var player in state.Players)
+        {
+            if (player.IsEliminated || player.Mission is not { RequiresLastChance: true } mission)
+            {
+                continue;
+            }
+
             if (mission.RequiresOwnTurn && player.Id != turnEndedByPlayerId)
             {
                 continue;
@@ -69,5 +118,22 @@ public static class WinConditionEvaluator
         }
 
         return winners;
+    }
+
+    /// <summary>
+    /// Hercontrole tijdens een lopend laatste-kans-venster (FO §6.2): of
+    /// <paramref name="achieverPlayerId"/>'s missie nog steeds geldt. <c>false</c> zodra die
+    /// speler inmiddels is uitgeschakeld (kan niet meer "winnen"), anders gewoon
+    /// <see cref="IMission.IsAchieved"/> — gecentraliseerd zodat de uitgeschakelde-guard niet
+    /// per aanroeper gedupliceerd wordt (DRY, src/CLAUDE.md).
+    /// </summary>
+    public static bool StillHoldsLastChanceMission(GameState state, string achieverPlayerId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentException.ThrowIfNullOrWhiteSpace(achieverPlayerId);
+
+        var achiever = state.Player(achieverPlayerId);
+
+        return !achiever.IsEliminated && achiever.Mission is { } mission && mission.IsAchieved(state, achieverPlayerId);
     }
 }

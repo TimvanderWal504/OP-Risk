@@ -5,6 +5,7 @@ using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
 using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Serialization;
+using RiskGame.Persistence.Sessions;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Persistence.Store;
@@ -36,6 +37,10 @@ public static class GameStoreFactory
             // omzeilt dat door Phase apart, doorzoekbaar op te slaan.
             options.Schema.For<GameState>()
                 .Duplicate(state => state.Phase, configure: index => index.Name = "idx_gamestate_phase");
+            // Los, niet event-sourced document (TO §6.3): een sessietoken is geen spelfeit,
+            // alleen een technisch identiteitsbewijs voor RejoinGame. Expliciet geregistreerd,
+            // net als GameState hierboven, i.p.v. op Martens Id-conventie te leunen.
+            options.Schema.For<PlayerSessionToken>();
             // PhaseChanged en CardsTraded dragen sinds deze wijziging de berekende uitkomst
             // (toegekende versterkingen resp. inlegopbrengst) in plaats van die bij het vouwen
             // te laten uitrekenen. Events van vóór die wijziging missen die velden en zouden

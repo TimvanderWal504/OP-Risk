@@ -494,8 +494,8 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
             settings,
             players:
             [
-                new Player("p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false),
-                new Player("p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false),
+                new Player("p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false),
+                new Player("p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false),
             ],
             territories,
             turnOrder: ["p1", "p2"],

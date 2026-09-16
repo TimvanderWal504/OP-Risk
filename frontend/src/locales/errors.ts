@@ -36,10 +36,15 @@ export const errors = {
       nl: 'Dit kan alleen tijdens {{expected}}; de beurt staat in {{actual}}.',
       en: 'This is only possible during {{expected}}; the turn is in {{actual}}.',
     },
+    gameFinished: { nl: 'Dit spel is al afgelopen.', en: 'This game has already ended.' },
     unknownTerritory: { nl: "Onbekend gebied '{{territoryId}}'.", en: "Unknown territory '{{territoryId}}'." },
     territoryNotOwned: {
       nl: "Gebied '{{territoryId}}' is niet van speler '{{playerId}}'.",
       en: "Territory '{{territoryId}}' does not belong to player '{{playerId}}'.",
+    },
+    tooManyJoinAttempts: {
+      nl: 'Te veel pogingen om te joinen; probeer het over een paar minuten opnieuw.',
+      en: 'Too many attempts to join; try again in a few minutes.',
     },
   },
   lobby: {

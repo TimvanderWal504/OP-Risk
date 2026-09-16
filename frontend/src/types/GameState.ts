@@ -123,4 +123,14 @@ export interface GameStateDto {
   orderRollState: OrderRollStateDto | null,
   setupState: SetupStateDto | null,
   stateVersion: number
+  /** Wie het spel gewonnen heeft; leeg totdat `phase === GamePhaseDto.Finished`. */
+  winners: string[]
+  /**
+   * FO §6.2: alleen gevuld tijdens een lopend laatste-kans-venster ÉN alleen wanneer
+   * `settings.missionWinTiming === MissionWinTimingDto.FullRoundRevealed` — anders altijd
+   * `null`, ook als er intern wel een venster loopt (optie "Volgende beurt" onthult bewust
+   * niets). Bevat uitsluitend de speler-id, nooit de missie-inhoud: die blijft geheim tot
+   * `phase === GamePhaseDto.Finished`.
+   */
+  pendingWinnerPlayerId: string | null
 }

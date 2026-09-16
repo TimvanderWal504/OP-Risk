@@ -145,7 +145,9 @@ public sealed class TurnTimerBackgroundService(
         // zonder deze broadcast persisteert de timeout-overstap wel, maar horen al verbonden
         // clients er pas iets van bij hun eerstvolgende eigen commando of een handmatige
         // reconnect (WatchGame/RejoinGame) — precies het gerapporteerde synchronisatiegat.
-        await hubContext.Clients.Group(GameGroups.All(gameId)).GameStateUpdated(versionedState);
+        // GameStatePush is de enige plek die de tv/player-privacy-grens (TO §6.1) toepast —
+        // een eigen Clients.Group(...).GameStateUpdated(...) hier zou die grens omzeilen.
+        await GameStatePush.BroadcastAsync(hubContext.Clients, gameId, versionedState);
     }
 
     private void LogRejectedThrottled(

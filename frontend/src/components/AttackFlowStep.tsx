@@ -111,17 +111,27 @@ export function AttackFlowStep({
     setPhase('dice')
   }
 
-  // Terugstappen binnen de picker. Puur lokaal: tot `roll()` is er nog geen `DeclareAttack` naar
-  // de server gegaan, dus er valt niets af te breken (anders dan bij `otherFight` hieronder, dat
-  // een al aangekondigd gevecht opgeeft en daarom wél `onAbandonAttack` nodig heeft). De keuze
-  // die je loslaat wordt gewist, zodat een half ingevulde selectie niet blijft hangen.
+  // Terugstappen binnen de picker. Alleen bereikbaar vóór `roll()` (zie `myUnfinishedCombat`
+  // hierboven: bij een lopende/afgehandelde belegering start de flow al op 'rolled', niet op
+  // 'tgt'), dus hier is nog geen `DeclareAttack` naar de server gegaan en valt er niets af te
+  // breken — anders dan `backToTgt` hieronder, die dezelfde knoptekst ook bereikt via "Nog een
+  // keer aanvallen". De keuze die je loslaat wordt gewist, zodat een half ingevulde selectie niet
+  // blijft hangen.
   const backToSrc = () => {
     setFromTerritoryId(null)
     setToTerritoryId(null)
     setPhase('src')
   }
 
-  const backToTgt = () => {
+  // Bij een verse picker (nog geen `DeclareAttack` geweest) is dit puur lokaal, zoals `backToSrc`
+  // hierboven. Maar via "Nog een keer aanvallen" (`attackAgain`) komt deze knop ook terug bij een
+  // al aangekondigd/afgehandeld gevecht (`myUnfinishedCombat`) — dan staat de beurttimer nog
+  // gepauzeerd (FO §5.4) en moet "Ander doelwit kiezen" 'm net als "Ander gevecht" hervatten,
+  // anders blijft de timer hangen tot een volgende `onDeclareAttack`.
+  const backToTgt = async () => {
+    if (myUnfinishedCombat) {
+      await onAbandonAttack()
+    }
     setToTerritoryId(null)
     setPhase('tgt')
   }
@@ -204,6 +214,15 @@ export function AttackFlowStep({
               </GlassPanel>
             ))}
           </div>
+          {/* Aanvallen is optioneel (FO §5.3): zonder deze knop kon de bronkeuze alleen naar
+              Verplaatsen doorschakelen via een reeds afgeronde aanvalsworp (`AttackRolledResult`
+              hieronder), terwijl een speler die deze beurt helemaal niet wil aanvallen hier
+              vastliep. */}
+          <Footer>
+            <Button variant="secondary" onClick={onEndPhase}>
+              {t('endAttackPhase')}
+            </Button>
+          </Footer>
         </>
       )}
 
@@ -240,7 +259,7 @@ export function AttackFlowStep({
               </GlassPanel>
             ))}
           </div>
-          <Button variant="secondary" onClick={backToSrc} className="mt-3 min-h-[46px] text-sm">
+          <Button variant="secondary" onClick={backToSrc} className="mt-3">
             {t('pickTgt.back')}
           </Button>
         </>
@@ -314,7 +333,7 @@ export function AttackFlowStep({
             {t('roll')}
           </button>
           {/* Zelfde ontsnapping als op de doelwitstap: ook hier is nog niets naar de server. */}
-          <Button variant="secondary" onClick={backToTgt} className="mt-2.5 min-h-[46px] text-sm">
+          <Button variant="secondary" onClick={backToTgt} className="mt-2.5">
             {t('pickDice.back')}
           </Button>
         </>

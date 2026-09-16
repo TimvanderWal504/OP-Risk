@@ -16,7 +16,4 @@ public enum PlayerStatus
 
     /// <summary>Uitgeschakeld; blijft het spel volgen maar handelt niet meer (FO §7).</summary>
     Eliminated,
-
-    /// <summary>Door de host als blijvend afwezig gemarkeerd; beurten worden overgeslagen (FO §11.2).</summary>
-    AutoPass,
 }

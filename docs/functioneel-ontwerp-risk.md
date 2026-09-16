@@ -6,11 +6,11 @@
 
 ## 1. Concept
 
-Een digitale Risk-implementatie in Jackbox-stijl. Eén **host-scherm** (TV/groot scherm) toont passief het speelbord; elke speler bestuurt het spel via zijn **eigen telefoon**. De server (self-hosted, later optioneel Azure) is authoritative: alle spelregels, dobbelworpen en validaties gebeuren server-side.
+Een digitale Risk-implementatie in Jackbox-stijl. Eén **host-scherm** (TV/groot scherm) toont passief het speelbord; elke speler bestuurt het spel via zijn **eigen telefoon**. De server (Azure App Service) is authoritative: alle spelregels, dobbelworpen en validaties gebeuren server-side.
 
 - **Spelers:** 2 t/m 7
 - **Sessies:** alleen live (geen opslaan/hervatten in v1)
-- **Netwerk:** LAN + remote via Tailscale; Azure-hosting als toekomstplan (§12)
+- **Netwerk:** publiek bereikbaar via Azure App Service (API + SignalR) en Vercel (frontend), zie §12
 - **Kaart, missies, rollen en gebeurtenissen:** volledig data-driven (JSON, zie §4 voor de kaart), zodat content zonder codewijziging kan worden toegevoegd of aangepast
 
 ---
@@ -34,7 +34,7 @@ De host-TV heeft **geen** bedieningsfunctie. Het toont:
 De telefoon van de speler toont drie soorten informatie:
 
 1. **Contextuele actieknoppen** — alleen de acties die de speler op dát moment mag doen: "Val aan" (+ onderliggende stappen), "Versterk" (+ onderliggende stappen), "Verplaats", "Beëindig beurt", "Leg kaarten in", "Gooi", dobbelsteenkeuze bij verdediging.
-2. **Privé-informatie** — eigen territoriumkaarten en eigen geheime missie. Deze verschijnen nooit op de TV.
+2. **Privé-informatie** — eigen territoriumkaarten en eigen geheime missie. Deze verschijnen nooit op de TV. Uitzondering: zie §6.2 voor de naam-onthulling tijdens een laatste-kans-venster (winconditie Geheime missies, timing-optie "Volle ronde met onthulling") — die onthult wie mogelijk wint, nooit de missie-inhoud zelf.
 3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen.
 
 De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), en na afloop direct een nieuw spel opzetten (§7).
@@ -215,12 +215,24 @@ Missies staan in JSON en zijn zelf uit te breiden. Ondersteunde missietypes (rul
 }
 ```
 
-**Wanneer worden missies gecontroleerd?** De server controleert de missievoorwaarden **na elke beurt** — dus ook wanneer jouw missie vervuld raakt door de actie van een ander (bijv. jouw doelwit wordt door een derde uitgeschakeld op het moment dat jij al aan de fallback-voorwaarde voldoet). Uitzondering: missies met het veld `requiresOwnTurn: true` worden alléén gehonoreerd aan het einde van de eigen beurt van de missiehouder; dit veld wordt altijd gerespecteerd.
+**Wanneer worden missies gecontroleerd?** De server controleert de missievoorwaarden **na elke beurt** — dus ook wanneer jouw missie vervuld raakt door de actie van een ander (bijv. jouw doelwit wordt door een derde uitgeschakeld op het moment dat jij al aan de fallback-voorwaarde voldoet). Uitzondering: missies met het veld `requiresOwnTurn: true` worden alléén gehonoreerd aan het einde van de eigen beurt van de missiehouder; dit veld wordt altijd gerespecteerd. Zie §6.2 voor het onderscheid tussen direct beslissende en laatste-kans-missies — dat onderscheid komt bovenop de `requiresOwnTurn`-regel hierboven, niet in plaats ervan.
 
 Regels rond `EliminatePlayer`:
 - Is het doelwit de speler zelf (eigen kleur) of doet die kleur niet mee → direct de fallback-missie.
 - Wordt het doelwit door een **andere** speler uitgeschakeld → speler krijgt automatisch de fallback-missie (melding op eigen telefoon, niet op TV).
 - Bij 7 spelers moet de missieset dekkend zijn voor 7 kleuren; de set wordt bij de start gevalideerd (server weigert een start met inconsistente missiedata).
+
+### 6.2 Timing van missie-overwinningen
+
+Instelbaar in de lobby (§10), naast de winconditie zelf — alleen relevant bij winconditie Geheime missies. Drie varianten:
+
+1. **Einde van je beurt (standaard).** Zoals hierboven beschreven: vervul je de missie, dan eindigt het spel meteen.
+2. **Begin van je volgende beurt.** Elke andere, nog niet uitgeschakelde speler krijgt eerst nog exact één beurt ("laatste kans"), in de normale beurtvolgorde, voordat de overwinning definitief is. Blijft de missie na al die beurten nog steeds vervuld, dan wint de missiehouder alsnog — dit gebeurt mechanisch op het moment dat de laatste van die beurten eindigt (het bord kan tussen "beurt eindigt" en "volgende beurt begint" niet meer veranderen, dus dat is gelijk aan "bij het begin van je volgende beurt" — zolang er geen effect bestaat dat specifiek bij het *begin* van een beurt het bord muteert; op dit moment bestaat zo'n effect niet in de engine, zie de doc-comment in `TurnFlowCommandHandler`). Doorbreekt een tegenstander de voorwaarde tijdens zijn eigen laatste-kans-beurt (de missiehouder voldoet niet langer), dan vervalt de dreigende overwinning en speelt het spel gewoon door — de missiehouder is niet uitgesloten om de missie later opnieuw te vervullen, en ook niemand anders is uitgesloten van winnen. Geen enkele aankondiging op TV of telefoon: niemand weet dat dit venster loopt.
+3. **Volle ronde met onthulling.** Mechanisch identiek aan optie 2, met één verschil: zodra het venster opent, toont TV én elke telefoon **wie** mogelijk gaat winnen (uitzondering op de privacyregel in §2) — de missie-inhoud zelf blijft geheim tot de echte afronding (§7).
+
+In alle drie de varianten geldt: ontstaat er tijdens een lopend venster een directe winconditie (werelddominantie, of een `EliminatePlayer`-missie, bij wie dan ook) → die wint meteen, ongeacht het venster. `EliminatePlayer` en werelddominantie zijn zelf nooit aan deze instelling onderhevig: ze zijn onomkeerbaar (wie de laatste tegenstander uitschakelt, heeft daarmee al werelddominantie — er is niemand meer over om iets te heroveren), dus optie 2/3 heeft daar geen functie.
+
+Vereenvoudiging: vervullen meerdere spelers in dezelfde beurt tegelijk een optie-2/3-missie, dan opent alleen de eerste (in de beurtvolgorde) een venster; de overige(n) worden opnieuw beoordeeld zodra dat venster is afgerond.
 
 ---
 
@@ -356,16 +368,9 @@ De server valideert elke actie (juiste speler, juiste fase, geldige gebieden, vo
 
 ## 12. Hosting
 
-**Primair scenario — reisopstelling zonder los kiosk-apparaat ("Plan B"):** backend blijft altijd thuis draaien op Proxmox; onderweg wordt de server bereikbaar gemaakt via **Tailscale Funnel** (publieke HTTPS-URL, geen installatie nodig bij medespelers) en een meegenomen laptop fungeert als TV-scherm. Volledig uitgewerkt in `plan-b-reisopstelling.md` (architectuur, beveiliging, betrouwbaarheid, deploy- en testchecklist).
+**Primair scenario — Azure App Service + Neon + Vercel:** de API + SignalR-hub draait always-on op **Azure App Service** (Basic B1, Linux); **Neon** levert de managed Postgres voor Marten (directe/unpooled connectie — één always-on instance heeft geen PgBouncer-laag nodig); de frontend staat als static build op **Vercel**, een apart origin met een eigen CORS-toegestane herkomst. Volledig uitgewerkt in `docs/azure-hosting-deployment.md` (provisioning, configuratie, deploy- en testchecklist).
 
 **Alternatief scenario — los kiosk-apparaat ("Plan A"):** een Raspberry Pi (nieuw indien budget het toelaat, anders tweedehands) draait backend + AP lokaal, volledig onafhankelijk van internet. Blijft de voorkeursoptie zodra er een geschikt apparaat binnen budget beschikbaar komt; zie het gespreksverslag voor de docker-compose/hostapd-aanpak.
-
-**Later — Azure (plan op hoofdlijnen, voor een eventuele publieke/always-on variant):**
-- **Azure Container Apps** voor de server (WebSockets/SignalR ondersteund, schaal naar 0 buiten speelsessies om kosten te drukken)
-- Bij meerdere instanties: **Azure SignalR Service** als backplane (voor één huiskamer-instantie onnodig)
-- **Azure Database for PostgreSQL – Flexible Server** (Marten blijft ongewijzigd; kleinste tier volstaat)
-- Frontend als static assets via **Azure Static Web Apps** of vanuit de container zelf
-- Toegang: publiek met game-codes, of privé houden via Tailscale op een VM — te beslissen bij uitwerking
 
 ---
 

@@ -60,7 +60,7 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
         var map = mapSource.Load("standaard-43");
 
         var player = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false, IsAutoPass: false);
+            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
         var owned = ownedTerritoryIds ?? [];
         var territories = map.Territories

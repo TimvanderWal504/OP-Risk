@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { PlaceReinforcementStep } from './PlaceReinforcementStep'
@@ -105,8 +105,7 @@ describe('PlaceReinforcementStep', () => {
     expect(onConfirmPlacements).toHaveBeenCalledWith([{ territoryId: 'alaska', amount: 2 }])
   })
 
-  it('toont "Klaar → Aanvallen" en roept onEndPhase aan zodra de server armiesLeft op 0 heeft gezet', async () => {
-    const user = userEvent.setup()
+  it('roept onEndPhase automatisch aan zodra de server armiesLeft op 0 heeft gezet, zonder een knop te tonen', async () => {
     const onEndPhase = vi.fn()
     render(
       <PlaceReinforcementStep
@@ -120,11 +119,9 @@ describe('PlaceReinforcementStep', () => {
       />,
     )
 
-    const doneButton = screen.getByRole('button', { name: 'Klaar → Aanvallen' })
-    expect(doneButton).toBeEnabled()
-    await user.click(doneButton)
-
-    expect(onEndPhase).toHaveBeenCalled()
+    await waitFor(() => expect(onEndPhase).toHaveBeenCalled())
+    expect(screen.queryByText('Bevestigen')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Verdeel eerst/)).not.toBeInTheDocument()
   })
 
   it('toont de Opbouw-breakdown wanneer aangeleverd', () => {

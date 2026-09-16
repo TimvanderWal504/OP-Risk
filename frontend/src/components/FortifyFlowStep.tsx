@@ -234,7 +234,7 @@ export function FortifyFlowStep({
               </GlassPanel>
             ))}
           </div>
-          <Button variant="secondary" onClick={backToSrc} className="mt-3 min-h-[46px] text-sm">
+          <Button variant="secondary" onClick={backToSrc} className="mt-3">
             {t('pickTgt.back')}
           </Button>
         </>
@@ -305,7 +305,7 @@ export function FortifyFlowStep({
             <Button disabled={submitting} onClick={confirmFortify}>
               {t('amount.confirm')}
             </Button>
-            <Button variant="secondary" disabled={submitting} onClick={backToTgt} className="min-h-[46px] text-sm">
+            <Button variant="secondary" disabled={submitting} onClick={backToTgt}>
               {t('amount.back')}
             </Button>
           </Footer>

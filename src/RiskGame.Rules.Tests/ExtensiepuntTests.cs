@@ -17,6 +17,9 @@ public class ExtensiepuntTests
     private sealed record TerritoryCountMission(string Id, int Count, bool RequiresOwnTurn)
         : IMission
     {
+        // Bezit-missie (FO §6.2): een tegenstander kan een gebied binnen één beurt heroveren.
+        public bool RequiresLastChance => true;
+
         public bool IsAchieved(GameState state, string playerId) =>
             state.TerritoriesOf(playerId).Count() >= Count;
     }

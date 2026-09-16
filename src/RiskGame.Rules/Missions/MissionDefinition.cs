@@ -11,6 +11,13 @@ namespace RiskGame.Rules.Missions;
 public abstract record MissionDefinition(string Id, string Name, string Description, bool RequiresOwnTurn)
     : IMission
 {
+    /// <summary>
+    /// Bewust <c>abstract</c>, geen <c>virtual</c>-default: elk missietype — ook toekomstige —
+    /// moet expliciet opgeven of het onomkeerbaar is (FO §6.2), zodat een nieuw missietype
+    /// nooit stilzwijgend de verkeerde classificatie erft.
+    /// </summary>
+    public abstract bool RequiresLastChance { get; }
+
     public abstract bool IsAchieved(GameState state, string playerId);
 }
 
@@ -24,6 +31,9 @@ public sealed record ConquerContinentsMission(
     bool ExtraAnyContinent)
     : MissionDefinition(Id, Name, Description, RequiresOwnTurn)
 {
+    /// <summary>Bezit-missie: een tegenstander kan een continent binnen één beurt heroveren (FO §6.2).</summary>
+    public override bool RequiresLastChance => true;
+
     public override bool IsAchieved(GameState state, string playerId)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -54,6 +64,9 @@ public sealed record TerritoryCountMission(
     int Count)
     : MissionDefinition(Id, Name, Description, RequiresOwnTurn)
 {
+    /// <summary>Bezit-missie: een tegenstander kan een gebied binnen één beurt heroveren (FO §6.2).</summary>
+    public override bool RequiresLastChance => true;
+
     public override bool IsAchieved(GameState state, string playerId)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -72,6 +85,9 @@ public sealed record TerritoryCountMinArmiesMission(
     int MinArmies)
     : MissionDefinition(Id, Name, Description, RequiresOwnTurn)
 {
+    /// <summary>Bezit-missie: een tegenstander kan een gebied binnen één beurt heroveren (FO §6.2).</summary>
+    public override bool RequiresLastChance => true;
+
     public override bool IsAchieved(GameState state, string playerId)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -83,14 +99,16 @@ public sealed record TerritoryCountMinArmiesMission(
 /// <summary>
 /// Schakel een tegenstander (op kleur) uit. Wordt het doelwit de speler zelf, of doet die
 /// kleur niet mee, dan geldt <see cref="FallbackMissionId"/> in plaats hiervan (FO §6.1) —
-/// die vervanging is missie-toewijzing (een latere bouwstap), niet iets wat hier getoetst
-/// wordt: op het moment dat deze missie aan een speler hangt, bestaat het doelwit al.
+/// die vervanging is missie-toewijzing (<see cref="MissionAssignmentCalculator.Assign"/>),
+/// niet iets wat hier getoetst wordt: op het moment dat deze missie aan een speler hangt,
+/// bestaat het doelwit al.
 /// </summary>
 /// <remarks>
 /// Telt alleen als de missiehouder zélf het doelwit uitschakelde (FO §6.1): schakelt een
 /// andere speler het doelwit uit, dan is deze missie niet vervuld en krijgt de missiehouder
-/// in plaats daarvan automatisch <see cref="FallbackMissionId"/> — die toewijzing hoort,
-/// net als hierboven, bij een latere bouwstap.
+/// in plaats daarvan automatisch <see cref="FallbackMissionId"/> — die herwijzing gebeurt in
+/// <see cref="MissionAssignmentCalculator.ResolveFallbacksAfterElimination"/>, aangeroepen
+/// vanuit <c>AttackCommandHandler</c> direct na het <c>PlayerEliminated</c>-event.
 /// </remarks>
 public sealed record EliminatePlayerMission(
     string Id,
@@ -101,6 +119,13 @@ public sealed record EliminatePlayerMission(
     string FallbackMissionId)
     : MissionDefinition(Id, Name, Description, RequiresOwnTurn)
 {
+    /// <summary>
+    /// Onomkeerbaar (FO §6.2): een uitgeschakelde speler kan niet worden "heroverd", dus een
+    /// laatste-kans-venster heeft hier geen functie — altijd direct beslissend, ongeacht
+    /// <see cref="GameSettings.MissionWinTiming"/>.
+    /// </summary>
+    public override bool RequiresLastChance => false;
+
     public override bool IsAchieved(GameState state, string playerId)
     {
         ArgumentNullException.ThrowIfNull(state);

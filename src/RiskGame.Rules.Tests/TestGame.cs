@@ -29,13 +29,12 @@ internal static class TestGame
         string id,
         string colorId,
         bool isEliminated = false,
-        bool isAutoPass = false,
         IMission? mission = null,
         string? roleId = null,
         IReadOnlyList<Card>? hand = null,
         string? eliminatedByPlayerId = null,
         bool isHost = false) =>
-        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, isAutoPass, eliminatedByPlayerId, isHost);
+        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, eliminatedByPlayerId, isHost);
 
     /// <summary>
     /// Een spel in volle gang. Alle gebieden zijn onverdeeld tenzij een test ze via

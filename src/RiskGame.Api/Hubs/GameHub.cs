@@ -1,14 +1,17 @@
+using System.Security.Cryptography;
+using System.Text;
 using Marten;
 using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Dtos;
+using RiskGame.Persistence.Sessions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Hubs;
 
-public sealed record JoinGameResponse(string PlayerId, GameStateDto State);
+public sealed record JoinGameResponse(string PlayerId, GameStateDto State, string SessionToken);
 
 public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
 
@@ -74,6 +77,15 @@ public sealed record CombatNarratedMessage(
 public sealed record TerritoryClaimedMessage(string TerritoryId, string PlayerId, int StateVersion);
 
 /// <summary>
+/// Het spel is zojuist beëindigd (FO §6/§7): wie er gewonnen heeft. Narratief naast de
+/// state-snapshot, zelfde reden als <see cref="CombatNarratedMessage"/> — de TV moet kunnen
+/// tonen dát er zojuist gewonnen is, niet alleen dat <see cref="GameStateDto.Phase"/> nu
+/// <see cref="RiskGame.Api.Dtos.GamePhaseDto.Finished"/> is. <c>WinnerPlayerIds</c> spiegelt
+/// <see cref="GameStateDto.Winners"/> — kan meer dan één speler bevatten (FO §6.1).
+/// </summary>
+public sealed record GameWonMessage(IReadOnlyList<string> WinnerPlayerIds, int StateVersion);
+
+/// <summary>
 /// SignalR-hub voor alle spelcommando's (TO §4.1): lobby, order-roll, startopstelling,
 /// rol-/missietoewijzing, versterken, aanvallen en de generieke beurtoverstap (Fortify/
 /// EndPhase/EndTurn). Dun: elke methode delegeert de TO §4-pijplijn naar de bijbehorende
@@ -82,10 +94,13 @@ public sealed record TerritoryClaimedMessage(string TerritoryId, string PlayerId
 /// de state van andere clients te raken.
 /// </summary>
 /// <remarks>
-/// Groepen (TO §6.1): één groep per spel, <c>game-{id}-all</c>. De tv-specifieke en
-/// per-speler-privé-groepen volgen in een latere plak zodra er daadwerkelijk privé-DTO's
-/// (handkaarten/geheime missies) gepusht moeten worden — nu zou dat ongebruikte
-/// infrastructuur zijn. Sessietokens/reconnect (TO §6.3) volgen in bouwstap 6.
+/// Groepen (TO §6.1): <c>game-{id}-all</c> (narratieve broadcasts zonder privé-info),
+/// <c>game-{id}-tv</c> (volledige publieke state) en <c>game-{id}-player-{playerId}</c>
+/// (publieke state plus de eigen Hand/Mission). <see cref="GameStatePush"/> is de enige plek
+/// die de laatste twee daadwerkelijk vult — zie die klasse voor de privacy-grens zelf.
+/// <see cref="RejoinGame"/> koppelt alleen aan de player-groep, en geeft alleen de eigen
+/// Hand/Mission mee, wanneer het meegestuurde sessietoken (TO §6.3) overeenkomt met het
+/// token dat <see cref="JoinGame"/> ooit uitgaf — zie de doc-comment op die methode.
 /// </remarks>
 public sealed class GameHub(
     IDocumentStore store,
@@ -104,6 +119,7 @@ public sealed class GameHub(
     public async Task<GameStateDto> WatchGame(string gameId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Tv(gameId));
 
         await using var session = store.QuerySession();
         var state = await session.LoadAsync<GameState>(gameId);
@@ -114,7 +130,9 @@ public sealed class GameHub(
                 new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
         }
 
-        return GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+
+        return GameStateDtoMapper.RedactForTv(dto);
     }
 
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
@@ -123,15 +141,46 @@ public sealed class GameHub(
 
         var result = await lobbyCommands.JoinGameAsync(gameId, playerName);
 
+        if (result.IsSuccess)
+        {
+            // Veilig: playerId is hier net server-side gegenereerd (Guid.NewGuid() in
+            // LobbyCommandHandler) en gaat uitsluitend naar de aanroepende verbinding terug —
+            // anders dan bij RejoinGame vóórdat het een sessietoken vereiste, is er hier niets
+            // te impersoneren: de identiteit (én het token) ontstaan pas in dit moment.
+            await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, result.Value.PlayerId));
+
+            // De telefoon roept vóór het joinen WatchGame aan (voor het kleurenpalet op de
+            // join-stap) en zit daardoor ook in de tv-groep. Een connectie die speler wordt
+            // moet daar weer uit: anders krijgt hij elke broadcast dubbel — eerst de
+            // tv-geredacte versie, dan de eigen — met hetzelfde StateVersion, en de client
+            // (useGameState.applyState) negeert de tweede als "niet nieuwer". Netto verdwijnen
+            // dan de eigen Hand/MissionId. Idempotent voor een connectie die nooit keek.
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Tv(gameId));
+        }
+
         return await UnwrapAndBroadcastAsync(
             gameId,
             result,
-            joinResult => new JoinGameResponse(joinResult.PlayerId, joinResult.State),
+            joinResult => new JoinGameResponse(joinResult.PlayerId, joinResult.State, joinResult.SessionToken),
             r => r.State,
-            (r, s) => r with { State = s });
+            (r, s) => r with { State = s },
+            r => r.PlayerId);
     }
 
-    public async Task<GameStateDto> RejoinGame(string gameId, string playerId)
+    /// <summary>
+    /// <paramref name="playerId"/> is een kale, publiek bekende string — elke verbonden client
+    /// kent elkaars <c>playerId</c> al via <see cref="GameStateDto.Players"/>. Het bewijs van
+    /// identiteit is <paramref name="sessionToken"/> (TO §6.3): <see cref="JoinGame"/> geeft dat
+    /// eenmalig terug aan de joinende connectie, opgeslagen als <see cref="PlayerSessionToken"/>.
+    /// Komt het meegestuurde token overeen met het opgeslagen token voor deze
+    /// <paramref name="playerId"/>, dan koppelt deze aanroep alsnog aan
+    /// <see cref="GameGroups.Player"/> en krijgt de aanroeper de eigen Hand/Mission. Zonder
+    /// geldig token (nog geen token bekend, of een client die alleen de publieke
+    /// <paramref name="playerId"/> kent maar niet het bijbehorende token) degradeert dit naar de
+    /// publieke, tv-achtige weergave — nooit een foutmelding: dat houdt reconnect altijd
+    /// werkend, ook wanneer er (nog) geen token voor deze speler bestaat.
+    /// </summary>
+    public async Task<GameStateDto> RejoinGame(string gameId, string playerId, string sessionToken = "")
     {
         await using var session = store.QuerySession();
         var state = await session.LoadAsync<GameState>(gameId);
@@ -150,35 +199,58 @@ public sealed class GameHub(
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
-        return GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+
+        var stored = await session.LoadAsync<PlayerSessionToken>(playerId);
+
+        if (stored is not null && sessionToken.Length > 0 && TokensMatch(stored.Token, sessionToken))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, playerId));
+
+            return GameStateDtoMapper.RedactForPlayer(dto, playerId);
+        }
+
+        return GameStateDtoMapper.RedactForTv(dto);
     }
 
     public async Task<GameStateDto> ChooseColor(string gameId, string playerId, string colorId)
     {
         var result = await lobbyCommands.ChooseColorAsync(gameId, playerId, colorId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> StartGame(string gameId, string playerId)
     {
         var result = await lobbyCommands.StartGameAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> SelectRole(string gameId, string playerId, string roleId)
     {
         var result = await lobbyCommands.SelectRoleAsync(gameId, playerId, roleId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> RemovePlayer(string gameId, string playerId, string targetPlayerId)
     {
         var result = await lobbyCommands.RemovePlayerAsync(gameId, playerId, targetPlayerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        var response = await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
+
+        if (result.IsSuccess)
+        {
+            // PlayerRemoved haalt targetPlayerId volledig uit state.Players (GameProjection),
+            // dus GameStatePush.BroadcastAsync (dat over state.Players itereert) pusht niet meer
+            // naar diens eigen groep — hij zou anders stilzwijgend nooit meer iets horen. Eén
+            // gerichte push hier houdt dat gedrag gelijk aan vóór de tv/player-groepensplitsing.
+            await Clients.Group(GameGroups.Player(gameId, targetPlayerId)).GameStateUpdated(
+                GameStateDtoMapper.RedactForTv(response));
+        }
+
+        return response;
     }
 
     public async Task<OrderRollResponse> RollForOrder(string gameId, string playerId)
@@ -196,7 +268,8 @@ public sealed class GameHub(
             result,
             rollResult => new OrderRollResponse(rollResult.Die1, rollResult.Die2, rollResult.State),
             r => r.State,
-            (r, s) => r with { State = s });
+            (r, s) => r with { State = s },
+            _ => playerId);
     }
 
     public async Task<GameStateDto> ClaimTerritory(string gameId, string playerId, string territoryId)
@@ -211,14 +284,14 @@ public sealed class GameHub(
                 territoryId, playerId, await FetchStateVersionAsync(versionSession, gameId)));
         }
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> PlaceInitialArmy(string gameId, string playerId, string territoryId)
     {
         var result = await setupCommands.PlaceInitialArmyAsync(gameId, playerId, territoryId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> PlaceReinforcements(
@@ -226,14 +299,14 @@ public sealed class GameHub(
     {
         var result = await reinforceCommands.PlaceReinforcementsAsync(gameId, playerId, territoryId, amount);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> TradeInCards(string gameId, string playerId, string[] cardIds)
     {
         var result = await reinforceCommands.TradeInCardsAsync(gameId, playerId, cardIds);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<DeclareAttackResponse> DeclareAttack(
@@ -253,7 +326,8 @@ public sealed class GameHub(
             result,
             declareResult => new DeclareAttackResponse(declareResult.AttackerRolls, declareResult.State),
             r => r.State,
-            (r, s) => r with { State = s });
+            (r, s) => r with { State = s },
+            _ => playerId);
     }
 
     public async Task<CombatResultResponse> ChooseDefenseDice(string gameId, string playerId, int defenseDice)
@@ -278,6 +352,12 @@ public sealed class GameHub(
                 result.Value.Conquered,
                 result.Value.EliminatedPlayerId,
                 await FetchStateVersionAsync(versionSession, gameId)));
+
+            if (result.Value.State.Winners.Count > 0)
+            {
+                await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
+                    result.Value.State.Winners, await FetchStateVersionAsync(versionSession, gameId)));
+            }
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -291,21 +371,22 @@ public sealed class GameHub(
                 combatResult.Conquered,
                 combatResult.State),
             r => r.State,
-            (r, s) => r with { State = s });
+            (r, s) => r with { State = s },
+            _ => playerId);
     }
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
     {
         var result = await attackCommands.MoveAfterConquestAsync(gameId, playerId, armiesToMove);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> AbandonAttack(string gameId, string playerId)
     {
         var result = await attackCommands.AbandonAttackAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> Fortify(
@@ -313,21 +394,29 @@ public sealed class GameHub(
     {
         var result = await turnFlowCommands.FortifyAsync(gameId, playerId, fromTerritoryId, toTerritoryId, armiesToMove);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> EndPhase(string gameId, string playerId)
     {
         var result = await turnFlowCommands.EndPhaseAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> EndTurn(string gameId, string playerId)
     {
         var result = await turnFlowCommands.EndTurnAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s);
+        if (result.IsSuccess && result.Value.Winners.Count > 0)
+        {
+            await using var versionSession = store.QuerySession();
+
+            await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
+                result.Value.Winners, await FetchStateVersionAsync(versionSession, gameId)));
+        }
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     /// <summary>
@@ -346,16 +435,20 @@ public sealed class GameHub(
 
     /// <summary>
     /// Eén centrale plek voor de push-compositie (src/CLAUDE.md, API-grens): elk geslaagd
-    /// commando pusht de bijgewerkte state naar de hele spelgroep, niet alleen naar de
-    /// aanroeper. Dit is ook de plek waar een toekomstige privacy-grens (TO §6.1) zou
-    /// landen zodra er privé-DTO's bijkomen.
+    /// commando pusht de bijgewerkte state naar tv- en per-speler-groepen (via
+    /// <see cref="GameStatePush"/>, TO §6.1), niet alleen naar de aanroeper. Het directe
+    /// RPC-antwoord aan de aanroeper wordt met dezelfde regel geredact —
+    /// <paramref name="callerPlayerId"/> levert diens eigen speler-id (of <c>null</c> als de
+    /// aanroeper geen speler is, bv. een toekomstige tv-only aanroep); zonder dat zou elk
+    /// muterend commando de volledige, ongeredacte Hand/Mission van iedereen teruggeven.
     /// </summary>
     private async Task<TResponse> UnwrapAndBroadcastAsync<T, TResponse>(
         string gameId,
         Result<T> result,
         Func<T, TResponse> onSuccess,
         Func<TResponse, GameStateDto> extractState,
-        Func<TResponse, GameStateDto, TResponse> withState)
+        Func<TResponse, GameStateDto, TResponse> withState,
+        Func<TResponse, string?> callerPlayerId)
     {
         if (!result.IsSuccess)
         {
@@ -366,10 +459,29 @@ public sealed class GameHub(
 
         await using var session = store.QuerySession();
         var versionedState = extractState(response) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
-        response = withState(response, versionedState);
 
-        await Clients.Group(GameGroups.All(gameId)).GameStateUpdated(versionedState);
+        await GameStatePush.BroadcastAsync(Clients, gameId, versionedState);
 
-        return response;
+        var callerId = callerPlayerId(response);
+        var responseState = callerId is null
+            ? GameStateDtoMapper.RedactForTv(versionedState)
+            : GameStateDtoMapper.RedactForPlayer(versionedState, callerId);
+
+        return withState(response, responseState);
+    }
+
+    /// <summary>
+    /// Vergelijkt een sessietoken (TO §6.3) in constante tijd i.p.v. met de standaard
+    /// string-gelijkheid, die vroegtijdig stopt bij het eerste verschillende teken. Voor een
+    /// geheim dat toegang geeft tot iemands privé Hand/Mission is een lengte-afhankelijke
+    /// vergelijkingstijd een (in de praktijk lastig, maar reëel) timing-zijkanaal.
+    /// </summary>
+    private static bool TokensMatch(string expected, string actual)
+    {
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+        var actualBytes = Encoding.UTF8.GetBytes(actual);
+
+        return expectedBytes.Length == actualBytes.Length
+            && CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
     }
 }

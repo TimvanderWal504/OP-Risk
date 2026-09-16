@@ -116,7 +116,7 @@ public sealed class LobbyGuardsTests
         var players = new[]
         {
             TestGame.Player("p1", "red"),
-            new Player("p2", "Speler p2", ColorId: null, [], null, null, false, false),
+            new Player("p2", "Speler p2", ColorId: null, [], null, null, false),
         };
         var state = LobbyState(players);
 

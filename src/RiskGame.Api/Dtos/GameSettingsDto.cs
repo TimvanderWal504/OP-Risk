@@ -13,12 +13,21 @@ public sealed record GameSettingsDto(
     int FortifyTimerSeconds,
     bool RolesEnabled,
     RoleAssignmentModeDto RoleAssignment,
-    bool EventsEnabled);
+    bool EventsEnabled,
+    MissionWinTimingDto MissionWinTiming = MissionWinTimingDto.EndOfTurn);
 
 public enum WinConditionDto
 {
     WorldDomination,
     SecretMissions,
+}
+
+/// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.MissionWinTiming"/> (FO §6.2).</summary>
+public enum MissionWinTimingDto
+{
+    EndOfTurn,
+    StartOfNextTurn,
+    FullRoundRevealed,
 }
 
 public enum SetupModeDto

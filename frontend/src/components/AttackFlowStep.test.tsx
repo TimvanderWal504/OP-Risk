@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { AttackFlowStep } from './AttackFlowStep'
 
 const players = [
-  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false },
-  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false },
+  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null },
+  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, missionId: null },
 ]
 
 const colors = [
@@ -48,6 +48,32 @@ describe('AttackFlowStep', () => {
 
     expect(screen.getByText('Alaska')).toBeInTheDocument()
     expect(screen.queryByText('Brazilië')).not.toBeInTheDocument()
+  })
+
+  it('roept onEndPhase aan vanuit de bronkeuze, want aanvallen is optioneel (FO §5.3)', async () => {
+    const user = userEvent.setup()
+    const onEndPhase = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <AttackFlowStep
+        playerId="alice"
+        myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
+        territories={territories}
+        territoryCatalog={territoryCatalog}
+        players={players}
+        colors={colors}
+        myColor={myColor}
+        pendingCombat={null}
+        combat={null}
+        onDeclareAttack={vi.fn()}
+        onAbandonAttack={vi.fn()}
+        onEndPhase={onEndPhase}
+      />,
+    )
+
+    await user.click(screen.getByText('Aanvalsfase beëindigen'))
+
+    expect(onEndPhase).toHaveBeenCalled()
   })
 
   it('doorloopt bron → doel → dobbelstenen en roept onDeclareAttack aan bij "Gooi"', async () => {

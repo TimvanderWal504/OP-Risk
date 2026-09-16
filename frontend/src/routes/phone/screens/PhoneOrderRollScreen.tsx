@@ -16,7 +16,7 @@ export function PhoneOrderRollScreen({
     <OrderRollWaitStep
       myDice={orderRollThrows[playerId]}
       colorHex={myColor?.hex ?? '#ffffff'}
-      canRoll={state.orderRollState !== null}
+      canRoll={state.orderRollState?.playersStillToRoll?.includes(playerId) ?? false}
       onRoll={rollForOrder}
       error={error}
     />

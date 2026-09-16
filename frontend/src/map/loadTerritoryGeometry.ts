@@ -1,5 +1,6 @@
 import { project, ringToPath, shiftRingForKamchatka } from './projection'
 import type { LonLat } from './projection'
+import { apiUrl } from '../config/apiConfig'
 
 /** `data/maps/standaard-43/territories.geo.json` — GeoJSON-subset die deze taak nodig heeft. */
 interface TerritoryFeature {
@@ -56,7 +57,7 @@ function toTerritoryGeometry(feature: TerritoryFeature): TerritoryGeometry {
 }
 
 export async function loadTerritoryGeometry(mapId = 'standaard-43'): Promise<TerritoryGeometry[]> {
-  const response = await fetch(`/maps/${mapId}/territories.geo.json`)
+  const response = await fetch(apiUrl(`/maps/${mapId}/territories.geo.json`))
   if (!response.ok) {
     throw new Error(`Kaartgeometrie voor '${mapId}' kon niet geladen worden (${response.status}).`)
   }

@@ -1,4 +1,5 @@
 using RiskGame.Rules.Fortify;
+using RiskGame.Rules.Map;
 using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
@@ -31,7 +32,14 @@ public static class GameStateDtoMapper
 
         var players = state.Players
             .Select(player => new PlayerDto(
-                player.Id, player.Name, player.ColorId, player.RoleId, player.IsHost, player.IsEliminated))
+                player.Id,
+                player.Name,
+                player.ColorId,
+                player.RoleId,
+                player.IsHost,
+                player.IsEliminated,
+                player.Hand.Select(ToDto).ToArray(),
+                player.Mission?.Id))
             .ToArray();
 
         var territories = state.Territories
@@ -77,12 +85,58 @@ public static class GameStateDtoMapper
             setupState = ToSetupDto(state, activePlayerId, startingArmies);
         }
 
+        var pendingWinnerPlayerId = state.PendingWin is { } pendingWin
+            && state.Settings.MissionWinTiming == MissionWinTiming.FullRoundRevealed
+                ? pendingWin.AchieverPlayerId
+                : null;
+
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
-            colors, roles, ToDto(state.Settings),
+            colors, roles, ToDto(state.Settings), state.Winners,
             state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
-            setupState);
+            setupState, StateVersion: 0, pendingWinnerPlayerId);
     }
+
+    /// <summary>
+    /// De privacy-grens (TO §6.1, src/CLAUDE.md API-grens-kader): voor de TV-groep gaan
+    /// <see cref="PlayerDto.Hand"/> en <see cref="PlayerDto.MissionId"/> van iedere speler
+    /// leeg de deur uit, ook van de speler wiens beurt het is. <see cref="ToDto"/> zelf vult
+    /// deze velden juist altijd volledig — dat is een eerlijke domeinvertaling, geen
+    /// privacybeslissing; die hoort hier, op de enige plek waar dat wordt afgedwongen.
+    ///
+    /// **Uitzondering, bewust en enige:** zodra <c>Phase == Finished</c> geeft deze methode
+    /// wél <see cref="PlayerDto.MissionId"/> vrij voor iedereen — FO §7 eist expliciet dat de
+    /// TV bij spelwinst "de missie-onthulling van alle spelers" toont. <see cref="PlayerDto.Hand"/>
+    /// blijft ook dan leeg: FO §7 vraagt om missies te onthullen, niet om kaarten te tonen.
+    /// Dit was in de vorige taak al vooruitgeplande deferral (zie het toenmalige bouwplan);
+    /// TO §6.1's "nooit naar de TV-groep" is hiermee bijgewerkt met deze ene, expliciete
+    /// uitzondering — vóór <c>Finished</c> geldt de oorspronkelijke, onvoorwaardelijke regel
+    /// onverkort.
+    /// </summary>
+    public static GameStateDto RedactForTv(GameStateDto dto) => dto with
+    {
+        Players = dto.Players
+            .Select(player => player with
+            {
+                Hand = [],
+                MissionId = dto.Phase == GamePhaseDto.Finished ? player.MissionId : null,
+            })
+            .ToArray(),
+    };
+
+    /// <summary>
+    /// Zoals <see cref="RedactForTv"/>, maar <paramref name="viewerPlayerId"/> behoudt zijn
+    /// eigen <see cref="PlayerDto.Hand"/>/<see cref="PlayerDto.MissionId"/> — precies wat
+    /// TO §6.1 bedoelt met "de publieke state plus die spelers privé-info".
+    /// </summary>
+    public static GameStateDto RedactForPlayer(GameStateDto dto, string viewerPlayerId) => dto with
+    {
+        Players = dto.Players
+            .Select(player => player.Id == viewerPlayerId ? player : player with { Hand = [], MissionId = null })
+            .ToArray(),
+    };
+
+    private static CardDto ToDto(Card card) => new(card.Id, card.TerritoryId, card.Symbol);
 
     /// <summary>
     /// Vult de setup-afleidingen per speler, met dezelfde calculators en guards die de
@@ -106,13 +160,23 @@ public static class GameStateDtoMapper
         (int)settings.FortifyTimer.TotalSeconds,
         settings.RolesEnabled,
         ToDto(settings.RoleAssignment),
-        settings.EventsEnabled);
+        settings.EventsEnabled,
+        ToDto(settings.MissionWinTiming));
 
     private static WinConditionDto ToDto(WinCondition winCondition) => winCondition switch
     {
         WinCondition.WorldDomination => WinConditionDto.WorldDomination,
         WinCondition.SecretMissions => WinConditionDto.SecretMissions,
         _ => throw new ArgumentOutOfRangeException(nameof(winCondition), winCondition, "Onbekende winconditie."),
+    };
+
+    private static MissionWinTimingDto ToDto(MissionWinTiming missionWinTiming) => missionWinTiming switch
+    {
+        MissionWinTiming.EndOfTurn => MissionWinTimingDto.EndOfTurn,
+        MissionWinTiming.StartOfNextTurn => MissionWinTimingDto.StartOfNextTurn,
+        MissionWinTiming.FullRoundRevealed => MissionWinTimingDto.FullRoundRevealed,
+        _ => throw new ArgumentOutOfRangeException(
+            nameof(missionWinTiming), missionWinTiming, "Onbekende missie-wintiming."),
     };
 
     private static SetupModeDto ToDto(SetupMode setupMode) => setupMode switch
@@ -184,13 +248,22 @@ public static class GameStateDtoMapper
         TimeSpan.FromSeconds(dto.FortifyTimerSeconds),
         dto.RolesEnabled,
         ToDomain(dto.RoleAssignment),
-        dto.EventsEnabled);
+        dto.EventsEnabled,
+        ToDomain(dto.MissionWinTiming));
 
     private static WinCondition ToDomain(WinConditionDto dto) => dto switch
     {
         WinConditionDto.WorldDomination => WinCondition.WorldDomination,
         WinConditionDto.SecretMissions => WinCondition.SecretMissions,
         _ => throw new ArgumentOutOfRangeException(nameof(dto), dto, "Onbekende winconditie."),
+    };
+
+    private static MissionWinTiming ToDomain(MissionWinTimingDto dto) => dto switch
+    {
+        MissionWinTimingDto.EndOfTurn => MissionWinTiming.EndOfTurn,
+        MissionWinTimingDto.StartOfNextTurn => MissionWinTiming.StartOfNextTurn,
+        MissionWinTimingDto.FullRoundRevealed => MissionWinTiming.FullRoundRevealed,
+        _ => throw new ArgumentOutOfRangeException(nameof(dto), dto, "Onbekende missie-wintiming."),
     };
 
     private static SetupMode ToDomain(SetupModeDto dto) => dto switch

@@ -30,7 +30,8 @@ public sealed class GameState
         TurnState? turnState,
         DeckState deck,
         IReadOnlyList<ActiveEffect> activeEffects,
-        IReadOnlyList<string>? winners = null)
+        IReadOnlyList<string>? winners = null,
+        PendingWin? pendingWin = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
         ArgumentNullException.ThrowIfNull(map);
@@ -52,6 +53,7 @@ public sealed class GameState
         Deck = deck;
         ActiveEffects = activeEffects;
         Winners = winners ?? [];
+        PendingWin = pendingWin;
 
         _playersById = players.ToFrozenDictionary(player => player.Id, StringComparer.Ordinal);
         _territoriesById = territories.ToFrozenDictionary(
@@ -96,6 +98,13 @@ public sealed class GameState
     /// </summary>
     public IReadOnlyList<string> Winners { get; }
 
+    /// <summary>
+    /// Null zolang er geen dreigende winnaar is die op een laatste kans van de rest wacht
+    /// (FO §6.2, <see cref="Missions.WinConditionEvaluator.LastChanceEligibleWinners"/>) —
+    /// zelfde "null is betekenisvol"-behandeling als <see cref="TurnState"/>.
+    /// </summary>
+    public PendingWin? PendingWin { get; }
+
     public bool HasPlayer(string playerId) => _playersById.ContainsKey(playerId);
 
     public Player Player(string playerId) => _playersById[playerId];
@@ -115,10 +124,9 @@ public sealed class GameState
 
     /// <summary>
     /// De toestand van een speler, afgeleid uit de opgeslagen feiten in plaats van
-    /// apart bijgehouden. Volgorde van precedentie: uitgeschakeld gaat vóór afwezig, en
-    /// beide gaan vóór "aan de beurt" — een uitgeschakelde speler is nooit
-    /// <see cref="PlayerStatus.Active"/>, ook niet als hij nog als actieve speler
-    /// genoteerd staat.
+    /// apart bijgehouden. Uitgeschakeld gaat vóór "aan de beurt" — een uitgeschakelde
+    /// speler is nooit <see cref="PlayerStatus.Active"/>, ook niet als hij nog als
+    /// actieve speler genoteerd staat.
     /// </summary>
     public PlayerStatus StatusOf(string playerId)
     {
@@ -127,11 +135,6 @@ public sealed class GameState
         if (player.IsEliminated)
         {
             return PlayerStatus.Eliminated;
-        }
-
-        if (player.IsAutoPass)
-        {
-            return PlayerStatus.AutoPass;
         }
 
         return TurnState?.ActivePlayerId == playerId
@@ -157,7 +160,8 @@ public sealed class GameState
             turnState,
             Deck,
             ActiveEffects,
-            Winners);
+            Winners,
+            PendingWin);
 
     public GameState WithDeck(DeckState deck) => With(deck: deck);
 
@@ -167,6 +171,25 @@ public sealed class GameState
         With(activeEffects: activeEffects);
 
     public GameState WithWinners(IReadOnlyList<string> winners) => With(winners: winners);
+
+    /// <summary>
+    /// Zet of wist het laatste-kans-venster. Net als <see cref="WithTurnState"/> bewust niet
+    /// via de gedeelde <c>With</c>-helper: null is hier een betekenisvolle waarde (geen
+    /// dreigende winnaar), geen "niet meegegeven".
+    /// </summary>
+    public GameState WithPendingWin(PendingWin? pendingWin) =>
+        new(GameId,
+            Map,
+            Phase,
+            Settings,
+            Players,
+            Territories,
+            TurnOrder,
+            TurnState,
+            Deck,
+            ActiveEffects,
+            Winners,
+            pendingWin);
 
     /// <summary>
     /// Voegt een nieuwe speler toe, of vervangt een bestaande speler met hetzelfde
@@ -214,7 +237,8 @@ public sealed class GameState
             TurnState,
             deck ?? Deck,
             activeEffects ?? ActiveEffects,
-            winners ?? Winners);
+            winners ?? Winners,
+            PendingWin);
 
     /// <summary>
     /// Vervangt het enige element dat aan <paramref name="matches"/> voldoet, op zijn

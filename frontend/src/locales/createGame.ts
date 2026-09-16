@@ -30,6 +30,31 @@ export const createGame = {
       },
     },
   },
+  /** Alleen getoond wanneer winCondition === SecretMissions (FO §6.2). */
+  missionWinTiming: {
+    title: { nl: 'Timing van winst', en: 'Win timing' },
+    endOfTurn: {
+      title: { nl: 'Einde beurt', en: 'End of turn' },
+      description: {
+        nl: 'Missie vervuld? Het spel eindigt meteen.',
+        en: 'Mission fulfilled? The game ends immediately.',
+      },
+    },
+    startOfNextTurn: {
+      title: { nl: 'Volgende beurt', en: 'Next turn' },
+      description: {
+        nl: 'Tegenstanders krijgen eerst nog één beurt om te heroveren.',
+        en: 'Opponents get one more turn to reconquer first.',
+      },
+    },
+    fullRoundRevealed: {
+      title: { nl: 'Volle ronde', en: 'Full round' },
+      description: {
+        nl: 'Zoals hiernaast, maar de naam van de mogelijke winnaar wordt getoond.',
+        en: 'Like Next turn, but the name of the possible winner is revealed.',
+      },
+    },
+  },
   setupMode: {
     title: { nl: 'Startopstelling', en: 'Starting setup' },
     description: { nl: 'Hoe worden gebieden verdeeld?', en: 'How are territories distributed?' },

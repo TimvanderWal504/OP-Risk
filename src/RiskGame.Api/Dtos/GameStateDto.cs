@@ -4,6 +4,19 @@ namespace RiskGame.Api.Dtos;
 /// Draad-representatie van de lobby-relevante velden van <see cref="RiskGame.Rules.State.GameState"/>.
 /// Groeit in latere plakken mee met wat de volgende fases nodig hebben.
 /// </summary>
+/// <param name="Winners">
+/// Wie het spel gewonnen heeft (<see cref="RiskGame.Rules.State.GameState.Winners"/>) — leeg
+/// totdat <see cref="GamePhaseDto.Finished"/> bereikt is. Kan meer dan één speler bevatten
+/// (FO §6.1: meerdere spelers kunnen tegelijk aan een winconditie voldoen).
+/// </param>
+/// <param name="PendingWinnerPlayerId">
+/// FO §6.2: alleen gevuld tijdens een lopend laatste-kans-venster ÉN alleen wanneer
+/// <see cref="GameSettingsDto.MissionWinTiming"/> op <see cref="MissionWinTimingDto.FullRoundRevealed"/>
+/// staat — anders altijd <c>null</c>, ook als er intern wel een <c>PendingWin</c> loopt (optie
+/// "Begin van je volgende beurt" onthult bewust niets). Bevat uitsluitend de speler-id, nooit de
+/// missie-inhoud: die blijft geheim tot <see cref="GamePhaseDto.Finished"/> (privacy-afdwinging
+/// op de enige daarvoor bedoelde plek, <see cref="GameStateDtoMapper"/>, src/CLAUDE.md).
+/// </param>
 public sealed record GameStateDto(
     string GameId,
     GamePhaseDto Phase,
@@ -15,9 +28,16 @@ public sealed record GameStateDto(
     IReadOnlyList<PlayerColorDto> Colors,
     IReadOnlyList<RoleSummaryDto> Roles,
     GameSettingsDto Settings,
+    // Geen `= []`: een collection-expression is geen compile-time constant, dus dat is geen
+    // geldige parameter-default (CS1736). Verplicht maken i.p.v. een nullable-omweg (zoals
+    // GameState.cs's `winners ?? []` in een gewone class-constructor) dwingt bovendien elke
+    // toekomstige aanroeper van deze ene, hier al bekende call site (GameStateDtoMapper) om
+    // 'm expliciet te vullen — een vergeten veld geeft een bouwfout, geen stille lege lijst.
+    IReadOnlyList<string> Winners,
     OrderRollStateDto? OrderRollState = null,
     SetupStateDto? SetupState = null,
-    int StateVersion = 0);
+    int StateVersion = 0,
+    string? PendingWinnerPlayerId = null);
 
 /// <summary>
 /// Alles wat een client tijdens <see cref="GamePhaseDto.Claiming"/>/
@@ -95,6 +115,14 @@ public sealed record PlayerColorDto(string Id, string Name, string Hex, string O
 public sealed record RoleSummaryDto(string Id, string Name, string Description, string OriginTerritory);
 
 public sealed record TerritoryDto(string TerritoryId, string? OwnerPlayerId, int ArmyCount);
+
+/// <summary>
+/// Draad-representatie van <see cref="RiskGame.Rules.Map.Card"/> — een territoriumkaart of
+/// joker (<c>TerritoryId is null</c>). Alleen gevuld op <see cref="PlayerDto.Hand"/> voor de
+/// speler die 'm zelf mag zien (TO §6.1); zie <see cref="GameStateDtoMapper.RedactForTv"/> en
+/// <see cref="GameStateDtoMapper.RedactForPlayer"/>.
+/// </summary>
+public sealed record CardDto(string Id, string? TerritoryId, string Symbol);
 
 /// <summary>
 /// Draad-representatie van <see cref="RiskGame.Rules.State.TurnState"/>.

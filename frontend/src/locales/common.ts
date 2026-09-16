@@ -23,7 +23,6 @@ export const common = {
   },
   playerHeader: {
     hostBadge: { nl: 'Host', en: 'Host' },
-    settings: { nl: 'Instellingen', en: 'Settings' },
     actions: {
       cards: { nl: 'Mijn kaarten', en: 'My cards' },
       mission: { nl: 'Mijn missie', en: 'My mission' },
