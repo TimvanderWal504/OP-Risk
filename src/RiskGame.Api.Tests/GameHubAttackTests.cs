@@ -68,7 +68,9 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         int aliceArmies,
         int bobArmies,
         string? extraBobTerritoryId = null,
-        bool aliceOwnsRestOfMap = false)
+        bool aliceOwnsRestOfMap = false,
+        IReadOnlyList<Card>? aliceHand = null,
+        int armiesRemaining = 0)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -91,7 +93,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             EventsEnabled: false);
 
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+            "p1", "Alice", "red", Hand: aliceHand ?? [], RoleId: null, Mission: null, IsEliminated: false);
         var bob = new Player(
             "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
@@ -115,7 +117,8 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
             territories,
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
-                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null),
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null,
+                ArmiesRemaining: armiesRemaining),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -738,5 +741,99 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.NotNull(attackRoll.CorrelationId);
         Assert.Equal(attackRoll.CorrelationId, defenseRoll.CorrelationId);
         Assert.Equal(attackRoll.CorrelationId, narrated.CorrelationId);
+    }
+
+    /// <summary>
+    /// Twee three-of-a-kind-sets voor de ≥6-inlegtests (FO §7, taak 4) — uit het echte deck
+    /// gehaald i.p.v. losstaand geconstrueerd: <see cref="RiskGame.Rules.Reinforcement.CardTradeCalculator.Evaluate"/>
+    /// zoekt <c>card.TerritoryId</c> op in <c>state.Territory(...)</c>, dus een zelfverzonnen
+    /// territory-id zou daar een <see cref="KeyNotFoundException"/> opleveren (anders dan bij
+    /// de pure <c>ReinforceGuards</c>-tests in Rules.Tests, die geen territory-lookup doen).
+    /// </summary>
+    private static Card[] SixCardHand(IReadOnlyList<Card> deck)
+    {
+        var groups = deck.Where(card => !card.IsJoker).GroupBy(card => card.Symbol)
+            .Where(group => group.Count() >= 3).Take(2).ToArray();
+
+        return [.. groups[0].Take(3), .. groups[1].Take(3)];
+    }
+
+    /// <summary>Drie three-of-a-kind-sets: na één inleg blijven er nog 6 over (nog steeds ≥6).</summary>
+    private static Card[] NineCardHand(IReadOnlyList<Card> deck)
+    {
+        var groups = deck.Where(card => !card.IsJoker).GroupBy(card => card.Symbol)
+            .Where(group => group.Count() >= 3).Take(3).ToArray();
+
+        return [.. groups[0].Take(3), .. groups[1].Take(3), .. groups[2].Take(3)];
+    }
+
+    [Fact]
+    public async Task DeclareAttack_MetZesOfMeerKaartenInHand_WordtGeweigerd()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var gameId = await SetUpAttackStateAsync(
+            factory, aliceArmies: 3, bobArmies: 1, aliceHand: SixCardHand(mapSource.Load("standaard-43").Deck));
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2));
+
+        Assert.Contains("reinforce.mustTradeInCardsFirst", exception.Message);
+    }
+
+    /// <summary>
+    /// FO §7 (taak 4): eerst inleggen, dan de opbrengst plaatsen, dan pas weer aanvallen
+    /// toegestaan — end-to-end via de drie betrokken hub-commando's.
+    /// </summary>
+    [Fact]
+    public async Task TradeInCards_InAanvallenMetZesOfMeerKaarten_MaaktAanvallenPasNaPlaatsenWeerMogelijk()
+    {
+        await using var factory = CreateFactory(6, 4);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var hand = SixCardHand(mapSource.Load("standaard-43").Deck);
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 3, bobArmies: 1, aliceHand: hand);
+
+        var afterTrade = await connection.InvokeAsync<GameStateDto>(
+            "TradeInCards", gameId, "p1", hand.Take(3).Select(card => card.Id).ToArray());
+
+        // Eerste inleg levert altijd 4 op (FO §4.4); hand is nu 3, dus de ≥6-vlag is weg.
+        Assert.Equal(4, afterTrade.TurnState!.ArmiesRemaining);
+        Assert.False(afterTrade.TurnState.MustTradeInCards);
+
+        var stillBlocked = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2));
+        Assert.Contains("turnFlow.armiesRemaining", stillBlocked.Message);
+
+        var afterPlace = await connection.InvokeAsync<GameStateDto>(
+            "PlaceReinforcements", gameId, "p1", "alaska", 4);
+        Assert.Equal(0, afterPlace.TurnState!.ArmiesRemaining);
+
+        var declared = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+        Assert.Equal(TurnPhaseDto.Attack, declared.State.TurnState!.TurnPhase);
+    }
+
+    /// <summary>Meerdere sets nodig (≥9 kaarten): de vlag blijft staan na de eerste inleg.</summary>
+    [Fact]
+    public async Task MustTradeInCards_InAanvallenMetNegenKaarten_BlijftWaarNaEenEersteInleg()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var hand = NineCardHand(mapSource.Load("standaard-43").Deck);
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 3, bobArmies: 1, aliceHand: hand);
+
+        var afterTrade = await connection.InvokeAsync<GameStateDto>(
+            "TradeInCards", gameId, "p1", hand.Take(3).Select(card => card.Id).ToArray());
+
+        Assert.True(afterTrade.TurnState!.MustTradeInCards);
     }
 }

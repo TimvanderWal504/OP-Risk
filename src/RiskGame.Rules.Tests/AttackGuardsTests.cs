@@ -1,5 +1,6 @@
 using RiskGame.Rules.Combat;
 using RiskGame.Rules.Effects;
+using RiskGame.Rules.Map;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Rules.Tests;
@@ -335,5 +336,35 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
 
         Assert.False(result.IsSuccess);
+    }
+
+    /// <summary>FO §7 (taak 4): eerst de ≥6-inleg na een eliminatie afhandelen, vóór verder vechten.</summary>
+    [Fact]
+    public void Aanval_MetZesOfMeerKaartenInHand_IsOngeldig()
+    {
+        var hand = Enumerable.Range(0, 6).Select(i => new Card($"c{i}", "quebec", "symbol-1")).ToArray();
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
+
+        var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("reinforce.mustTradeInCardsFirst", result.Errors.Single().Code);
+    }
+
+    /// <summary>Eerst plaatsen, dan verder vechten — ook als de ≥6-vlag zelf al weg is.</summary>
+    [Fact]
+    public void Aanval_MetOngeplaatsteInlegpool_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 3)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
+
+        var result = AttackGuards.CanDeclareAttack(state, "p1", "alaska", "alberta", attackDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("turnFlow.armiesRemaining", result.Errors.Single().Code);
     }
 }

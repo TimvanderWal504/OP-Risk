@@ -9,6 +9,7 @@ using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Store;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Tests;
@@ -57,14 +58,21 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : 
             withTurnTimer: true);
 
     private static async Task<(string GameId, IDocumentStore Store)> SetUpStateAsync(
-        WebApplicationFactory<Program> factory, TurnPhase turnPhase, PhaseTimer timer)
+        WebApplicationFactory<Program> factory,
+        TurnPhase turnPhase,
+        PhaseTimer timer,
+        int armiesRemaining = 0,
+        IReadOnlyList<UnsettledTrade>? unsettledTrades = null,
+        IReadOnlyList<Card>? aliceHand = null,
+        IReadOnlyList<Card>? discardPile = null,
+        int nextTradeValue = 4)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
         var map = mapSource.Load("standaard-43");
 
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+            "p1", "Alice", "red", Hand: aliceHand ?? [], RoleId: null, Mission: null, IsEliminated: false);
         var bob = new Player(
             "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
 
@@ -85,8 +93,10 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : 
             players: [alice, bob],
             territories,
             turnOrder: ["p1", "p2"],
-            turnState: new TurnState("p1", turnPhase, timer, PendingCombat: null, ArmiesRemaining: 0),
-            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            turnState: new TurnState(
+                "p1", turnPhase, timer, PendingCombat: null,
+                ArmiesRemaining: armiesRemaining, UnsettledTrades: unsettledTrades),
+            deck: new DeckState(DrawPile: [], DiscardPile: discardPile ?? [], nextTradeValue),
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
@@ -379,5 +389,118 @@ public sealed class TurnTimerBackgroundServiceTests(PostgresFixture postgres) : 
 
         Assert.Equal(TurnPhase.Attack, reloaded!.TurnState!.TurnPhase);
         Assert.NotNull(reloaded.TurnState.PendingCombat);
+    }
+
+    /// <summary>Drie kaarten uit de vorige beurt "al ingeleverd" (staan al op de aflegstapel).</summary>
+    private static Card[] TradedCards() =>
+    [
+        new Card("trade-1", "quebec", "symbol-1"),
+        new Card("trade-2", "ontario", "symbol-1"),
+        new Card("trade-3", "manitoba", "symbol-1"),
+    ];
+
+    /// <summary>
+    /// FO §5.4 (besluit gebruiker 2026-09-16, taak 4b): verloopt de Versterken-timer terwijl
+    /// een inleg nog volledig binnen de resterende pool past, dan draait hij terug — de
+    /// kaarten mogen niet "verdampen". <c>PhaseChanged</c> wist <c>TurnState</c> (dus ook
+    /// <c>ArmiesRemaining</c>/<c>UnsettledTrades</c>) hoe dan ook; wat hier bewijsbaar blijft
+    /// zijn de blijvende effecten: hand, aflegstapel en inlegwaarde.
+    /// </summary>
+    [Fact]
+    public async Task VersterkenTimerVerloopt_MetVolledigTeruggedraaidePasseInleg_HerstelKaartenEnInlegwaarde()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+
+        var tradedCards = TradedCards();
+        var unsettledTrade = new UnsettledTrade(
+            tradedCards.Select(card => card.Id).ToArray(), SetValue: 4, OwnedTerritoryBonuses: [], PreviousTradeValue: 4);
+
+        var (gameId, store) = await SetUpStateAsync(
+            factory,
+            TurnPhase.Reinforce,
+            new PhaseTimer(TimeSpan.FromSeconds(1), timeProvider.GetUtcNow()),
+            armiesRemaining: 4,
+            unsettledTrades: [unsettledTrade],
+            discardPile: tradedCards,
+            nextTradeValue: 6);
+
+        await AdvancePastDeadlineAsync(
+            timeProvider, store, gameId, state => state.TurnState!.TurnPhase != TurnPhase.Reinforce);
+
+        await using var session = store.QuerySession();
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        Assert.Equal(TurnPhase.Fortify, updated!.TurnState!.TurnPhase);
+        Assert.Equal(tradedCards, updated.Player("p1").Hand);
+        Assert.Empty(updated.Deck.DiscardPile);
+        Assert.Equal(4, updated.Deck.NextTradeValue);
+    }
+
+    /// <summary>Past de inleg niet meer volledig in de resterende pool, dan blijft hij staan (vervalt).</summary>
+    [Fact]
+    public async Task VersterkenTimerVerloopt_MetTeWeinigResterendeLegersVoorDeInleg_InlegBlijftStaan()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+
+        var tradedCards = TradedCards();
+        var unsettledTrade = new UnsettledTrade(
+            tradedCards.Select(card => card.Id).ToArray(), SetValue: 4, OwnedTerritoryBonuses: [], PreviousTradeValue: 4);
+
+        var (gameId, store) = await SetUpStateAsync(
+            factory,
+            TurnPhase.Reinforce,
+            new PhaseTimer(TimeSpan.FromSeconds(1), timeProvider.GetUtcNow()),
+            armiesRemaining: 2,
+            unsettledTrades: [unsettledTrade],
+            discardPile: tradedCards,
+            nextTradeValue: 6);
+
+        await AdvancePastDeadlineAsync(
+            timeProvider, store, gameId, state => state.TurnState!.TurnPhase != TurnPhase.Reinforce);
+
+        await using var session = store.QuerySession();
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        Assert.Equal(TurnPhase.Fortify, updated!.TurnState!.TurnPhase);
+        Assert.Empty(updated.Player("p1").Hand);
+        Assert.Equal(tradedCards, updated.Deck.DiscardPile);
+        Assert.Equal(6, updated.Deck.NextTradeValue);
+    }
+
+    /// <summary>Geldt niet alleen voor Versterken (vanaf taak 3) maar ook voor Aanvallen (taak 4).</summary>
+    [Fact]
+    public async Task AanvallenTimerVerloopt_MetVolledigTeruggedraaidePasseInleg_HerstelKaartenEnInlegwaarde()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+
+        var tradedCards = TradedCards();
+        var unsettledTrade = new UnsettledTrade(
+            tradedCards.Select(card => card.Id).ToArray(), SetValue: 4, OwnedTerritoryBonuses: [], PreviousTradeValue: 4);
+
+        var (gameId, store) = await SetUpStateAsync(
+            factory,
+            TurnPhase.Attack,
+            new PhaseTimer(TimeSpan.FromSeconds(1), timeProvider.GetUtcNow()),
+            armiesRemaining: 4,
+            unsettledTrades: [unsettledTrade],
+            discardPile: tradedCards,
+            nextTradeValue: 6);
+
+        await AdvancePastDeadlineAsync(
+            timeProvider, store, gameId, state => state.TurnState!.TurnPhase != TurnPhase.Attack);
+
+        await using var session = store.QuerySession();
+        var updated = await session.LoadAsync<GameState>(gameId);
+
+        Assert.Equal(TurnPhase.Fortify, updated!.TurnState!.TurnPhase);
+        Assert.Equal(tradedCards, updated.Player("p1").Hand);
+        Assert.Empty(updated.Deck.DiscardPile);
+        Assert.Equal(4, updated.Deck.NextTradeValue);
     }
 }

@@ -178,4 +178,107 @@ public class ReinforceGuardsTests
 
         Assert.False(result.IsSuccess);
     }
+
+    private static Card[] SixCardHand() =>
+    [
+        Card("c1", "alaska", "symbol-1"),
+        Card("c2", "alberta", "symbol-1"),
+        Card("c3", "ontario", "symbol-1"),
+        Card("c4", "quebec", "symbol-2"),
+        Card("c5", "brazil", "symbol-2"),
+        Card("c6", "peru", "symbol-2"),
+    ];
+
+    [Fact]
+    public void MustTradeInCardsDuringAttack_MetZesOfMeerKaartenEnGeenLopendGevecht_IsWaar()
+    {
+        var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+
+        Assert.True(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
+    }
+
+    [Fact]
+    public void MustTradeInCardsDuringAttack_MetVijfKaarten_IsOnwaar()
+    {
+        var hand = Enumerable.Range(0, 5).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+
+        Assert.False(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
+    }
+
+    /// <summary>Een lopend gevecht blokkeert toch al alles — de vlag hoeft er niet nog eens bovenop.</summary>
+    [Fact]
+    public void MustTradeInCardsDuringAttack_MetLopendGevecht_IsOnwaar()
+    {
+        var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(
+            players: players,
+            turnPhase: TurnPhase.Attack,
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()));
+
+        Assert.False(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
+    }
+
+    [Fact]
+    public void MustTradeInCardsDuringAttack_BuitenAanvallen_IsOnwaar()
+    {
+        var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce);
+
+        Assert.False(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
+    }
+
+    [Fact]
+    public void CanTradeInCards_InAanvallenMetZesOfMeerKaarten_IsGeldig()
+    {
+        var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+
+        var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "c3"]);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void CanTradeInCards_InAanvallenMetVijfKaarten_IsOngeldig()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-1"),
+            Card("c3", "ontario", "symbol-1"),
+            Card("c4", "quebec", "symbol-2"),
+            Card("c5", "brazil", "symbol-2"),
+        };
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+
+        var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "c3"]);
+
+        Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Plaatsen_InAanvallenMetOnverwerktePool_IsGeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 4)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
+
+        var result = ReinforceGuards.CanPlaceArmies(state, "p1", "alaska", amount: 2);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Plaatsen_InAanvallenZonderPool_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 0)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
+
+        var result = ReinforceGuards.CanPlaceArmies(state, "p1", "alaska", amount: 2);
+
+        Assert.False(result.IsSuccess);
+    }
 }

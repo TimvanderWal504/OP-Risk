@@ -117,6 +117,21 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
         var now = timeProvider.GetUtcNow();
         var timer = PhaseTimerFactory.ForPhase(TurnPhase.Fortify, state.Settings, turnState.Timer, now);
 
+        // FO §5.4 (besluit gebruiker 2026-09-16, taak 4b): een inleg van deze fase waarvan de
+        // opbrengst niet volledig geplaatst is, draait terug in plaats van stilzwijgend te
+        // vervallen — vanaf de laatste inleg, zolang de resterende pool 'm nog volledig
+        // bevat (CardTradeReversal). Geldt voor zowel Versterken als Aanvallen (de guard
+        // hierboven staat beide toe); wat er ná het terugdraaien van de pool overblijft
+        // (incl. een eventuele basispool) vervalt gewoon — dat is geen apart event, alleen
+        // afwezigheid van een event.
+        foreach (var trade in CardTradeReversal.Resolve(turnState))
+        {
+            session.Events.Append(
+                gameId,
+                new CardTradeReverted(
+                    gameId, playerId, trade.CardIds, trade.SetValue, trade.OwnedTerritoryBonuses, trade.PreviousTradeValue));
+        }
+
         // Naar Verplaatsen: geen versterkingspool, zie EndPhaseAsync.
         session.Events.Append(
             gameId,

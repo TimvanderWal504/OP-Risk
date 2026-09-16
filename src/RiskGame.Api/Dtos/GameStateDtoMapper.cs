@@ -58,11 +58,15 @@ public static class GameStateDtoMapper
                     ? FortifyGuards.ReachableComponents(state, state.TurnState.ActivePlayerId)
                     : [],
                 state.TurnState.TurnPhase == TurnPhase.Reinforce
-                    ? ToDto(ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId))
+                    ? ToDto(
+                        ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId),
+                        state.TurnState.UnsettledTrades.Sum(trade => trade.SetValue))
                     : null,
                 state.TurnState.HasFortified,
-                state.TurnState.TurnPhase == TurnPhase.Reinforce
-                    && ReinforceGuards.MustTradeInCards(state, state.TurnState.ActivePlayerId));
+                (state.TurnState.TurnPhase == TurnPhase.Reinforce
+                    && ReinforceGuards.MustTradeInCards(state, state.TurnState.ActivePlayerId))
+                || (state.TurnState.TurnPhase == TurnPhase.Attack
+                    && ReinforceGuards.MustTradeInCardsDuringAttack(state, state.TurnState.ActivePlayerId)));
 
         var colors = state.Map.Colors
             .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))
@@ -220,8 +224,8 @@ public static class GameStateDtoMapper
         return new TurnTimerDto(remainingMs, timer.IsPaused);
     }
 
-    private static ReinforcementBreakdownDto ToDto(ReinforcementBreakdown breakdown) => new(
-        breakdown.BaseArmies, breakdown.ContinentBonus, breakdown.RoleBonus, breakdown.EventBonus);
+    private static ReinforcementBreakdownDto ToDto(ReinforcementBreakdown breakdown, int cardTradeBonus) => new(
+        breakdown.BaseArmies, breakdown.ContinentBonus, breakdown.RoleBonus, breakdown.EventBonus, cardTradeBonus);
 
     private static TurnPhaseDto ToDto(TurnPhase turnPhase) => turnPhase switch
     {

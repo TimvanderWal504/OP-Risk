@@ -69,6 +69,31 @@ public class TurnGuardsTests
         Assert.Equal("turnFlow.combatInProgress", result.Errors.Single().Code);
     }
 
+    /// <summary>FO §7 (taak 4): dezelfde volgorde als Aanvallen zelf — eerst inleggen, dan fase dicht.</summary>
+    [Fact]
+    public void EndPhase_VanuitAanvallenMetZesOfMeerKaarten_IsOngeldig()
+    {
+        var hand = Enumerable.Range(0, 6).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+
+        var result = TurnGuards.CanEndPhase(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("reinforce.mustTradeInCardsFirst", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void EndPhase_VanuitAanvallenMetOngeplaatsteInlegpool_IsOngeldig()
+    {
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 4);
+
+        var result = TurnGuards.CanEndPhase(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("turnFlow.armiesRemaining", result.Errors.Single().Code);
+    }
+
     [Fact]
     public void EndPhase_VanuitVerplaatsen_IsOngeldig()
     {

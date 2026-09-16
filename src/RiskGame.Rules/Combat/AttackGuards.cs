@@ -1,4 +1,5 @@
 using RiskGame.Rules.Effects;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -43,6 +44,19 @@ public static class AttackGuards
         if (state.TurnState!.PendingCombat is not null)
         {
             return ValidationResult.Failure("attack.combatInProgress");
+        }
+
+        // FO §7 (taak 4): eerst de ≥6-inleg na een eliminatie afhandelen, en de opbrengst
+        // ervan plaatsen, vóórdat er verder gevochten mag worden — "eerst plaatsen, dan
+        // verder vechten".
+        if (ReinforceGuards.MustTradeInCardsDuringAttack(state, playerId))
+        {
+            return ValidationResult.Failure("reinforce.mustTradeInCardsFirst");
+        }
+
+        if (state.TurnState.ArmiesRemaining > 0)
+        {
+            return ValidationResult.Failure("turnFlow.armiesRemaining");
         }
 
         var fromArmyCount = state.Territory(fromTerritoryId).ArmyCount;

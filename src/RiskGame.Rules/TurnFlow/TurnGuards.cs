@@ -37,9 +37,16 @@ public static class TurnGuards
                 : state.TurnState.ArmiesRemaining == 0
                     ? ValidationResult.Success()
                     : ValidationResult.Failure("turnFlow.armiesRemaining"),
-            TurnPhase.Attack => state.TurnState.PendingCombat is null
-                ? ValidationResult.Success()
-                : ValidationResult.Failure("turnFlow.combatInProgress"),
+            // FO §7 (taak 4): dezelfde volgorde als Aanvallen zelf (AttackGuards.CanDeclareAttack)
+            // — eerst het lopende gevecht, dan een eventuele ≥6-inlegverplichting, dan een nog
+            // niet geplaatste inlegpool. Pas als dat alles leeg is mag de fase dicht.
+            TurnPhase.Attack => state.TurnState.PendingCombat is not null
+                ? ValidationResult.Failure("turnFlow.combatInProgress")
+                : ReinforceGuards.MustTradeInCardsDuringAttack(state, playerId)
+                    ? ValidationResult.Failure("reinforce.mustTradeInCardsFirst")
+                    : state.TurnState.ArmiesRemaining == 0
+                        ? ValidationResult.Success()
+                        : ValidationResult.Failure("turnFlow.armiesRemaining"),
             TurnPhase.Fortify => ValidationResult.Failure("turnFlow.useEndTurnInFortify"),
             _ => ValidationResult.Failure("turnFlow.unknownPhase"),
         };

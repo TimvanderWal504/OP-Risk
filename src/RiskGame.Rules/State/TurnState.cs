@@ -1,3 +1,5 @@
+using RiskGame.Rules.Reinforcement;
+
 namespace RiskGame.Rules.State;
 
 /// <summary>De stand van de lopende beurt (TO §3.1).</summary>
@@ -35,6 +37,15 @@ namespace RiskGame.Rules.State;
 /// over vanuit de vorige <see cref="TurnState"/>, en pas terug op <see langword="false"/> zodra
 /// de nieuwe fase <see cref="TurnPhase.Reinforce"/> is (een beurt begint altijd daar).
 /// </param>
+/// <param name="UnsettledTrades">
+/// Inlegs van déze fase waarvan de opbrengst nog niet (volledig) in <see cref="ArmiesRemaining"/>
+/// is opgegaan door plaatsing (FO §5.4, taak 4b: teruggedraaid bij een timeout in plaats van
+/// stilzwijgend vervallen — zie <see cref="CardTradeReversal"/>). Gevuld door de
+/// <c>CardsTraded</c>-vouwregel (append, meest recente laatst); leeg bij elke nieuwe
+/// <see cref="TurnState"/> — net als <see cref="HasFortified"/> bouwt <c>PhaseChanged</c> die
+/// altijd helemaal opnieuw op, dus een voltooide fase (die <c>ArmiesRemaining == 0</c> al
+/// vereist) laat hier vanzelf niets achter.
+/// </param>
 public sealed record TurnState(
     string ActivePlayerId,
     TurnPhase TurnPhase,
@@ -43,4 +54,8 @@ public sealed record TurnState(
     AttackEngagement? PausedAttackTarget = null,
     int ArmiesRemaining = 0,
     bool HasFortified = false,
-    bool HasConqueredThisTurn = false);
+    bool HasConqueredThisTurn = false,
+    IReadOnlyList<UnsettledTrade>? UnsettledTrades = null)
+{
+    public IReadOnlyList<UnsettledTrade> UnsettledTrades { get; init; } = UnsettledTrades ?? [];
+}

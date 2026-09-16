@@ -144,11 +144,11 @@ public sealed record CardDto(string Id, string? TerritoryId, string Symbol);
 /// (frontend/CLAUDE.md: geen spelregels client-side).
 /// </param>
 /// <param name="MustTradeInCards">
-/// Of de actieve speler moet inleggen vóór elke andere actie (FO §5.2: 5+ kaarten in
-/// Versterken) — de telefoon mag deze spelregel niet zelf nabouwen (frontend/CLAUDE.md),
-/// dus de server levert de vlag. Fase-bewust: alleen gevuld in
-/// <see cref="TurnPhaseDto.Reinforce"/>; in elke andere fase <see langword="false"/>. Taak 4
-/// (FO §7, ≥6 kaarten na een eliminatie) breidt dit uit naar <see cref="TurnPhaseDto.Attack"/>.
+/// Of de actieve speler moet inleggen vóór elke andere actie — de telefoon mag deze
+/// spelregel niet zelf nabouwen (frontend/CLAUDE.md), dus de server levert de vlag.
+/// Fase-bewust, met een andere drempel per fase: in <see cref="TurnPhaseDto.Reinforce"/>
+/// bij 5+ kaarten (FO §5.2), in <see cref="TurnPhaseDto.Attack"/> bij 6+ kaarten ná een
+/// eliminatie (FO §7); in elke andere fase <see langword="false"/>.
 /// </param>
 public sealed record TurnStateDto(
     string ActivePlayerId,
@@ -163,9 +163,17 @@ public sealed record TurnStateDto(
 
 /// <summary>
 /// Draad-representatie van <see cref="RiskGame.Rules.Reinforcement.ReinforcementBreakdown"/> —
-/// dezelfde vier optellermen als <see cref="RiskGame.Rules.Reinforcement.ReinforcementCalculator.CalculateArmies"/>.
+/// dezelfde vier optellermen als <see cref="RiskGame.Rules.Reinforcement.ReinforcementCalculator.CalculateArmies"/>,
+/// plus <see cref="CardTradeBonus"/> voor de "Kaarteninleg"-rij van de opbouw-uitsplitsing.
 /// </summary>
-public sealed record ReinforcementBreakdownDto(int BaseArmies, int ContinentBonus, int RoleBonus, int EventBonus);
+/// <param name="CardTradeBonus">
+/// Som van <c>SetValue</c> over de nog niet volledig geplaatste inlegs van déze fase
+/// (<see cref="RiskGame.Rules.State.TurnState.UnsettledTrades"/>, taak 4b) — dus niet de
+/// bezitsbonussen (die staan al los op de gebieden zelf) en niet inlegs van een eerdere
+/// fase (die zijn dan al volledig geplaatst of teruggedraaid). 0 zolang er niets ingelegd is.
+/// </param>
+public sealed record ReinforcementBreakdownDto(
+    int BaseArmies, int ContinentBonus, int RoleBonus, int EventBonus, int CardTradeBonus = 0);
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.PendingCombat"/>.</summary>
 public sealed record PendingCombatDto(string FromTerritoryId, string ToTerritoryId, int AttackDice);

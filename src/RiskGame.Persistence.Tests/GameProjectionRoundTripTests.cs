@@ -263,6 +263,206 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// De vouwregel van <see cref="CardsTraded"/> registreert de inleg ook als
+    /// <see cref="TurnState.UnsettledTrades"/> (taak 4b), met de inlegwaarde die vóór déze
+    /// inleg gold — <em>niet</em> <see cref="CardsTraded.NextTradeValue"/> (dat is de waarde
+    /// ná deze inleg) — zodat <see cref="CardTradeReverted"/> 'm later kan herstellen.
+    /// </summary>
+    [Fact]
+    public void CardsTraded_VoegtEenUnsettledTradeToeMetDeInlegwaardeVanVoorDezeInleg()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var ownedCard = new Rules.Map.Card("card-alaska", "alaska", "symbol-1");
+        var otherCard1 = new Rules.Map.Card("card-siberia", "siberia", "symbol-2");
+        var otherCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
+            RoleId: null, Mission: null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(
+            initialState,
+            new CardsTraded(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 4,
+                OwnedTerritoryBonuses: [new TerritoryBonus("alaska", map.SetRules.OwnedTerritoryBonus)],
+                NextTradeValue: 6));
+
+        var unsettledTrade = Assert.Single(result.TurnState!.UnsettledTrades);
+        Assert.Equal(["card-alaska", "card-siberia", "card-brazil"], unsettledTrade.CardIds);
+        Assert.Equal(4, unsettledTrade.SetValue);
+        Assert.Equal(4, unsettledTrade.PreviousTradeValue);
+    }
+
+    /// <summary>
+    /// <see cref="CardTradeReverted"/> (FO §5.4, taak 4b) maakt een inleg volledig ongedaan:
+    /// kaarten terug in de hand, inlegwaarde hersteld, bezitsbonus van het gebied af,
+    /// <see cref="TurnState.ArmiesRemaining"/> weer omlaag, en de inleg verdwijnt uit
+    /// <see cref="TurnState.UnsettledTrades"/>. Bewijst ook een Marten-round-trip, net als
+    /// <see cref="CardsTraded_VouwtHandAflegstapelEnBezitsbonusEnOverleeftEenMartenRoundTrip"/>.
+    /// </summary>
+    [Fact]
+    public async Task CardTradeReverted_DraaitDeInlegVolledigTerugEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var ownedCard = new Rules.Map.Card("card-alaska", "alaska", "symbol-1");
+        var otherCard1 = new Rules.Map.Card("card-siberia", "siberia", "symbol-2");
+        var otherCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [ownedCard, otherCard1, otherCard2],
+            RoleId: null, Mission: null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var afterTrade = projection.Apply(
+            initialState,
+            new CardsTraded(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 4,
+                OwnedTerritoryBonuses: [new TerritoryBonus("alaska", map.SetRules.OwnedTerritoryBonus)],
+                NextTradeValue: 6));
+
+        var result = projection.Apply(
+            afterTrade,
+            new CardTradeReverted(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 4,
+                OwnedTerritoryBonuses: [new TerritoryBonus("alaska", map.SetRules.OwnedTerritoryBonus)],
+                RestoredTradeValue: 4));
+
+        Assert.Equal([ownedCard, otherCard1, otherCard2], result.Player("p1").Hand);
+        Assert.Empty(result.Deck.DiscardPile);
+        Assert.Equal(4, result.Deck.NextTradeValue);
+        Assert.Equal(1, result.Territory("alaska").ArmyCount);
+        Assert.Equal(0, result.TurnState!.ArmiesRemaining);
+        Assert.Empty(result.TurnState.UnsettledTrades);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal([ownedCard, otherCard1, otherCard2], reloaded!.Player("p1").Hand);
+        Assert.Empty(reloaded.Deck.DiscardPile);
+        Assert.Equal(4, reloaded.Deck.NextTradeValue);
+        Assert.Equal(1, reloaded.Territory("alaska").ArmyCount);
+        Assert.Equal(0, reloaded.TurnState!.ArmiesRemaining);
+        Assert.Empty(reloaded.TurnState.UnsettledTrades);
+    }
+
+    /// <summary>
+    /// De invariant hieronder is een eigenschap van de guards van vandaag, geen wet (zie
+    /// doc-comment op <see cref="GameProjection.Apply(GameState, CardTradeReverted)"/>) — deze
+    /// test bewijst dat een onmogelijke situatie (bonus groter dan het huidige legeraantal)
+    /// hard faalt in plaats van een negatief of nul legeraantal op te leveren.
+    /// </summary>
+    [Fact]
+    public void CardTradeReverted_MetBonusDieGebiedOnder1LegerZouBrengen_GooitEenUitzondering()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var ownedCard = new Rules.Map.Card("card-alaska", "alaska", "symbol-1");
+        var otherCard1 = new Rules.Map.Card("card-siberia", "siberia", "symbol-2");
+        var otherCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [],
+            RoleId: null, Mission: null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState(
+                "p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow),
+                PendingCombat: null, ArmiesRemaining: 4),
+            deck: new DeckState(DrawPile: [], DiscardPile: [ownedCard, otherCard1, otherCard2], NextTradeValue: 6),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+
+        Assert.Throws<InvalidOperationException>(() => projection.Apply(
+            initialState,
+            new CardTradeReverted(
+                gameId,
+                "p1",
+                ["card-alaska", "card-siberia", "card-brazil"],
+                SetValue: 4,
+                OwnedTerritoryBonuses: [new TerritoryBonus("alaska", Amount: 5)],
+                RestoredTradeValue: 4)));
+    }
+
+    /// <summary>
     /// <see cref="TurnState.ArmiesRemaining"/> komt bij het ingaan van Versterken uit
     /// <see cref="PhaseChanged.ArmiesGranted"/>, daarna afgeteld door
     /// <see cref="ArmiesReinforced"/> en opgehoogd door <see cref="CardsTraded.SetValue"/>
@@ -923,8 +1123,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <remarks>
-    /// <see cref="Player"/> en <see cref="DeckState"/> hebben zelf een lijst-property
-    /// (<c>Hand</c>, resp. <c>DrawPile</c>/<c>DiscardPile</c>). De record-gegenereerde
+    /// <see cref="Player"/>, <see cref="DeckState"/> en (sinds taak 4b) <see cref="TurnState"/>
+    /// (<c>UnsettledTrades</c>) hebben zelf een lijst-property. De record-gegenereerde
     /// <c>Equals</c> daarvan vergelijkt zo'n lijst niet inhoudelijk maar via
     /// <c>object.Equals</c> (arrays/lijsten overschrijven die niet) — twee inhoudelijk
     /// gelijke maar apart opgebouwde lege lijsten (hier: JSON-deserialisatie levert een
@@ -939,7 +1139,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.Settings, actual.Settings);
         Assert.Equal(expected.Territories, actual.Territories);
         Assert.Equal(expected.TurnOrder, actual.TurnOrder);
-        Assert.Equal(expected.TurnState, actual.TurnState);
+        AssertTurnStateEqual(expected.TurnState, actual.TurnState);
         Assert.Equal(expected.ActiveEffects, actual.ActiveEffects);
         Assert.Equal(expected.Winners, actual.Winners);
         AssertPendingWinEqual(expected.PendingWin, actual.PendingWin);
@@ -969,5 +1169,26 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.Map.Deck, actual.Map.Deck);
         Assert.Equal(expected.Map.Roles, actual.Map.Roles);
         Assert.Equal(expected.Map.Adjacency, actual.Map.Adjacency);
+    }
+
+    /// <summary>Zie de doc-comment op <see cref="AssertIdenticalGameState"/>: <c>UnsettledTrades</c>
+    /// is de lijst-property die hier per veld vergeleken moet worden.</summary>
+    private static void AssertTurnStateEqual(TurnState? expected, TurnState? actual)
+    {
+        if (expected is null || actual is null)
+        {
+            Assert.Equal(expected, actual);
+            return;
+        }
+
+        Assert.Equal(expected.ActivePlayerId, actual.ActivePlayerId);
+        Assert.Equal(expected.TurnPhase, actual.TurnPhase);
+        Assert.Equal(expected.Timer, actual.Timer);
+        Assert.Equal(expected.PendingCombat, actual.PendingCombat);
+        Assert.Equal(expected.PausedAttackTarget, actual.PausedAttackTarget);
+        Assert.Equal(expected.ArmiesRemaining, actual.ArmiesRemaining);
+        Assert.Equal(expected.HasFortified, actual.HasFortified);
+        Assert.Equal(expected.HasConqueredThisTurn, actual.HasConqueredThisTurn);
+        Assert.Equal(expected.UnsettledTrades, actual.UnsettledTrades);
     }
 }

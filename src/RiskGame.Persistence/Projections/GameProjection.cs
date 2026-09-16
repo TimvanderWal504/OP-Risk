@@ -17,12 +17,13 @@ namespace RiskGame.Persistence.Projections;
 /// </summary>
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
-/// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het (her)schudden van de
-/// trekstapel, het volledige gevechtsarsenaal, kaarttrekken, uitschakeling, de
-/// gebeurtenisronde-effecten, het laatste-kans-venster rond bezit-missies (FO §6.2) en het
-/// spel-einde (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
-/// gebieden claimen/bijplaatsen, rol en missie toewijzen, fase-overgangen binnen een beurt,
-/// legers versterken, kaarten inleveren, de trekstapel (her)schudden, aanvallen, veroveren,
+/// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg (incl. het terugdraaien
+/// ervan bij een timeout, FO §5.4), het (her)schudden van de trekstapel, het volledige
+/// gevechtsarsenaal, kaarttrekken, uitschakeling, de gebeurtenisronde-effecten, het
+/// laatste-kans-venster rond bezit-missies (FO §6.2) en het spel-einde (spel aanmaken,
+/// spelers joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen, rol
+/// en missie toewijzen, fase-overgangen binnen een beurt, legers versterken, kaarten
+/// inleveren, een inleg terugdraaien, de trekstapel (her)schudden, aanvallen, veroveren,
 /// verplaatsen, kaart trekken, een speler uitschakelen, een gebeurteniseffect toepassen/
 /// laten verlopen, een dreigende missie-overwinning openen/versmallen/laten vervallen, het
 /// spel winnen) — een achtste plak.
@@ -211,6 +212,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             .Select(cardId => player.Hand.First(card => card.Id == cardId))
             .ToArray();
 
+        // Vóór de aftrek hieronder: dit is de inlegwaarde die deze inleg opleverde (FO §4.4),
+        // dus precies wat CardTradeReverted moet herstellen als deze inleg ooit teruggedraaid
+        // wordt (taak 4b) — UnsettledTrade draagt 'm daarom apart van het event zelf.
+        var previousTradeValue = state.Deck.NextTradeValue;
+
         state = state.WithPlayer(player with
         {
             Hand = [.. player.Hand.Where(card => !tradedCards.Contains(card))],
@@ -228,9 +234,59 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + bonus.Amount });
         }
 
+        var unsettledTrade = new UnsettledTrade(
+            @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue);
+
         return state.WithTurnState(state.TurnState! with
         {
             ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
+            UnsettledTrades = [.. state.TurnState.UnsettledTrades, unsettledTrade],
+        });
+    }
+
+    /// <summary>
+    /// Draait een eerdere inleg van deze fase terug (FO §5.4, taak 4b) — zie doc-comment op
+    /// <see cref="CardTradeReverted"/> voor waarom dit veilig is zonder de rest van de beurt
+    /// te raken. De invariant hieronder (nooit onder 1 leger) is een eigenschap van de guards
+    /// van vandaag, geen wet — een toekomstige wijziging die legers verplaatst tussen inleg en
+    /// timeout zou 'm stil kunnen breken, vandaar de expliciete <see cref="InvalidOperationException"/>
+    /// in plaats van een stille negatieve/nul-uitkomst.
+    /// </summary>
+    public GameState Apply(GameState state, CardTradeReverted @event)
+    {
+        var player = state.Player(@event.PlayerId);
+        var revertedCards = @event.CardIds
+            .Select(cardId => state.Deck.DiscardPile.First(card => card.Id == cardId))
+            .ToArray();
+
+        state = state.WithPlayer(player with { Hand = [.. player.Hand, .. revertedCards] });
+
+        state = state.WithDeck(state.Deck with
+        {
+            DiscardPile = [.. state.Deck.DiscardPile.Where(card => !revertedCards.Contains(card))],
+            NextTradeValue = @event.RestoredTradeValue,
+        });
+
+        foreach (var bonus in @event.OwnedTerritoryBonuses)
+        {
+            var territory = state.Territory(bonus.TerritoryId);
+            var newArmyCount = territory.ArmyCount - bonus.Amount;
+
+            if (newArmyCount < 1)
+            {
+                throw new InvalidOperationException(
+                    $"CardTradeReverted zou gebied '{territory.TerritoryId}' onder 1 leger " +
+                    $"brengen ({territory.ArmyCount} - {bonus.Amount}) — onmogelijke toestand, " +
+                    "geen regeluitkomst.");
+            }
+
+            state = state.WithTerritory(territory with { ArmyCount = newArmyCount });
+        }
+
+        return state.WithTurnState(state.TurnState! with
+        {
+            ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue,
+            UnsettledTrades = [.. state.TurnState.UnsettledTrades.Where(trade => !trade.CardIds.SequenceEqual(@event.CardIds))],
         });
     }
 

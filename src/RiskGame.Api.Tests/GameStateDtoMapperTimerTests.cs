@@ -8,6 +8,7 @@ using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Tests;
@@ -53,7 +54,8 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
 
     private static async Task<string> SetUpInProgressStateAsync(
         WebApplicationFactory<Program> factory, PhaseTimer timer, IReadOnlyCollection<string>? ownedTerritoryIds = null,
-        TurnPhase turnPhase = TurnPhase.Reinforce, IReadOnlyList<Card>? hand = null)
+        TurnPhase turnPhase = TurnPhase.Reinforce, IReadOnlyList<Card>? hand = null,
+        IReadOnlyList<UnsettledTrade>? unsettledTrades = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -76,7 +78,8 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
             players: [player],
             territories,
             turnOrder: ["p1"],
-            turnState: new TurnState("p1", turnPhase, timer, PendingCombat: null, ArmiesRemaining: 0),
+            turnState: new TurnState(
+                "p1", turnPhase, timer, PendingCombat: null, ArmiesRemaining: 0, UnsettledTrades: unsettledTrades),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
 
@@ -170,6 +173,35 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
         Assert.Equal(0, state.TurnState.ReinforcementBreakdown.ContinentBonus);
         Assert.Equal(0, state.TurnState.ReinforcementBreakdown.RoleBonus);
         Assert.Equal(0, state.TurnState.ReinforcementBreakdown.EventBonus);
+        Assert.Equal(0, state.TurnState.ReinforcementBreakdown.CardTradeBonus);
+    }
+
+    /// <summary>
+    /// <see cref="ReinforcementBreakdownDto.CardTradeBonus"/> (taak 4b) is de som van
+    /// <c>SetValue</c> over de nog niet volledig geplaatste inlegs van déze fase — niet de
+    /// bezitsbonussen (die staan al los op de gebieden).
+    /// </summary>
+    [Fact]
+    public async Task ReinforcementBreakdown_MetOnverwerkteInlegs_TeltCardTradeBonusOp()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var unsettledTrades = new[]
+        {
+            new UnsettledTrade(["c1", "c2", "c3"], SetValue: 4, OwnedTerritoryBonuses: [], PreviousTradeValue: 4),
+            new UnsettledTrade(["c4", "c5", "c6"], SetValue: 6, OwnedTerritoryBonuses: [], PreviousTradeValue: 6),
+        };
+
+        var gameId = await SetUpInProgressStateAsync(
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()),
+            ownedTerritoryIds: ["alaska"], unsettledTrades: unsettledTrades);
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.Equal(4 + 6, state.TurnState!.ReinforcementBreakdown!.CardTradeBonus);
     }
 
     [Fact]
