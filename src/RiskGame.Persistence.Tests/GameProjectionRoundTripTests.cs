@@ -449,9 +449,14 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         var mapSource = new MapDefinitionSource(MapsRoot);
         var map = mapSource.Load("standaard-43");
 
-        var handCard = new Rules.Map.Card("card-japan", "japan", "symbol-2");
-        var discardedCard1 = new Rules.Map.Card("card-china", "china", "symbol-3");
-        var discardedCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+        // Uit het echte, opgebouwde deck gehaald i.p.v. losstaand geconstrueerd: de
+        // DeckShuffled-vouwregel zoekt kaarten op in state.Map.Deck (niet in de eigen
+        // trekstapel, zoals CardDrawn dat doet), dus een zelfverzonnen symbool zou hier
+        // — anders dan bij de CardDrawn-tests hierboven — niet overeenkomen met wat de
+        // vouwregel daadwerkelijk teruggeeft.
+        var handCard = map.Deck.First(card => card.Id == "card-japan");
+        var discardedCard1 = map.Deck.First(card => card.Id == "card-china");
+        var discardedCard2 = map.Deck.First(card => card.Id == "card-brazil");
 
         var player = new Player(
             "p1", "Alice", "red", Hand: [handCard],
