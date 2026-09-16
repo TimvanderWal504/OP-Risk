@@ -306,7 +306,8 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
 
     /// <summary>
     /// Dwingt alleen de roltoewijzing (2 trekkingen, welke rol precies uitkomt maakt niet
-    /// uit voor deze test) en de order-roll-winnaar (Alice wint altijd, 10 tegen 5, zelfde
+    /// uit voor deze test), StartGame's deck-shuffle (<see cref="DeckShuffleFiller"/>, zie
+    /// die doc-comment) en de order-roll-winnaar (Alice wint altijd, 10 tegen 5, zelfde
     /// als <see cref="CreateFactory"/>) op een vaste uitkomst. Alles daarna — de
     /// gebiedsverdeling, tot 43 trekkingen met krimpende bereiken — loopt bewust op echte
     /// willekeur door: dit scenario bewijst invarianten (alles verdeeld, max. 1 verschil
@@ -317,7 +318,8 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         ApiTestHost.Create(
             postgres,
             services => services.AddSingleton<IRandomSource>(
-                new PrefixThenRandomSource(new SystemRandomSource(), 0, 1, 6, 4, 3, 2)));
+                new PrefixThenRandomSource(
+                    new SystemRandomSource(), [0, 1, .. DeckShuffleFiller.Values, 6, 4, 3, 2])));
 
     /// <summary>
     /// FO §5.1 (Random-startopstelling) end-to-end: na de order-roll-winnaar moet
