@@ -203,13 +203,18 @@ A derived `player.glass.*` layer (`glass-tokens.ts`, `deriveGlassTint`) computes
 a translucent version of each seat color — HSL-derived, alpha 0.22, 55% of the
 original saturation kept — for glass-surface contexts where a flat seat-color
 fill would be too heavy (e.g. selection tints). A second derived set,
-`player.diceFace.*`, uses a higher alpha (0.8) and normalizes all seven colors
-to the same HSL lightness (0.42) specifically so dice-face contrast stays
-consistent across all seven seats despite sRGB weighting green far more heavily
-than blue; the opaque dice pip itself (`dicePip.fill`/`highlight`, full alpha)
-never varies by seat, only the surface tint underneath it does. Both are
-computed, not hand-picked per color — never add a per-seat literal here instead
-of extending the derivation.
+`player.diceFace.*` (`deriveDiceGlassGradient`), builds a 135° two-stop
+gradient per seat instead of a flat fill — alpha 0.45 at the lit (top-left)
+stop, 0.28 at the shadowed (bottom-right) stop, both normalized to the same
+HSL lightness (0.42) so dice-face contrast stays consistent across all seven
+seats despite sRGB weighting green far more heavily than blue. This replaced a
+single, near-opaque flat fill (alpha 0.8) in the 2026-08-18 glass overhaul: the
+seat-color identity moved off the fill and onto the die's own border and pip
+glow instead (see **Components → Dice**), so the surface itself can stay
+translucent enough for the battlefield illustration to show through. The
+opaque dice pip fill (`dicePip.fill`, full alpha) never varies by seat. Both
+derived sets are computed, not hand-picked per color — never add a per-seat
+literal here instead of extending the derivation.
 
 ### Light theme
 A full light-mode token set exists in parallel (`[data-theme="light"]` /
@@ -393,6 +398,14 @@ focus states.
 ### Player Header / Stat rows
 - Combines a colored player avatar (from the seat-color system, not this palette), display-font name/status text, and tabular-numeral timer text that swaps color (`normal` → ink, `low` → Alert Red, pulsing) based on state — a good example of the system's "state changes color, not shape" convention.
 
+### Dice (`Dice`)
+- **Character:** its own glass surface, not a `GlassPanel` — a die is a chip-scale object, not a panel/card/modal, so it owns a dedicated blur base (`DICE_GLASS_BLUR_BASE`, 12px pre-context-scale, between `glassBlur.sm`'s 8px and `glassBlur.md`) instead of reusing `glassBlur.sm`. Context scaling (tv full blur, phone halved) and `saturate(1.4)` still reuse the shared `GLASS_CONTEXT_BLUR_SCALE`/`glassSaturate`.
+- **Surface fill:** the seat-color `player.diceFace.*` two-stop gradient (see **Colors → Player seat colors**) rather than a flat fill — deliberately translucent so the combat scene behind it stays visible. Falls back to the neutral `glassSurface.raised` tone for the one caller that has no resolved seat color yet (`DefendStep`/`AttackFlowStep`'s "unknown player" placeholder).
+- **Border:** the solid seat color at 60% alpha (`color-mix(in srgb, colorHex 60%, transparent)`) — carries the seat-color identity that the now-translucent fill no longer can by itself.
+- **Shadow:** a fixed top-left light source (`diceGlassShadow`) — inset top/left highlight, inset bottom/right shadow edge, a top-edge band suggesting plate thickness, plus a cast shadow so the die reads as floating above its panel. A `perspective(400px) rotateX(5deg)` transform (`diceGlassPerspective`) adds plate depth independent of any roll animation.
+- **Pips:** a recessed dimple, not an embossed bump — a radial off-white highlight (`dicePipRecessedHighlight`) layered over the fully opaque `dicePip.fill`, with an inset shadow plus a seat-colored outer glow (`dicePipGlow`, full saturation, alpha 0.6) sized as a fraction of pip size. The pip itself is always 100% opaque; only the glow around it carries translucency.
+- **Motion boundary:** the roll animation lives on a non-filtering outer wrapper, never on the `backdrop-filter` element itself — Safari/iOS doesn't reliably recompute backdrop blur per animation frame when `transform`/`opacity` and `backdrop-filter` share an element. The light direction visibly rotates with the wrapper mid-roll and settles back to top-left once every tumble keyframe ends on `rotate(0)`.
+
 ### Selectable Option (radio card)
 - **Pattern:** a full-card `role="radio"`/`aria-checked` button (`SelectableOption`) whose border color alone carries the selected state — `--pitch-500` when selected, `--border-strong` when not, `--border` when disabled at 50% opacity. No separate checkmark glyph or icon is layered on top; the border/background change *is* the selection signal, another instance of **The Invisible Design Rule**. Used for color pickers, role lists, and territory/army selection lists.
 
@@ -412,7 +425,7 @@ focus states.
 ### Don't:
 - **Don't** reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04) because the "trophy/World Cup" association didn't fit a conquest game. Caution Amber (`--warning`) is the one exception, since it's a functional status color, not decoration.
 - **Don't** reach for the legacy flat tonal overlay (`--atlas-t0X`) as a first choice for a new card/panel/row — that's the retired default; glass is. It remains valid only as one of the three defined fallback routes (unsupported browser, reduced transparency, nested glass), never as a stylistic alternative.
-- **Don't** apply your own `backdrop-filter`/blur value outside `glassBlur`'s three steps (8/16/28px) or invent a new elevation tier beyond Base/Raised/Overlay — extend `glass-tokens.ts`, don't hardcode a one-off in a component.
+- **Don't** apply your own `backdrop-filter`/blur value outside `glassBlur`'s three steps (8/16/28px) or invent a new elevation tier beyond Base/Raised/Overlay — extend `glass-tokens.ts`, don't hardcode a one-off in a component. `Dice`'s own `DICE_GLASS_BLUR_BASE` (see **Components → Dice**) is the one documented exception: a die is chip-scale, not a panel/card/modal, so it isn't an elevation tier and was never meant to share `glassBlur.sm`.
 - **Don't** add a background color or tint to a `GlassPanel`/glass `Button` — glass is clear by design; the `glass-surface-*-opaque` hexes exist only for the three defined fallback cases (nested, unsupported browser, reduced transparency), never as a stylistic tint.
 - **Don't** try to fix on-glass legibility by picking a different/darker gray or by lightening one further up the standard `--fg`/`--fg-secondary`/`--fg-muted` scale — any mid-tone color loses against an arbitrary bright photo patch. Use the opacity-stepped `--glass-fg-*` + text-shadow treatment instead.
 - **Don't** assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells, and the glass layer specifically has no light-mode tints at all today (a gap, not a design decision, if a light glass surface is ever needed).

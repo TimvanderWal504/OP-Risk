@@ -269,18 +269,28 @@ code, .twc-code {
   --player-cyan-glass: rgba(91, 185, 151, 0.22);
   --player-orange-glass: rgba(204, 125, 86, 0.22);
 
-  /* player.diceFace.* — DICE_FACE_ALPHA (0.6) + GLASS_TARGET_LIGHTNESS (0.42)
-     genormaliseerd, zie deriveGlassTint()/playerDiceFaceColors in
-     glass-tokens.ts. Los van --player-*-glass (paneel-tint, geen lightness-
-     override) — de dobbelsteen heeft een hogere, dekkendere alpha nodig om
-     als spelerskleur herkenbaar te blijven. */
-  --player-red-dice-face: rgba(148, 78, 66, 0.6);
-  --player-blue-dice-face: rgba(48, 88, 166, 0.6);
-  --player-green-dice-face: rgba(125, 166, 48, 0.6);
-  --player-yellow-dice-face: rgba(164, 146, 50, 0.6);
-  --player-purple-dice-face: rgba(99, 48, 166, 0.6);
-  --player-cyan-dice-face: rgba(64, 150, 119, 0.6);
-  --player-orange-dice-face: rgba(164, 87, 50, 0.6);
+  /* player.diceFace.* — DICE_FACE_ALPHA_LIGHT/DARK (0.45/0.28) +
+     GLASS_TARGET_LIGHTNESS (0.42) genormaliseerd, zie deriveDiceGlassGradient()/
+     playerDiceFaceGradients in glass-tokens.ts. Los van --player-*-glass
+     (paneel-tint, geen lightness-override). Twee stops i.p.v. één vlakke
+     waarde sinds de 2026-08-18-glasoverhaul (op verzoek van de gebruiker): de
+     RGB-triple is voor beide stops identiek, alleen de alpha verschilt — dus
+     hier als `-light`/`-dark`-paar i.p.v. de vroegere enkelvoudige
+     `-dice-face`-variabele. */
+  --player-red-dice-face-light: rgba(166, 48, 78, 0.45);
+  --player-red-dice-face-dark: rgba(166, 48, 78, 0.28);
+  --player-blue-dice-face-light: rgba(66, 104, 149, 0.45);
+  --player-blue-dice-face-dark: rgba(66, 104, 149, 0.28);
+  --player-green-dice-face-light: rgba(88, 126, 88, 0.45);
+  --player-green-dice-face-dark: rgba(88, 126, 88, 0.28);
+  --player-yellow-dice-face-light: rgba(164, 146, 50, 0.45);
+  --player-yellow-dice-face-dark: rgba(164, 146, 50, 0.28);
+  --player-purple-dice-face-light: rgba(129, 48, 166, 0.45);
+  --player-purple-dice-face-dark: rgba(129, 48, 166, 0.28);
+  --player-cyan-dice-face-light: rgba(64, 150, 119, 0.45);
+  --player-cyan-dice-face-dark: rgba(64, 150, 119, 0.28);
+  --player-orange-dice-face-light: rgba(154, 107, 61, 0.45);
+  --player-orange-dice-face-dark: rgba(154, 107, 61, 0.28);
 
   /* dice.pip.* — constant per speler, alleen de surface-tint varieert. */
   --dice-pip-fill: rgba(255, 255, 255, 0.92);

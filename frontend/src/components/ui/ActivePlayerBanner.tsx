@@ -40,7 +40,10 @@ export function ActivePlayerBanner({ turnOfLabel, playerName, color, subtitle, s
       </div>
       {stat && (
         <div className="flex-none text-right">
-          <div className="font-display text-[26px] leading-none font-black text-silver-300">{stat.value}</div>
+          {/* `text-h1` (28px, DESIGN.md-typeramp) i.p.v. het losstaande 26px — gelijkgetrokken
+              met `PlayerHeader`'s timercijfer (zelfde hero-stat-conventie, zelfde `font-black`
+              i.p.v. de ramp's h1-gewicht, zie de doc-comment daar). */}
+          <div className="font-display text-h1 leading-none font-black text-silver-300">{stat.value}</div>
           <div className="font-body text-[10px] text-fg-muted">{stat.label}</div>
         </div>
       )}

@@ -4,7 +4,7 @@ export interface PhoneScreenProps {
   children: ReactNode
   /** Layout binnen het frame (centreren, `gap`, `text-align`) — nooit padding. */
   className?: string
-  /** Alleen voor wat geen utility heeft, bv. de radiale achtergrond van
+  /** Alleen voor wat geen utility heeft, bv. de achtergrondfoto van
    *  `PlayerEliminatedScreen`. Zelfde ontsnappingsluik als `GlassPanel`. */
   style?: CSSProperties
 }

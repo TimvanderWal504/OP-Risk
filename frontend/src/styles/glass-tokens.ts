@@ -220,8 +220,31 @@ export function glassPanelBlurPx(elevation: GlassElevation, context: GlassPanelC
 // ---------------------------------------------------------------------------
 export const GLASS_FILL_ALPHA = 0.22; // startwaarde — paneel/oppervlak-tint
 export const GLASS_SATURATE_KEEP = 0.55; // fractie van de originele saturatie die behouden blijft (45% ingeleverd)
-export const DICE_FACE_ALPHA = 0.8; // startwaarde — dekkender dan paneel-tint, kleur moet herkenbaar blijven als spelerskleur
 export const GLASS_TARGET_LIGHTNESS = 0.42; // HSL-lightness waar alle zeven dobbelsteen-tints naartoe genormaliseerd worden
+
+/**
+ * DICE_FACE_ALPHA_LIGHT/DARK — vervangt de vroegere, enkelvoudige DICE_FACE_ALPHA
+ * (0.8, bijna-dekkend). 2026-08-18, expliciet op verzoek van de gebruiker: de
+ * dobbelsteen droeg tot nu toe de kleuridentiteit via een bijna-vlakke
+ * spelerskleur-vulling; dat verschuift naar de rand (bestaande 60%-alpha
+ * `border`) en de pip-gloed (`DICE_PIP_GLOW_ALPHA` hieronder), zodat de vulling
+ * zelf "stiller" kan — het gevechtsbeeld moet er vaag doorheen zichtbaar
+ * blijven. Twee stops i.p.v. één: een diagonale gradient (135deg) geeft de
+ * glasplaat zelf een gerichte lichtval, dezelfde richting (linksboven) als
+ * `diceGlassShadow` verderop — licht komt van één kant, consistent over alle
+ * glas-lagen van de dobbelsteen. Gemiddelde (~0.365) valt binnen de
+ * opgedragen ~35–45%-band; de twee stops liggen bewust aan weerszijden
+ * daarvan i.p.v. beide in het midden, anders zou de gradient nauwelijks
+ * zichtbaar zijn. GLASS_TARGET_LIGHTNESS-normalisatie (zie luminantie-
+ * bevinding hierboven) blijft ongewijzigd op beide stops toegepast — de
+ * argumentatie daar (contrast van de opake `dicePip`-vulling tegen de
+ * surface) blijft onverkort geldig: de pip zelf blijft, ook na de
+ * "ingedrukte putje"-restyling verderop, een volledig ondoorzichtige laag
+ * bovenop een eigen ondoorzichtige achtergrond (zie `dicePipRecessedHighlight`),
+ * nooit vermengd met wat er via de surface heen schemert.
+ */
+export const DICE_FACE_ALPHA_LIGHT = 0.45; // top-links gradient-stop — dekkender, geeft de lichtkant
+export const DICE_FACE_ALPHA_DARK = 0.28; // rechts-onder gradient-stop — transparanter, geeft de schaduwkant
 
 function hexToRgb(hex: string) {
   const n = parseInt(hex.slice(1), 16);
@@ -303,47 +326,118 @@ export const playerGlassColors: Record<PlayerColorId, string> = Object.fromEntri
 ) as Record<PlayerColorId, string>;
 
 /**
- * Dobbelsteen-gezicht-tint — zelfde afleiding, hogere alpha (DICE_FACE_ALPHA)
- * én lightness genormaliseerd naar GLASS_TARGET_LIGHTNESS zodat de zeven
- * kleuren dicht genoeg bij elkaar liggen voor één constante dicePip-set
- * (zie luminantie-bevinding hierboven; restspreiding ~0.037–0.127,
- * dicePip.fill houdt daar ≥5:1 contrast tegen).
+ * Dobbelsteen-gezicht-gradient — zelfde afleiding als hierboven, tweemaal
+ * toegepast (DICE_FACE_ALPHA_LIGHT/DARK) en samengevoegd tot één diagonale
+ * `linear-gradient`, lightness genormaliseerd naar GLASS_TARGET_LIGHTNESS
+ * zodat de zeven kleuren dicht genoeg bij elkaar liggen (zie
+ * luminantie-bevinding hierboven).
  */
-export const playerDiceFaceColors: Record<PlayerColorId, string> = Object.fromEntries(
-  (Object.entries(playerColors) as [PlayerColorId, (typeof playerColors)[PlayerColorId]][]).map(
-    ([id, { hex }]) => [id, deriveGlassTint(hex, DICE_FACE_ALPHA, GLASS_SATURATE_KEEP, GLASS_TARGET_LIGHTNESS)],
-  ),
+export function deriveDiceGlassGradient(hex: string): string {
+  const light = deriveGlassTint(hex, DICE_FACE_ALPHA_LIGHT, GLASS_SATURATE_KEEP, GLASS_TARGET_LIGHTNESS);
+  const dark = deriveGlassTint(hex, DICE_FACE_ALPHA_DARK, GLASS_SATURATE_KEEP, GLASS_TARGET_LIGHTNESS);
+  return `linear-gradient(135deg, ${light}, ${dark})`;
+}
+
+export const playerDiceFaceGradients: Record<PlayerColorId, string> = Object.fromEntries(
+  (Object.entries(playerColors) as [PlayerColorId, (typeof playerColors)[PlayerColorId]][]).map(([id, { hex }]) => [
+    id,
+    deriveDiceGlassGradient(hex),
+  ]),
 ) as Record<PlayerColorId, string>;
 
 // ---------------------------------------------------------------------------
-// dice.pip.* — bol met bevel: fill/highlight/shadow constant over alle
-// spelerskleuren, alleen de surface-tint (playerDiceFaceColors) varieert per
-// speler. `fill`/`highlight` zijn bewust volledig ondoorzichtig (alpha 1) —
-// de pip-schijf zelf mag nooit doorschijnend zijn, anders wisselt zijn
-// zichtbare kleur mee met wat er via de vervaagde glas-surface achter de
-// dobbelsteen doorschemert (precies het faalscenario: een licht stuk
-// illustratie achter een translucente surface zou een translucente pip
-// alsnog laten "verdwijnen"). `shadow` is de inset-bevelschaduw BOVENOP de
-// al ondoorzichtige `fill` — die mag wél alpha hebben, want dat is shading
-// binnen de pip-schijf zelf, geen doorkijk naar de achtergrond.
+// dice.pip.* — constant over alle spelerskleuren, alleen de surface-tint
+// (playerDiceFaceGradients) varieert per speler. `fill` is bewust volledig
+// ondoorzichtig (alpha 1) — de pip-schijf zelf mag nooit doorschijnend zijn,
+// anders wisselt zijn zichtbare kleur mee met wat er via de vervaagde
+// glas-surface achter de dobbelsteen doorschemert (precies het faalscenario:
+// een licht stuk illustratie achter een translucente surface zou een
+// translucente pip alsnog laten "verdwijnen"). `dicePipRecessedHighlight`
+// (verderop) legt een radiale, wél-alpha hoogtelicht-laag BOVENOP deze
+// `fill`, nooit ervoor los — dezelfde opaciteits-garantie, alleen intern
+// gelaagd i.p.v. plat. `highlight`/`shadow` (bevel-bolling) zijn met de
+// 2026-08-18-glasoverhaul vervangen door `dicePipRecessedHighlight`/
+// `dicePipRecessedInnerShadow`/`dicePipRecessedRim` (ingedrukt putje i.p.v.
+// bolle knop) — hier verwijderd, niet als dode velden laten staan.
 // ---------------------------------------------------------------------------
 export const dicePip = {
   fill: '#eef2f8', // field-ink-100 (DESIGN.md), volledig dekkend
-  highlight: '#ffffff', // inset top-bevel, volledig dekkend, lichter dan fill
-  shadow: 'rgba(4, 6, 11, 0.55)', // inset bottom-bevel — shading op de opake fill, geen doorkijk
 } as const;
 
 // ---------------------------------------------------------------------------
 // Dice — blur-radius voor de dobbelsteen-surface. Geen eigen GlassElevation
-// (een dobbelsteen is geen paneel/kaart/modal), maar herbruikt dezelfde
-// context-schaal als GlassPanel (tv volle blur, phone gehalveerd — zelfde
-// reden: geen illustratielaag achter de telefoonschermen). Basiswaarde
-// `glassBlur.sm` ("kleine chips/badges op glas") — een dobbelsteen is qua
-// schaal een chip, geen kaartpaneel.
+// (een dobbelsteen is geen paneel/kaart/modal). Eigen, losstaande basiswaarde
+// (DICE_GLASS_BLUR_BASE) i.p.v. hergebruik van `glassBlur.sm` — 2026-08-18 op
+// expliciet verzoek van de gebruiker ("give it its own backdrop-filter"): tot
+// deze wijziging leende de dobbelsteen `glassBlur.sm` (8px, "kleine
+// chips/badges op glas"); nu een eigen waarde, dichter bij `glassBlur.md`,
+// zodat het gevechtsbeeld er merkbaar door refracteert i.p.v. nauwelijks. De
+// context-schaal (tv volle blur, phone gehalveerd — zelfde reden als
+// GlassPanel: geen illustratielaag achter oudere telefoonschermen, en
+// `backdrop-filter` is duur op telefoon-GPU's) blijft ongewijzigd hergebruikt.
+// `saturate` leent nog altijd de gedeelde `glassSaturate` (1.4) — dat is
+// toevallig al exact de opgedragen waarde, dus geen eigen duplicaat nodig.
 // ---------------------------------------------------------------------------
+const DICE_GLASS_BLUR_BASE = 12; // px, vóór context-schaal
+
 export function diceGlassBlurPx(context: GlassPanelContext): number {
-  return Math.round(glassBlur.sm * GLASS_CONTEXT_BLUR_SCALE[context]);
+  return Math.round(DICE_GLASS_BLUR_BASE * GLASS_CONTEXT_BLUR_SCALE[context]);
 }
+
+// ---------------------------------------------------------------------------
+// Dice — glasoverhaul (2026-08-18, expliciet op verzoek van de gebruiker).
+// Vier onderdelen, hier als tokens; de vijfde (specular sweep) is puur CSS,
+// zie `.dice-glass-sweep` in `index.css` — een ::before-pseudo-element kan
+// niet via inline React-style, dezelfde reden waarom `.glass-panel` z'n
+// runtime-CSS ook daar staat i.p.v. hier.
+//
+// (1) DICE_FACE_ALPHA_LIGHT/DARK + deriveDiceGlassGradient — hierboven.
+// (2) diceGlassShadow — vaste lichtrichting linksboven (rand-highlights,
+//     top-edge-band) + cast shadow (dobbelsteen "zweeft" los van het paneel
+//     eronder). Losstaand van `glassShadow.raised`: dat is een generieke
+//     paneelschaduw zonder gerichte randlicht-highlights, hier expliciet
+//     gevraagd. Bij een geanimeerde worp (`animation`-prop) staat deze schaduw
+//     op de binnenste, niet-roterende... eigenlijk wél meeroterende `surface`-
+//     div (frontend/CLAUDE.md verbiedt `animation` sámen met `backdrop-filter`
+//     op één element, zie Dice.tsx-doc-comment — de rotatie zelf zit op de
+//     buitenste wrapper). Gevolg: tijdens de worp draait de lichtrichting
+//     zichtbaar mee (want CSS-transforms op een voorouder transformeren ook
+//     de box-shadow van een kind), maar elke tumble-keyframe eindigt op
+//     `rotate(0)` (motion.ts, bevroren letterlijke export-waarden — niet hier
+//     aangepast) — dus in rust (vóór en na elke worp) staat het licht altijd
+//     linksboven. Fysiek plausibel voor een tolend object; niet losgekoppeld
+//     via een tegen-rotatie-laag, dat zou de bevroren keyframes moeten
+//     opsplitsen in een aparte translate/rotate-laag — buiten scope hier.
+// (3) specular sweep — zie CSS-opmerking hierboven.
+// (4) dicePipRecessed* + dicePipGlow — vervangt de vlakke bevel-pip door een
+//     ingedrukt putje + spelerskleur-gloed. De radiale hoogtelicht-laag zelf
+//     heeft alpha (.95→.7 aan de rand), maar wordt in Dice.tsx altijd als
+//     tweede `background`-laag BOVEN de bestaande, volledig ondoorzichtige
+//     `dicePip.fill` gerenderd — de pip als geheel blijft dus 100% dekkend,
+//     zelfde invariant als hierboven gedocumenteerd bij `dicePip` (nooit
+//     vermengd met wat er via de surface heen schemert), alleen nu intern
+//     gelaagd i.p.v. plat.
+// ---------------------------------------------------------------------------
+export const diceGlassShadow =
+  'inset 1px 1px 0 rgba(255,255,255,.45), ' + // lit edge (linksboven)
+  'inset -1px -1px 0 rgba(0,0,0,.25), ' + // shadow edge (rechtsonder)
+  'inset 0 3px 0 rgba(255,255,255,.18), ' + // top-edge-band, suggereert plaatdikte
+  '0 8px 20px -6px rgba(0,0,0,.45)'; // cast shadow — de dobbelsteen zweeft los van het paneel
+
+export const dicePipRecessedHighlight =
+  'radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(255,255,255,.7))';
+export const dicePipRecessedInnerShadow = 'rgba(0,0,0,.35)';
+export const dicePipRecessedRim = 'rgba(255,255,255,.3)';
+
+/** Outer bloom van de pip — spelerskleur, volle saturatie (geen GLASS_SATURATE_KEEP-afzwakking, de gloed mag juist wél de volle merkkleur tonen). */
+const DICE_PIP_GLOW_ALPHA = 0.6;
+
+export function dicePipGlow(hex: string): string {
+  return deriveGlassTint(hex, DICE_PIP_GLOW_ALPHA, 1);
+}
+
+/** `transform` voor de dobbelsteen-surface — suggereert een glasplaat met dikte, los van de worp-animatie (die op de buitenste wrapper zit, zie hierboven). */
+export const diceGlassPerspective = 'perspective(400px) rotateX(5deg)';
 
 // ---------------------------------------------------------------------------
 // Instructie-kicker (Fase 3b, CHROME) — TV-only chip boven het bord tijdens

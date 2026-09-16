@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-11T00:00:00Z",
+  "generatedAt": "2026-08-18T00:00:00Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -104,6 +104,13 @@
       "css": ".ds-badge-pitch { display: inline-flex; padding: 6px 16px; border-radius: 9999px; background: #a1c23a; color: #04060b; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }"
     },
     {
+      "name": "Dice",
+      "kind": "custom",
+      "description": "Seat-colored die: its own glass surface (dedicated 12px blur base, not a GlassPanel elevation tier), a two-stop 135° seat-color gradient fill, a 60%-alpha seat-color border, a fixed top-left light shadow + slight perspective tilt, and recessed (not embossed) pips with a seat-colored outer glow.",
+      "html": "<div class=\"ds-dice\"><span class=\"ds-dice-pip\"></span></div>",
+      "css": ".ds-dice { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 10px; background: linear-gradient(135deg, rgba(166,48,78,0.45), rgba(166,48,78,0.28)); border: 1px solid color-mix(in srgb, #a6304e 60%, transparent); box-shadow: inset 1px 1px 0 rgba(255,255,255,.45), inset -1px -1px 0 rgba(0,0,0,.25), inset 0 3px 0 rgba(255,255,255,.18), 0 8px 20px -6px rgba(0,0,0,.45); backdrop-filter: blur(12px) saturate(1.4); -webkit-backdrop-filter: blur(12px) saturate(1.4); transform: perspective(400px) rotateX(5deg); } .ds-dice-pip { width: 14px; height: 14px; border-radius: 9999px; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), rgba(255,255,255,.7)), #eef2f8; box-shadow: inset 0 -1px 2px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.3), 0 0 6px rgba(166,48,78,0.6); }"
+    },
+    {
       "name": "Selectable Option",
       "kind": "custom",
       "description": "Radio-semantics card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Used for color pickers, role lists, and territory/army selection.",
@@ -145,7 +152,7 @@
     "donts": [
       "Don't reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04). Caution Amber is the one exception, since it's a functional status color, not decoration.",
       "Don't reach for the legacy flat tonal overlay (--atlas-t0X) as a first choice for a new card/panel/row — that's the retired default; glass is. Valid only as a defined fallback route, never a stylistic alternative.",
-      "Don't apply a backdrop-filter/blur value outside glassBlur's three steps (8/16/28px) or invent a new elevation tier beyond base/raised/overlay — extend glass-tokens.ts, don't hardcode a one-off.",
+      "Don't apply a backdrop-filter/blur value outside glassBlur's three steps (8/16/28px) or invent a new elevation tier beyond base/raised/overlay — extend glass-tokens.ts, don't hardcode a one-off. Dice's own DICE_GLASS_BLUR_BASE is the one documented exception: a die is chip-scale, not a panel/card/modal.",
       "Don't add a background color or tint to a GlassPanel/glass Button — glass is clear by design; the glass-surface-*-opaque hexes exist only for the three defined fallback cases, never as a stylistic tint.",
       "Don't try to fix on-glass legibility by picking a different/darker gray or lightening one further up the standard gray scale — use the opacity-stepped --glass-fg-* + text-shadow treatment instead.",
       "Don't assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells today; the glass layer has no light-mode tints at all yet.",

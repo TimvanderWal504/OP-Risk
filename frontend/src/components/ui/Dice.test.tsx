@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Dice } from './Dice'
-import { dicePip } from '../../styles/glass-tokens'
+import { dicePip, dicePipRecessedHighlight } from '../../styles/glass-tokens'
 import { expectedColorMixBorder } from '../../test/cssColorMix'
 
 describe('Dice', () => {
@@ -16,10 +16,13 @@ describe('Dice', () => {
     expect(die.style.border).toBe(expectedColorMixBorder('#ca3c25'))
   })
 
-  it('gebruikt de constante, volledig ondoorzichtige dice.pip-kleur voor elke pip, ongeacht de spelerskleur', () => {
+  it('legt de recessed hoogtelicht-laag over de constante, volledig ondoorzichtige dice.pip-kleur, ongeacht de spelerskleur', () => {
     render(<Dice value={1} colorHex="#ca3c25" context="tv" size={104} radius={22} padding={15} gap={6} pipSize={17} />)
     const die = screen.getByRole('img', { name: 'Dobbelsteen 1' })
-    expect(die.querySelector('span > span')).toHaveStyle({ background: dicePip.fill })
+    // De pip blijft 100% dekkend: de radiale hoogtelicht-laag (met eigen alpha) zit ALTIJD
+    // bovenop de opake `dicePip.fill`-laag, nooit los, zodat de pip nooit vermengt met wat
+    // er via de surface heen schemert (zie dicePipRecessedHighlight-doc-comment).
+    expect(die.querySelector('span > span')).toHaveStyle({ background: `${dicePipRecessedHighlight}, ${dicePip.fill}` })
   })
 
   it('valt terug op een neutrale glas-surface als colorHex geen hex-kleur is (nog geen speler bekend)', () => {

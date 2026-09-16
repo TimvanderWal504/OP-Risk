@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
-import { shadowGlowPitch } from '../../styles/design-tokens'
 import {
   buttonPrimaryGlassTintOpaque,
   glassBorder,
@@ -43,7 +42,7 @@ export function Button({
     '--glass-bg-opaque': isPrimary ? buttonPrimaryGlassTintOpaque : glassSurfaceOpaque.base,
     '--glass-border': isPrimary ? glassBorder : 'var(--border-strong)',
     '--glass-inner-highlight': glassInnerHighlight,
-    '--glass-shadow': isPrimary ? shadowGlowPitch : 'none',
+    '--glass-shadow': 'none',
     '--glass-filter': `blur(${BUTTON_BLUR_PX}px) saturate(${glassSaturate})`,
   } as CSSProperties
 
