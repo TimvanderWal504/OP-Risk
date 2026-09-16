@@ -31,9 +31,9 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
-    private WebApplicationFactory<Program> CreateFactory() =>
+    private WebApplicationFactory<Program> CreateFactory(IRandomSource? randomSource = null) =>
         ApiTestHost.Create(
-            postgres, services => services.AddSingleton<IRandomSource>(new SequenceRandomSource()));
+            postgres, services => services.AddSingleton<IRandomSource>(randomSource ?? new SequenceRandomSource()));
 
     private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
         ApiTestHost.ConnectAsync(factory, client);
@@ -61,7 +61,11 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
         string? aliceMissionId = null,
         bool aliceOwnsRestOfMap = false,
         bool bobIsEliminated = false,
-        string? bobEliminatedByPlayerId = null)
+        string? bobEliminatedByPlayerId = null,
+        bool hasConqueredThisTurn = false,
+        IReadOnlyList<string>? drawPileCardIds = null,
+        IReadOnlyList<string>? discardPileCardIds = null,
+        IReadOnlyList<string>? aliceHandCardIds = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -79,8 +83,15 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
         var aliceMission = aliceMissionId is null ? null : map.Missions.Single(mission => mission.Id == aliceMissionId);
 
+        // Uit het echte, opgebouwde deck gehaald i.p.v. losstaand geconstrueerd: CardDrawn en
+        // DeckShuffled zoeken kaarten op in map.Deck/state.Deck.DrawPile, dus een zelfverzonnen
+        // symbool zou daar niet mee overeenkomen (zelfde valkuil als in Persistence.Tests).
+        var cardsById = map.Deck.ToDictionary(card => card.Id);
+
         var alice = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: aliceMission, IsEliminated: false);
+            "p1", "Alice", "red",
+            Hand: [.. (aliceHandCardIds ?? []).Select(id => cardsById[id])],
+            RoleId: null, Mission: aliceMission, IsEliminated: false);
         var bob = new Player(
             "p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null,
             IsEliminated: bobIsEliminated, EliminatedByPlayerId: bobEliminatedByPlayerId);
@@ -109,8 +120,11 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
             turnOrder: ["p1", "p2"],
             turnState: new TurnState(
                 "p1", turnPhase, new PhaseTimer(settings.TurnTimer, DateTimeOffset.UtcNow), pendingCombat,
-                ArmiesRemaining: armiesRemaining),
-            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+                ArmiesRemaining: armiesRemaining, HasConqueredThisTurn: hasConqueredThisTurn),
+            deck: new DeckState(
+                DrawPile: [.. (drawPileCardIds ?? []).Select(id => cardsById[id])],
+                DiscardPile: [.. (discardPileCardIds ?? []).Select(id => cardsById[id])],
+                NextTradeValue: 4),
             activeEffects: []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
@@ -351,5 +365,113 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
             connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1"));
 
         Assert.Contains("common.wrongTurnPhase", exception.Message);
+    }
+
+    /// <summary>
+    /// FO §5.2: een beurt met minstens één verovering trekt aan het einde 1 kaart van de
+    /// bovenkant van de (al geschudde) trekstapel — nogmaals dobbelen is niet nodig, dus
+    /// <see cref="SequenceRandomSource"/> hoeft hier geen waarden te bevatten.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_MetVeroverdGebiedDezeBeurt_TrektEenKaartVanDeTrekstapel()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Fortify, albertaOwnerId: "p2", albertaArmies: 1,
+            hasConqueredThisTurn: true, drawPileCardIds: ["card-japan", "card-china"]);
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var alice = updated.Players.Single(player => player.Id == "p1");
+        Assert.Equal(["card-japan"], alice.Hand.Select(card => card.Id));
+    }
+
+    [Fact]
+    public async Task EndTurn_ZonderVeroverdGebiedDezeBeurt_TrektGeenKaart()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Fortify, albertaOwnerId: "p2", albertaArmies: 1,
+            hasConqueredThisTurn: false, drawPileCardIds: ["card-japan", "card-china"]);
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var alice = updated.Players.Single(player => player.Id == "p1");
+        Assert.Empty(alice.Hand);
+    }
+
+    /// <summary>
+    /// FO §4.4: raakt de trekstapel leeg tijdens het spel, dan wordt de aflegstapel
+    /// hertschud tot de nieuwe trekstapel — ook wanneer dat nodig is om de kaart van een
+    /// veroverende beurt te kunnen trekken.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_MetLegeTrekstapelEnGevuldeAflegstapel_HerschudtEnTrektDeBovensteKaart()
+    {
+        // PickRandomSubset over 2 kaarten: i=0 -> Next(0,2)=0 (geen swap), i=1 -> Next(1,2)=1
+        // (enige geldige waarde in dat bereik) — levert de aflegstapel dus terug in dezelfde
+        // volgorde, zodat "card-japan" boven komt te liggen.
+        var random = new SequenceRandomSource([0, 1]);
+        await using var factory = CreateFactory(random);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Fortify, albertaOwnerId: "p2", albertaArmies: 1,
+            hasConqueredThisTurn: true, discardPileCardIds: ["card-japan", "card-china"]);
+
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var alice = updated.Players.Single(player => player.Id == "p1");
+        Assert.Equal(["card-japan"], alice.Hand.Select(card => card.Id));
+    }
+
+    /// <summary>
+    /// Anders dan <see cref="TurnState.HasFortified"/> moet <c>HasConqueredThisTurn</c> een
+    /// fase-overgang binnen dezelfde beurt overleven (Aanvallen → Verplaatsen). Bewezen
+    /// indirect via het kaarttrekken: zou de vlag onderweg resetten, dan zou de latere
+    /// <c>EndTurn</c> niets trekken.
+    /// </summary>
+    [Fact]
+    public async Task HasConqueredThisTurn_OverleeftFaseovergangNaarVerplaatsen()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Attack, albertaOwnerId: "p2", albertaArmies: 1,
+            hasConqueredThisTurn: true, drawPileCardIds: ["card-japan"]);
+
+        await connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1");
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var alice = updated.Players.Single(player => player.Id == "p1");
+        Assert.Equal(["card-japan"], alice.Hand.Select(card => card.Id));
+    }
+
+    /// <summary>
+    /// Beide stapels leeg terwijl niet alle kaarten in een hand zitten kan alleen een bug
+    /// zijn (bv. een spelstream zonder <c>DeckShuffled</c>) — geen stille no-op (src/CLAUDE.md).
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_MetVeroveringEnBeideStapelsOnverwachtLeeg_GooitEenFout()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpStateAsync(
+            factory, TurnPhase.Fortify, albertaOwnerId: "p2", albertaArmies: 1,
+            hasConqueredThisTurn: true);
+
+        await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1"));
     }
 }

@@ -164,10 +164,18 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
                 $"PhaseChanged naar Versterken zonder ArmiesGranted (speler '{@event.PlayerId}').")
             : 0;
 
+        // Anders dan HasFortified moet HasConqueredThisTurn intra-beurt fase-overgangen
+        // overleven (zie doc-comment op TurnState.HasConqueredThisTurn) — alleen een nieuwe
+        // beurt (die altijd in Versterken begint) reset 'm.
+        var hasConqueredThisTurn = @event.TurnPhase == TurnPhase.Reinforce
+            ? false
+            : state.TurnState?.HasConqueredThisTurn ?? false;
+
         return state
             .WithPhase(GamePhase.InProgress)
             .WithTurnState(new TurnState(
-                @event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, ArmiesRemaining: armiesRemaining));
+                @event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, ArmiesRemaining: armiesRemaining,
+                HasConqueredThisTurn: hasConqueredThisTurn));
     }
 
     /// <summary>
@@ -279,10 +287,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>
     /// Alleen het eigendom gaat over — het legeraantal staat door het voorafgaande
-    /// <see cref="CombatResolved"/> al op 0 (zie doc-comment op dit event).
+    /// <see cref="CombatResolved"/> al op 0 (zie doc-comment op dit event). Zet ook
+    /// <see cref="TurnState.HasConqueredThisTurn"/>: deze beurt trekt aan het einde een kaart
+    /// (FO §5.2), ongeacht hoeveel gebieden er in totaal veroverd worden.
     /// </summary>
     public GameState Apply(GameState state, TerritoryConquered @event) =>
-        state.WithTerritory(state.Territory(@event.TerritoryId) with { OwnerPlayerId = @event.PlayerId });
+        state.WithTerritory(state.Territory(@event.TerritoryId) with { OwnerPlayerId = @event.PlayerId })
+            .WithTurnState(state.TurnState! with { HasConqueredThisTurn = true });
 
     /// <summary>
     /// Sluit het gevecht af (FO §5.4: inclusief eventuele meeverplaatsing na verovering) —

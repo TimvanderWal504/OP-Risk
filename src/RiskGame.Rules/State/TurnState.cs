@@ -27,6 +27,14 @@ namespace RiskGame.Rules.State;
 /// waar is. Start op <see langword="false"/> bij elke nieuwe fase-intrede, want <c>PhaseChanged</c>
 /// bouwt altijd een geheel nieuwe <see cref="TurnState"/> op (nooit een <c>with</c> op de oude).
 /// </param>
+/// <param name="HasConqueredThisTurn">
+/// Of deze beurt al minstens één gebied is veroverd (FO §5.2: bepaalt of de beurt aan het
+/// einde een kaart trekt). Anders dan <see cref="HasFortified"/> moet deze vlag wél een
+/// fase-overgang binnen dezelfde beurt overleven (Versterken → Aanvallen → Verplaatsen kunnen
+/// alle drie na een verovering volgen) — <c>PhaseChanged</c>'s vouwregel zet 'm daarom expliciet
+/// over vanuit de vorige <see cref="TurnState"/>, en pas terug op <see langword="false"/> zodra
+/// de nieuwe fase <see cref="TurnPhase.Reinforce"/> is (een beurt begint altijd daar).
+/// </param>
 public sealed record TurnState(
     string ActivePlayerId,
     TurnPhase TurnPhase,
@@ -34,4 +42,5 @@ public sealed record TurnState(
     PendingCombat? PendingCombat,
     AttackEngagement? PausedAttackTarget = null,
     int ArmiesRemaining = 0,
-    bool HasFortified = false);
+    bool HasFortified = false,
+    bool HasConqueredThisTurn = false);

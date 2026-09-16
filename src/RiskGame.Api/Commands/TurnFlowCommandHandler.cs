@@ -1,6 +1,7 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Reinforcement;
@@ -16,11 +17,12 @@ namespace RiskGame.Api.Commands;
 /// (FO §5.2, §5.5). De rules-engine (<see cref="FortifyGuards"/>, <see cref="TurnGuards"/>,
 /// <see cref="TurnPhaseTransitions"/>, <see cref="TurnOrderCalculator"/>,
 /// <see cref="WinConditionEvaluator"/>) bestond al; deze handler rijgt ze aan elkaar, net als
-/// <see cref="AttackCommandHandler"/> dat deed voor Aanvallen. Kaart trekken bij verovering
-/// hoort nog steeds niet bij deze plak (TO §11, latere bouwstap) — de trekstapel wordt nergens
-/// gevuld, zie <see cref="RiskGame.Rules.State.DeckState"/>.
+/// <see cref="AttackCommandHandler"/> dat deed voor Aanvallen. <see cref="EndTurnAsync"/> trekt
+/// ook de kaart na een veroverende beurt (FO §5.2) — <see cref="IRandomSource"/> is daarbij
+/// alleen nodig om de aflegstapel te hertschudden zodra de trekstapel leeg is (TO §4.2); de
+/// trekstapel zelf is bij spelstart al geschud, dus daar wordt niet nogmaals gedobbeld.
 /// </summary>
-public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider timeProvider)
+public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
 {
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
@@ -157,6 +159,33 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, TimeProvider ti
         // getriggerd) en `ReinforcementCalculator` berekent alleen de versterkingspool, zonder
         // `TerritoryOwnership` te muteren. Deze aanname moet herzien worden zodra dat verandert.
         var directWinners = WinConditionEvaluator.DirectWinners(state, playerId);
+
+        // FO §5.2: een beurt met minstens één verovering trekt aan het einde 1 kaart. De
+        // trekstapel is al geschud (taak 1: bij spelstart, of hierbeneden bij een lege
+        // trekstapel) — de bovenste kaart pakken voegt dus geen extra toeval toe.
+        if (state.TurnState!.HasConqueredThisTurn)
+        {
+            var drawPileIds = state.Deck.DrawPile.Select(card => card.Id).ToArray();
+
+            if (drawPileIds.Length == 0 && state.Deck.DiscardPile.Count > 0)
+            {
+                var reshuffled = random.PickRandomSubset(state.Deck.DiscardPile, state.Deck.DiscardPile.Count);
+                drawPileIds = reshuffled.Select(card => card.Id).ToArray();
+                session.Events.Append(gameId, new DeckShuffled(gameId, drawPileIds));
+            }
+
+            if (drawPileIds.Length > 0)
+            {
+                session.Events.Append(gameId, new CardDrawn(gameId, playerId, drawPileIds[0]));
+            }
+            else if (state.Players.Sum(player => player.Hand.Count) != state.Map.Deck.Count)
+            {
+                // Beide stapels leeg terwijl niet alle kaarten in een hand zitten kan alleen een
+                // bug zijn (bv. een stream zonder DeckShuffled bij spelstart) — geen stille no-op.
+                throw new InvalidOperationException(
+                    $"Trekstapel en aflegstapel zijn beide leeg voor spel '{gameId}', maar niet alle kaarten zijn in een hand.");
+            }
+        }
 
         session.Events.Append(gameId, new TurnEnded(gameId, playerId));
 
