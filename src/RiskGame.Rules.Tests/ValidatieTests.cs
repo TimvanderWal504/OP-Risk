@@ -31,7 +31,7 @@ public class ValidatieTests
     private const string GeldigeCards = """
         {
           "themes": { "classic": { "symbol-1": "Infanterie", "joker": "Joker" } },
-          "setRules": { "validSets": ["three-of-a-kind"], "jokerIsWild": true, "ownedTerritoryBonus": 2 },
+          "setRules": { "validSets": ["three-of-a-kind", "one-of-each"], "jokerIsWild": true, "ownedTerritoryBonus": 2 },
           "deck": { "symbols": ["symbol-1"], "jokerCount": 2 }
         }
         """;
@@ -304,6 +304,30 @@ public class ValidatieTests
             """;
 
         Parse(cards: cards).AssertFailure("deck.symbols");
+    }
+
+    /// <summary>
+    /// Duivenhokprincipe (FO §5.2, taak 3): met 5 kaarten over 3 symbolen bestaat er altijd
+    /// een geldige set zolang <c>validSets</c> zowel <c>three-of-a-kind</c> als
+    /// <c>one-of-each</c> toestaat. Ontbreekt één van de twee, dan kan de 5+-inlegverplichting
+    /// een speler met een 2+2+1-verdeling vastzetten — dat moet bij het laden van de
+    /// kaartvariant al falen, niet pas als een speler er ooit tegenaan loopt.
+    /// </summary>
+    [Theory]
+    [InlineData("""["three-of-a-kind"]""")]
+    [InlineData("""["one-of-each"]""")]
+    [InlineData("[]")]
+    public void SetRulesZonderBeideSetsoorten_IsOngeldig(string validSets)
+    {
+        var cards = $$"""
+            {
+              "themes": { "classic": { "symbol-1": "Infanterie", "joker": "Joker" } },
+              "setRules": { "validSets": {{validSets}}, "jokerIsWild": true, "ownedTerritoryBonus": 2 },
+              "deck": { "symbols": ["symbol-1"], "jokerCount": 2 }
+            }
+            """;
+
+        Parse(cards: cards).AssertFailure("setRules.validSets");
     }
 
     [Fact]

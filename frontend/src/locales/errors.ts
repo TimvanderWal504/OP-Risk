@@ -217,6 +217,10 @@ export const errors = {
       nl: "Speler '{{playerId}}' probeert dezelfde kaart meerdere keren in te leveren.",
       en: "Player '{{playerId}}' is trying to submit the same card more than once.",
     },
+    mustTradeInCardsFirst: {
+      nl: 'Je hebt 5 of meer kaarten; je moet eerst een set inleveren voordat je verder kunt.',
+      en: 'You have 5 or more cards; you must trade in a set before you can continue.',
+    },
     invalidCardSetSize: {
       nl: 'Een kaartenset bestaat uit precies {{expected}} kaarten, niet {{actual}}.',
       en: 'A card set consists of exactly {{expected}} cards, not {{actual}}.',

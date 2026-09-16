@@ -310,6 +310,25 @@ public static class MapDefinitionParser
         {
             errors.Add("cards.json: veld 'setRules' ontbreekt.");
         }
+        else
+        {
+            var validSets = setRules.ValidSets ?? [];
+            var hasThreeOfAKind = validSets.Contains(Reinforcement.CardSetEvaluator.ThreeOfAKind);
+            var hasOneOfEach = validSets.Contains(Reinforcement.CardSetEvaluator.OneOfEach);
+
+            if (!hasThreeOfAKind || !hasOneOfEach)
+            {
+                // Duivenhokprincipe (FO §5.2, taak 3): met 5 kaarten over 3 symbolen bestaat er
+                // altijd een geldige set zolang beide setsoorten zijn toegestaan (bv. 2+2+1 geeft
+                // altijd een "one-of-each"). Ontbreekt er één, dan kan de 5+-inlegverplichting
+                // (ReinforceGuards.MustTradeInCards) een speler met zo'n handverdeling vastzetten
+                // — dat is een datafout in deze kaartvariant, geen spelregel-uitkomst.
+                errors.Add(
+                    "cards.json: 'setRules.validSets' moet zowel 'three-of-a-kind' als " +
+                    "'one-of-each' bevatten, anders kan de verplichte inleg bij 5+ kaarten " +
+                    "(FO §5.2) een speler vastzetten.");
+            }
+        }
 
         var themes = file.Themes ?? [];
 

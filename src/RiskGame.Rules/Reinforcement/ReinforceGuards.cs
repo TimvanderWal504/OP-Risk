@@ -27,6 +27,13 @@ public static class ReinforceGuards
             return preconditions;
         }
 
+        // FO §5.2: bij 5+ kaarten gaat inleggen vóór elke andere actie in Versterken —
+        // ook vóór het plaatsen van de al toegekende versterkingspool.
+        if (MustTradeInCards(state, playerId))
+        {
+            return ValidationResult.Failure("reinforce.mustTradeInCardsFirst");
+        }
+
         return amount > 0
             ? ValidationResult.Success()
             : ValidationResult.Failure("reinforce.mustPlaceAtLeastOneArmy");

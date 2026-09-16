@@ -143,6 +143,13 @@ public sealed record CardDto(string Id, string? TerritoryId, string Symbol);
 /// filtert de doellijst hiermee zonder zelf een pad-/effectregel na te bouwen
 /// (frontend/CLAUDE.md: geen spelregels client-side).
 /// </param>
+/// <param name="MustTradeInCards">
+/// Of de actieve speler moet inleggen vóór elke andere actie (FO §5.2: 5+ kaarten in
+/// Versterken) — de telefoon mag deze spelregel niet zelf nabouwen (frontend/CLAUDE.md),
+/// dus de server levert de vlag. Fase-bewust: alleen gevuld in
+/// <see cref="TurnPhaseDto.Reinforce"/>; in elke andere fase <see langword="false"/>. Taak 4
+/// (FO §7, ≥6 kaarten na een eliminatie) breidt dit uit naar <see cref="TurnPhaseDto.Attack"/>.
+/// </param>
 public sealed record TurnStateDto(
     string ActivePlayerId,
     TurnPhaseDto TurnPhase,
@@ -151,7 +158,8 @@ public sealed record TurnStateDto(
     TurnTimerDto? Timer,
     IReadOnlyList<IReadOnlyList<string>> ReachableFortifyGroups,
     ReinforcementBreakdownDto? ReinforcementBreakdown = null,
-    bool HasFortified = false);
+    bool HasFortified = false,
+    bool MustTradeInCards = false);
 
 /// <summary>
 /// Draad-representatie van <see cref="RiskGame.Rules.Reinforcement.ReinforcementBreakdown"/> —

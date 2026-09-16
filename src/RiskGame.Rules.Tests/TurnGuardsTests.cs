@@ -1,3 +1,4 @@
+using RiskGame.Rules.Map;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
 
@@ -5,6 +6,8 @@ namespace RiskGame.Rules.Tests;
 
 public class TurnGuardsTests
 {
+    private static Card Card(string id, string? territoryId, string symbol) => new(id, territoryId, symbol);
+
     [Fact]
     public void EndPhase_VanuitVersterken_IsGeldig()
     {
@@ -13,6 +16,23 @@ public class TurnGuardsTests
         var result = TurnGuards.CanEndPhase(state, "p1");
 
         Assert.True(result.IsSuccess);
+    }
+
+    /// <summary>
+    /// FO §5.2: inleggen bij 5+ kaarten gaat vóór "fase klaar" — zelfs als
+    /// <c>ArmiesRemaining</c> al 0 is (alle toegekende legers zijn geplaatst).
+    /// </summary>
+    [Fact]
+    public void EndPhase_VanuitVersterkenMet5OfMeerKaarten_IsOngeldig()
+    {
+        var hand = Enumerable.Range(0, 5).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce, armiesRemaining: 0);
+
+        var result = TurnGuards.CanEndPhase(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("reinforce.mustTradeInCardsFirst", result.Errors.Single().Code);
     }
 
     [Fact]

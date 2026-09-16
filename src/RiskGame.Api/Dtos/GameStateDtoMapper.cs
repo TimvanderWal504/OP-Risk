@@ -60,7 +60,9 @@ public static class GameStateDtoMapper
                 state.TurnState.TurnPhase == TurnPhase.Reinforce
                     ? ToDto(ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId))
                     : null,
-                state.TurnState.HasFortified);
+                state.TurnState.HasFortified,
+                state.TurnState.TurnPhase == TurnPhase.Reinforce
+                    && ReinforceGuards.MustTradeInCards(state, state.TurnState.ActivePlayerId));
 
         var colors = state.Map.Colors
             .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))

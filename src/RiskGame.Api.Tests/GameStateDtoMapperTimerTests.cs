@@ -53,14 +53,14 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
 
     private static async Task<string> SetUpInProgressStateAsync(
         WebApplicationFactory<Program> factory, PhaseTimer timer, IReadOnlyCollection<string>? ownedTerritoryIds = null,
-        TurnPhase turnPhase = TurnPhase.Reinforce)
+        TurnPhase turnPhase = TurnPhase.Reinforce, IReadOnlyList<Card>? hand = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
         var map = mapSource.Load("standaard-43");
 
         var player = new Player(
-            "p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+            "p1", "Alice", "red", Hand: hand ?? [], RoleId: null, Mission: null, IsEliminated: false);
 
         var owned = ownedTerritoryIds ?? [];
         var territories = map.Territories
@@ -186,5 +186,63 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
         var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
 
         Assert.Null(state.TurnState!.ReinforcementBreakdown);
+    }
+
+    /// <summary>Vijf willekeurige, niet-bestaande kaarten volstaan: alleen het aantal telt (FO §5.2).</summary>
+    private static Card[] DummyHand(int count) =>
+        [.. Enumerable.Range(0, count).Select(i => new Card($"c{i}", TerritoryId: null, Symbol: "symbol-1"))];
+
+    [Fact]
+    public async Task MustTradeInCards_TijdensReinforceMet5OfMeerKaarten_IsWaar()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpInProgressStateAsync(
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()), hand: DummyHand(5));
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.True(state.TurnState!.MustTradeInCards);
+    }
+
+    [Fact]
+    public async Task MustTradeInCards_TijdensReinforceMet4Kaarten_IsOnwaar()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpInProgressStateAsync(
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()), hand: DummyHand(4));
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.False(state.TurnState!.MustTradeInCards);
+    }
+
+    /// <summary>
+    /// Fase-bewust vanaf dag één (taak 3-plan): 5+ kaarten buiten Versterken slaat de vlag
+    /// nog niet aan — taak 4 breidt dit uit met de ≥6-regel in Aanvallen. Zonder deze
+    /// fase-check zou de telefoon in Aanvallen (taak 6) ten onrechte de inleg-stap tonen.
+    /// </summary>
+    [Fact]
+    public async Task MustTradeInCards_BuitenReinforceMet5OfMeerKaarten_IsOnwaar()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpInProgressStateAsync(
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()),
+            turnPhase: TurnPhase.Attack, hand: DummyHand(5));
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.False(state.TurnState!.MustTradeInCards);
     }
 }

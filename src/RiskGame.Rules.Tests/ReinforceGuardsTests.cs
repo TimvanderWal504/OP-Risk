@@ -52,6 +52,24 @@ public class ReinforceGuardsTests
         Assert.False(result.IsSuccess);
     }
 
+    /// <summary>
+    /// FO §5.2: bij 5+ kaarten gaat inleggen vóór elke andere actie in Versterken — ook vóór
+    /// het plaatsen van een al toegekende versterkingspool.
+    /// </summary>
+    [Fact]
+    public void Plaatsen_Met5OfMeerKaarten_IsOngeldig()
+    {
+        var hand = Enumerable.Range(0, 5).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
+        var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
+
+        var result = ReinforceGuards.CanPlaceArmies(state, "p1", "alaska", amount: 2);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("reinforce.mustTradeInCardsFirst", result.Errors.Single().Code);
+    }
+
     [Fact]
     public void MustTradeInCards_MetVijfOfMeerKaarten_IsVerplicht()
     {

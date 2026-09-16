@@ -1,3 +1,4 @@
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -29,9 +30,13 @@ public static class TurnGuards
 
         return state.TurnState!.TurnPhase switch
         {
-            TurnPhase.Reinforce => state.TurnState.ArmiesRemaining == 0
-                ? ValidationResult.Success()
-                : ValidationResult.Failure("turnFlow.armiesRemaining"),
+            // FO §5.2: inleggen bij 5+ kaarten gaat vóór alles, ook vóór "fase klaar" —
+            // zelfde volgorde als ReinforceGuards.CanPlaceArmies.
+            TurnPhase.Reinforce => ReinforceGuards.MustTradeInCards(state, playerId)
+                ? ValidationResult.Failure("reinforce.mustTradeInCardsFirst")
+                : state.TurnState.ArmiesRemaining == 0
+                    ? ValidationResult.Success()
+                    : ValidationResult.Failure("turnFlow.armiesRemaining"),
             TurnPhase.Attack => state.TurnState.PendingCombat is null
                 ? ValidationResult.Success()
                 : ValidationResult.Failure("turnFlow.combatInProgress"),

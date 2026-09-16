@@ -12,8 +12,17 @@ namespace RiskGame.Rules.Reinforcement;
 public static class CardSetEvaluator
 {
     private const int SetSize = 3;
-    private const string ThreeOfAKind = "three-of-a-kind";
-    private const string OneOfEach = "one-of-each";
+
+    /// <summary>
+    /// <c>internal</c> (niet <c>private</c>) omdat <see cref="Map.MapDefinitionParser"/> op
+    /// deze zelfde letterlijke waarde moet valideren (FO §5.2, taak 3: de 5+-inlegverplichting
+    /// mag een speler nooit vastzetten) — één bron van waarheid voor de setsoort-strings i.p.v.
+    /// een tweede, los kopieerbare constante (src/CLAUDE.md, DRY).
+    /// </summary>
+    internal const string ThreeOfAKind = "three-of-a-kind";
+
+    /// <summary>Zie doc-comment op <see cref="ThreeOfAKind"/>.</summary>
+    internal const string OneOfEach = "one-of-each";
 
     public static ValidationResult Validate(CardSetRules rules, IReadOnlyList<Card> cards)
     {

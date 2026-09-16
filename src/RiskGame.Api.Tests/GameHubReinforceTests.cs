@@ -388,4 +388,81 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
 
         Assert.Contains("reinforce.invalidCardSet", exception.Message);
     }
+
+    /// <summary>
+    /// Bouwt een hand van precies 5 kaarten op: een geldige three-of-a-kind (inzetbaar om de
+    /// verplichting op te heffen) plus 2 losse extra kaarten die geen deel uitmaken van die set.
+    /// </summary>
+    private static (Card[] ThreeOfAKind, Card[] Hand) FiveCardHandWithTradeableSet(IReadOnlyList<Card> deck)
+    {
+        var threeOfAKind = ThreeOfAKindFrom(deck);
+        var extras = deck.Where(card => !card.IsJoker && !threeOfAKind.Contains(card)).Take(2).ToArray();
+
+        return (threeOfAKind, [.. threeOfAKind, .. extras]);
+    }
+
+    [Fact]
+    public async Task PlaceReinforcements_Met5OfMeerKaartenInHand_WordtGeweigerd()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var (_, hand) = FiveCardHandWithTradeableSet(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, "p1", "alaska", 1));
+
+        Assert.Contains("reinforce.mustTradeInCardsFirst", exception.Message);
+    }
+
+    /// <summary>
+    /// FO §5.2: inleggen gaat vóór "fase klaar", ook als de toegekende pool al volledig
+    /// geplaatst is (<c>ArmiesRemaining == 0</c>) — anders zou een speler de verplichting
+    /// kunnen omzeilen door gewoon door te spelen.
+    /// </summary>
+    [Fact]
+    public async Task EndPhase_Met5OfMeerKaartenInHandEnArmiesRemainingNul_WordtGeweigerd()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var (_, hand) = FiveCardHandWithTradeableSet(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 0);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<GameStateDto>("EndPhase", gameId, "p1"));
+
+        Assert.Contains("reinforce.mustTradeInCardsFirst", exception.Message);
+    }
+
+    [Fact]
+    public async Task TradeInCards_VerlaagtHandOnder5_HeftDeInlegverplichtingOp()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var (threeOfAKind, hand) = FiveCardHandWithTradeableSet(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var afterTrade = await connection.InvokeAsync<GameStateDto>(
+            "TradeInCards", gameId, "p1", threeOfAKind.Select(card => card.Id).ToArray());
+
+        Assert.False(afterTrade.TurnState!.MustTradeInCards);
+
+        // De blokkade is nu echt op — geen HubException meer.
+        var afterPlace = await connection.InvokeAsync<GameStateDto>(
+            "PlaceReinforcements", gameId, "p1", "alaska", 1);
+
+        Assert.Equal(afterTrade.TurnState.ArmiesRemaining - 1, afterPlace.TurnState!.ArmiesRemaining);
+    }
 }
