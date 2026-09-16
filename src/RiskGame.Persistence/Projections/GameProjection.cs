@@ -17,14 +17,15 @@ namespace RiskGame.Persistence.Projections;
 /// </summary>
 /// <remarks>
 /// Dekt tot nu toe de lobby-fase, de order-roll, de startopstelling, de rol-/missie-
-/// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het volledige
-/// gevechtsarsenaal, kaarttrekken, uitschakeling, de gebeurtenisronde-effecten, het
-/// laatste-kans-venster rond bezit-missies (FO §6.2) en het spel-einde (spel aanmaken,
-/// spelers joinen, kleur kiezen, spelersvolgorde bepalen, gebieden claimen/bijplaatsen,
-/// rol en missie toewijzen, fase-overgangen binnen een beurt, legers versterken, kaarten
-/// inleveren, aanvallen, veroveren, verplaatsen, kaart trekken, een speler uitschakelen,
-/// een gebeurteniseffect toepassen/laten verlopen, een dreigende missie-overwinning
-/// openen/versmallen/laten vervallen, het spel winnen) — een achtste plak.
+/// toewijzing, de beurtstart, de versterkingsfase, kaarteninleg, het (her)schudden van de
+/// trekstapel, het volledige gevechtsarsenaal, kaarttrekken, uitschakeling, de
+/// gebeurtenisronde-effecten, het laatste-kans-venster rond bezit-missies (FO §6.2) en het
+/// spel-einde (spel aanmaken, spelers joinen, kleur kiezen, spelersvolgorde bepalen,
+/// gebieden claimen/bijplaatsen, rol en missie toewijzen, fase-overgangen binnen een beurt,
+/// legers versterken, kaarten inleveren, de trekstapel (her)schudden, aanvallen, veroveren,
+/// verplaatsen, kaart trekken, een speler uitschakelen, een gebeurteniseffect toepassen/
+/// laten verlopen, een dreigende missie-overwinning openen/versmallen/laten vervallen, het
+/// spel winnen) — een achtste plak.
 /// <see cref="OrderRolled"/>, <see cref="TurnEnded"/>, <see cref="DiceRolled"/>,
 /// <see cref="EventCardDrawn"/> en <see cref="MissionCompleted"/> horen daar bewust niet
 /// bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die
@@ -342,6 +343,20 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return state
             .WithPlayer(player with { Hand = [.. player.Hand, card] })
             .WithDeck(state.Deck with { DrawPile = [.. state.Deck.DrawPile.Where(c => c != card)] });
+    }
+
+    /// <summary>
+    /// Vervangt de trekstapel door de genoemde kaarten, in die volgorde; de aflegstapel gaat
+    /// leeg (FO §4.4). Zoekt alleen op in <see cref="Map.MapDefinition.Deck"/> — spelershanden
+    /// en (bij spelstart, wanneer de aflegstapel toch al leeg is) de rest van de aflegstapel
+    /// staan hier niet los van vermeld en blijven dus vanzelf onaangeroerd.
+    /// </summary>
+    public GameState Apply(GameState state, DeckShuffled @event)
+    {
+        var cardsById = state.Map.Deck.ToDictionary(card => card.Id);
+        var drawPile = @event.CardIds.Select(id => cardsById[id]).ToArray();
+
+        return state.WithDeck(state.Deck with { DrawPile = drawPile, DiscardPile = [] });
     }
 
     /// <summary>

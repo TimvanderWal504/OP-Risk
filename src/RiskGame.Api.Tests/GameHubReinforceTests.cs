@@ -32,12 +32,14 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
-    // Zelfde volgorde als GameHubSetupTests: 2 trekkingen voor SecretMissions, dan wint Alice de
-    // order-roll altijd meteen, zodat TurnOrder vaststaat.
+    // Zelfde volgorde als GameHubSetupTests: 2 trekkingen voor SecretMissions, dan
+    // DeckShuffleFiller.Values voor StartGame's deck-shuffle, dan wint Alice de order-roll
+    // altijd meteen, zodat TurnOrder vaststaat.
     private WebApplicationFactory<Program> CreateFactory() =>
         ApiTestHost.Create(
             postgres,
-            services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
+            services => services.AddSingleton<IRandomSource>(
+                new SequenceRandomSource([0, 1, .. DeckShuffleFiller.Values, 6, 4, 3, 2])));
 
     private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
         ApiTestHost.ConnectAsync(factory, client);

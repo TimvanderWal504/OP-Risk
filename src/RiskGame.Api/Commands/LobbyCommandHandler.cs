@@ -187,6 +187,13 @@ public sealed class LobbyCommandHandler(
             }
         }
 
+        // Volledig deck schudden (FO §4.4): de trekstapel moet bij spelstart al gevuld zijn,
+        // niet pas bij de eerste kaarttrekking. Loopt via dezelfde IRandomSource als de
+        // toewijzingen hierboven — een volledige PickRandomSubset (count == Deck.Count) is een
+        // complete Fisher-Yates, geen apart schud-algoritme nodig.
+        var shuffledDeck = random.PickRandomSubset(state.Map.Deck, state.Map.Deck.Count);
+        session.Events.Append(gameId, new DeckShuffled(gameId, shuffledDeck.Select(card => card.Id).ToArray()));
+
         session.Events.Append(gameId, new GameStarted(gameId));
         await session.SaveChangesAsync();
 

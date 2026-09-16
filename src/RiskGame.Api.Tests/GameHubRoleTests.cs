@@ -134,9 +134,9 @@ public sealed class GameHubRoleTests(PostgresFixture postgres)
     public async Task ClaimTerritory_OpEigenRolHerkomstland_WordtGeweigerd()
     {
         // Alice: 6+4=10, Bob: 3+2=5 — geen gelijkspel, meteen een winnaar; Alice claimt dus
-        // als eerste. Geen SecretMissions in deze settings, dus geen extra trekkingen vóór
-        // de order-roll-dobbelstenen.
-        var random = new SequenceRandomSource(6, 4, 3, 2);
+        // als eerste. Geen SecretMissions in deze settings (dus geen missie-trekkingen), wel
+        // DeckShuffleFiller.Values voor StartGame's deck-shuffle, vóór de order-roll-dobbelstenen.
+        var random = new SequenceRandomSource([.. DeckShuffleFiller.Values, 6, 4, 3, 2]);
         await using var factory = CreateFactory(random);
         using var client = factory.CreateClient();
         var gameId = await CreateGameAsync(client, ChooseSettings);

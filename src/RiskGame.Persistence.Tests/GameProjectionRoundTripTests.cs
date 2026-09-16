@@ -40,9 +40,12 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
         await using var session = store.LightweightSession();
 
+        var deckIds = mapSource.Load("standaard-43").Deck.Select(card => card.Id).ToArray();
+
         session.Events.StartStream<GameState>(
             gameId,
             new GameCreated(gameId, "standaard-43", Settings),
+            new DeckShuffled(gameId, deckIds),
             new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
             new ColorChosen(gameId, "p1", "red"),
             new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
@@ -87,7 +90,12 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.NotNull(live);
         Assert.NotNull(replayed);
 
-        AssertIdenticalGameState(live!, replayed!);
+        // 43 gebiedskaarten + 2 jokers (FO §4.4); deze stream bevat geen CardDrawn, dus alle
+        // 45 staan nog op de trekstapel.
+        Assert.Equal(45, live!.Deck.DrawPile.Count);
+        Assert.Empty(live.Deck.DiscardPile);
+
+        AssertIdenticalGameState(live, replayed!);
     }
 
     /// <summary>
@@ -376,6 +384,100 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.NotNull(reloaded);
         Assert.Equal([drawnCard], reloaded!.Player("p1").Hand);
         Assert.Equal([remainingCard], reloaded.Deck.DrawPile);
+    }
+
+    /// <summary>
+    /// <see cref="DeckShuffled"/> bij spelstart (FO §4.4): de trekstapel wordt gevuld met alle
+    /// 45 kaarten van <c>standaard-43</c>, in precies de door het event meegegeven volgorde —
+    /// de vouwregel schudt zelf niets, dat is al gebeurd vóór het event ontstond.
+    /// </summary>
+    [Fact]
+    public async Task DeckShuffled_VultDeVolledigeTrekstapelInDeGegevenVolgordeEnOverleeftEenMartenRoundTrip()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        // Omgekeerde volgorde t.o.v. Map.Deck, zodat een vouwregel die per ongeluk toch de
+        // eigen volgorde van Map.Deck zou gebruiken (i.p.v. die van het event) hier zou omvallen.
+        var shuffledIds = map.Deck.Select(card => card.Id).Reverse().ToArray();
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.Lobby,
+            Settings,
+            players: [],
+            territories: [],
+            turnOrder: [],
+            turnState: null,
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(initialState, new DeckShuffled(gameId, shuffledIds));
+
+        Assert.Equal(45, result.Deck.DrawPile.Count);
+        Assert.Equal(shuffledIds, result.Deck.DrawPile.Select(card => card.Id));
+        Assert.Empty(result.Deck.DiscardPile);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await store.Storage.ApplyAllConfiguredChangesToDatabaseAsync();
+
+        await using var session = store.LightweightSession();
+
+        session.Store(result);
+        await session.SaveChangesAsync();
+
+        var reloaded = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(shuffledIds, reloaded!.Deck.DrawPile.Select(card => card.Id));
+        Assert.Empty(reloaded.Deck.DiscardPile);
+    }
+
+    /// <summary>
+    /// Hertschudden (FO §4.4, lege trekstapel): <see cref="DeckShuffled.CardIds"/> hoeft niet
+    /// het volledige deck te zijn — alleen de kaarten die op dat moment de aflegstapel vormen.
+    /// De vouwregel raakt spelershanden nergens aan: een kaart die iemand al getrokken had
+    /// blijft onaangeroerd, ook al staat hij niet in de nieuwe lijst.
+    /// </summary>
+    [Fact]
+    public void DeckShuffled_MetEenDeelverzameling_LaatKaartenInHandenOngemoeid()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+
+        var handCard = new Rules.Map.Card("card-japan", "japan", "symbol-2");
+        var discardedCard1 = new Rules.Map.Card("card-china", "china", "symbol-3");
+        var discardedCard2 = new Rules.Map.Card("card-brazil", "brazil", "symbol-3");
+
+        var player = new Player(
+            "p1", "Alice", "red", Hand: [handCard],
+            RoleId: null, Mission: null, IsEliminated: false);
+
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories: [],
+            turnOrder: ["p1"],
+            turnState: null,
+            deck: new DeckState(
+                DrawPile: [], DiscardPile: [discardedCard1, discardedCard2], NextTradeValue: 6),
+            activeEffects: []);
+
+        var projection = new GameProjection(mapSource);
+        var result = projection.Apply(
+            initialState,
+            new DeckShuffled(gameId, [discardedCard2.Id, discardedCard1.Id]));
+
+        Assert.Equal([discardedCard2, discardedCard1], result.Deck.DrawPile);
+        Assert.Empty(result.Deck.DiscardPile);
+        Assert.Equal([handCard], result.Player("p1").Hand);
     }
 
     /// <summary>
@@ -778,6 +880,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             state = @event.Data switch
             {
                 GameCreated created => projection.Create(created),
+                DeckShuffled deckShuffled => projection.Apply(state!, deckShuffled),
                 PlayerJoined joined => projection.Apply(state!, joined),
                 ColorChosen chosen => projection.Apply(state!, chosen),
                 OrderRolled => state!,

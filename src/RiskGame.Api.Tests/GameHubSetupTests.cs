@@ -36,12 +36,14 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         EventsEnabled: false);
 
     // De eerste 2 waarden gaan naar StartGame's missietoewijzing (WinCondition.SecretMissions,
-    // 2 spelers = 2 trekkingen); daarna wint Alice de order-roll altijd meteen (10 tegen 5),
-    // zodat TurnOrder vaststaat.
+    // 2 spelers = 2 trekkingen), dan DeckShuffleFiller.Values voor StartGame's deck-shuffle
+    // (zie die doc-comment); daarna wint Alice de order-roll altijd meteen (10 tegen 5), zodat
+    // TurnOrder vaststaat.
     private WebApplicationFactory<Program> CreateFactory() =>
         ApiTestHost.Create(
             postgres,
-            services => services.AddSingleton<IRandomSource>(new SequenceRandomSource(0, 1, 6, 4, 3, 2)));
+            services => services.AddSingleton<IRandomSource>(
+                new SequenceRandomSource([0, 1, .. DeckShuffleFiller.Values, 6, 4, 3, 2])));
 
     private static Task<HubConnection> ConnectAsync(WebApplicationFactory<Program> factory, HttpClient client) =>
         ApiTestHost.ConnectAsync(factory, client);
@@ -77,6 +79,37 @@ public sealed class GameHubSetupTests(PostgresFixture postgres)
         Assert.Equal(alice.PlayerId, bobRoll.State.SetupState?.ActivePlayerId);
 
         return (gameId, alice.PlayerId, bob.PlayerId, bobRoll.State);
+    }
+
+    /// <summary>
+    /// FO §4.4: <c>StartGame</c> schudt de trekstapel meteen, niet pas bij de eerste
+    /// kaarttrekking. Nog geen enkel scherm consumeert de trekstapel zelf (alleen
+    /// <c>PlayerDto.Hand</c> gaat over de draad), dus dit toetst de server-state rechtstreeks
+    /// via de store in plaats van via een DTO-veld dat er niet hoort te zijn (CLAUDE.md:
+    /// het wire-contract loopt niet vooruit op een scherm dat er nog niet is).
+    /// </summary>
+    [Fact]
+    public async Task StartGame_VultDeTrekstapelMetHetVolledigeDeck()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await CreateGameAsync(client);
+        var alice = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+        var bob = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Bob");
+        await connection.InvokeAsync<GameStateDto>("ChooseColor", gameId, alice.PlayerId, "red");
+        await connection.InvokeAsync<GameStateDto>("ChooseColor", gameId, bob.PlayerId, "blue");
+        await connection.InvokeAsync<GameStateDto>("StartGame", gameId, alice.PlayerId);
+
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(state);
+        Assert.Equal(45, state!.Deck.DrawPile.Count);
+        Assert.Empty(state.Deck.DiscardPile);
+        Assert.Equal(state.Map.Deck.Select(card => card.Id).ToHashSet(), state.Deck.DrawPile.Select(card => card.Id).ToHashSet());
     }
 
     [Fact]
