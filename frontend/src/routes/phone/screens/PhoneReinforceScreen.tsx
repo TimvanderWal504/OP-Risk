@@ -16,7 +16,9 @@ export function PhoneReinforceScreen({
   me,
   territoryCatalog,
   placeReinforcements,
+  tradeInCards,
   endPhase,
+  error,
 }: PhoneScreenProps) {
   const { t } = useTranslation('reinforce')
 
@@ -24,7 +26,7 @@ export function PhoneReinforceScreen({
     return <PhonePlaceholderScreen />
   }
 
-  const { activePlayerId, armiesRemaining, reinforcementBreakdown } = state.turnState
+  const { activePlayerId, armiesRemaining, reinforcementBreakdown, mustTradeInCards } = state.turnState
 
   if (activePlayerId !== playerId) {
     const activePlayer = state.players.find((player) => player.id === activePlayerId)
@@ -37,6 +39,7 @@ export function PhoneReinforceScreen({
 
   const myTerritories = state.territories.filter((territory) => territory.ownerPlayerId === playerId)
   const myColor = state.colors.find((color) => color.id === me.colorId) ?? null
+  const myTerritoryIds = new Set(myTerritories.map((territory) => territory.territoryId))
 
   return (
     <PlaceReinforcementStep
@@ -46,12 +49,17 @@ export function PhoneReinforceScreen({
       territoryCatalog={territoryCatalog}
       armiesLeft={armiesRemaining}
       breakdown={reinforcementBreakdown}
+      hand={me.hand}
+      myTerritoryIds={myTerritoryIds}
+      mustTradeInCards={mustTradeInCards}
       onConfirmPlacements={async (placements) => {
         for (const placement of placements) {
           await placeReinforcements(placement.territoryId, placement.amount)
         }
       }}
+      onTradeInCards={tradeInCards}
       onEndPhase={endPhase}
+      error={error}
     />
   )
 }

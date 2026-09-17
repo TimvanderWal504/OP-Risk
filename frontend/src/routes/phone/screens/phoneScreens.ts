@@ -36,6 +36,8 @@ export interface PhoneScreenProps {
   claimTerritory: (territoryId: string) => Promise<void>
   placeInitialArmy: (territoryId: string) => Promise<void>
   placeReinforcements: (territoryId: string, amount: number) => Promise<void>
+  /** Kaarten inleveren (FO §4.4/§5.2/§7) — zelfde fire-and-forget-patroon als `placeReinforcements`. */
+  tradeInCards: (cardIds: string[]) => Promise<void>
   endPhase: () => Promise<void>
   /** Narratieve gevechts-broadcastdata (attacker/defender-worpen + resultaat), zie
    *  `useCombatBroadcast.ts`. Alleen relevant tijdens `TurnPhaseDto.Attack`. */

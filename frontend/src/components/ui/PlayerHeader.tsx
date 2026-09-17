@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { PlayerAvatar } from './PlayerAvatar'
 import { GlassPanel } from './GlassPanel'
 import { CardsIcon, CrownIcon, InfoIcon, MissionIcon } from './icons'
+import { glassBadgeBorder } from '../../styles/glass-tokens'
 
 export interface PlayerHeaderAction {
   /** Een echt icoon-element (SVG), geen tekst-glyph — zie `icons.tsx`/DESIGN.md's emoji-verbod. */
@@ -11,6 +12,16 @@ export interface PlayerHeaderAction {
   onClick?: () => void
   /** Actief tabblad (bv. het open bottom-sheet-tabblad). */
   active?: boolean
+  /**
+   * Tabular-numeral teller in de hoek van het icoon (bv. handaantal op "Mijn kaarten") —
+   * alleen zichtbaar bij `>= 1` (Invisible Design Rule): niets te melden bij 0 is geen badge,
+   * geen "0". Geen tekst-suffix op `label` zelf: een teller in een label leest als onderdeel
+   * van de naam, zie de "Mijn kaarten"-design-brief.
+   */
+  badgeCount?: number
+  /** `'default'` (silver-outline) of `'warning'` (Caution Amber — de ene toegestane
+   *  amber-toepassing, bv. een verplichte kaarteninleg). */
+  badgeVariant?: 'default' | 'warning'
 }
 
 export interface PlayerHeaderProps {
@@ -122,7 +133,7 @@ export function PlayerHeader({
               onClick={action.onClick}
               className="flex flex-1 flex-col items-center gap-1 rounded-[12px] border border-silver-600 bg-silver-400/12 px-1 py-2 text-xs font-bold text-silver-300"
             >
-              {action.icon}
+              <ActionIcon action={action} />
               {action.label}
             </button>
           ) : (
@@ -132,7 +143,7 @@ export function PlayerHeader({
                 onClick={action.onClick}
                 className="flex w-full flex-col items-center gap-1 px-1 py-2 text-xs font-bold text-fg-secondary"
               >
-                {action.icon}
+                <ActionIcon action={action} />
                 {action.label}
               </button>
             </GlassPanel>
@@ -140,5 +151,30 @@ export function PlayerHeader({
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Icoon + optionele hoek-badge (bv. handaantal), gedeeld tussen de `active`- en
+ * default-variant van een actieknop hierboven — anders zou de badge-opmaak op twee plekken
+ * los herhaald moeten worden.
+ */
+function ActionIcon({ action }: { action: PlayerHeaderAction }) {
+  const badgeCount = action.badgeCount ?? 0
+
+  return (
+    <span className="relative inline-flex">
+      {action.icon}
+      {badgeCount > 0 && (
+        <span
+          className={`absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-[3px] font-body text-[10px] font-extrabold text-ink-950 tabular-nums ${
+            action.badgeVariant === 'warning' ? 'bg-warning' : 'bg-silver-400'
+          }`}
+          style={{ border: `1px solid ${action.badgeVariant === 'warning' ? 'var(--warning)' : glassBadgeBorder}` }}
+        >
+          {badgeCount}
+        </span>
+      )}
+    </span>
   )
 }

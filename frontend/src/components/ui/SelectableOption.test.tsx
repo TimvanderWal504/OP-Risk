@@ -31,4 +31,16 @@ describe('SelectableOption', () => {
     await userEvent.click(option)
     expect(onSelect).not.toHaveBeenCalled()
   })
+
+  it('rendert als checkbox i.p.v. radio wanneer meerdere tegels tegelijk selecteerbaar moeten zijn', () => {
+    render(
+      <SelectableOption selected role="checkbox" onSelect={vi.fn()}>
+        Kaart 1
+      </SelectableOption>,
+    )
+
+    const option = screen.getByRole('checkbox', { name: 'Kaart 1' })
+    expect(option).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('radio', { name: 'Kaart 1' })).not.toBeInTheDocument()
+  })
 })

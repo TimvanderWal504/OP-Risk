@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { AttackFlowStep } from './AttackFlowStep'
 
 const players = [
-  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null },
-  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, missionId: null },
+  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, hand: [], missionId: null },
+  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null },
 ]
 
 const colors = [

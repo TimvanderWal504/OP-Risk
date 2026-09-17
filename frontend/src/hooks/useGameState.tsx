@@ -279,6 +279,17 @@ export function useGameState(gameId: string) {
     [invoke, gameId, playerId],
   )
 
+  const tradeInCards = useCallback(
+    async (cardIds: string[]) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('TradeInCards', gameId, playerId, cardIds)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
   const endPhase = useCallback(async () => {
     if (!playerId) return
 
@@ -393,6 +404,7 @@ export function useGameState(gameId: string) {
     claimTerritory,
     placeInitialArmy,
     placeReinforcements,
+    tradeInCards,
     declareAttack,
     chooseDefenseDice,
     moveAfterConquest,

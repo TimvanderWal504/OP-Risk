@@ -3,8 +3,6 @@ import type { LocaleTree } from '../i18n/types'
 /**
  * Versterken (`TurnPhaseDto.Reinforce`, FO §5.2), telefoonkant. Bron:
  * het oorspronkelijke telefoon-design se `isReinf`-fase.
- * De "Kaarteninleg"-rij uit de export (L519-526) ontbreekt bewust — blokkeert op het
- * ontbrekende hand-DTO (zie het Reinforce-plan, "Buiten scope"), niet vergeten.
  */
 export const reinforce = {
   kicker: { nl: 'Versterken', en: 'Reinforce' },
@@ -15,7 +13,11 @@ export const reinforce = {
   continentBonusRow: { nl: 'Continentbonus', en: 'Continent bonus' },
   roleBonusRow: { nl: 'Roleffect', en: 'Role effect' },
   eventBonusRow: { nl: 'Gebeurteniseffect', en: 'Event effect' },
+  /** Alleen zichtbaar bij `reinforcementBreakdown.cardTradeBonus > 0` (taak 4b: som van nog
+   *  niet volledig geplaatste inlegs van déze fase, PlaceReinforcementStep.tsx). */
+  cardTradeBonusRow: { nl: 'Kaarteninleg', en: 'Card trade-in' },
   placeAllFirst: { nl: 'Verdeel eerst alle {{count}} legers', en: 'Place all {{count}} armies first' },
+  tradeCardsButton: { nl: 'Leg kaarten in', en: 'Trade in cards' },
   /**
    * Niet in de export: die kent maar twee knopstaten (verdelen/klaar), want de demo plaatst
    * lokaal zonder server-round-trip. Onze server-round-trip (stage-then-confirm, zie het

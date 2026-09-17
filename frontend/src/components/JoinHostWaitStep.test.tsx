@@ -6,8 +6,8 @@ import { JoinHostWaitStep } from './JoinHostWaitStep'
 const colors = [{ id: 'red', name: 'Rood', hex: '#C0392B', onHex: '#FFFFFF', symbol: 'circle' }]
 
 const players = [
-  { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, missionId: null },
-  { id: '2', name: 'Bob', colorId: null, roleId: null, isHost: false, isEliminated: false, missionId: null },
+  { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, hand: [], missionId: null },
+  { id: '2', name: 'Bob', colorId: null, roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null },
 ]
 
 describe('JoinHostWaitStep', () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-18T00:00:00Z",
+  "generatedAt": "2026-09-17T06:08:41Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -113,9 +113,17 @@
     {
       "name": "Selectable Option",
       "kind": "custom",
-      "description": "Radio-semantics card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Used for color pickers, role lists, and territory/army selection.",
+      "description": "Card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Defaults to role=\"radio\" for mutually-exclusive groups (color pickers, role lists, territory/army selection); role=\"checkbox\" switches the same visual pattern to independent multi-select (e.g. choosing cards to trade in) without changing the border/background language.",
       "html": "<button class=\"ds-selectable\" role=\"radio\" aria-checked=\"true\">GROEN</button>",
       "css": ".ds-selectable { position: relative; border-radius: 16px; border-width: 2px; border-style: solid; border-color: #84ad28; padding: 16px; color: #eef2f8; font-family: 'Lexend', sans-serif; font-weight: 700; background: transparent; } .ds-selectable[aria-checked=\"false\"] { border-color: #33425a; } .ds-selectable:disabled { border-color: #243246; opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Territory Card Tile",
+      "kind": "custom",
+      "refersTo": "glass-panel-raised",
+      "description": "One territory card: a military-silhouette line icon + uppercase symbol label, the territory name (H3), and — only when the card is one of the player's own territories — a Territory-Green border plus a single 'Gebied in bezit' text line instead of a second color, dot, or bonus amount. Passive in a hand-overview grid, or wrapped as the body of a Selectable Option (role=checkbox) in a trade-selection grid.",
+      "html": "<div class=\"ds-card-tile ds-card-tile--owned\"><span class=\"ds-card-tile-symbol\"><svg viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"3.6\" r=\"1.6\"/><path d=\"M8 5.4v3.4M5.2 7.6 8 6.4l2.8 1.2M6.1 13 8 8.8l1.9 4.2\"/></svg>INFANTERIE</span><span class=\"ds-card-tile-name\">Alaska</span><span class=\"ds-card-tile-owned\">Gebied in bezit</span></div>",
+      "css": ".ds-card-tile { display: flex; flex-direction: column; gap: 8px; border-radius: 16px; padding: 16px; background: transparent; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 16px 40px -12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.16); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); text-align: left; } .ds-card-tile--owned { border-color: #536f1b; } .ds-card-tile-symbol { display: flex; align-items: center; gap: 6px; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, #eef2f8 60%, transparent); } .ds-card-tile-name { font-family: 'Lexend', sans-serif; font-size: 17px; font-weight: 600; color: #eef2f8; text-shadow: 0 1px 3px rgba(4,6,11,0.55); } .ds-card-tile-owned { font-family: 'Gilroy', sans-serif; font-size: 13px; color: color-mix(in srgb, #eef2f8 80%, transparent); }"
     }
   ],
   "narrative": {
@@ -147,7 +155,9 @@
       "Do keep uppercase + wide letter-spacing (0.1em) for kicker/label/eyebrow text at 16px, extrabold weight.",
       "Do treat data/colors.json player seat colors as a separate system from this palette; derive translucent seat-color surfaces via deriveGlassTint, never a hand-picked per-seat rgba literal.",
       "Do rely on the SelectableOption border/background change as the only selected-state signal — no redundant checkmark on top.",
-      "Do drop a phase-name kicker above a heading that already states the action; merge into one line instead when the heading alone isn't complete."
+      "Do drop a phase-name kicker above a heading that already states the action; merge into one line instead when the heading alone isn't complete.",
+      "Do use role=\"checkbox\" on SelectableOption (instead of the radio default) whenever more than one tile can be selected at once — the visual pattern stays identical, only the accessible semantics change.",
+      "Do signal a possession/ownership state (e.g. an owned territory's card) with a single border-color change plus one text line, not a second color, dot, or icon layered on top."
     ],
     "donts": [
       "Don't reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04). Caution Amber is the one exception, since it's a functional status color, not decoration.",

@@ -39,6 +39,7 @@ const inProgressState = (overrides: Partial<NonNullable<GameStateDto['turnState'
     timer: { remainingMs: 60_000, isPaused: true },
     reinforcementBreakdown: null,
     hasFortified: false,
+    mustTradeInCards: false,
     reachableFortifyGroups: [],
     ...overrides,
   },

@@ -18,6 +18,7 @@ const fortifyState = {
     timer: { remainingMs: 60_000, isPaused: false },
     reinforcementBreakdown: null,
     hasFortified: false,
+    mustTradeInCards: false,
     reachableFortifyGroups: [['alaska', 'ontario']],
   },
 }

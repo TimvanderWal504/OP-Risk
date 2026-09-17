@@ -53,3 +53,42 @@ export function CrownIcon({ className = 'h-4 w-4' }: IconProps) {
     </svg>
   )
 }
+
+/**
+ * Territoriumkaart-symbolen (FO §4.4, "Mijn kaarten"-paneel): militaire silhouetten, geen
+ * unicode-glyph als vervanging (DESIGN.md). Zelfde conventie als de iconen hierboven.
+ */
+
+export function InfantryIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="3.6" r="1.6" />
+      <path d="M8 5.4v3.4M5.2 7.6 8 6.4l2.8 1.2M6.1 13 8 8.8l1.9 4.2" />
+    </svg>
+  )
+}
+
+export function CavalryIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.6 13V9.7c0-1.6.9-2.9 2.2-3.5L6 4.2c-.2-.6.2-1.2.8-1.3l1.5-.3c.6-.1 1.1.1 1.4.6l1.3 1.9c1.1.2 2 1.1 2 2.3v1.4" />
+    </svg>
+  )
+}
+
+export function ArtilleryIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="5.4" cy="11" r="2.2" />
+      <path d="M5.4 11 12.2 4.2M9 2.8l3.6 3.6" />
+    </svg>
+  )
+}
+
+export function JokerIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round">
+      <path d="M8 1.6l1.6 3.6 3.9.4-2.9 2.7.8 3.9L8 10.3l-3.4 1.9.8-3.9-2.9-2.7 3.9-.4L8 1.6Z" />
+    </svg>
+  )
+}

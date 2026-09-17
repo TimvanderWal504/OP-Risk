@@ -13,11 +13,18 @@ export interface SelectableOptionProps {
   unselectedBorderVar?: string
   /** Randkleur wanneer disabled (bv. door een andere speler bezet). Default 'var(--border)' (rollenlijst). */
   disabledBorderVar?: string
+  /**
+   * `'radio'` (default): mutueel exclusief binnen een groep — kleur-/rol-/legerpreset-keuzes.
+   * `'checkbox'`: onafhankelijk aan/uit te zetten, meerdere tegels tegelijk geselecteerd (bv.
+   * kaarten kiezen voor een inleg) — `role="radio"`/`aria-checked` zou daar onjuist suggereren
+   * dat de keuzes elkaar uitsluiten.
+   */
+  role?: 'radio' | 'checkbox'
 }
 
-/** Eén selecteerbare, omrande keuze-kaart (radio-semantiek). Verzorgt de
- * gedeelde selected/disabled-styling; de inhoud (swatch, naam, badges) komt via
- * `children`, zodat kleur-grid en rol-lijst dezelfde basis delen. */
+/** Eén selecteerbare, omrande keuze-kaart. Verzorgt de gedeelde selected/disabled-styling; de
+ * inhoud (swatch, naam, badges) komt via `children`, zodat kleur-grid, rol-lijst en een
+ * multi-select-raster (kaarten) dezelfde basis delen. */
 export function SelectableOption({
   selected,
   disabled = false,
@@ -27,13 +34,14 @@ export function SelectableOption({
   selectedBorderVar = 'var(--pitch-500)',
   unselectedBorderVar = 'var(--border-strong)',
   disabledBorderVar = 'var(--border)',
+  role = 'radio',
 }: SelectableOptionProps) {
   const borderColor = disabled ? disabledBorderVar : selected ? selectedBorderVar : unselectedBorderVar
 
   return (
     <button
       type="button"
-      role="radio"
+      role={role}
       aria-checked={selected}
       aria-disabled={disabled}
       disabled={disabled}

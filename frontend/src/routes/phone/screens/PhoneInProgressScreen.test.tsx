@@ -16,6 +16,7 @@ const baseTurnState = {
   timer: null,
   reinforcementBreakdown: null,
   hasFortified: false,
+  mustTradeInCards: false,
   reachableFortifyGroups: [],
 }
 

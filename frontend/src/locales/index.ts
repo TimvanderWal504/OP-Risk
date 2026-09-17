@@ -21,6 +21,7 @@ import { territories } from './territories'
 import { continents } from './continents'
 import { missions } from './missions'
 import { missionPanel } from './missionPanel'
+import { cardsPanel } from './cardsPanel'
 import { events } from './events'
 import { cards } from './cards'
 import { quotes } from './quotes'
@@ -49,6 +50,7 @@ export const trees = {
   continents,
   missions,
   missionPanel,
+  cardsPanel,
   events,
   cards,
   quotes,

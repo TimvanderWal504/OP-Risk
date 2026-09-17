@@ -69,6 +69,10 @@ export interface ReinforcementBreakdownDto {
   continentBonus: number
   roleBonus: number
   eventBonus: number
+  /** Som van de inlegwaarde over nog niet volledig geplaatste inlegs van déze fase — 0 zolang
+   *  er niets ingelegd is. Niet zelf uitrekenen: de client kent de eigen hand wel, maar niet
+   *  welke inleg(s) nog "los" staan (server-only, FO §5.4). */
+  cardTradeBonus: number
 }
 
 export interface TurnStateDto {
@@ -80,6 +84,13 @@ export interface TurnStateDto {
   reinforcementBreakdown: ReinforcementBreakdownDto | null
   /** Of deze beurt al een Fortify-verplaatsing is toegepast (FO §5.2 Kernregel: "één verplaatsing"). */
   hasFortified: boolean
+  /**
+   * Of de actieve speler moet inleggen vóór elke andere actie — een andere drempel per fase
+   * (Reinforce: 5+ kaarten, FO §5.2; Attack: 6+ ná een eliminatie, FO §7), `false` in Fortify.
+   * De telefoon mag deze spelregel niet zelf nabouwen (frontend/CLAUDE.md), dus dit komt
+   * rechtstreeks van de server.
+   */
+  mustTradeInCards: boolean
   /**
    * Alleen gevuld tijdens `TurnPhaseDto.Fortify` (leeg daarbuiten): de eigen gebieden van de
    * actieve speler, verdeeld in samenhangende groepen (`FortifyGuards.ReachableComponents`).

@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto, ReinforcementBreakdownDto, TerritoryDto } from '../types/GameState'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
+import type { CardDto } from '../types/Card'
 import { ArmyStepperRow } from './ui/ArmyStepperRow'
+import { Button } from './ui/Button'
 import { Collapsible } from './ui/Collapsible'
 import { GlassPanel } from './ui/GlassPanel'
 import { StatHeaderCard } from './ui/StatHeaderCard'
+import { CardsPanel } from './CardsPanel'
 import { shadowGlowPitch } from '../styles/design-tokens'
 import { tDynamic } from '../i18n/useT'
 import { PhoneScreen } from './ui/PhoneScreen'
@@ -18,14 +21,19 @@ export interface PlaceReinforcementStepProps {
    *  bevestigde plaatsing. Nooit lokaal herberekend. */
   armiesLeft: number
   breakdown: ReinforcementBreakdownDto | null
+  hand: CardDto[]
+  myTerritoryIds: Set<string>
+  mustTradeInCards: boolean
   onConfirmPlacements: (placements: { territoryId: string; amount: number }[]) => Promise<void>
+  onTradeInCards: (cardIds: string[]) => Promise<void>
   onEndPhase: () => Promise<void>
+  error: string | null
 }
 
 /**
  * Versterken · Legers verdelen. Stage-then-confirm: decrement raakt nooit de server, één
  * `PlaceReinforcements`-call per gebied bij bevestigen (niet N losse calls van 1 — zie het
- * Reinforce-plan). Het "Kaarteninleg"-blok ontbreekt bewust, zie `locales/reinforce.ts`.
+ * Reinforce-plan).
  */
 export function PlaceReinforcementStep({
   myTerritories,
@@ -33,12 +41,25 @@ export function PlaceReinforcementStep({
   territoryCatalog,
   armiesLeft,
   breakdown,
+  hand,
+  myTerritoryIds,
+  mustTradeInCards,
   onConfirmPlacements,
+  onTradeInCards,
   onEndPhase,
+  error,
 }: PlaceReinforcementStepProps) {
   const { t } = useTranslation('reinforce')
   const [staged, setStaged] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState(false)
+  // Afgeleide open-staat i.p.v. een los `useEffect` dat op de *overgang* van
+  // `mustTradeInCards` let: bij twee verplichte inlegs achter elkaar (bv. hand 8 → 5, nog
+  // steeds ≥5) blijft `mustTradeInCards` van vóór naar ná de eerste inleg gewoon `true` — een
+  // effect met `[mustTradeInCards]` als dependency zou dan niet opnieuw vuren en het paneel
+  // zou dicht blijven terwijl de verplichting nog geldt. Met deze afleiding hoeft er niets te
+  // "vuren": zolang de server `mustTradeInCards` teruggeeft is het paneel open, punt uit.
+  const [voluntaryCardsOpen, setVoluntaryCardsOpen] = useState(false)
+  const cardsOpen = mustTradeInCards || voluntaryCardsOpen
 
   const totalStaged = Object.values(staged).reduce((sum, amount) => sum + amount, 0)
   const remainingToStage = armiesLeft - totalStaged
@@ -109,100 +130,129 @@ export function PlaceReinforcementStep({
         { label: t('continentBonusRow'), value: breakdown.continentBonus, color: undefined },
         { label: t('roleBonusRow'), value: breakdown.roleBonus, color: undefined },
         { label: t('eventBonusRow'), value: breakdown.eventBonus, color: undefined },
+        // Anders dan de rijen hierboven: alleen zichtbaar bij > 0 (taak 4b-design-brief) —
+        // er is geen "geen inleg deze fase"-rij om een 0 zinvol naast te tonen.
+        ...(breakdown.cardTradeBonus > 0
+          ? [{ label: t('cardTradeBonusRow'), value: breakdown.cardTradeBonus, color: undefined }]
+          : []),
       ]
     : []
 
   return (
-    <PhoneScreen>
-      <StatHeaderCard
-        title={t('distribute')}
-        statValue={remainingToStage}
-        statLabel={t('toPlace')}
-        paddingY={12}
-        accentColor="pitch"
-      />
+    <>
+      <PhoneScreen>
+        <StatHeaderCard
+          title={t('distribute')}
+          statValue={remainingToStage}
+          statLabel={t('toPlace')}
+          paddingY={12}
+          accentColor="pitch"
+        />
 
-      <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
-        {breakdown && (
-          <GlassPanel elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
-            <div className="mb-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
-              {t('buildup')}
-            </div>
-            {breakdownRows.map((row) => (
-              <div key={row.label} className="flex items-center justify-between py-1">
-                <span className="font-body text-[16px] text-fg-secondary">{row.label}</span>
-                <span
-                  className={`font-display text-[16px] font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
-                >
-                  +{row.value}
-                </span>
-              </div>
-            ))}
-          </GlassPanel>
+        {!isDone && hand.length >= 3 && (
+          <Button
+            variant="secondary"
+            className="mt-[11px] min-h-0 py-3 text-body"
+            onClick={() => setVoluntaryCardsOpen(true)}
+          >
+            {t('tradeCardsButton')}
+          </Button>
         )}
 
-        {continentGroups.map((group) => {
-          const stagedInGroup = group.territoryIds.reduce((sum, id) => sum + (staged[id] ?? 0), 0)
-
-          return (
-            // `Collapsible` is bewust achtergrondloos (generiek); paneel eromheen zodat de
-            // continent-kicker leesbaar blijft op de stage-achtergrond.
-            <GlassPanel key={group.continent} elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
-              <Collapsible
-                collapsible={continentGroups.length >= 2}
-                defaultOpen={continentGroups.length < 2}
-                title={
-                  <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
-                    {tDynamic(group.continent, 'continents')}
+        <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
+          {breakdown && (
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
+              <div className="mb-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                {t('buildup')}
+              </div>
+              {breakdownRows.map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-1">
+                  <span className="font-body text-[16px] text-fg-secondary">{row.label}</span>
+                  <span
+                    className={`font-display text-[16px] font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
+                  >
+                    +{row.value}
                   </span>
-                }
-                summary={
-                  <span className="font-body text-[16px] text-fg-muted">
-                    {group.territoryIds.length}/{group.totalInContinent}
-                    {stagedInGroup > 0 && ` · +${stagedInGroup}`}
-                  </span>
-                }
-              >
-                {group.territoryIds.map((territoryId) => {
-                  const territory = myTerritories.find((t) => t.territoryId === territoryId)!
-
-                  return (
-                    <ArmyStepperRow
-                      key={territoryId}
-                      incrementOnly={false}
-                      color={myColor}
-                      label={tDynamic(territoryId, 'territories')}
-                      baseArmyCount={territory.armyCount}
-                      armyCount={territory.armyCount + (staged[territoryId] ?? 0)}
-                      delta={staged[territoryId] ?? 0}
-                      canIncrement={canStageMore}
-                      canDecrement={(staged[territoryId] ?? 0) > 0}
-                      onIncrement={() => inc(territoryId)}
-                      onDecrement={() => dec(territoryId)}
-                    />
-                  )
-                })}
-              </Collapsible>
+                </div>
+              ))}
             </GlassPanel>
-          )
-        })}
-      </div>
+          )}
 
-      {!isDone && (
-        <button
-          type="button"
-          disabled={!buttonEnabled}
-          onClick={buttonAction}
-          className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black disabled:cursor-not-allowed"
-          style={{
-            background: buttonEnabled ? 'var(--pitch-500)' : 'var(--border-strong)',
-            color: buttonEnabled ? 'var(--on-pitch)' : 'var(--fg-muted)',
-            boxShadow: buttonEnabled ? shadowGlowPitch : 'none',
-          }}
-        >
-          {buttonLabel}
-        </button>
+          {continentGroups.map((group) => {
+            const stagedInGroup = group.territoryIds.reduce((sum, id) => sum + (staged[id] ?? 0), 0)
+
+            return (
+              // `Collapsible` is bewust achtergrondloos (generiek); paneel eromheen zodat de
+              // continent-kicker leesbaar blijft op de stage-achtergrond.
+              <GlassPanel key={group.continent} elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
+                <Collapsible
+                  collapsible={continentGroups.length >= 2}
+                  defaultOpen={continentGroups.length < 2}
+                  title={
+                    <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                      {tDynamic(group.continent, 'continents')}
+                    </span>
+                  }
+                  summary={
+                    <span className="font-body text-[16px] text-fg-muted">
+                      {group.territoryIds.length}/{group.totalInContinent}
+                      {stagedInGroup > 0 && ` · +${stagedInGroup}`}
+                    </span>
+                  }
+                >
+                  {group.territoryIds.map((territoryId) => {
+                    const territory = myTerritories.find((t) => t.territoryId === territoryId)!
+
+                    return (
+                      <ArmyStepperRow
+                        key={territoryId}
+                        incrementOnly={false}
+                        color={myColor}
+                        label={tDynamic(territoryId, 'territories')}
+                        baseArmyCount={territory.armyCount}
+                        armyCount={territory.armyCount + (staged[territoryId] ?? 0)}
+                        delta={staged[territoryId] ?? 0}
+                        canIncrement={canStageMore}
+                        canDecrement={(staged[territoryId] ?? 0) > 0}
+                        onIncrement={() => inc(territoryId)}
+                        onDecrement={() => dec(territoryId)}
+                      />
+                    )
+                  })}
+                </Collapsible>
+              </GlassPanel>
+            )
+          })}
+        </div>
+
+        {!isDone && (
+          <button
+            type="button"
+            disabled={!buttonEnabled}
+            onClick={buttonAction}
+            className="mt-[11px] flex min-h-[62px] w-full items-center justify-center gap-2.5 rounded-2xl font-display text-xl font-black disabled:cursor-not-allowed"
+            style={{
+              background: buttonEnabled ? 'var(--pitch-500)' : 'var(--border-strong)',
+              color: buttonEnabled ? 'var(--on-pitch)' : 'var(--fg-muted)',
+              boxShadow: buttonEnabled ? shadowGlowPitch : 'none',
+            }}
+          >
+            {buttonLabel}
+          </button>
+        )}
+      </PhoneScreen>
+
+      {cardsOpen && (
+        <CardsPanel
+          hand={hand}
+          myTerritoryIds={myTerritoryIds}
+          mustTradeInCards={mustTradeInCards}
+          initialMode="trade"
+          onTradeInCards={onTradeInCards}
+          onClose={() => setVoluntaryCardsOpen(false)}
+          error={error}
+        />
       )}
-    </PhoneScreen>
+    </>
   )
 }

@@ -28,6 +28,7 @@ const attackState = (options: {
     timer: { remainingMs: 60_000, isPaused: options.pendingCombat !== null },
     reinforcementBreakdown: null,
     hasFortified: false,
+    mustTradeInCards: false,
     reachableFortifyGroups: [],
   },
 })
@@ -94,7 +95,7 @@ describe('PhoneAttackScreen', () => {
   it('rendert de omstander-weergave voor een niet-betrokken speler', () => {
     // "bob" bezit hier het doelgebied (kamchatka) en is dus de verdediger, niet de omstander —
     // een echte omstander is een derde speler die noch aanvaller noch verdediger is.
-    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isHost: false, isEliminated: false, missionId: null }
+    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null }
     const state = {
       ...attackState({ activePlayerId: 'alice', pendingCombat, toTerritoryOwnerId: 'bob' }),
       players: [...fixtureState.players, carol],

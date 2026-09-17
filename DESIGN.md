@@ -397,6 +397,7 @@ focus states.
 
 ### Player Header / Stat rows
 - Combines a colored player avatar (from the seat-color system, not this palette), display-font name/status text, and tabular-numeral timer text that swaps color (`normal` → ink, `low` → Alert Red, pulsing) based on state — a good example of the system's "state changes color, not shape" convention.
+- **Action badge:** a header action icon (e.g. "Mijn kaarten") can carry a small tabular-numeral count badge in its corner — silver-outline by default, Caution Amber when the count represents a mandatory action (a required card trade-in). Only rendered at count ≥ 1 (**The Invisible Design Rule** — nothing to report at zero is no badge, not a badge showing "0"); never a text suffix on the label itself, since a counter inside a label reads as part of the name rather than a separate signal.
 
 ### Dice (`Dice`)
 - **Character:** its own glass surface, not a `GlassPanel` — a die is a chip-scale object, not a panel/card/modal, so it owns a dedicated blur base (`DICE_GLASS_BLUR_BASE`, 12px pre-context-scale, between `glassBlur.sm`'s 8px and `glassBlur.md`) instead of reusing `glassBlur.sm`. Context scaling (tv full blur, phone halved) and `saturate(1.4)` still reuse the shared `GLASS_CONTEXT_BLUR_SCALE`/`glassSaturate`.
@@ -407,7 +408,13 @@ focus states.
 - **Motion boundary:** the roll animation lives on a non-filtering outer wrapper, never on the `backdrop-filter` element itself — Safari/iOS doesn't reliably recompute backdrop blur per animation frame when `transform`/`opacity` and `backdrop-filter` share an element. The light direction visibly rotates with the wrapper mid-roll and settles back to top-left once every tumble keyframe ends on `rotate(0)`.
 
 ### Selectable Option (radio card)
-- **Pattern:** a full-card `role="radio"`/`aria-checked` button (`SelectableOption`) whose border color alone carries the selected state — `--pitch-500` when selected, `--border-strong` when not, `--border` when disabled at 50% opacity. No separate checkmark glyph or icon is layered on top; the border/background change *is* the selection signal, another instance of **The Invisible Design Rule**. Used for color pickers, role lists, and territory/army selection lists.
+- **Pattern:** a full-card button (`SelectableOption`) whose border color alone carries the selected state — `--pitch-500` when selected, `--border-strong` when not, `--border` when disabled at 50% opacity. No separate checkmark glyph or icon is layered on top; the border/background change *is* the selection signal, another instance of **The Invisible Design Rule**. Used for color pickers, role lists, and territory/army selection lists.
+- **Role:** defaults to `role="radio"`/`aria-checked` for mutually-exclusive single-choice groups. An explicit `role="checkbox"` switches the same visual pattern to independent multi-select (e.g. choosing up to 3 territory cards to trade in) without changing anything but the accessible semantics — the border/background language stays identical either way.
+
+### Territory Card Tile (`TerritoryCardTile`) / Cards Panel (`CardsPanel`)
+- **Territory Card Tile:** one tile, two uses — passive in the hand-overview grid, or wrapped as the interactive body of a `SelectableOption` (`role="checkbox"`) in the trade-selection grid. Content: a symbol row (military-silhouette line icon + uppercase eyebrow label, same treatment as every other kicker) above the territory name (H3, `font-display`); a joker substitutes its own label for a territory name. **Owned-territory signal:** a `--pitch-700` border plus one `text-fg-secondary` line ("Gebied in bezit") — no dot, no second color, no bonus amount on the tile (that value isn't sent to the client, see **frontend/CLAUDE.md**'s server-authoritative rule). Surface: `GlassPanel elevation="raised"`, flattened by the no-nested-blur rule inside `CardsPanel`'s `ModalShell`.
+- **Card symbol icons:** four line-style SVGs (infantry/cavalry/artillery/joker) added to the shared icon set — same `viewBox 0 0 16 16`, `stroke=currentColor`, `aria-hidden` convention as every other icon; no unicode/emoji stand-ins (see **Don't**, below).
+- **Cards Panel:** a full-screen `ModalShell`, structurally identical to `MissionPanel` (privacy line, title, `Footer`-hosted actions) with two views sharing one component instance — browse (a passive grid, or an empty-state line when the hand is empty) and trade (the same tiles as `SelectableOption` checkboxes, capped at 3 selected). Leaving trade — confirming or cancelling — always closes the panel; a server-driven `mustTradeInCards` flag removes the close/skip affordance entirely rather than disabling it, so the mandatory state has no escape by omission, not by a disabled button a player could puzzle over.
 
 ## Do's and Don'ts
 
@@ -420,6 +427,8 @@ focus states.
 - **Do** keep uppercase + wide letter-spacing (`0.1em`) for kicker/label/eyebrow text at 16px, extrabold weight.
 - **Do** treat `data/colors.json` player seat colors as a separate system from this palette — never reuse a seat color as a UI brand color or vice versa; derive translucent seat-color surfaces via `deriveGlassTint`, never a hand-picked per-seat rgba literal.
 - **Do** rely on the `SelectableOption` border/background change as the only selected-state signal — a redundant checkmark or icon on top of an already-distinct border is chrome that doesn't carry new information (**The Invisible Design Rule**).
+- **Do** use `role="checkbox"` on `SelectableOption` (instead of the `radio` default) whenever more than one tile can be selected at once — the visual pattern stays identical, only the accessible semantics change to match the actual selection behavior.
+- **Do** signal a possession/ownership state (e.g. "Gebied in bezit" on an owned territory's card) with a single border-color change plus one text line, the same pattern `TerritoryCardTile` uses — not a second color, dot, or icon layered on top (**The Invisible Design Rule**).
 - **Do** drop a phase-name kicker/eyebrow above a heading when the heading alone already states the action ("Verdeel je legers", "Wie mag beginnen?"); when the heading alone isn't a complete statement (e.g. a bare territory name), merge the kicker's words into the one heading line instead of stacking two lines.
 
 ### Don't:

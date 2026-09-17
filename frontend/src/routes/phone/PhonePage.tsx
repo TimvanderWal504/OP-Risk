@@ -33,6 +33,7 @@ export function PhonePage() {
     claimTerritory,
     placeInitialArmy,
     placeReinforcements,
+    tradeInCards,
     endPhase,
     combat,
     declareAttack,
@@ -95,7 +96,15 @@ export function PhonePage() {
 
   return (
     <PhoneShell scrimLevel={scrimLevel}>
-      {showHeader && <PhonePlayerHeader state={state} me={me} phase={headerPhase} />}
+      {showHeader && (
+        <PhonePlayerHeader
+          state={state}
+          me={me}
+          phase={headerPhase}
+          tradeInCards={tradeInCards}
+          error={error}
+        />
+      )}
       {createElement(resolvePhoneScreen(displayPhase), {
         state,
         playerId,
@@ -111,6 +120,7 @@ export function PhonePage() {
         claimTerritory,
         placeInitialArmy,
         placeReinforcements,
+        tradeInCards,
         endPhase,
         combat,
         declareAttack,

@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerHeaderAction } from './ui/PlayerHeader'
 import { PlayerHeader } from './ui/PlayerHeader'
 import { MissionPanel } from './ui/MissionPanel'
 import { MissionChangedNotice } from './ui/MissionChangedNotice'
+import { CardsPanel } from './CardsPanel'
 import { CardsIcon, InfoIcon, MissionIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
@@ -16,6 +18,10 @@ export interface PhonePlayerHeaderProps {
   /** `PhonePage.tsx`'s `displayPhase` — dezelfde vertraagde fase als voor de schermkeuze
    *  (`useHeldPhase`), zodat de header niet vooruitloopt op een scherm dat nog niet wisselt. */
   phase: GamePhaseDtoType
+  /** Nodig omdat de header nu zelf een `CardsPanel`-instantie bezit (vrijwillige "Mijn
+   *  kaarten"-toegang) — zelfde `useGameState`-functies als elk ander scherm ontvangt. */
+  tradeInCards: (cardIds: string[]) => Promise<void>
+  error: string | null
 }
 
 /**
@@ -36,11 +42,12 @@ export interface PhonePlayerHeaderProps {
  * mount. `useMissionPanel` mag de hook daarom onvoorwaardelijk aanroepen (nooit `null`, wel
  * eventueel `''` voor WorldDomination-potjes zonder missies).
  */
-export function PhonePlayerHeader({ state, me, phase }: PhonePlayerHeaderProps) {
+export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: PhonePlayerHeaderProps) {
   const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common'])
   const color = state.colors.find((c) => c.id === me.colorId)
   const mission = useMissionPanel(me.missionId ?? '')
   const { timer, timerState } = usePhoneHeaderTimer(state.turnState?.timer ?? null)
+  const [cardsOpen, setCardsOpen] = useState(false)
 
   const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null)
 
@@ -68,8 +75,20 @@ export function PhonePlayerHeader({ state, me, phase }: PhonePlayerHeaderProps) 
     }
   })()
 
+  const myTerritoryIds = new Set(
+    state.territories.filter((territory) => territory.ownerPlayerId === me.id).map((territory) => territory.territoryId),
+  )
+  const mustTradeInCards = state.turnState?.mustTradeInCards ?? false
+
   const actions: PlayerHeaderAction[] = [
-    { icon: <CardsIcon className="h-[18px] w-[18px]" />, label: t('common:playerHeader.actions.cards') },
+    {
+      icon: <CardsIcon className="h-[18px] w-[18px]" />,
+      label: t('common:playerHeader.actions.cards'),
+      onClick: () => setCardsOpen(true),
+      active: cardsOpen,
+      badgeCount: me.hand.length,
+      badgeVariant: mustTradeInCards ? 'warning' : 'default',
+    },
     {
       icon: <MissionIcon className="h-[18px] w-[18px]" />,
       label: t('common:playerHeader.actions.mission'),
@@ -94,6 +113,17 @@ export function PhonePlayerHeader({ state, me, phase }: PhonePlayerHeaderProps) 
       />
       {me.missionId && mission.changed && <MissionChangedNotice onDismiss={mission.dismissChanged} />}
       {me.missionId && mission.open && <MissionPanel missionId={me.missionId} onClose={mission.closePanel} />}
+      {cardsOpen && (
+        <CardsPanel
+          hand={me.hand}
+          myTerritoryIds={myTerritoryIds}
+          mustTradeInCards={false}
+          initialMode="browse"
+          onTradeInCards={tradeInCards}
+          onClose={() => setCardsOpen(false)}
+          error={error}
+        />
+      )}
     </>
   )
 }
