@@ -95,7 +95,7 @@ describe('PhoneAttackScreen', () => {
   it('rendert de omstander-weergave voor een niet-betrokken speler', () => {
     // "bob" bezit hier het doelgebied (kamchatka) en is dus de verdediger, niet de omstander —
     // een echte omstander is een derde speler die noch aanvaller noch verdediger is.
-    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null }
+    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null }
     const state = {
       ...attackState({ activePlayerId: 'alice', pendingCombat, toTerritoryOwnerId: 'bob' }),
       players: [...fixtureState.players, carol],
@@ -192,5 +192,50 @@ describe('PhoneAttackScreen', () => {
     rerender(<PhoneAttackScreen {...fixtureProps({ state: bobsTurnState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />)
 
     expect(screen.queryByText('Je wordt aangevallen')).not.toBeInTheDocument()
+  })
+
+  describe('taak 6 — ≥6-inleg/plaatsing midden in Aanvallen', () => {
+    it('toont het verplichte inlegpaneel i.p.v. AttackFlowStep zodra mustTradeInCards waar is', () => {
+      const base = attackState({ activePlayerId: 'alice', pendingCombat: null, toTerritoryOwnerId: null })
+      const state: GameStateDto = { ...base, turnState: { ...base.turnState!, mustTradeInCards: true } }
+
+      render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
+
+      expect(screen.getByText('Leg 3 kaarten in')).toBeInTheDocument()
+      expect(screen.getByText('Je hebt 5 of meer kaarten — inleggen is verplicht.')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Niet inleggen' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Sluiten' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Aanvallen vanuit')).not.toBeInTheDocument()
+    })
+
+    it('toont de plaatsings-UI i.p.v. AttackFlowStep zodra armiesRemaining > 0 staat, zonder "Leg kaarten in"-knop', () => {
+      const base = attackState({ activePlayerId: 'alice', pendingCombat: null, toTerritoryOwnerId: null })
+      const state: GameStateDto = {
+        ...base,
+        turnState: { ...base.turnState!, armiesRemaining: 3, mustTradeInCards: false },
+      }
+
+      render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
+
+      expect(screen.getByText('3')).toBeInTheDocument()
+      // Vrijwillig inleggen is in Aanvallen nooit toegestaan (zie de doc-comment in
+      // PhoneAttackScreen.tsx) — deze knop hoort hier onder geen beding te verschijnen, ook al
+      // zou de hand toevallig een geldige set bevatten.
+      expect(screen.queryByRole('button', { name: 'Leg kaarten in' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Aanvallen vanuit')).not.toBeInTheDocument()
+    })
+
+    it('toont onveranderd AttackFlowStep zolang mustTradeInCards en armiesRemaining beide leeg zijn', () => {
+      const base = attackState({ activePlayerId: 'alice', pendingCombat: null, toTerritoryOwnerId: null })
+      const state: GameStateDto = {
+        ...base,
+        turnState: { ...base.turnState!, armiesRemaining: 0, mustTradeInCards: false },
+      }
+
+      render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
+
+      // "Aanvallen vanuit" komt dubbel voor (kop + stap-indicator) — de subtitel is uniek.
+      expect(screen.getByText('Kies een van je gebieden dat kan aanvallen.')).toBeInTheDocument()
+    })
   })
 })

@@ -39,6 +39,8 @@ public static class GameStateDtoMapper
                 player.IsHost,
                 player.IsEliminated,
                 player.Hand.Select(ToDto).ToArray(),
+                CardSetEvaluator.HasTradeableSet(state.Map.SetRules, player.Hand),
+                player.Hand.Count,
                 player.Mission?.Id))
             .ToArray();
 
@@ -125,6 +127,7 @@ public static class GameStateDtoMapper
             .Select(player => player with
             {
                 Hand = [],
+                HasTradeableCardSet = false,
                 MissionId = dto.Phase == GamePhaseDto.Finished ? player.MissionId : null,
             })
             .ToArray(),
@@ -132,13 +135,16 @@ public static class GameStateDtoMapper
 
     /// <summary>
     /// Zoals <see cref="RedactForTv"/>, maar <paramref name="viewerPlayerId"/> behoudt zijn
-    /// eigen <see cref="PlayerDto.Hand"/>/<see cref="PlayerDto.MissionId"/> — precies wat
-    /// TO §6.1 bedoelt met "de publieke state plus die spelers privé-info".
+    /// eigen <see cref="PlayerDto.Hand"/>/<see cref="PlayerDto.HasTradeableCardSet"/>/
+    /// <see cref="PlayerDto.MissionId"/> — precies wat TO §6.1 bedoelt met "de publieke state
+    /// plus die spelers privé-info".
     /// </summary>
     public static GameStateDto RedactForPlayer(GameStateDto dto, string viewerPlayerId) => dto with
     {
         Players = dto.Players
-            .Select(player => player.Id == viewerPlayerId ? player : player with { Hand = [], MissionId = null })
+            .Select(player => player.Id == viewerPlayerId
+                ? player
+                : player with { Hand = [], HasTradeableCardSet = false, MissionId = null })
             .ToArray(),
     };
 

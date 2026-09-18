@@ -11,8 +11,8 @@ export const fixtureState: GameStateDto = {
   gameId: 'ABCD',
   phase: GamePhaseDto.Lobby,
   players: [
-    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, hand: [], missionId: null },
-    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null },
+    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
   ],
   availableColorIds: ['green'],
   turnOrder: ['alice', 'bob'],

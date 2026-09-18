@@ -22,7 +22,7 @@ describe('PhoneGameOverScreen', () => {
   })
 
   it('toont beide namen bij meerdere winnaars, geen van beide de eigen speler', () => {
-    const otherPlayer = { id: 'carol', name: 'Carol', colorId: 'green', roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null }
+    const otherPlayer = { id: 'carol', name: 'Carol', colorId: 'green', roleId: null, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null }
 
     render(
       <PhoneGameOverScreen

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { JoinWaitStep } from './JoinWaitStep'
 
-const me = { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: false, isEliminated: false, hand: [], missionId: null }
+const me = { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null }
 
 describe('JoinWaitStep', () => {
   it('toont naam, kleur en het aantal aangesloten spelers', () => {

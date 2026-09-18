@@ -14,4 +14,7 @@ export const board = {
   playersTitle: { nl: 'Spelers', en: 'Players' },
   territoriesCount: { nl: '{{count}} gebieden', en: '{{count}} territories' },
   armiesLabel: { nl: 'Legers', en: 'Armies' },
+  /** FO §7: het aantal kaarten is publiek, de kaarten zelf niet — taak 6. Alleen getoond bij
+   *  ≥1 (Invisible Design Rule), geen "0 kaarten"-ruis vroeg in het spel. */
+  cardsCount: { nl: '{{count}} kaarten', en: '{{count}} cards' },
 } satisfies LocaleTree

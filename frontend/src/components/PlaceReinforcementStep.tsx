@@ -23,10 +23,20 @@ export interface PlaceReinforcementStepProps {
   breakdown: ReinforcementBreakdownDto | null
   hand: CardDto[]
   myTerritoryIds: Set<string>
+  /** Server-berekend (FO §4.4): of er ergens in `hand` een geldige inlegset zit — bepaalt of de
+   *  "Leg kaarten in"-knop verschijnt, niet `hand.length` (frontend/CLAUDE.md). */
+  hasTradeableCardSet: boolean
   mustTradeInCards: boolean
   onConfirmPlacements: (placements: { territoryId: string; amount: number }[]) => Promise<void>
   onTradeInCards: (cardIds: string[]) => Promise<void>
-  onEndPhase: () => Promise<void>
+  /** Vuurt zodra alle legers geplaatst zijn (`armiesLeft === 0`, en `mustTradeInCards` niet
+   *  meer openstaat — zie de `isDone`-doc-comment hieronder). De aanroeper bepaalt wat daarna
+   *  gebeurt: in Versterken (`PhoneReinforceScreen`) is dat de fase beëindigen; in Aanvallen
+   *  (`PhoneAttackScreen`, taak 6 — het ≥6-inleg-hergebruik van dit component) hoeft niets te
+   *  gebeuren, de eigen render-logica daar valt vanzelf terug op `AttackFlowStep` zodra
+   *  `armiesRemaining`/`mustTradeInCards` weer beide `false` zijn. Bewust hernoemd van
+   *  `onEndPhase`: die naam klopte alleen voor de Versterken-aanroeper. */
+  onAllPlaced: () => Promise<void>
   error: string | null
 }
 
@@ -42,11 +52,12 @@ export function PlaceReinforcementStep({
   armiesLeft,
   breakdown,
   hand,
+  hasTradeableCardSet,
   myTerritoryIds,
   mustTradeInCards,
   onConfirmPlacements,
   onTradeInCards,
-  onEndPhase,
+  onAllPlaced,
   error,
 }: PlaceReinforcementStepProps) {
   const { t } = useTranslation('reinforce')
@@ -89,18 +100,25 @@ export function PlaceReinforcementStep({
     }
   }
 
-  const isDone = armiesLeft === 0
+  // `&& !mustTradeInCards` (taak 6): direct na een eliminatie midden in Aanvallen kan
+  // `armiesLeft` al 0 zijn terwijl er nog niets is ingelegd/geplaatst (de ≥6-inlegpool bestaat
+  // dan nog niet). Zonder deze voorwaarde zou `onAllPlaced` hieronder een voltooide plaatsing
+  // simuleren vóórdat de verplichte inleg zelfs maar is gestart. Verandert niets voor de
+  // bestaande Versterken-aanroeper: bij 5+ kaarten start `armiesLeft` daar altijd al >0, en de
+  // server weigert plaatsen zolang `mustTradeInCards` geldt — `armiesLeft` kan dus nooit op 0
+  // uitkomen terwijl de verplichting daar nog openstaat.
+  const isDone = armiesLeft === 0 && !mustTradeInCards
   const readyToConfirm = !isDone && remainingToStage === 0 && totalStaged > 0
 
-  // Guard tegen dubbele `EndPhase`-calls (React StrictMode dubbelt effects in dev, en
-  // `EndPhase` vanuit Aanvallen zonder lopend gevecht is óók geldig — een tweede call zou dus
-  // niet falen maar in één klap doorschieten naar Verplaatsen, de Aanvalsfase overslaand).
-  const endPhaseFired = useRef(false)
+  // Guard tegen dubbele `onAllPlaced`-calls (React StrictMode dubbelt effects in dev, en
+  // `onAllPlaced` vanuit Aanvallen zonder lopend gevecht is óók geldig — een tweede call zou
+  // dus niet falen maar in één klap doorschieten naar Verplaatsen, de Aanvalsfase overslaand).
+  const allPlacedFired = useRef(false)
 
   useEffect(() => {
-    if (isDone && !endPhaseFired.current) {
-      endPhaseFired.current = true
-      onEndPhase()
+    if (isDone && !allPlacedFired.current) {
+      allPlacedFired.current = true
+      onAllPlaced()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDone])
@@ -149,7 +167,7 @@ export function PlaceReinforcementStep({
           accentColor="pitch"
         />
 
-        {!isDone && hand.length >= 3 && (
+        {!isDone && hasTradeableCardSet && (
           <Button
             variant="secondary"
             className="mt-[11px] min-h-0 py-3 text-body"
@@ -246,6 +264,7 @@ export function PlaceReinforcementStep({
         <CardsPanel
           hand={hand}
           myTerritoryIds={myTerritoryIds}
+          hasTradeableCardSet={hasTradeableCardSet}
           mustTradeInCards={mustTradeInCards}
           initialMode="trade"
           onTradeInCards={onTradeInCards}

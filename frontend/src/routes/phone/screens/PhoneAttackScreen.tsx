@@ -6,6 +6,7 @@ import { NotYourTurnStep } from '../../../components/NotYourTurnStep'
 import { AttackFlowStep } from '../../../components/AttackFlowStep'
 import { ConquestMoveStep } from '../../../components/ConquestMoveStep'
 import { DefendStep } from '../../../components/DefendStep'
+import { PlaceReinforcementStep } from '../../../components/PlaceReinforcementStep'
 import { PhonePlaceholderScreen } from './PhonePlaceholderScreen'
 import { resolveAttackRole } from './resolveAttackRole'
 import type { PhoneScreenProps } from './phoneScreens'
@@ -32,7 +33,21 @@ interface HeldDefend {
  * Aanvallen (`TurnPhaseDto.Attack`, FO §5.3). Vier rollen i.p.v. de turn-based tweedeling van
  * Reinforce/InitialPlacement — zie `resolveAttackRole` en het bouwplan.
  */
-export function PhoneAttackScreen({ state, playerId, me, territoryCatalog, combat, declareAttack, chooseDefenseDice, moveAfterConquest, abandonAttack, endPhase }: PhoneScreenProps) {
+export function PhoneAttackScreen({
+  state,
+  playerId,
+  me,
+  territoryCatalog,
+  combat,
+  declareAttack,
+  chooseDefenseDice,
+  moveAfterConquest,
+  abandonAttack,
+  endPhase,
+  placeReinforcements,
+  tradeInCards,
+  error,
+}: PhoneScreenProps) {
   const { t } = useTranslation('attack')
 
   // Zodra `ChooseDefenseDice` resolvet, kantelt `resolveAttackRole` in dezelfde renderslag al
@@ -142,6 +157,45 @@ export function PhoneAttackScreen({ state, playerId, me, territoryCatalog, comba
 
   if (role === 'attacker') {
     const myTerritories = state.territories.filter((territory) => territory.ownerPlayerId === playerId)
+
+    // ≥6-inleg midden in Aanvallen ná een eliminatie (FO §7, taak 4/6): een niet-lege
+    // `pendingCombat` en een open `mustTradeInCards`/`armiesRemaining > 0` kunnen nooit
+    // gelijktijdig bestaan (`MustTradeInCardsDuringAttack` vereist zelf al `PendingCombat:
+    // null`, en `AttackGuards.CanDeclareAttack` weigert een nieuwe aanval zolang
+    // `ArmiesRemaining > 0`) — deze check raakt de `pendingCombat`-afgeleide takken hierboven
+    // dus per constructie nooit. Hergebruikt `PlaceReinforcementStep` (dezelfde component als
+    // Versterken): eerst de verplichte inleg (via zijn eigen `CardsPanel`, mandatory zodra
+    // `mustTradeInCards`), dan de plaatsing van de verkregen legers.
+    if (state.turnState.mustTradeInCards || state.turnState.armiesRemaining > 0) {
+      const myTerritoryIds = new Set(myTerritories.map((territory) => territory.territoryId))
+
+      return (
+        <PlaceReinforcementStep
+          myTerritories={myTerritories}
+          myColor={myColor}
+          territoryCatalog={territoryCatalog}
+          armiesLeft={state.turnState.armiesRemaining}
+          breakdown={state.turnState.reinforcementBreakdown}
+          hand={me.hand}
+          // Bewust `false`, niet `me.hasTradeableCardSet`: vrijwillig inleggen is in Aanvallen
+          // nooit toegestaan (`ReinforceGuards.CanTradeInCards`'s fase-check staat daar alleen
+          // de ≥6-verplichting toe) — dit onderdrukt uitsluitend dit component z'n eigen "Leg
+          // kaarten in"-knop, die anders een kansloze server-aanroep zou uitlokken. De
+          // verplichte flow zelf loopt via `mustTradeInCards` hieronder, ongewijzigd.
+          hasTradeableCardSet={false}
+          myTerritoryIds={myTerritoryIds}
+          mustTradeInCards={state.turnState.mustTradeInCards}
+          onConfirmPlacements={async (placements) => {
+            for (const placement of placements) {
+              await placeReinforcements(placement.territoryId, placement.amount)
+            }
+          }}
+          onTradeInCards={tradeInCards}
+          onAllPlaced={async () => {}}
+          error={error}
+        />
+      )
+    }
 
     return (
       <AttackFlowStep

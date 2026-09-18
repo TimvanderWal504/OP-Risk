@@ -169,4 +169,58 @@ describe('PhonePlayerHeader', () => {
 
     expect(screen.getByText('Nog geen kaarten. Verover in een beurt minstens één gebied en je trekt er een.')).toBeInTheDocument()
   })
+
+  describe('taak 6 — vrijwillig inleggen alleen zichtbaar tijdens Versterken', () => {
+    const cards = [
+      { id: 'c1', territoryId: 'alaska', symbol: 'symbol-1' },
+      { id: 'c2', territoryId: 'alberta', symbol: 'symbol-1' },
+      { id: 'c3', territoryId: 'ontario', symbol: 'symbol-1' },
+    ]
+
+    const stateWithPhase = (turnPhase: TurnPhaseDto) => ({
+      ...fixtureState,
+      phase: GamePhaseDto.InProgress,
+      players: [
+        { ...fixtureState.players[0], hand: cards, hasTradeableCardSet: true },
+        fixtureState.players[1],
+      ],
+      turnState: {
+        activePlayerId: 'bob',
+        turnPhase,
+        armiesRemaining: 0,
+        pendingCombat: null,
+        timer: { remainingMs: 90_000, isPaused: false },
+        reinforcementBreakdown: null,
+        hasFortified: false,
+        mustTradeInCards: false,
+        reachableFortifyGroups: [],
+      },
+    })
+
+    it('verbergt de "Leg 3 kaarten in"-knop in browse-modus buiten Versterken, ook met een geldige set', async () => {
+      const state = stateWithPhase(TurnPhaseDto.Fortify)
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} error={null} />,
+      )
+
+      // `/Mijn kaarten/` i.p.v. exacte match: het handaantal-badge (hier 3, uit `cards`)
+      // rendert vóór het label in de DOM, dus de toegankelijke naam is "3 Mijn kaarten".
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.queryByRole('button', { name: 'Leg 3 kaarten in' })).not.toBeInTheDocument()
+    })
+
+    it('toont de "Leg 3 kaarten in"-knop in browse-modus tijdens Versterken met een geldige set', async () => {
+      const state = stateWithPhase(TurnPhaseDto.Reinforce)
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} error={null} />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.getByRole('button', { name: 'Leg 3 kaarten in' })).toBeInTheDocument()
+    })
+  })
 })

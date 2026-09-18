@@ -8,10 +8,16 @@ import { TerritoryCardTile } from './ui/TerritoryCardTile'
 import { Button } from './ui/Button'
 import { Footer } from './ui/Footer'
 import { LockIcon } from './ui/icons'
+import { useTerritoryOutlines } from '../hooks/useTerritoryOutlines'
 
 export interface CardsPanelProps {
   hand: CardDto[]
   myTerritoryIds: Set<string>
+  /** Server-berekend (FO §4.4, `CardSetEvaluator.HasTradeableSet`): of er ergens in `hand` een
+   *  geldige inlegset zit. Bepaalt of de browse-modus "Leg 3 kaarten in"-knop verschijnt — niet
+   *  `hand.length`, dat zegt niets over of een drietal ook daadwerkelijk geldig is
+   *  (frontend/CLAUDE.md: geen spelregels client-side nabouwen). */
+  hasTradeableCardSet: boolean
   /** Bepaalt de copy ("verplicht") én of de sluit-/overslaanknoppen verborgen blijven. */
   mustTradeInCards: boolean
   initialMode: 'browse' | 'trade'
@@ -45,6 +51,7 @@ const TRADE_SET_SIZE = 3
 export function CardsPanel({
   hand,
   myTerritoryIds,
+  hasTradeableCardSet,
   mustTradeInCards,
   initialMode,
   onTradeInCards,
@@ -55,8 +62,10 @@ export function CardsPanel({
   const [mode, setMode] = useState<'browse' | 'trade'>(initialMode)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const outlines = useTerritoryOutlines()
 
   const isOwned = (card: CardDto) => card.territoryId !== null && myTerritoryIds.has(card.territoryId)
+  const outlineFor = (card: CardDto) => (card.territoryId ? (outlines?.[card.territoryId] ?? null) : null)
 
   const toggleCard = (cardId: string) => {
     setSelectedIds((current) => {
@@ -110,15 +119,15 @@ export function CardsPanel({
               {t('empty')}
             </GlassPanel>
           ) : (
-            <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto">
+            <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto">
               {hand.map((card) => (
-                <TerritoryCardTile key={card.id} card={card} owned={isOwned(card)} />
+                <TerritoryCardTile key={card.id} card={card} owned={isOwned(card)} outline={outlineFor(card)} />
               ))}
             </div>
           ))}
 
         {mode === 'trade' && (
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-y-auto" role="group">
+          <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto" role="group">
             {hand.map((card) => {
               const selected = selectedIds.includes(card.id)
 
@@ -131,7 +140,7 @@ export function CardsPanel({
                   onSelect={() => toggleCard(card.id)}
                   className="p-0"
                 >
-                  <TerritoryCardTile card={card} owned={isOwned(card)} />
+                  <TerritoryCardTile card={card} owned={isOwned(card)} outline={outlineFor(card)} />
                 </SelectableOption>
               )
             })}
@@ -142,7 +151,7 @@ export function CardsPanel({
       <Footer error={error}>
         {mode === 'browse' ? (
           <>
-            {hand.length >= TRADE_SET_SIZE && (
+            {hasTradeableCardSet && (
               <Button variant="primary" onClick={() => setMode('trade')}>
                 {t('tradeTitle')}
               </Button>

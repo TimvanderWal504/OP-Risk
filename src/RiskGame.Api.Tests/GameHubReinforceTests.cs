@@ -465,4 +465,95 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
 
         Assert.Equal(afterTrade.TurnState.ArmiesRemaining - 1, afterPlace.TurnState!.ArmiesRemaining);
     }
+
+    [Fact]
+    public async Task HasTradeableCardSet_HandZonderGeldigeSet_IsFalse()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var deck = mapSource.Load("standaard-43").Deck;
+        var symbolGroups = deck.Where(card => !card.IsJoker).GroupBy(card => card.Symbol).ToList();
+
+        // Exact het door de gebruiker gemelde geval: 2 gelijke + 1 ander, geen joker.
+        var invalidSet = symbolGroups[0].Take(2)
+            .Concat(symbolGroups.First(group => group.Key != symbolGroups[0].Key).Take(1))
+            .ToArray();
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, invalidSet, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var state = await connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, "p1", "alaska", 1);
+
+        Assert.False(state.Players.Single(player => player.Id == "p1").HasTradeableCardSet);
+    }
+
+    [Fact]
+    public async Task HasTradeableCardSet_HandMetGeldigeSet_IsTrue()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var hand = ThreeOfAKindFrom(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var state = await connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, "p1", "alaska", 1);
+
+        Assert.True(state.Players.Single(player => player.Id == "p1").HasTradeableCardSet);
+    }
+
+    /// <summary>
+    /// Privacy-grens (TO §6.1), zelfde opzet als <c>GameHubMissionPrivacyTests.RejoinGame_
+    /// MetBekendePubliekeIdMaarZonderToken_GeeftNooitDeMissionIdVanDieSpelerTerug</c>: een
+    /// kaal <c>playerId</c> zonder het bijbehorende sessietoken (TO §6.3) levert altijd de
+    /// publieke, geredacte weergave op — <see cref="PlayerDto.HasTradeableCardSet"/> mag dus
+    /// nooit iets verklappen over een hand die de aanroeper niet mag zien, ook al bevat die
+    /// hand daadwerkelijk een geldige set.
+    /// </summary>
+    [Fact]
+    public async Task HasTradeableCardSet_ZonderJuistSessionToken_IsAltijdFalseOngeachtDeWerkelijkeHand()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var hand = ThreeOfAKindFrom(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var rejoined = await connection.InvokeAsync<GameStateDto>("RejoinGame", gameId, "p1", "");
+
+        Assert.False(rejoined.Players.Single(player => player.Id == "p1").HasTradeableCardSet);
+    }
+
+    /// <summary>
+    /// FO §7: het aantal kaarten is publiek ("Hand-aantal van elke speler is publiek, de
+    /// kaarten zelf niet") — anders dan <see cref="PlayerDto.Hand"/>/
+    /// <see cref="PlayerDto.HasTradeableCardSet"/> hierboven blijft
+    /// <see cref="PlayerDto.HandCount"/> dus ook zichtbaar zonder het juiste sessietoken,
+    /// dezelfde openbare behandeling als <see cref="PlayerDto.RoleId"/>.
+    /// </summary>
+    [Fact]
+    public async Task HandCount_BlijftZichtbaarZonderJuistSessionToken_TerwijlHandZelfWordtGeredact()
+    {
+        await using var factory = CreateFactory();
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var hand = ThreeOfAKindFrom(mapSource.Load("standaard-43").Deck);
+
+        var gameId = await SetUpDirectReinforceStateAsync(factory, hand, armiesRemaining: 3);
+
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var rejoined = await connection.InvokeAsync<GameStateDto>("RejoinGame", gameId, "p1", "");
+        var player = rejoined.Players.Single(p => p.Id == "p1");
+
+        Assert.Equal(hand.Length, player.HandCount);
+        Assert.Empty(player.Hand);
+    }
 }

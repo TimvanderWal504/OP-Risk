@@ -26,11 +26,12 @@ const defaultProps = (overrides: Partial<PlaceReinforcementStepProps> = {}): Pla
   armiesLeft: 4,
   breakdown: null,
   hand: [],
+  hasTradeableCardSet: false,
   myTerritoryIds: new Set(myTerritories.map((t) => t.territoryId)),
   mustTradeInCards: false,
   onConfirmPlacements: vi.fn(),
   onTradeInCards: vi.fn(),
-  onEndPhase: vi.fn(),
+  onAllPlaced: vi.fn(),
   error: null,
   ...overrides,
 })
@@ -90,13 +91,33 @@ describe('PlaceReinforcementStep', () => {
     expect(onConfirmPlacements).toHaveBeenCalledWith([{ territoryId: 'alaska', amount: 2 }])
   })
 
-  it('roept onEndPhase automatisch aan zodra de server armiesLeft op 0 heeft gezet, zonder een knop te tonen', async () => {
-    const onEndPhase = vi.fn()
-    render(<PlaceReinforcementStep {...defaultProps({ myTerritories: [myTerritories[0]], armiesLeft: 0, onEndPhase })} />)
+  it('roept onAllPlaced automatisch aan zodra de server armiesLeft op 0 heeft gezet, zonder een knop te tonen', async () => {
+    const onAllPlaced = vi.fn()
+    render(<PlaceReinforcementStep {...defaultProps({ myTerritories: [myTerritories[0]], armiesLeft: 0, onAllPlaced })} />)
 
-    await waitFor(() => expect(onEndPhase).toHaveBeenCalled())
+    await waitFor(() => expect(onAllPlaced).toHaveBeenCalled())
     expect(screen.queryByText('Bevestigen')).not.toBeInTheDocument()
     expect(screen.queryByText(/^Verdeel eerst/)).not.toBeInTheDocument()
+  })
+
+  it('roept onAllPlaced NIET aan zodra armiesLeft 0 is maar mustTradeInCards nog openstaat (taak 6-bugfix)', async () => {
+    const onAllPlaced = vi.fn()
+    render(
+      <PlaceReinforcementStep
+        {...defaultProps({
+          myTerritories: [myTerritories[0]],
+          armiesLeft: 0,
+          mustTradeInCards: true,
+          hand: [{ id: 'c1', territoryId: 'alaska', symbol: 'symbol-1' }],
+          onAllPlaced,
+        })}
+      />,
+    )
+
+    // Geen manier om "nooit gebeurt" direct te awaiten; een korte wacht + assert op 0 calls is
+    // hier het gangbare patroon voor een negatieve async-assertion.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(onAllPlaced).not.toHaveBeenCalled()
   })
 
   it('toont de Opbouw-breakdown wanneer aangeleverd, incl. de Kaarteninleg-rij alleen bij een positieve bonus', () => {
@@ -129,15 +150,34 @@ describe('PlaceReinforcementStep', () => {
     expect(screen.getByText('Kaarteninleg')).toBeInTheDocument()
   })
 
-  it('toont de "Leg kaarten in"-knop pas vanaf 3 kaarten in de hand', () => {
-    const twoCards = [
+  it('toont de "Leg kaarten in"-knop niet zonder hasTradeableCardSet, ook niet met 3+ kaarten in de hand', () => {
+    // Exact het door de gebruiker gemelde geval: 2 infanterie + 1 cavalerie — 3 kaarten, maar
+    // geen enkele geldige set. hand.length alleen mag de knop dus niet meer sturen.
+    const threeCardsGeenGeldigeSet = [
       { id: 'c1', territoryId: 'alaska', symbol: 'symbol-1' },
-      { id: 'c2', territoryId: 'ukraine', symbol: 'symbol-2' },
+      { id: 'c2', territoryId: 'alberta', symbol: 'symbol-1' },
+      { id: 'c3', territoryId: 'ukraine', symbol: 'symbol-2' },
     ]
 
-    render(<PlaceReinforcementStep {...defaultProps({ hand: twoCards })} />)
+    render(
+      <PlaceReinforcementStep
+        {...defaultProps({ hand: threeCardsGeenGeldigeSet, hasTradeableCardSet: false })}
+      />,
+    )
 
     expect(screen.queryByRole('button', { name: 'Leg kaarten in' })).not.toBeInTheDocument()
+  })
+
+  it('toont de "Leg kaarten in"-knop zodra hasTradeableCardSet waar is', () => {
+    const drieGelijk = [
+      { id: 'c1', territoryId: 'alaska', symbol: 'symbol-1' },
+      { id: 'c2', territoryId: 'alberta', symbol: 'symbol-1' },
+      { id: 'c3', territoryId: 'ontario', symbol: 'symbol-1' },
+    ]
+
+    render(<PlaceReinforcementStep {...defaultProps({ hand: drieGelijk, hasTradeableCardSet: true })} />)
+
+    expect(screen.getByRole('button', { name: 'Leg kaarten in' })).toBeInTheDocument()
   })
 
   it('opent het inlegpaneel meteen, zonder ontsnapping, zodra mustTradeInCards waar is', () => {
@@ -147,7 +187,11 @@ describe('PlaceReinforcementStep', () => {
       symbol: 'symbol-1',
     }))
 
-    render(<PlaceReinforcementStep {...defaultProps({ hand: fiveCards, mustTradeInCards: true })} />)
+    render(
+      <PlaceReinforcementStep
+        {...defaultProps({ hand: fiveCards, hasTradeableCardSet: true, mustTradeInCards: true })}
+      />,
+    )
 
     expect(screen.getByText('Leg 3 kaarten in')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Niet inleggen' })).not.toBeInTheDocument()

@@ -102,6 +102,24 @@ describe('TvMainBoardScreen', () => {
     expect(screen.getAllByText('Legers')).toHaveLength(2)
   })
 
+  it('toont het handaantal per speler in het spelerspaneel zodra ≥1, taak 6 (FO §7: publiek)', () => {
+    const stateWithHands = {
+      ...stateInProgress,
+      players: stateInProgress.players.map((player) => (player.id === 'alice' ? { ...player, handCount: 3 } : player)),
+    }
+    render(<TvMainBoardScreen state={stateWithHands} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('1 gebieden · 3 kaarten')).toBeInTheDocument()
+    // Bob heeft in deze fixture handCount 0 — geen "0 kaarten"-ruis (Invisible Design Rule).
+    expect(screen.getByText('1 gebieden')).toBeInTheDocument()
+  })
+
+  it('toont geen handaantal-suffix bij handCount 0', () => {
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.queryByText(/kaarten/)).not.toBeInTheDocument()
+  })
+
   it('dimt een uitgeschakelde speler in het spelerspaneel', () => {
     const stateWithElimination = {
       ...stateInProgress,

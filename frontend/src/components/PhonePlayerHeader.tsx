@@ -9,6 +9,7 @@ import { CardsIcon, InfoIcon, MissionIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
 import { resolvePhoneHeaderStatus } from '../routes/phone/screens/resolvePhoneHeaderStatus'
+import { TurnPhaseDto } from '../types/GameState'
 import type { GameStateDto, GamePhaseDto as GamePhaseDtoType } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 
@@ -79,6 +80,12 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
     state.territories.filter((territory) => territory.ownerPlayerId === me.id).map((territory) => territory.territoryId),
   )
   const mustTradeInCards = state.turnState?.mustTradeInCards ?? false
+  // Vrijwillig inleggen is uitsluitend een Versterken-actie (`ReinforceGuards.CanTradeInCards`'s
+  // fase-check) — de Aanvallen-≥6-inleg (taak 6) loopt altijd via `mustTradeInCards`, nooit
+  // vrijwillig. `PhonePlayerHeader` is op elk scherm gemount, dus zonder deze check zou de
+  // "Leg 3 kaarten in"-knop hieronder ook buiten Versterken kunnen verschijnen (bv. een
+  // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken.
+  const canTradeVoluntarily = state.turnState?.turnPhase === TurnPhaseDto.Reinforce
 
   const actions: PlayerHeaderAction[] = [
     {
@@ -117,6 +124,7 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
         <CardsPanel
           hand={me.hand}
           myTerritoryIds={myTerritoryIds}
+          hasTradeableCardSet={me.hasTradeableCardSet && canTradeVoluntarily}
           mustTradeInCards={false}
           initialMode="browse"
           onTradeInCards={tradeInCards}

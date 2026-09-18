@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CardsPanel } from './CardsPanel'
 
 const hand = [
@@ -10,12 +10,31 @@ const hand = [
   { id: 'c4', territoryId: 'ukraine', symbol: 'symbol-2' },
 ]
 
+// `useTerritoryOutlines` fetcht de omlijningen-GeoJSON; hier alleen relevant dat het paneel
+// zonder crash rendert terwijl die fetch loopt/faalt — de tegel toont dan gewoon een leeg
+// derde deel (zie `TerritoryCardTile.test.tsx` voor de omlijning-inhoud zelf).
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ type: 'FeatureCollection', features: [] }),
+    }),
+  )
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
 describe('CardsPanel', () => {
   it('toont de leeg-tekst wanneer de hand leeg is (browse-modus)', () => {
     render(
       <CardsPanel
         hand={[]}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={false}
         mustTradeInCards={false}
         initialMode="browse"
         onTradeInCards={vi.fn()}
@@ -29,11 +48,30 @@ describe('CardsPanel', () => {
     ).toBeInTheDocument()
   })
 
+  it('houdt het raster boven-uitgelijnd (content-start) zodat tegels niet uitrekken bij weinig kaarten', () => {
+    const { container } = render(
+      <CardsPanel
+        hand={[hand[0]]}
+        myTerritoryIds={new Set()}
+        hasTradeableCardSet={false}
+        mustTradeInCards={false}
+        initialMode="browse"
+        onTradeInCards={vi.fn()}
+        onClose={vi.fn()}
+        error={null}
+      />,
+    )
+
+    const grid = container.querySelector('.grid')
+    expect(grid).toHaveClass('content-start')
+  })
+
   it('toont alle handkaarten in browse-modus en markeert een eigen gebied', () => {
     render(
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set(['alaska'])}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="browse"
         onTradeInCards={vi.fn()}
@@ -44,7 +82,6 @@ describe('CardsPanel', () => {
 
     expect(screen.getByText('Alaska')).toBeInTheDocument()
     expect(screen.getByText('Alberta')).toBeInTheDocument()
-    expect(screen.getByText('Gebied in bezit')).toBeInTheDocument()
   })
 
   it('schakelt van browse naar trade via de "Leg 3 kaarten in"-knop', async () => {
@@ -52,6 +89,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="browse"
         onTradeInCards={vi.fn()}
@@ -70,6 +108,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="trade"
         onTradeInCards={vi.fn()}
@@ -94,6 +133,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="trade"
         onTradeInCards={vi.fn()}
@@ -122,6 +162,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="trade"
         onTradeInCards={onTradeInCards}
@@ -144,6 +185,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards
         initialMode="trade"
         onTradeInCards={vi.fn()}
@@ -163,6 +205,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="browse"
         onTradeInCards={vi.fn()}
@@ -181,6 +224,7 @@ describe('CardsPanel', () => {
       <CardsPanel
         hand={hand}
         myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
         mustTradeInCards={false}
         initialMode="trade"
         onTradeInCards={vi.fn()}

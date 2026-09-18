@@ -179,6 +179,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">
                     {t('territoriesCount', { count: territoryCountByPlayer[playerId] ?? 0 })}
+                    {/* FO §7: handaantal is publiek, kaarten zelf niet (taak 6) — alleen
+                        getoond bij ≥1, geen "0 kaarten"-ruis (Invisible Design Rule). */}
+                    {player.handCount >= 1 && ` · ${t('cardsCount', { count: player.handCount })}`}
                   </div>
                 </div>
                 <div className="flex flex-col items-end">

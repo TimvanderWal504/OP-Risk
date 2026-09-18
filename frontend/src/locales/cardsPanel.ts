@@ -20,7 +20,6 @@ export const cardsPanel = {
     nl: 'Nog geen kaarten. Verover in een beurt minstens één gebied en je trekt er een.',
     en: "No cards yet. Conquer at least one territory in a turn and you'll draw one.",
   },
-  ownedTerritory: { nl: 'Gebied in bezit', en: 'Territory owned' },
   jokerLabel: { nl: 'Joker', en: 'Joker' },
   tradeTitle: { nl: 'Leg 3 kaarten in', en: 'Trade in 3 cards' },
   tradeMandatory: {

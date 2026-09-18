@@ -115,4 +115,119 @@ public class CardSetEvaluatorTests
 
         Assert.False(result.IsSuccess);
     }
+
+    [Fact]
+    public void HasTradeableSet_TweeGelijkPlusEenAnderZonderJoker_IsFalse()
+    {
+        // Exact het door de gebruiker gemelde geval: 2 infanterie + 1 cavalerie, geen joker.
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-1"),
+            Card("c3", "ontario", "symbol-2"),
+        };
+
+        Assert.False(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Fact]
+    public void HasTradeableSet_DrieGelijkeAanwezig_IsTrue()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-1"),
+            Card("c3", "ontario", "symbol-1"),
+            Card("c4", "quebec", "symbol-2"),
+        };
+
+        Assert.True(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Fact]
+    public void HasTradeableSet_DrieVerschillendeSymbolenAanwezig_IsTrue()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-2"),
+            Card("c3", "ontario", "symbol-3"),
+            Card("c4", "quebec", "symbol-2"),
+        };
+
+        Assert.True(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Fact]
+    public void HasTradeableSet_JokerVultTweeGelijkAan_IsTrue()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-1"),
+            Card("c3", null, CardDeckBuilder.JokerSymbol),
+        };
+
+        Assert.True(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Fact]
+    public void HasTradeableSet_JokerVultTweeVerschillendeAan_IsTrue()
+    {
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-2"),
+            Card("c3", null, CardDeckBuilder.JokerSymbol),
+        };
+
+        Assert.True(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void HasTradeableSet_MinderDanDrieKaarten_IsFalse(int count)
+    {
+        var hand = Enumerable.Range(0, count)
+            .Select(i => Card($"c{i}", "alaska", "symbol-1"))
+            .ToArray();
+
+        Assert.False(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
+
+    [Fact]
+    public void HasTradeableSet_JokerNietWildEnGeenAndereSet_IsFalse()
+    {
+        var rules = Rules with { JokerIsWild = false };
+        var hand = new[]
+        {
+            Card("c1", "alaska", "symbol-1"),
+            Card("c2", "alberta", "symbol-2"),
+            Card("c3", null, CardDeckBuilder.JokerSymbol),
+        };
+
+        Assert.False(CardSetEvaluator.HasTradeableSet(rules, hand));
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(9)]
+    public void HasTradeableSet_InvariantMetDeadlockGarantie_IsAltijdTrueBijMandatoryDrempel(int handSize)
+    {
+        // Zelfde duivenhokprincipe als de deadlock-validatie in MapDefinitionParser (taak 3):
+        // bij 5+ kaarten over hooguit 3 symbolen bestaat er altijd een geldige set zodra zowel
+        // three-of-a-kind als one-of-each toegestaan zijn. Deze test legt vast dat
+        // HasTradeableSet die garantie ook daadwerkelijk waarmaakt, zodat de vrijwillige
+        // knop-gating en de verplichte auto-open-flow (mustTradeInCards) nooit tegenstrijdig
+        // kunnen worden.
+        var symbols = new[] { "symbol-1", "symbol-2", "symbol-3" };
+        var hand = Enumerable.Range(0, handSize)
+            .Select(i => Card($"c{i}", "alaska", symbols[i % symbols.Length]))
+            .ToArray();
+
+        Assert.True(CardSetEvaluator.HasTradeableSet(Rules, hand));
+    }
 }
