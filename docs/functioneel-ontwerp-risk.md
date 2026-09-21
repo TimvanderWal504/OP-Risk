@@ -1,6 +1,6 @@
 # Functioneel Ontwerp — Digitaal Risk (Host + Telefoons)
 
-**Versie:** 1.3 · **Datum:** 27 juli 2026 · **Status:** Vastgesteld; rollen/missies/events inmiddels ook inhoudelijk ingevuld (zie §13)
+**Versie:** 1.4 · **Datum:** 21 september 2026 · **Status:** Vastgesteld; rollen/missies/events inmiddels ook inhoudelijk ingevuld (zie §13); herwerp-stap en meervoudig Verplaatsen aangescherpt (§5.2, §5.3, §8.1)
 
 ---
 
@@ -157,13 +157,13 @@ Klassiek: **Versterken → Aanvallen → Verplaatsen (Fortify)**.
 - **Kaarteninleg:** klassiek escalerend (4, 6, 8, 10, 12, 15, daarna telkens +5). Inleg bij 5+ kaarten verplicht aan het begin van de versterkingsfase. Deck, geldige sets, jokers en de +2-bezitsbonus staan in `cards.json` (§4.4). Na elke beurt waarin de speler minstens één gebied veroverde, trekt hij 1 kaart. Een speler mag in één versterkingsfase **meerdere sets** achter elkaar inleveren; er is geen maximum.
 - **Verplichting bij een verlopen timer:** loopt de beurttimer af terwijl een speler nog moet inleggen (5+ kaarten), dan vervalt die verplichting niet — hij schuift door naar het begin van de volgende beurt van die speler. De server legt niet automatisch een set in.
 - **Aanvallen:** onbeperkt aantal aanvallen. Aanvaller kiest per worp 1–3 dobbelstenen, verdediger kiest 1–2 (§5.3). Na verovering verplicht minimaal zoveel legers meeverplaatsen als gebruikte aanvalsdobbelstenen.
-- **Verplaatsen:** de **moderne variant** — één verplaatsing over een aaneengesloten pad van eigen gebieden (niet beperkt tot directe buren). **Kernregel:** in het brongebied moet minimaal 1 leger achterblijven.
+- **Verplaatsen:** de **moderne variant** — één verplaatsing over een aaneengesloten pad van eigen gebieden (niet beperkt tot directe buren). **Kernregel:** in het brongebied moet minimaal 1 leger achterblijven. Een actieve `FortifyUpgrade`-rol met `moves` (§8.1) geeft dat aantal verplaatsingen in plaats van één, allemaal binnen dezelfde Verplaatsen-timer (§10); er gelden geen extra restricties op bron- of doelgebied van de tweede verplaatsing (dezelfde gebieden mogen opnieuw).
 
 ### 5.3 Gevechten & dobbelen
 
 1. Aanvaller kiest herkomst- en doelgebied (hybride selectie §2.3) en het aantal dobbelstenen. **Kernregel:** aanvallen kan alleen vanuit een gebied met minimaal 2 legers, en het aantal aanvalsdobbelstenen is maximaal (legers in het brongebied − 1), met een absoluut maximum van 3.
 2. Aanvaller drukt **"Gooi"** — dit is tegelijk de bevestiging van de aanval (§5.5). De server gooit meteen de aanvalsdobbelstenen, zichtbaar op TV.
-3. Heeft de aanvaller een actieve `Reroll`-rol (§8), dan mag hij — nog vóórdat de verdediger heeft gegooid — zelf kiezen of hij 1 van zijn eigen dobbelstenen herwerpt (tot het aantal dat de rol per beurt toestaat). Dit is dus altijd vóór enige vergelijking met de verdediger.
+3. Heeft de aanvaller een actieve `Reroll`-rol (§8) en is de herwerp voor dit doelgebied deze beurt nog niet gebruikt, dan krijgt hij een **expliciete herwerp-stap**: hij kiest zelf één van zijn eigen dobbelstenen om te herwerpen, óf kiest "Doorgaan" zonder herwerp. De verdediger kan pas kiezen (stap 4) nadat de aanvaller deze stap heeft afgerond; zijn telefoon toont ondertussen dat de aanvaller een herwerp overweegt. Dit is dus altijd vóór enige vergelijking met de verdediger. Is er geen actieve `Reroll`-rol of is de herwerp voor dit doelgebied al gebruikt, dan is er geen stap en gaat het direct door naar stap 4.
 4. De verdediger krijgt op zijn telefoon de keuze: verdedigen met 1 of 2 dobbelstenen. **Harde regel:** een verdediger met slechts 1 leger in het gebied kan alleen 1 dobbelsteen kiezen (de UI toont dan geen keuze). **De verdediger heeft geen timer.**
 5. De server gooit de verdedigingsdobbelstenen, zichtbaar op TV. Uitkomst (verliezen per kant) wordt bepaald door de (eventueel herworpen) aanvalsworp tegen de verdedigingsworp te vergelijken, en op de TV getoond en verwerkt.
 6. Bij verovering: aanvaller kiest hoeveel legers hij meeverplaatst (minimaal het aantal gebruikte aanvalsdobbelstenen).
@@ -274,8 +274,8 @@ Effect-types in v1:
 |---|---|---|
 | `ExtraReinforcement` | `amount` | Extra legers in de versterkingsfase |
 | `CardTradeBonus` | `amount` | Extra legers bij kaarteninleg |
-| `Reroll` | `perTurn` | De aanvaller mag, na zijn eigen worp maar **vóórdat de verdediger gooit**, per beurt 1 van zijn eigen dobbelstenen zelf kiezen om te herwerpen (zichtbaar op TV als "herworpen") — niet gebaseerd op "verloren", want er is op dat moment nog niets met de verdediger vergeleken. De herwerp-prompt heeft **geen timer** (net als de verdediger-keuze; de beurttimer staat tijdens het gevecht toch al stil) |
-| `FortifyUpgrade` | `moves` of `throughEnemy` | Extra verplaatsing, of pad door 1 vijandelijk gebied |
+| `Reroll` | — | De aanvaller mag, na zijn eigen worp maar **vóórdat de verdediger gooit**, **één keer per doelgebied per beurt** 1 van zijn eigen dobbelstenen zelf kiezen om te herwerpen (zichtbaar op TV als "herworpen": de gekozen dobbelsteen wordt gehighlight en krijgt zijn nieuwe waarde) — niet gebaseerd op "verloren", want er is op dat moment nog niets met de verdediger vergeleken. Een herworpen dobbelsteen kan niet nogmaals herworpen worden. De herwerp geldt per doelgebied: meerdere worpen tegen hetzelfde gebied delen één herwerp, tussendoor een ander gebied aanvallen en terugkomen geeft géén nieuwe; een ander doelgebied heeft zijn eigen herwerp; een nieuwe beurt begint met een schone lei. "Doorgaan" zonder herwerp verbruikt hem niet: bij een volgende worp tegen hetzelfde gebied verschijnt de keuze opnieuw, totdat de aanvaller daadwerkelijk herwerpt. De herwerp-stap heeft **geen timer** (net als de verdediger-keuze; de beurttimer staat tijdens het gevecht toch al stil) |
+| `FortifyUpgrade` | `moves` of `throughEnemy` | `moves`: dat aantal verplaatsingen in de Verplaatsen-fase in plaats van één (§5.2); `throughEnemy`: pad door 1 vijandelijk gebied |
 
 Bewuste keuze: **geen verborgen kansmanipulatie** (gewogen dobbelstenen). Alle voordelen zijn zichtbaar en telbaar op het bord, zodat uitkomsten aan tafel niet als oneerlijk voelen.
 

@@ -1,6 +1,6 @@
 # Technisch Ontwerp — Digitaal Risk
 
-**Versie:** 1.1 · **Datum:** 27 juli 2026 · **Status:** Grotendeels geïmplementeerd (bouwstappen 1–3, zie §11); frontend-kaartlaag (stap 5) nog te bouwen
+**Versie:** 1.2 · **Datum:** 21 september 2026 · **Status:** Grotendeels geïmplementeerd (bouwstappen 1–3, zie §11); frontend-kaartlaag (stap 5) nog te bouwen; herwerp-stap en meervoudig Verplaatsen (`docs/plan-rollen.md`) ontworpen, nog te bouwen
 **Verwant:** `functioneel-ontwerp-risk.md` (het *wat*); dit document beschrijft het *hoe*.
 
 ---
@@ -61,7 +61,8 @@ GameState
 ├─ Settings         (winconditie, startopstelling, startlegers, timer, feature-toggles)
 ├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isAutoPass)
 ├─ Territories[]    (territoryId → ownerPlayerId, armyCount)
-├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat?)
+├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat? {from, to, attackDice,
+│                    attackerRolls, awaitingRerollDecision}, rerolledTargetTerritoryIds[], fortifiesUsed, ...)
 ├─ Deck             (trekstapel, aflegstapel, volgende inleg-waarde)
 ├─ ActiveEffects[]  (lopende event-effecten met resterende duur)
 └─ TurnOrder[]      (spelersvolgorde, bepaald door de order-roll)
@@ -129,11 +130,13 @@ Commando binnen (SignalR)
 | `PlaceInitialArmy` | InitialPlacement | Speler heeft nog startlegers, gebied is van hem |
 | `TradeCards` | Reinforce | Geldige set (`cards.json`-regels), verplicht bij 5+ kaarten |
 | `PlaceArmies` | Reinforce | Aantal ≤ beschikbare versterkingen, gebied van speler |
-| `DeclareAttack` (= "Gooi") | Attack | Van-gebied ≥ 2 legers, doel is vijandelijke buur, #dobbelstenen ≤ legers−1 (max 3) |
-| `ChooseDefenseDice` | Attack (verdediger) | 1 of 2; bij 1 verdedigend leger gedwongen 1 |
+| `DeclareAttack` (= "Gooi") | Attack | Van-gebied ≥ 2 legers, doel is vijandelijke buur, #dobbelstenen ≤ legers−1 (max 3). Opent de herwerp-stap (`PendingCombat.AwaitingRerollDecision`) als de aanvaller een actieve `Reroll`-rol heeft én het doelgebied nog niet in `TurnState.RerolledTargetTerritoryIds` staat (FO §5.3 stap 3) |
+| `RerollAttackDie` | Attack | Herwerp-stap staat open; `dieIndex` binnen de eigen worp. Voegt het doelgebied toe aan `RerolledTargetTerritoryIds` (FO §8.1: één per doelgebied per beurt) |
+| `KeepAttackDice` (= "Doorgaan") | Attack | Herwerp-stap staat open. Sluit de stap zonder herwerp; verbruikt niets (FO §8.1) |
+| `ChooseDefenseDice` | Attack (verdediger) | 1 of 2; bij 1 verdedigend leger gedwongen 1; geweigerd zolang de herwerp-stap open staat |
 | `MoveAfterConquest` | Attack | ≥ gebruikte aanvalsdobbelstenen, ≤ (bron−1) |
 | `AbandonAttack` (= "Ander gevecht") | Attack | Speler aan de beurt, geen actief `PendingCombat`, er staat een bevroren belegering (`TurnState.PausedAttackTarget`) om af te breken |
-| `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter |
+| `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter, `TurnState.FortifiesUsed` < toegestane verplaatsingen (1, of `moves` van een actieve `FortifyUpgrade`-rol — FO §5.2) |
 | `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt |
 | `SetAutoPass` (host) | elke | Aanroeper is host; doel is afwezige speler |
 | `VoteReplay` / `HostRestart` (host) | Finished | — |
@@ -162,7 +165,7 @@ E�n event-stream per `GameId`. Events zijn onveranderlijke feiten in verleden 
 ```
 GameCreated, PlayerJoined, ColorChosen, OrderRolled, TurnOrderDetermined,
 TerritoryClaimed, InitialArmyPlaced, RoleAssigned, MissionAssigned,
-CardsTraded, ArmiesReinforced, AttackDeclared, DiceRolled, CombatResolved,
+CardsTraded, ArmiesReinforced, AttackDeclared, DiceRolled, AttackDieRerolled, AttackDiceKept, CombatResolved,
 TerritoryConquered, ArmiesMovedAfterConquest, Fortified,
 CardDrawn, PlayerEliminated, EventCardDrawn, EffectApplied, EffectExpired,
 PhaseChanged, TurnEnded, MissionCompleted, GameWon
@@ -173,6 +176,8 @@ De **geprojecteerde `GameState`** (§3.1) is een Marten-projectie (inline of asy
 **Events dragen hun eigen uitkomst.** Een event bevat niet alleen wat er gebeurde maar ook wat het opleverde, berekend door de rules engine vóórdat het event ontstond: `PhaseChanged` draagt de toegekende versterkingen, `CardsTraded` de setwaarde, de bezitsbonussen en de volgende inlegwaarde. De projectie rekent dus niets uit, ze vouwt alleen. Zou de opbrengst pas bij het vouwen berekend worden, dan zou een latere wijziging van bijvoorbeeld de versterkingsformule of de inlegtabel met terugwerkende kracht de uitkomst van al gespeelde partijen veranderen.
 
 **Streams van vóór die wijziging worden niet ondersteund.** Ze missen die velden en zouden bij een replay stilzwijgend naar `null`/`0` deserialiseren — een speler die zonder versterkingen begint, zonder foutmelding. `PhaseChanged` en `CardsTraded` zijn daarom hernoemd naar `phase_changed_v2` en `cards_traded_v2` (`GameStoreFactory`), zodat een oude stream bij een replay hard faalt in plaats van stil verkeerd te vouwen. De database wordt bij het uitrollen van deze wijziging leeggegooid; dit is pre-release-testdata, er is bewust geen upcast-pad gebouwd.
+
+**Aanvalsworp in de state (herwerp-stap, FO §5.3 stap 3).** `AttackDeclared` draagt de aanvalsworp (`AttackerRolls`) en de door de commandhandler bepaalde vlag `AwaitingRerollDecision` — de projectie past ook hier alleen toe, ze raadpleegt geen rol-effecten. Het wordt daarom `attack_declared_v2`, met dezelfde wipe-afspraak als hierboven. `DiceRolled` blijft bestaan als puur audit-/TV-narratiefeit zonder vouwregel; de worp in `PendingCombat.AttackerRolls` is leidend voor `ChooseDefenseDice`. `AttackDieRerolled` (met de oude worp, de herworpen index, de nieuwe waarde en de nieuwe gesorteerde worp — `CombatResolver.RerollDie` sorteert opnieuw, dus een kale index is na de herwerp betekenisloos) vervangt `AttackerRolls`, sluit de herwerp-stap en voegt het doelgebied toe aan `TurnState.RerolledTargetTerritoryIds`; `AttackDiceKept` sluit alleen de stap. Beide zijn idempotent ten opzichte van elkaar: een tweede sluit-event op een al gesloten stap is een no-op, want de commandhandlers gebruiken geen expected-version en twee gelijktijdige beslissingen van dezelfde aanvaller kunnen allebei slagen. `RerolledTargetTerritoryIds` en `FortifiesUsed` leven in `TurnState` en beginnen leeg/0 bij elke fase-intrede (`PhaseChanged` bouwt altijd een nieuwe `TurnState`); Aanvallen en Verplaatsen zijn elk één fase per beurt, dus dat is per beurt.
 
 ### 5.3 Timer-afhandeling
 
