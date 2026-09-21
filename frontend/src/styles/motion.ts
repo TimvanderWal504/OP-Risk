@@ -102,10 +102,17 @@ export const tvAnimations = {
   /** A2 — eigenaarswissel van een gebied: uitgaande kleur faded weg, badge swapt (L914/L919). */
   ownerWash: 'atlasOwnerWash .42s ease-out both',
   ownerBadgeSwap: 'atlasBadgeSwap .3s cubic-bezier(.2,.7,.3,1) both',
-  /** A3 — dobbelsteen-herworp in-place. Volgordedobbelsteen los (L991); aanvaller-herworp
-   *  gecombineerd met de bestaande settle-schaduw-animatie, zelfde duur (L1011). */
+  /** A3 — dobbelsteen-herworp in-place. Volgordedobbelsteen los (L991); de export combineerde
+   *  aanvaller-herworp (L1011) met `atlasSettle`, maar die schaduw-animatie is elders in dit
+   *  bestand (zie `attackerDie`/`defenderDie` hierboven) juist bewust verwijderd — box-shadow
+   *  animeren is verboden op TV (frontend/CLAUDE.md §Animatie, zwakke GPU) en `Dice`'s
+   *  niet-filterende buiten-`<div>` toont 'm als vierkante laag (iOS-fix 2026-08-10). Diezelfde
+   *  twee redenen gelden hier evengoed, dus die koppeling is hier ook geschrapt i.p.v. letterlijk
+   *  overgenomen — beide entries draaien nu op de kale `atlasReroll`-rotatie. Tot de rol-herworp
+   *  (plan-rollen) dit gebruikte, bestond `@keyframes atlasReroll` niet eens in `index.css`,
+   *  dus de tie-break-herworp hieronder speelde in de praktijk geen animatie af — nu gefixt. */
   diceRerollOrder: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
-  diceRerollAttacker: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both, atlasSettle .55s both',
+  diceRerollAttacker: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
   /** A4 — nieuwe spelerskaart in lobby (L971) en rol die op een bestaande kaart bijkomt (L972) — zelfde keyframe, andere duur. */
   lobbyCardIn: 'atlasChipIn .42s cubic-bezier(.2,.7,.3,1) both',
   lobbyRoleIn: 'atlasChipIn .4s cubic-bezier(.2,.7,.3,1) both',
@@ -188,6 +195,12 @@ export const phoneAnimations = {
   waitDie: 'phDice .9s cubic-bezier(.2,.8,.3,1) both',
   /** Kleine aanval/verdedig-dobbelstenen, gestaggerd (L1677, L1703). idx = dobbelsteenindex. */
   combatDie: (idx: number) => `phDice .8s cubic-bezier(.2,.8,.3,1) ${(idx * 0.12).toFixed(2)}s both`,
+  /** Dobbelsteen-herworp in-place (Reroll-rol, plan-rollen taak 5) — geen letterlijke
+   *  telefoon-tegenhanger in de oorspronkelijke export, want dit scherm bestond daar niet. Geen
+   *  nieuwe keyframe nodig: `atlasReroll` bevat alleen rotate/scale, geen apparaat-specifieke
+   *  translate-afstand (anders dan `atlasRollL/R` vs. `phDice`), dus dezelfde CSS-regel en duur
+   *  als de TV-kant (`tvAnimations.diceRerollAttacker`) volstaat voor beide. */
+  diceReroll: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
   /** Titel-slam, twee losse instanties (L635, L989). */
   titleSlamShort: 'phSlam .6s both',
   titleSlamLong: 'phSlam .7s both',

@@ -164,6 +164,28 @@ select:focus-visible,
       inset 0 3px 0 rgba(255, 255, 255, 0.28);
   }
 }
+/* Dobbelsteen-herworp in-place (geen fly-in, de steen staat al in beeld): tot nu toe alleen
+   als string in motion.ts (`tvAnimations.diceRerollOrder`) opgenomen zonder dat deze
+   @keyframes-regel hier bestond, dus de tie-break-herworp op `OrderRollTvPanel` speelde in de
+   praktijk geen animatie af (onbekende animation-naam wordt stil genegeerd). Nu ook nodig voor
+   de rol-herworp (Reroll-effect, plan-rollen taak 5/6). */
+@keyframes atlasReroll {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  12% {
+    transform: rotate(-84deg) scale(0.86);
+  }
+  62% {
+    transform: rotate(276deg) scale(1.08);
+  }
+  82% {
+    transform: rotate(348deg) scale(0.98);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
 @keyframes atlasStageIn {
   0% {
     opacity: 0;
