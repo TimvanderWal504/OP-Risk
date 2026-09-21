@@ -5,7 +5,15 @@ import { apiUrl } from '../config/apiConfig'
 
 export function GameHubProvider({ children }: { children: ReactNode }) {
   const [connection] = useState(() =>
-    new HubConnectionBuilder().withUrl(apiUrl('/hubs/game')).withAutomaticReconnect().build(),
+    // withCredentials: false — de SignalR-client stuurt anders standaard cookies mee
+    // cross-origin (incl. Azure's eigen ARRAffinity-cookie), wat de CORS-preflight laat
+    // stuklopen omdat de API bewust geen AllowCredentials() heeft (Program.cs): onze eigen
+    // app-logica gebruikt toch geen cookies/Authorization-headers, sessietokens gaan als
+    // expliciet hub-argument (RejoinGame).
+    new HubConnectionBuilder()
+      .withUrl(apiUrl('/hubs/game'), { withCredentials: false })
+      .withAutomaticReconnect()
+      .build(),
   )
   const [connectionState, setConnectionState] = useState(connection.state)
   // houdt start/stop gescheiden over StrictMode-remounts heen
