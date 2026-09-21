@@ -414,9 +414,25 @@ focus states.
 
 ### Territory Card Tile (`TerritoryCardTile`) / Cards Panel (`CardsPanel`)
 - **Territory Card Tile — three centered parts, no dividers, height follows content** (revised 2026-09-18: a fixed `aspect-[3/4]` was tried and explicitly removed — "actively making the UI worse" — so the tile's height is now whatever its three parts need, not a forced ratio): `GlassPanel elevation="raised"`, flattened by the no-nested-blur rule inside `CardsPanel`'s `ModalShell`. **Part 1 — name:** the territory name (H3, `font-display`), centered. **Part 2 — outline:** a normalized, per-territory line-drawing derived from the map's own GeoJSON (`stroke=currentColor`, `fill=none`, no separate asset per territory), centered — sized at double the flex share of parts 1/3 (`flex-[2]` vs. `flex-1`, 2026-09-17: "de kaarten iets te klein") and unclamped (no `max-h` cap) so the drawing fills that doubled space fully instead of sitting small inside it. **Part 3 — value:** a theme-aware filled card-symbol icon (`h-24 w-24`) above the uppercase eyebrow label (same kicker treatment as elsewhere), both centered. This name → outline → value order, and the absence of any divider between the three parts, replaced an earlier value → name → outline / hairline-divided build the user rejected on sight. **Joker:** all 3 parts show a value icon from the current theme instead, in symbol order (classic: infantry/cavalry/artillery), plus the same uppercase symbol-label treatment as a regular card — a single "Joker" line pinned to the bottom of the tile, below the 3 icons — no name, no outline. **No owned-territory text signal** (removed 2026-09-18, same feedback round as the aspect-ratio removal — deliberately simplified, not an omission): the `owned` prop still drives a `--pitch-700` border on the tile, but the earlier "Gebied in bezit" text line under it is gone.
-- **Card symbol icons — filled silhouettes, a named exception to the line-icon convention:** the 5 value icons (`cardSymbolIcons.tsx`) are user-supplied traced illustrations with their own native viewBox per icon (not forced to 16×16, which would distort them), rendered at a fixed container size (`h-16 w-16`, bumped up from an initial `h-10 w-10` per user feedback) so all 5 read as the same visual weight despite very different source aspect ratios. Unlike every other icon in `icons.tsx` (`stroke=currentColor`/`fill=none`, `viewBox 0 0 16 16`), these are **filled shapes** (`fill=currentColor`) — a deliberate, user-directed departure that mirrors the physical reference card (a solid icon in one corner, a thin outline drawing elsewhere), not drift (see **Don't**, below, and `Dice`'s own documented blur exception in **Components → Dice** for the same category of deliberate one-off). Kept in their own file rather than `icons.tsx` — each icon is hundreds of lines of path data, which would break that file's small/scannable character. **Bugfix (2026-09-17, user screenshot):** the first `<path>` of each source SVG carried an extra full-canvas frame subpath (a VTracer background-tracing artifact) that rendered as a solid `currentColor`-filled square behind the silhouette; that subpath is stripped at generation time so only the actual figure renders. **Second bugfix (2026-09-17, same feedback round — "some parts are completely filled in"):** the source files also split each icon across several independently-filled `<path>` elements, some carrying their own internal hole (e.g. a wheel hub); rendered as separate opaque same-color shapes, a hole in one path was masked by an overlapping solid fill from another, hiding real detail (boots, helmet, hub rings, tank treads). Fixed by baking every path's `translate()` offset into absolute coordinates and merging all subpaths into one `<path fill-rule="evenodd">` per icon, so a hole anywhere punches through the whole combined shape.
+- **Card symbol icons — filled silhouettes, a named exception to the line-icon convention:** the 5 value icons (`cardSymbolIcons.tsx`) are user-supplied traced illustrations with their own native viewBox per icon (not forced to 16×16, which would distort them), rendered at a fixed container size (`h-24 w-24`, bumped up from an initial `h-10 w-10`, then `h-16 w-16`, per two rounds of user feedback) so all 5 read as the same visual weight despite very different source aspect ratios. The component's own default prop still reads `h-16 w-16`, but every call site in `TerritoryCardTile.tsx` overrides it to `h-24 w-24` — the default is unused, not a second live size. Unlike every other icon in `icons.tsx` (`stroke=currentColor`/`fill=none`, `viewBox 0 0 16 16`), these are **filled shapes** (`fill=currentColor`) — a deliberate, user-directed departure that mirrors the physical reference card (a solid icon in one corner, a thin outline drawing elsewhere), not drift (see **Don't**, below, and `Dice`'s own documented blur exception in **Components → Dice** for the same category of deliberate one-off). Kept in their own file rather than `icons.tsx` — each icon is hundreds of lines of path data, which would break that file's small/scannable character. **Bugfix (2026-09-17, user screenshot):** the first `<path>` of each source SVG carried an extra full-canvas frame subpath (a VTracer background-tracing artifact) that rendered as a solid `currentColor`-filled square behind the silhouette; that subpath is stripped at generation time so only the actual figure renders. **Second bugfix (2026-09-17, same feedback round — "some parts are completely filled in"):** the source files also split each icon across several independently-filled `<path>` elements, some carrying their own internal hole (e.g. a wheel hub); rendered as separate opaque same-color shapes, a hole in one path was masked by an overlapping solid fill from another, hiding real detail (boots, helmet, hub rings, tank treads). Fixed by baking every path's `translate()` offset into absolute coordinates and merging all subpaths into one `<path fill-rule="evenodd">` per icon, so a hole anywhere punches through the whole combined shape.
 - **Territory outline:** normalized per-territory, not the TV board's map-scale coordinates — each territory's own bounding box is scaled (aspect preserved) into a small fixed viewBox, so a tiny island and a huge territory render at the same visual size on the tile.
-- **Cards Panel:** a full-screen `ModalShell`, structurally identical to `MissionPanel` (privacy line, title, `Footer`-hosted actions) with two views sharing one component instance — browse (a passive grid, or an empty-state line when the hand is empty) and trade (the same tiles as `SelectableOption` checkboxes, capped at 3 selected). Both grids anchor content to the top (`content-start`) so a short hand's tiles keep their fixed tile size instead of stretching to fill the available height. Leaving trade — confirming or cancelling — always closes the panel; a server-driven `mustTradeInCards` flag removes the close/skip affordance entirely rather than disabling it, so the mandatory state has no escape by omission, not by a disabled button a player could puzzle over.
+- **Cards Panel:** a full-screen `ModalShell`, structurally identical to `MissionPanel` (privacy line, title, `Footer`-hosted actions) with two views sharing one component instance — browse (a passive grid, or an empty-state line when the hand is empty) and trade (the same tiles as `SelectableOption` checkboxes, capped at 3 selected). Both grids anchor content to the top (`content-start`) so a short hand's tiles keep their fixed tile size instead of stretching to fill the available height. Leaving trade — confirming or cancelling — always closes the panel; a server-driven `mustTradeInCards` flag removes the close/skip affordance entirely rather than disabling it, so the mandatory state has no escape by omission, not by a disabled button a player could puzzle over. **Trade-mode guidance (added 2026-09-21, `/impeccable critique` P1 findings):** a small `{{count}}/3 geselecteerd` line (`text-xs`, `tabular-nums`, `text-fg-muted`) sits under the intro paragraph so the player never has to recount bordered tiles by eye; the set rule itself (FO §4.4's "3× hetzelfde symbool of 1 van elk; een joker vervangt elk symbool", paraphrased) renders as `Footer`'s existing `hint` slot below the action buttons — no new UI element, the panel's first use of an affordance every other `Footer`-hosted screen already has available.
+
+### Role Reroll (Reroll-effect, `AttackFlowStep` / `DefendStep` / `TvCombatOverlay`)
+Design brief for `docs/plan-rollen.md` §3B (B1/B2/B6) — none of the three pieces below exist yet; each needs `PendingCombat.AttackerRolls`/`AwaitingRerollDecision` (plan-rollen taak 3/4) before it can be built.
+- **Phone — attacker's reroll offer (`AttackRolledResult`'s waiting-for-defense state):** visible only while the attacker's Reroll boost is active and this target territory hasn't been rerolled yet this turn (FO §8.1 — once per target territory, not consumed by "Doorgaan"). Sits inside the same results `GlassPanel`, below the dice row: an instruction line (`font-body text-sm text-fg-muted`, "Herwerp een dobbelsteen voordat de verdediger gooit"), the dice become tappable — a tapped die gets a selection ring (`border-2 border-silver-400`, the same "border carries the state" idiom as `SelectableOption`, not a second checkmark) — then two `Footer` actions: primary "Herwerpen" (pitch-glow, disabled until a die is selected) and secondary "Doorgaan" (no boost cost, see A8). Confirming replays the die's animation via `phoneAnimations.diceReroll` (a bare `atlasReroll` in-place rotation — no fly-in, the die is already on screen, and no `atlasSettle` shadow-pairing, banned on `Dice`'s non-filtering wrapper) applied only to the rerolled die's wrapper, never the whole row (the untouched dice stay static — a full-row replay would misreport which die actually changed).
+- **TV — attacker's reroll highlight (`TvCombatOverlay`'s `CombatSide` for the attacker):** on a `kind: "reroll"` dice message, only the changed die's wrapper replays `tvAnimations.diceRerollAttacker` (the same bare `atlasReroll` rotation as the phone side — no separate TV-only glow or chip). The motion itself is the signal (**The Invisible Design Rule**); no kicker-text change, no badge.
+- **Phone — defender's wait state (`DefendStep`, `result === null` block):** while `PendingCombat.AwaitingRerollDecision` is true, the two existing dice-count buttons stay mounted (no layout jump once the decision lands) but render `disabled` — the component's standard 50%-opacity/`cursor-not-allowed` state, no fade — with the choice copy (`defend.choose`) swapped for a waiting line ("Aanvaller overweegt een herwerp…"). The moment the decision resolves, the buttons flip back to normal instantly and *are* the throw action — no separate "Gooien" control.
+
+### Role Badge (`TvMainBoardScreen` player row / `PhonePlayerHeader`)
+Design brief for `docs/plan-rollen.md` §3B (B3/B4). Needs a forthcoming `PlayerDto.IsRoleActive` field (plan-rollen taak 3/4); both renderings gate on `roleId !== null` (**The Invisible Design Rule** — a game with roles off shows nothing extra on either screen).
+- **TV:** reuses the existing `Badge` component as-is — `pitch-solid` while the role's origin territory is owned (boost active), `silver-outline` while it isn't — exactly the tone split `Badge`/**Badges · Chips** already documents for "active/confirmed" vs. neutral, so this introduces no new visual language. Placed inline right after the player's name on the roster row's name line (`TvMainBoardScreen`'s "Spelers" panel), showing only the role's display name — no extra "(in)actief" word, since the tone already carries that.
+- **Phone:** a text segment, not a chip — matches the header's existing plain-text identity/status lines better than a colored badge would. Appends to `PhonePlayerHeader`'s status line via the same middle-dot idiom already documented under **Player Header / Stat rows** ("a second stat joins inline with a middle-dot separator"): `"Jouw beurt · Aanvallen · Generaal · actief"` (lower-case "actief"/"inactief", matching the sentence-case status text around it, not the uppercase kicker style).
+
+### Fortify continuation state (`FortifyFlowStep`)
+Design brief for `docs/plan-rollen.md` §3B (B5). Needs `TurnState.HasFortified` (bool) to become `FortifiesUsed`/`fortifiesRemaining` (int) server-side (plan-rollen taak 2) before this can be built.
+- At `fortifiesRemaining === 1` (one of two role-granted moves used): the same confirmation `GlassPanel` as today's terminal state, but with two `Footer` actions instead of one — primary "Nog een verplaatsing" (pitch-glow, same "do the same kind of action again" idiom as `AttackFlowStep`'s "Nog een keer aanvallen"; returns to the `src` picker, clearing the remembered intent) and secondary "Beurt beëindigen" (unchanged).
+- At `fortifiesRemaining === 0` (both moves used, or the role/boost isn't active): identical to the current terminal state — confirmation text plus only "Beurt beëindigen".
 
 ## Do's and Don'ts
 
@@ -442,3 +458,72 @@ focus states.
 - **Don't** assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells, and the glass layer specifically has no light-mode tints at all today (a gap, not a design decision, if a light glass surface is ever needed).
 - **Don't** use a decorative unicode emoji or glyph as a stand-in icon (🎲, ⚔, 👑, 📺, ⏱, ›, ◌, ✓). `ColorSymbol`'s player-seat glyphs (`▲ ● ■ ★ ✚ ⬡ ◆`) are the one exception — they're colorblind-accessibility data sourced from frozen `data/colors.json`, not decoration standing in for missing UI (removed across the phone screens, 2026-08-05).
 - **Don't** treat every icon as `stroke=currentColor`/`fill=none` — the 5 territory-card value icons (`cardSymbolIcons.tsx`, see **Components → Territory Card Tile**) are the one documented exception: filled silhouettes, user-supplied to match the physical reference card's solid-icon/thin-outline contrast, not a stylistic drift from the line-icon convention.
+
+## Taste-Skill Guardrail
+
+**What it is.** `design-taste-frontend` — the default skill of
+[Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (v2, MIT,
+upstream commit `5217fb4`, 2026-09-20) — is vendored verbatim as a project skill
+at `.claude/skills/design-taste-frontend/SKILL.md`. It exists to catch the one
+failure mode nothing else in this file can: output that is token-conformant and
+still reads as generated — the LLM defaults the skill calls "AI tells" (three
+identical cards, decorative status dots, section-number eyebrows, scroll cues,
+filler verbs, poetic section labels, fake product previews built from `<div>`s,
+the em-dash as a design element, "Jane Doe" fixture data). This file describes
+what the system *is*; the taste-skill is the checklist for what a new screen must
+*not* quietly become.
+
+**Where it sits.** Below this file, never beside it. `DESIGN.md` plus
+`design-tokens.ts`/`motion.ts` remain the spec (CLAUDE.md, "Bronnen van
+waarheid"); the taste-skill is a review lens applied on top of a deliverable.
+Where the two disagree, this file wins and the disagreement is not a finding to
+fix — it's one of the documented exceptions below. Nothing in the skill grants
+permission to change a token, add a dependency, or "improve" the design
+silently; the frozen-tokens and no-silent-drift rules in CLAUDE.md apply to
+taste-skill output exactly as to any other.
+
+**When to invoke.**
+- As a *review* pass: on every `/impeccable critique` / `polish` / `quieter` /
+  `bolder` run, and on the design-conformity check of any new screen or
+  component (frontend/CLAUDE.md, "Afwijkingenlijst"), load the skill and run
+  its §9 "AI tells" list and the applicable rows of its §14 pre-flight matrix
+  against the deliverable. Hits go into the afwijkingenlijst with a reason,
+  like any other deviation.
+- Not as a *generator*: the skill's §0–§3 (brief inference, dial selection,
+  "pick a design system", stack and icon-library conventions) are already
+  answered by this file and the TO. Skip them. The skill's own §13 declares
+  dense product UI and multi-step flows out of scope, and both game shells are
+  exactly that — so only its cross-cutting parts (typography discipline,
+  interactive states, contrast checks, copy self-audit, AI tells) apply here.
+
+**Dial reading of this system** (skill §11.B: an existing site's reading is the
+starting point, not the `8 / 6 / 4` baseline). Derived from this file, not
+chosen fresh — a change to these values is a design change, not a tuning:
+- `DESIGN_VARIANCE: 3` — broadcast graphics are rigid by nature: an aligned
+  lower-third, a fixed grid, a symmetric scoreboard. The asymmetric/zig-zag
+  layouts of skill §4.3 and §9.C would break the at-a-distance reading the
+  whole system exists for (see **The Invisible Design Rule**).
+- `MOTION_INTENSITY: 3` — every duration and easing lives in `motion.ts`;
+  motion is functional (phase crossfade, dice reveal, state transitions),
+  never cinematic. No GSAP, no scroll-driven skeletons (skill §5): both are new
+  dependencies, and the shells don't scroll.
+- `VISUAL_DENSITY: 6` — TV scoreboard and phone controller, closer to
+  "cockpit" than "art gallery". Skill §4.9's density rules apply; §4.4's "cards
+  banned above density 7" does not, because glass is the material, not a
+  grouping device (**The Glass-By-Default Rule**).
+
+**Documented exceptions** — skill rules deliberately overruled here, listed so a
+future taste pass doesn't "fix" them:
+
+| Skill rule | Status here | Why |
+|---|---|---|
+| §0.D / §9.A — "no generic glassmorphism on everything", "no outer glows" | Overruled | Clear glass is the system's material (**The Glass-By-Default Rule**); the single `shadow-glow-pitch` on the primary CTA is a scarcity signal, not decoration (**Do's**). |
+| §3.C / §9.E — "never hand-roll SVG icons; use Phosphor/Tabler/…" | Overruled | `icons.tsx` and `cardSymbolIcons.tsx` *are* the icon set. Adding an icon package is a dependency decision (CLAUDE.md, "Geen nieuwe dependencies zonder overleg"), not a taste fix. |
+| §3.A / §3.B — stack (Next.js/RSC, Tailwind v4, Motion, Zustand) | Ignored | Stack and state model are fixed by the TO and `useGameState`/SignalR. |
+| §4.1 / §9.B — typography defaults, "no oversized H1s" | N/A | Lexend/Archivo display at black weight, tabular numerals and the 16px uppercase kicker are fixed in tokens; the size *is* the legibility mechanism (**Typography**). |
+| §4.4 — shape consistency lock | Already satisfied | Radius is stepped by role (pill / `--radius-input` / `--radius-card` / `--radius-sheet`, **Shapes**), which is exactly the "documented rule" form §4.4 permits for a mixed system. |
+| §6.C / §8 — dark mode protocol, "test both modes" | Already satisfied / N/A | Both shells force dark (**Overview**); the glass layer is dark-only by design. |
+| §9.G — em-dash ban | *New* UI copy only | Existing Dutch copy (e.g. "Je hebt 5 of meer kaarten — inleggen is verplicht.") follows the FO; changing it is a copy change to raise with the user, not a taste fix. This file's own prose is documentation and out of the skill's scope. |
+| §9.D — "no generic names / fake-perfect numbers" | Fixtures only | Real game state comes from the server; the rule applies to `host/` demo data and test fixtures. |
+| §3.D — emoji policy | Already stricter here | **Don't** list: no decorative unicode glyphs, with `ColorSymbol`'s seat glyphs as the one data-driven exception. |
+| §14 — hero / marquee / logo-wall / bento / section-repetition rows | N/A | Marketing-page checks; there is no hero, marquee or section scroll in either shell. |
