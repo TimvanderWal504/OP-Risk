@@ -146,24 +146,6 @@ select:focus-visible,
     opacity: 1;
   }
 }
-@keyframes atlasSettle {
-  0%,
-  72% {
-    box-shadow:
-      0 16px 34px rgba(0, 0, 0, 0.55),
-      inset 0 3px 0 rgba(255, 255, 255, 0.28);
-  }
-  80% {
-    box-shadow:
-      0 4px 10px rgba(0, 0, 0, 0.6),
-      inset 0 3px 0 rgba(255, 255, 255, 0.28);
-  }
-  100% {
-    box-shadow:
-      0 16px 34px rgba(0, 0, 0, 0.55),
-      inset 0 3px 0 rgba(255, 255, 255, 0.28);
-  }
-}
 /* Dobbelsteen-herworp in-place (geen fly-in, de steen staat al in beeld): tot nu toe alleen
    als string in motion.ts (`tvAnimations.diceRerollOrder`) opgenomen zonder dat deze
    @keyframes-regel hier bestond, dus de tie-break-herworp op `OrderRollTvPanel` speelde in de

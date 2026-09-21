@@ -15,7 +15,6 @@ export const tvKeyframes = {
   atlasRollL: `0%{transform:translate(-1500px,-260px) rotate(-1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(90px,30px) rotate(180deg) scale(1.08);}76%{transform:translate(-46px,-16px) rotate(72deg) scale(1);}88%{transform:translate(22px,8px) rotate(-20deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}`,
   atlasRollR: `0%{transform:translate(1500px,-300px) rotate(1080deg) scale(.6);opacity:0;}8%{opacity:1;}60%{transform:translate(-90px,34px) rotate(-180deg) scale(1.08);}76%{transform:translate(50px,-18px) rotate(-72deg) scale(1);}88%{transform:translate(-24px,9px) rotate(24deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}`,
   atlasTumble: `0%{transform:translate(-680px,-880px) rotate(-900deg) scale(.55);opacity:0;}10%{opacity:1;}58%{transform:translate(60px,40px) rotate(150deg) scale(1.1);}74%{transform:translate(-30px,-18px) rotate(60deg) scale(1);}88%{transform:translate(14px,7px) rotate(-16deg);}100%{transform:translate(0,0) rotate(0) scale(1);opacity:1;}`,
-  atlasSettle: `0%,72%{box-shadow:0 16px 34px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.28);}80%{box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 3px 0 rgba(255,255,255,.28);}100%{box-shadow:0 16px 34px rgba(0,0,0,.55),inset 0 3px 0 rgba(255,255,255,.28);}`,
   atlasLow: `0%,100%{transform:scale(1);}50%{transform:scale(1.05);}`,
   atlasBurst: `0%{transform:scale(0.2);opacity:0;}35%{opacity:.9;}100%{transform:scale(2.6);opacity:0;}`,
   atlasCard: `0%{transform:translateY(60px) scale(.9);opacity:0;}100%{transform:none;opacity:1;}`,
@@ -74,13 +73,15 @@ export const tvAnimations = {
    * de verdediger start 0.5s later. idx = dobbelsteenindex.
    *
    * De `atlasSettle`-schaduwanimatie die hier in de export naast stond is eruit gehaald
-   * (2026-08-13, op verzoek van de gebruiker). Twee redenen: `atlasSettle` animeert
+   * (2026-08-13, op verzoek van de gebruiker). Twee redenen: `atlasSettle` animeerde
    * `box-shadow`, wat frontend/CLAUDE.md §Animatie uitsluit (paint per frame op een zwakke
    * TV-GPU); en sinds de iOS-fix van 2026-08-10 landt de animatie op `Dice`'s niet-filterende
    * buiten-`<div>` — een transparante, hoekige wrapper zonder border-radius. De schaduw
    * (plus de `inset 0 3px 0` witte lijn erin) werd daar als vierkante laag rondom elke
    * dobbelsteen zichtbaar. De diepte van de dobbelsteen komt van `glassShadow.raised` op de
-   * surface zelf, die er al onder zat.
+   * surface zelf, die er al onder zat. `atlasSettle` zelf is op 2026-09-21 helemaal verwijderd
+   * (geen ander gebruik in de export dan hier en bij de herworp hieronder, en die had 'm ook
+   * al niet meer nodig) — verwijs er dus niet meer naar als een bestaande keyframe.
    */
   attackerDie: (idx: number) => `atlasRollL .9s cubic-bezier(.2,.8,.3,1) ${(idx * 0.16).toFixed(2)}s both`,
   defenderDie: (idx: number) => `atlasRollR .9s cubic-bezier(.2,.8,.3,1) ${(0.5 + idx * 0.16).toFixed(2)}s both`,
@@ -108,9 +109,12 @@ export const tvAnimations = {
    *  animeren is verboden op TV (frontend/CLAUDE.md §Animatie, zwakke GPU) en `Dice`'s
    *  niet-filterende buiten-`<div>` toont 'm als vierkante laag (iOS-fix 2026-08-10). Diezelfde
    *  twee redenen gelden hier evengoed, dus die koppeling is hier ook geschrapt i.p.v. letterlijk
-   *  overgenomen — beide entries draaien nu op de kale `atlasReroll`-rotatie. Tot de rol-herworp
-   *  (plan-rollen) dit gebruikte, bestond `@keyframes atlasReroll` niet eens in `index.css`,
-   *  dus de tie-break-herworp hieronder speelde in de praktijk geen animatie af — nu gefixt. */
+   *  overgenomen — beide entries draaien nu op de kale `atlasReroll`-rotatie, en `atlasSettle`
+   *  zelf is (2026-09-21) helemaal uit dit bestand en `index.css` verwijderd — geen ander
+   *  gebruik in de hele export dan deze twee, al bewust losgekoppelde plekken. Tot de
+   *  rol-herworp (plan-rollen) dit gebruikte, bestond `@keyframes atlasReroll` niet eens in
+   *  `index.css`, dus de tie-break-herworp hieronder speelde in de praktijk geen animatie af —
+   *  nu gefixt. */
   diceRerollOrder: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
   diceRerollAttacker: 'atlasReroll .55s cubic-bezier(.2,.8,.3,1) both',
   /** A4 — nieuwe spelerskaart in lobby (L971) en rol die op een bestaande kaart bijkomt (L972) — zelfde keyframe, andere duur. */
