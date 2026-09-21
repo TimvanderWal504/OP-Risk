@@ -37,6 +37,12 @@ internal static class ApiTestHost
         bool withTurnTimer = false) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
+            // Program.cs eist AllowedOrigin (CORS) en faalt hard als hij ontbreekt. Lokaal komt
+            // hij uit appsettings.Development.json, maar dat bestand staat in .gitignore en
+            // bestaat dus niet op CI. De tests praten via TestServer (zelfde origin), de waarde
+            // zelf doet er niet toe — hij moet er alleen zijn.
+            builder.UseSetting("AllowedOrigin", "http://localhost");
+
             if (loggerProvider is not null)
             {
                 builder.ConfigureLogging(logging => logging.AddProvider(loggerProvider));
