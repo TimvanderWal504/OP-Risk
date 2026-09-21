@@ -19,8 +19,12 @@ public abstract record RoleEffect;
 /// <summary>+<paramref name="Amount"/> leger per beurt.</summary>
 public sealed record ExtraReinforcementEffect(int Amount) : RoleEffect;
 
-/// <summary>Herwerp <paramref name="PerTurn"/> verloren dobbelsteen/-stenen per beurt.</summary>
-public sealed record RerollEffect(int PerTurn) : RoleEffect;
+/// <summary>
+/// Herwerp één eigen dobbelsteen per doelgebied per beurt, na de eigen worp maar vóórdat de
+/// verdediger gooit (FO §5.3 stap 3, §8.1). Bewust zonder parameters: het aantal is een vaste
+/// spelregel, geen content-instelling.
+/// </summary>
+public sealed record RerollEffect : RoleEffect;
 
 /// <summary>
 /// Sterkere Verplaatsen: een pad door één vijandelijk gebied heen (<paramref name="ThroughEnemy"/>),

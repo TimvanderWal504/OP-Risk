@@ -18,12 +18,9 @@
       "name": "Generaal",
       "originTerritory": "china",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Laat het Ming-Dynasty herrijzen: herwerp 1 verloren dobbelsteen per beurt zolang je China bezit."
+      "description": "Laat het Ming-Dynasty herrijzen: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je China bezit."
     },
     {
       "id": "safariranger",
@@ -66,12 +63,9 @@
       "name": "Admiraal",
       "originTerritory": "ural",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Legers verdwijnen naar de Gulag? Niet onder jouw bewind: Herwerp 1 verloren dobbelsteen per beurt zolang je de Oeral bezit."
+      "description": "Legers verdwijnen naar de Gulag? Niet onder jouw bewind: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je de Oeral bezit."
     },
     {
       "id": "kolonist",
@@ -90,24 +84,18 @@
       "name": "Aboriginal",
       "originTerritory": "eastern-australia",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 verloren dobbelsteen per beurt zolang je Eastern Australia bezit."
+      "description": "Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Eastern Australia bezit."
     },
     {
       "id": "samurai",
       "name": "Samurai",
       "originTerritory": "japan",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Krijgersdiscipline: herwerp 1 verloren dobbelsteen per beurt zolang je Japan bezit."
+      "description": "Krijgersdiscipline: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Japan bezit."
     },
     {
       "id": "inca",
@@ -126,12 +114,9 @@
       "name": "Cowboy",
       "originTerritory": "western-united-states",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Snelle trekker: herwerp 1 verloren dobbelsteen per beurt zolang je Western United States bezit."
+      "description": "Snelle trekker: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Western United States bezit."
     },
     {
       "id": "viking",
@@ -174,12 +159,9 @@
       "name": "Maori",
       "originTerritory": "new-zealand",
       "effect": {
-        "type": "Reroll",
-        "params": {
-          "perTurn": 1
-        }
+        "type": "Reroll"
       },
-      "description": "Ervaren navigators en krijgers herwerpen 1 verloren dobbelsteen per beurt, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland."
+      "description": "Ervaren navigators en krijgers herwerpen 1 eigen dobbelsteen per gebied dat ze aanvallen, vóórdat de verdediger gooit, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland."
     }
   ]
 }

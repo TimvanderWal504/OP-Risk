@@ -540,7 +540,7 @@ public class ValidatieTests
                   "id": "generaal",
                   "name": "Generaal",
                   "originTerritory": "a",
-                  "effect": { "type": "Reroll", "params": { "perTurn": 1 } },
+                  "effect": { "type": "Reroll" },
                   "description": "D"
                 }
               ]

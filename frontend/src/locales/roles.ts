@@ -18,8 +18,8 @@ export const roles = {
   generaal: {
     name: { nl: 'Generaal', en: 'General' },
     description: {
-      nl: 'Laat het Ming-Dynasty herrijzen: herwerp 1 verloren dobbelsteen per beurt zolang je China bezit.',
-      en: 'Let the Ming Dynasty rise again: reroll 1 lost die per turn as long as you hold China.',
+      nl: 'Laat het Ming-Dynasty herrijzen: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je China bezit.',
+      en: 'Let the Ming Dynasty rise again: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold China.',
     },
   },
   safariranger: {
@@ -46,8 +46,8 @@ export const roles = {
   admiraal: {
     name: { nl: 'Admiraal', en: 'Admiral' },
     description: {
-      nl: 'Legers verdwijnen naar de Gulag? Niet onder jouw bewind: Herwerp 1 verloren dobbelsteen per beurt zolang je de Oeral bezit.',
-      en: 'Armies vanishing to the Gulag? Not under your rule: reroll 1 lost die per turn as long as you hold Ural.',
+      nl: 'Legers verdwijnen naar de Gulag? Niet onder jouw bewind: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je de Oeral bezit.',
+      en: 'Armies vanishing to the Gulag? Not under your rule: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Ural.',
     },
   },
   kolonist: {
@@ -60,15 +60,15 @@ export const roles = {
   aboriginal: {
     name: { nl: 'Aboriginal', en: 'Aboriginal' },
     description: {
-      nl: 'Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 verloren dobbelsteen per beurt zolang je Eastern Australia bezit.',
-      en: 'Generations of knowledge of the land reduce the odds of a bad roll: reroll 1 lost die per turn as long as you hold Eastern Australia.',
+      nl: 'Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Eastern Australia bezit.',
+      en: 'Generations of knowledge of the land reduce the odds of a bad roll: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Eastern Australia.',
     },
   },
   samurai: {
     name: { nl: 'Samurai', en: 'Samurai' },
     description: {
-      nl: 'Krijgersdiscipline: herwerp 1 verloren dobbelsteen per beurt zolang je Japan bezit.',
-      en: 'Warrior discipline: reroll 1 lost die per turn as long as you hold Japan.',
+      nl: 'Krijgersdiscipline: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Japan bezit.',
+      en: 'Warrior discipline: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Japan.',
     },
   },
   inca: {
@@ -81,8 +81,8 @@ export const roles = {
   cowboy: {
     name: { nl: 'Cowboy', en: 'Cowboy' },
     description: {
-      nl: 'Snelle trekker: herwerp 1 verloren dobbelsteen per beurt zolang je Western United States bezit.',
-      en: 'Quick on the draw: reroll 1 lost die per turn as long as you hold Western United States.',
+      nl: 'Snelle trekker: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Western United States bezit.',
+      en: 'Quick on the draw: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Western United States.',
     },
   },
   viking: {
@@ -109,8 +109,8 @@ export const roles = {
   maori: {
     name: { nl: 'Maori', en: 'Maori' },
     description: {
-      nl: 'Ervaren navigators en krijgers herwerpen 1 verloren dobbelsteen per beurt, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland.',
-      en: 'Experienced navigators and warriors reroll 1 lost die per turn, as long as you hold New Zealand. Only available on map variants that include New Zealand.',
+      nl: 'Ervaren navigators en krijgers herwerpen 1 eigen dobbelsteen per gebied dat ze aanvallen, vóórdat de verdediger gooit, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland.',
+      en: 'Experienced navigators and warriors reroll 1 of their own dice per territory they attack, before the defender rolls, as long as you hold New Zealand. Only available on map variants that include New Zealand.',
     },
   },
 } satisfies LocaleTree

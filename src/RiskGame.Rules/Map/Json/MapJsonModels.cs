@@ -195,8 +195,6 @@ internal sealed class RoleEffectParamsJson
 {
     public int? Amount { get; init; }
 
-    public int? PerTurn { get; init; }
-
     public bool? ThroughEnemy { get; init; }
 
     public int? Moves { get; init; }

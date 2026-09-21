@@ -793,13 +793,7 @@ public static class MapDefinitionParser
                 return new ExtraReinforcementEffect(extra);
 
             case "Reroll":
-                if (p?.PerTurn is not { } perTurn || perTurn <= 0)
-                {
-                    errors.Add($"roles.json: rol '{roleId}' (Reroll) heeft geen positieve 'perTurn'.");
-                    return null;
-                }
-
-                return new RerollEffect(perTurn);
+                return new RerollEffect();
 
             case "CardTradeBonus":
                 if (p?.Amount is not { } tradeBonus || tradeBonus <= 0)
