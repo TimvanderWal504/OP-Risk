@@ -28,5 +28,10 @@ export const common = {
       mission: { nl: 'Mijn missie', en: 'My mission' },
       info: { nl: 'Spelinfo', en: 'Game info' },
     },
+    // Plan-rollen B4: eigen rol/boost-status als extra segment op de statusregel
+    // ("Aanvallen · Generaal · actief") — kleine letters, geen kicker-hoofdlettergebruik,
+    // zodat het aansluit bij de omringende zin-stijl status-tekst i.p.v. de uppercase badge.
+    roleActive: { nl: 'actief', en: 'active' },
+    roleInactive: { nl: 'inactief', en: 'inactive' },
   },
 } satisfies LocaleTree

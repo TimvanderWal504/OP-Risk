@@ -170,6 +170,52 @@ describe('PhonePlayerHeader', () => {
     expect(screen.getByText('Nog geen kaarten. Verover in een beurt minstens één gebied en je trekt er een.')).toBeInTheDocument()
   })
 
+  describe('taak 7 — eigen rol/boost-status op de statusregel (plan-rollen B4)', () => {
+    const stateInProgress = {
+      ...fixtureState,
+      phase: GamePhaseDto.InProgress,
+      turnState: {
+        activePlayerId: 'bob',
+        turnPhase: TurnPhaseDto.Attack,
+        armiesRemaining: 0,
+        pendingCombat: null,
+        timer: { remainingMs: 90_000, isPaused: false },
+        reinforcementBreakdown: null,
+        fortifiesRemaining: 1,
+        mustTradeInCards: false,
+        reachableFortifyGroups: [],
+      },
+    }
+
+    it('voegt de rolnaam en "actief" toe aan de statusregel zolang het herkomstland in bezit is', () => {
+      const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: true }, fixtureState.players[1]] }
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} error={null} />,
+      )
+
+      expect(screen.getByText('Aanvallen · Generaal · actief')).toBeInTheDocument()
+    })
+
+    it('toont "inactief" zodra het herkomstland niet meer in bezit is', () => {
+      const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: false }, fixtureState.players[1]] }
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} error={null} />,
+      )
+
+      expect(screen.getByText('Aanvallen · Generaal · inactief')).toBeInTheDocument()
+    })
+
+    it('laat de statusregel ongemoeid zonder rol (rollen uit, of nog niet toegewezen)', () => {
+      render(
+        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} error={null} />,
+      )
+
+      expect(screen.getByText('Aanvallen')).toBeInTheDocument()
+    })
+  })
+
   describe('taak 6 — vrijwillig inleggen alleen zichtbaar tijdens Versterken', () => {
     const cards = [
       { id: 'c1', territoryId: 'alaska', symbol: 'symbol-1' },

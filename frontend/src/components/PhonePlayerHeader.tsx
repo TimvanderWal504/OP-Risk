@@ -12,6 +12,7 @@ import { resolvePhoneHeaderStatus } from '../routes/phone/screens/resolvePhoneHe
 import { TurnPhaseDto } from '../types/GameState'
 import type { GameStateDto, GamePhaseDto as GamePhaseDtoType } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
+import { tDynamic } from '../i18n/useT'
 
 export interface PhonePlayerHeaderProps {
   state: GameStateDto
@@ -76,6 +77,14 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
     }
   })()
 
+  // Eigen rol + boost-status (plan-rollen B4): zelfde middle-dot-idioom als de naamregel
+  // hierboven ("{name} · {colorName}"), hier als extra segment ná de fasenaam. `me.isRoleActive`
+  // komt al kant-en-klaar van de server (RoleEffects.IsActive, plan-rollen C4) — de telefoon mag
+  // "bezit ik nog mijn herkomstland" niet zelf naspelen (frontend/CLAUDE.md).
+  const statusWithRole = me.roleId
+    ? `${status} · ${tDynamic(`${me.roleId}.name`, 'roles')} · ${t(me.isRoleActive ? 'common:playerHeader.roleActive' : 'common:playerHeader.roleInactive')}`
+    : status
+
   const myTerritoryIds = new Set(
     state.territories.filter((territory) => territory.ownerPlayerId === me.id).map((territory) => territory.territoryId),
   )
@@ -113,7 +122,7 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
         colorOnHex={color.onHex}
         colorSymbol={color.symbol}
         isHost={me.isHost}
-        status={status}
+        status={statusWithRole}
         timer={timer}
         timerState={timerState}
         actions={actions}
