@@ -42,6 +42,8 @@ describe('AttackFlowStep', () => {
         combat={null}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -67,6 +69,8 @@ describe('AttackFlowStep', () => {
         combat={null}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={onEndPhase}
       />,
     )
@@ -93,6 +97,8 @@ describe('AttackFlowStep', () => {
         combat={null}
         onDeclareAttack={onDeclareAttack}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -115,10 +121,12 @@ describe('AttackFlowStep', () => {
         players={players}
         colors={colors}
         myColor={myColor}
-        pendingCombat={{ fromTerritoryId: 'alaska', toTerritoryId: 'kamchatka', attackDice: 2 }}
-        combat={{ correlationId: 'c1', attackerRolls: [5, 3], defenderRolls: null, narrated: null }}
+        pendingCombat={{ fromTerritoryId: 'alaska', toTerritoryId: 'kamchatka', attackDice: 2, attackerRolls: [5, 3], awaitingRerollDecision: false }}
+        combat={{ correlationId: 'c1', attackerRolls: [5, 3], defenderRolls: null, reroll: null, narrated: null }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -127,6 +135,108 @@ describe('AttackFlowStep', () => {
     // ongeacht fase) — de subtitel van de bron-picker is wél uniek voor die stap.
     expect(screen.queryByText('Kies een van je gebieden dat kan aanvallen.')).not.toBeInTheDocument()
     expect(screen.getByText('Uitkomst')).toBeInTheDocument()
+  })
+
+  describe('rol-herwerp (plan-rollen taak 5, B1/B2)', () => {
+    const rerollPendingCombat = {
+      fromTerritoryId: 'alaska',
+      toTerritoryId: 'kamchatka',
+      attackDice: 2,
+      attackerRolls: [4, 2],
+      awaitingRerollDecision: true,
+    }
+    const rerollCombat = { correlationId: 'c1', attackerRolls: [4, 2], defenderRolls: null, reroll: null, narrated: null }
+
+    it('toont het herwerp-aanbod i.p.v. de kale wachtstip zolang de beslissing openstaat, en roept onRerollAttackDie aan met de gekozen dobbelsteen', async () => {
+      const user = userEvent.setup()
+      const onRerollAttackDie = vi.fn().mockResolvedValue(undefined)
+
+      render(
+        <AttackFlowStep
+          playerId="alice"
+          myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
+          territories={territories}
+          territoryCatalog={territoryCatalog}
+          players={players}
+          colors={colors}
+          myColor={myColor}
+          pendingCombat={rerollPendingCombat}
+          combat={rerollCombat}
+          onDeclareAttack={vi.fn()}
+          onAbandonAttack={vi.fn()}
+          onRerollAttackDie={onRerollAttackDie}
+          onKeepAttackDice={vi.fn()}
+          onEndPhase={vi.fn()}
+        />,
+      )
+
+      expect(screen.getByText('Herwerp een dobbelsteen voordat de verdediger gooit')).toBeInTheDocument()
+
+      const confirmButton = screen.getByRole('button', { name: 'Herwerpen' })
+      expect(confirmButton).toBeDisabled()
+
+      // Twee worp-dobbelstenen (waarden 4 en 2) — tik de tweede aan (dieIndex 1).
+      const dice = screen.getAllByRole('img')
+      expect(dice).toHaveLength(2)
+      await user.click(dice[1])
+
+      expect(confirmButton).not.toBeDisabled()
+      await user.click(confirmButton)
+
+      expect(onRerollAttackDie).toHaveBeenCalledWith(1)
+    })
+
+    it('roept onKeepAttackDice aan bij "Doorgaan", zonder dat er een dobbelsteen gekozen hoeft te zijn', async () => {
+      const user = userEvent.setup()
+      const onKeepAttackDice = vi.fn().mockResolvedValue(undefined)
+
+      render(
+        <AttackFlowStep
+          playerId="alice"
+          myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
+          territories={territories}
+          territoryCatalog={territoryCatalog}
+          players={players}
+          colors={colors}
+          myColor={myColor}
+          pendingCombat={rerollPendingCombat}
+          combat={rerollCombat}
+          onDeclareAttack={vi.fn()}
+          onAbandonAttack={vi.fn()}
+          onRerollAttackDie={vi.fn()}
+          onKeepAttackDice={onKeepAttackDice}
+          onEndPhase={vi.fn()}
+        />,
+      )
+
+      await user.click(screen.getByRole('button', { name: 'Doorgaan' }))
+
+      expect(onKeepAttackDice).toHaveBeenCalled()
+    })
+
+    it('toont de kale wachtstip i.p.v. het herwerp-aanbod zodra de beslissing gesloten is', () => {
+      render(
+        <AttackFlowStep
+          playerId="alice"
+          myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
+          territories={territories}
+          territoryCatalog={territoryCatalog}
+          players={players}
+          colors={colors}
+          myColor={myColor}
+          pendingCombat={{ ...rerollPendingCombat, awaitingRerollDecision: false }}
+          combat={rerollCombat}
+          onDeclareAttack={vi.fn()}
+          onAbandonAttack={vi.fn()}
+          onRerollAttackDie={vi.fn()}
+          onKeepAttackDice={vi.fn()}
+          onEndPhase={vi.fn()}
+        />,
+      )
+
+      expect(screen.queryByText('Herwerp een dobbelsteen voordat de verdediger gooit')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Herwerpen' })).not.toBeInTheDocument()
+    })
   })
 
   it('toont het resultaat en de vervolgacties zodra CombatNarrated binnen is', async () => {
@@ -147,6 +257,7 @@ describe('AttackFlowStep', () => {
           correlationId: 'c1',
           attackerRolls: [5, 3],
           defenderRolls: [4],
+          reroll: null,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -162,6 +273,8 @@ describe('AttackFlowStep', () => {
         }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={onEndPhase}
       />,
     )
@@ -195,6 +308,7 @@ describe('AttackFlowStep', () => {
           correlationId: 'c1',
           attackerRolls: [5, 3],
           defenderRolls: [4],
+          reroll: null,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -210,6 +324,8 @@ describe('AttackFlowStep', () => {
         }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -235,6 +351,7 @@ describe('AttackFlowStep', () => {
           correlationId: 'c1',
           attackerRolls: [5, 3],
           defenderRolls: [4],
+          reroll: null,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -250,6 +367,8 @@ describe('AttackFlowStep', () => {
         }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={onAbandonAttack}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -278,6 +397,7 @@ describe('AttackFlowStep', () => {
           correlationId: 'c1',
           attackerRolls: [6, 3],
           defenderRolls: [1],
+          reroll: null,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -293,6 +413,8 @@ describe('AttackFlowStep', () => {
         }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )
@@ -318,6 +440,7 @@ describe('AttackFlowStep', () => {
           correlationId: 'c1',
           attackerRolls: [2, 1],
           defenderRolls: [4],
+          reroll: null,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -333,6 +456,8 @@ describe('AttackFlowStep', () => {
         }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
+        onRerollAttackDie={vi.fn()}
+        onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
       />,
     )

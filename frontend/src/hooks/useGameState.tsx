@@ -9,6 +9,7 @@ import type {
   DiceRolledMessage,
   JoinGameResponse,
   OrderRollResponse,
+  RerollAttackDieResponse,
 } from '../types/HubResponses'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
@@ -357,6 +358,29 @@ export function useGameState(gameId: string) {
     if (updated) applyState(updated)
   }, [invoke, gameId, playerId])
 
+  // Rol-herwerp (FO §8.1, plan-rollen taak 5): fire-and-forget zoals `declareAttack` — de
+  // aanvaller ziet de nieuwe worp ook via de "reroll"-`DiceRolled`-broadcast (`combat`), en de
+  // bijgewerkte `PendingCombatDto` komt gewoon mee in deze respons.
+  const rerollAttackDie = useCallback(
+    async (dieIndex: number) => {
+      if (!playerId) return
+
+      const response = await invoke<RerollAttackDieResponse>('RerollAttackDie', gameId, playerId, dieIndex)
+
+      if (response) applyState(response.state)
+    },
+    [invoke, gameId, playerId],
+  )
+
+  // "Doorgaan" (FO §8.1, plan-rollen A8): sluit de herwerp-beslissing zonder te herwerpen.
+  const keepAttackDice = useCallback(async () => {
+    if (!playerId) return
+
+    const updated = await invoke<GameStateDto>('KeepAttackDice', gameId, playerId)
+
+    if (updated) applyState(updated)
+  }, [invoke, gameId, playerId])
+
   // Anders dan de fire-and-forget-acties hierboven: `FortifyFlowStep` moet synchroon weten of de
   // aanroep lukte om te beslissen of ze op de foutmelding moet blijven staan (i.p.v. door te gaan
   // naar de volgende stap) — vandaar `Promise<boolean>` i.p.v. `Promise<void>`. `invoke` vangt elke
@@ -409,6 +433,8 @@ export function useGameState(gameId: string) {
     chooseDefenseDice,
     moveAfterConquest,
     abandonAttack,
+    rerollAttackDie,
+    keepAttackDice,
     endPhase,
     fortify,
     endTurn,

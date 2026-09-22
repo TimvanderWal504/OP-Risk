@@ -16,7 +16,7 @@ const baseState = {
     activePlayerId: 'alice',
     turnPhase: TurnPhaseDto.Attack,
     armiesRemaining: 0,
-    pendingCombat: { fromTerritoryId: 'alaska', toTerritoryId: 'ukraine', attackDice: 2 },
+    pendingCombat: { fromTerritoryId: 'alaska', toTerritoryId: 'ukraine', attackDice: 2, attackerRolls: [5, 3], awaitingRerollDecision: false },
     timer: { remainingMs: 60_000, isPaused: true },
     reinforcementBreakdown: null,
     fortifiesRemaining: 1,
@@ -39,6 +39,7 @@ describe('TvCombatOverlay', () => {
       correlationId: 'c1',
       attackerRolls: [5, 4],
       defenderRolls: [3],
+      reroll: null,
       narrated: null,
     }
 
@@ -54,6 +55,7 @@ describe('TvCombatOverlay', () => {
       correlationId: 'c1',
       attackerRolls: [5, 4],
       defenderRolls: [1],
+      reroll: null,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',
@@ -85,6 +87,7 @@ describe('TvCombatOverlay', () => {
       correlationId: 'c1',
       attackerRolls: [5, 4],
       defenderRolls: [6, 6],
+      reroll: null,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',
@@ -109,6 +112,7 @@ describe('TvCombatOverlay', () => {
       correlationId: 'c1',
       attackerRolls: [6, 6],
       defenderRolls: [1],
+      reroll: null,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',

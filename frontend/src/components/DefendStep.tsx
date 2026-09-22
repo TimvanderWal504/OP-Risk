@@ -18,6 +18,11 @@ export interface DefendStepProps {
   toTerritoryId: string
   /** Legerstand van `toTerritoryId` (mijn gebied) — bepaalt de gedwongen 1-dobbelsteen-regel. */
   defenderArmyCount: number
+  /** B6: of de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen — zolang dat zo is, blijven de
+   *  keuzeknoppen gemount maar uitgeschakeld, met een wachtregel i.p.v. `defend.choose`. Komt
+   *  rechtstreeks van `PendingCombatDto.awaitingRerollDecision` (frontend/CLAUDE.md: geen
+   *  spelregels client-side afleiden). */
+  awaitingRerollDecision: boolean
   onChooseDefenseDice: (defenseDice: number) => Promise<CombatResultResponse | undefined>
   /** "Terug naar wachten": de verdediger heeft zijn eigen worp gezien en klikt 'm zelf weg.
    *  `PhoneAttackScreen` houdt dit component gemount tot dit vuurt (of tot een nieuwe aanval 'm
@@ -57,6 +62,7 @@ export function DefendStep({
   fromTerritoryId,
   toTerritoryId,
   defenderArmyCount,
+  awaitingRerollDecision,
   onChooseDefenseDice,
   onDismiss,
 }: DefendStepProps) {
@@ -118,7 +124,9 @@ export function DefendStep({
 
           {result === null && (
             <>
-              <div className="font-body text-[15px] text-fg-secondary">{t('defend.choose')}</div>
+              <div className="font-body text-[15px] text-fg-secondary">
+                {t(awaitingRerollDecision ? 'defend.awaitingReroll' : 'defend.choose')}
+              </div>
               {/* Kleuridentiteit zit in tint + rand, niet in de tekst: `var(--pitch-400)` als
                   tekstkleur zou de on-glass tekstbehandeling omzeilen (zelfde valkuil als de
                   dobbelsteen-picker in AttackFlowStep). */}
@@ -142,7 +150,7 @@ export function DefendStep({
             <div className="flex gap-[11px]">
               <button
                 type="button"
-                disabled={submitting}
+                disabled={submitting || awaitingRerollDecision}
                 onClick={() => choose(1)}
                 className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[18px] text-fg disabled:opacity-60"
                 style={{ borderColor: 'var(--border-strong)' }}
@@ -152,7 +160,7 @@ export function DefendStep({
               </button>
               <button
                 type="button"
-                disabled={submitting || forcedToOneDie}
+                disabled={submitting || forcedToOneDie || awaitingRerollDecision}
                 onClick={() => choose(2)}
                 className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[18px] text-fg disabled:cursor-not-allowed disabled:opacity-40"
                 style={{ borderColor: 'var(--pitch-400)', background: defenseDiceBlueTint }}

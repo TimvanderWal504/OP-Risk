@@ -24,6 +24,7 @@ const combat = (overrides: Partial<CombatBroadcastState> = {}): CombatBroadcastS
   correlationId: 'combat-1',
   attackerRolls: [5],
   defenderRolls: [3],
+  reroll: null,
   narrated: null,
   ...overrides,
 })
@@ -55,7 +56,7 @@ describe('useHeldCombat', () => {
   })
 
   it('blijft live zolang pendingCombat bestaat, ook als het gevecht al opgelost is (wacht op meeverplaatsen)', () => {
-    const pendingCombat = { fromTerritoryId: 'a', toTerritoryId: 'b', attackDice: 3 }
+    const pendingCombat = { fromTerritoryId: 'a', toTerritoryId: 'b', attackDice: 3, attackerRolls: [4, 2, 1], awaitingRerollDecision: false }
     const state = inProgressState({ pendingCombat })
     const resolved = combat({ narrated: narrated({ conquered: true }) })
 
@@ -171,7 +172,7 @@ describe('useHeldCombat', () => {
     })
 
     const secondState = inProgressState({
-      pendingCombat: { fromTerritoryId: 'a', toTerritoryId: 'c', attackDice: 2 },
+      pendingCombat: { fromTerritoryId: 'a', toTerritoryId: 'c', attackDice: 2, attackerRolls: [5, 3], awaitingRerollDecision: false },
     })
     const second = combat({ correlationId: 'combat-2', narrated: null })
     rerender({ c: second, s: secondState })

@@ -16,15 +16,32 @@ export interface OrderRollResponse {
 
 /**
  * Spiegelt RiskGame.Api.Hubs.DiceRolledMessage — transiënt "DiceRolled"-broadcast-event
- * (geen state, puur audit/weergave) voor order-roll- en gevechtsworpen.
+ * (geen state, puur audit/weergave) voor order-roll-, gevechts- en rol-herwerpworpen.
  * `correlationId` is `null` bij `order-roll` (geen gevecht om aan te correleren) en gelijk
- * aan `PendingCombat.CorrelationId` bij `attack`/`defense` — zie `useCombatBroadcast.ts`.
+ * aan `PendingCombat.CorrelationId` bij `attack`/`defense`/`reroll` — zie `useCombatBroadcast.ts`.
+ * `previousRolls`/`rerolledDieIndex`/`newValue` zijn alleen gevuld bij `context === 'reroll'`
+ * (plan-rollen C5); `dice` draagt dan de nieuwe, gesorteerde worp (gelijk aan wat
+ * `PendingCombatDto.attackerRolls` na de herwerp bevat).
  */
 export interface DiceRolledMessage {
   playerId: string
   dice: number[]
-  context: 'order-roll' | 'attack' | 'defense'
+  context: 'order-roll' | 'attack' | 'defense' | 'reroll'
   correlationId: string | null
+  previousRolls: number[] | null
+  /** Positie van de herworpen dobbelsteen in `previousRolls` — vóór de hersortering, dus een
+   *  index in `dice` zou hier betekenisloos zijn (plan-rollen C5). */
+  rerolledDieIndex: number | null
+  newValue: number | null
+}
+
+/** Spiegelt RiskGame.Api.Hubs.RerollAttackDieResponse (src/RiskGame.Api/Hubs/GameHub.cs). */
+export interface RerollAttackDieResponse {
+  previousRolls: number[]
+  rerolledDieIndex: number
+  newValue: number
+  rolls: number[]
+  state: GameStateDto
 }
 
 /**

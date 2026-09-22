@@ -42,6 +42,9 @@ const diceRolled = (overrides: Partial<DiceRolledMessage> = {}): DiceRolledMessa
   dice: [6],
   context: 'attack',
   correlationId: 'combat-1',
+  previousRolls: null,
+  rerolledDieIndex: null,
+  newValue: null,
   ...overrides,
 })
 
@@ -55,6 +58,7 @@ describe('useCombatBroadcast', () => {
       correlationId: 'combat-1',
       attackerRolls: [5, 4],
       defenderRolls: null,
+      reroll: null,
       narrated: null,
     })
 
@@ -65,6 +69,7 @@ describe('useCombatBroadcast', () => {
       correlationId: 'combat-1',
       attackerRolls: [5, 4],
       defenderRolls: [3],
+      reroll: null,
       narrated: narrated(),
     })
   })
@@ -100,6 +105,30 @@ describe('useCombatBroadcast', () => {
       correlationId: 'combat-2',
       attackerRolls: [6, 6],
       defenderRolls: null,
+      reroll: null,
+      narrated: null,
+    })
+  })
+
+  it('vervangt attackerRolls en vult reroll bij een reroll-DiceRolled (plan-rollen C5)', () => {
+    const { connection, emit } = createFakeConnection()
+    const { result } = renderHook(() => useCombatBroadcast(connection))
+
+    act(() => emit('DiceRolled', diceRolled({ context: 'attack', dice: [4, 2] })))
+    act(() =>
+      emit(
+        'DiceRolled',
+        diceRolled({ context: 'reroll', dice: [6, 4], previousRolls: [4, 2], rerolledDieIndex: 1, newValue: 6 }),
+      ),
+    )
+
+    expect(result.current).toEqual({
+      correlationId: 'combat-1',
+      // `dice` bij `reroll` ís de nieuwe worp — geen apart veld nodig om de weergave bij te
+      // werken (zie de doc-comment op RiskGame.Api.Hubs.DiceRolledMessage.Dice).
+      attackerRolls: [6, 4],
+      defenderRolls: null,
+      reroll: { previousRolls: [4, 2], rerolledDieIndex: 1, newValue: 6, rolls: [6, 4] },
       narrated: null,
     })
   })
@@ -114,6 +143,7 @@ describe('useCombatBroadcast', () => {
       correlationId: 'combat-9',
       attackerRolls: null,
       defenderRolls: [2],
+      reroll: null,
       narrated: null,
     })
   })

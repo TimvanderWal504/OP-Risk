@@ -7,6 +7,27 @@ const attackerColor = { id: 'red', name: 'Rood', hex: '#c0392b', onHex: '#fff', 
 const myColor = { id: 'blue', name: 'Blauw', hex: '#2980b9', onHex: '#fff', symbol: 'square' }
 
 describe('DefendStep', () => {
+  it('toont de wachtregel en grijst de keuzeknoppen uit zolang de aanvaller een herwerp-beslissing openheeft (B6)', () => {
+    render(
+      <DefendStep
+        attackerName="Alice"
+        attackerColor={attackerColor}
+        myColor={myColor}
+        fromTerritoryId="alaska"
+        toTerritoryId="kamchatka"
+        defenderArmyCount={3}
+        awaitingRerollDecision={true}
+        onChooseDefenseDice={vi.fn()}
+        onDismiss={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Aanvaller overweegt een herwerp…')).toBeInTheDocument()
+    expect(screen.queryByText('Verdedig dit gebied.')).not.toBeInTheDocument()
+    expect(screen.getByText('1').closest('button')).toBeDisabled()
+    expect(screen.getByText('2').closest('button')).toBeDisabled()
+  })
+
   it('grijst "2 dobbelstenen" uit zodra het gebied nog maar 1 leger heeft', () => {
     render(
       <DefendStep
@@ -16,6 +37,7 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={1}
+        awaitingRerollDecision={false}
         onChooseDefenseDice={vi.fn()}
         onDismiss={vi.fn()}
       />,
@@ -44,6 +66,7 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        awaitingRerollDecision={false}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={vi.fn()}
       />,
@@ -75,6 +98,7 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        awaitingRerollDecision={false}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={onDismiss}
       />,
@@ -109,6 +133,7 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        awaitingRerollDecision={false}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={vi.fn()}
       />,

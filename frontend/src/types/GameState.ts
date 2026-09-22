@@ -51,6 +51,12 @@ export interface PendingCombatDto {
   fromTerritoryId: string
   toTerritoryId: string
   attackDice: number
+  /** De actuele aanvalsworp — na een herwerp de nieuwe, gesorteerde worp (plan-rollen C5). */
+  attackerRolls: number[]
+  /** Of de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen vóór de verdediger mag reageren
+   *  (FO §5.3 stap 3, §8.1) — de telefoon mag dit niet zelf uit een actieve rol afleiden
+   *  (frontend/CLAUDE.md), dus dit komt rechtstreeks van de server. */
+  awaitingRerollDecision: boolean
 }
 
 /**

@@ -48,6 +48,10 @@ export interface PhoneScreenProps {
   moveAfterConquest: (armiesToMove: number) => Promise<void>
   /** "Ander gevecht" (FO §5.4): stopt de huidige belegering handmatig, hervat de beurttimer. */
   abandonAttack: () => Promise<void>
+  /** "Herwerp" (FO §8.1, plan-rollen taak 5) — fire-and-forget, zelfde patroon als `declareAttack`. */
+  rerollAttackDie: (dieIndex: number) => Promise<void>
+  /** "Doorgaan" (FO §8.1, A8): sluit de herwerp-beslissing zonder te herwerpen. */
+  keepAttackDice: () => Promise<void>
   /** Verplaatsen (FO §5.2). `Promise<boolean>` i.p.v. fire-and-forget: de aanroeper moet weten
    *  of de move lukte om te beslissen of ze op de foutmelding moet blijven staan. */
   fortify: (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number) => Promise<boolean>

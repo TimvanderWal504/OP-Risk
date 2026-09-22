@@ -12,10 +12,22 @@ import type { CombatNarratedMessage, DiceRolledMessage } from '../types/HubRespo
  * knop-gedreven (frontend/CLAUDE.md, "server-authoritative"-sectie + de `next`/`backToWait`-
  * knoppen in het design), dus heeft alleen de kale accumulatie nodig.
  */
+/** Details van de laatste rol-herwerp dit gevecht (plan-rollen C5/B2) — alleen gezet zodra de
+ *  "reroll"-broadcast binnenkomt, blijft daarna staan voor de rest van het gevecht (de
+ *  herwerp-animatie speelt precies één keer en houdt zijn eindstand vast, dezelfde `both`-fill
+ *  als de overige dobbelsteen-animaties in motion.ts). */
+export interface CombatRerollState {
+  previousRolls: number[]
+  rerolledDieIndex: number
+  newValue: number
+  rolls: number[]
+}
+
 export interface CombatBroadcastState {
   correlationId: string
   attackerRolls: number[] | null
   defenderRolls: number[] | null
+  reroll: CombatRerollState | null
   narrated: CombatNarratedMessage | null
 }
 
@@ -34,22 +46,32 @@ export function useCombatBroadcast(connection: HubConnection | undefined): Comba
         apply(
           current && current.correlationId === correlationId
             ? current
-            : { correlationId, attackerRolls: null, defenderRolls: null, narrated: null },
+            : { correlationId, attackerRolls: null, defenderRolls: null, reroll: null, narrated: null },
         ),
       )
     }
 
     const onDiceRolled = (message: DiceRolledMessage) => {
-      if (message.context !== 'attack' && message.context !== 'defense') return
+      if (message.context !== 'attack' && message.context !== 'defense' && message.context !== 'reroll') return
       if (message.correlationId === null) return
 
       const correlationId = message.correlationId
 
-      withCombat(correlationId, (current) =>
-        message.context === 'attack'
-          ? { ...current, attackerRolls: message.dice }
-          : { ...current, defenderRolls: message.dice },
-      )
+      withCombat(correlationId, (current) => {
+        if (message.context === 'defense') return { ...current, defenderRolls: message.dice }
+
+        // `attack` én `reroll` dragen allebei de (op dat moment) actuele aanvalsworp in `dice`
+        // (C5: bij een herwerp is dat de nieuwe, gesorteerde worp) — reroll vult daarnaast de
+        // detailvelden voor de highlight-animatie (TV/telefoon, plan-rollen B2).
+        return {
+          ...current,
+          attackerRolls: message.dice,
+          reroll:
+            message.context === 'reroll'
+              ? { previousRolls: message.previousRolls!, rerolledDieIndex: message.rerolledDieIndex!, newValue: message.newValue!, rolls: message.dice }
+              : current.reroll,
+        }
+      })
     }
 
     const onCombatNarrated = (message: CombatNarratedMessage) => {

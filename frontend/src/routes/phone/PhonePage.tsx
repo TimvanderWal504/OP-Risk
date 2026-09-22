@@ -40,6 +40,8 @@ export function PhonePage() {
     chooseDefenseDice,
     moveAfterConquest,
     abandonAttack,
+    rerollAttackDie,
+    keepAttackDice,
     fortify,
     endTurn,
   } = useGameState(gameId!)
@@ -127,6 +129,8 @@ export function PhonePage() {
         chooseDefenseDice,
         moveAfterConquest,
         abandonAttack,
+        rerollAttackDie,
+        keepAttackDice,
         fortify,
         endTurn,
       })}

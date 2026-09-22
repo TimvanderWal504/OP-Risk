@@ -3,9 +3,9 @@ import type { LocaleTree } from '../i18n/types'
 /**
  * Aanvallen (`TurnPhaseDto.Attack`, FO §5.3), telefoonkant. Bron:
  * het oorspronkelijke telefoon-design se `isAttack`/`isConquest`-fasen,
- * L964-997 (`isDefend`) en L1005-1013 (`isElim`). De reroll-blok (Generaal-rol, L617-635) en de
- * "Kaarteninleg"/kaart-trek-tekst ontbreken bewust — buiten scope van deze taak, zie het
- * Attack-bouwplan.
+ * L964-997 (`isDefend`) en L1005-1013 (`isElim`). De "Kaarteninleg"/kaart-trek-tekst ontbreekt
+ * bewust — buiten scope van deze taak, zie het Attack-bouwplan. Het reroll-blok (Generaal-rol,
+ * L617-635) is toegevoegd in plan-rollen taak 5 (`reroll`-sectie hieronder).
  */
 export const attack = {
   armiesWord: { nl: 'legers', en: 'armies' },
@@ -56,6 +56,17 @@ export const attack = {
     both: { nl: 'Jullie verliezen allebei 1 leger', en: 'You both lose 1 army' },
   },
 
+  // Rol-herwerp (FO §8.1, plan-rollen B1/C5): de aanvaller mag, met een actieve `Reroll`-rol,
+  // vóór de verdedigingsworp één eigen dobbelsteen herwerpen — per doelgebied per beurt.
+  reroll: {
+    instruction: {
+      nl: 'Herwerp een dobbelsteen voordat de verdediger gooit',
+      en: 'Reroll a die before the defender throws',
+    },
+    confirm: { nl: 'Herwerpen', en: 'Reroll' },
+    keep: { nl: 'Doorgaan', en: 'Continue' },
+  },
+
   conquest: {
     // Gebied vóór de uitroep (2026-08-13, op verzoek): het gebied is waar dit scherm over gaat,
     // "Veroverd!" is de kwalificatie erbij. Eén sleutel met interpolatie i.p.v. een losse
@@ -73,6 +84,9 @@ export const attack = {
     underAttack: { nl: 'Je wordt aangevallen', en: 'You are under attack' },
     line: { nl: '{{attacker}} valt {{territory}} aan vanuit {{from}}', en: '{{attacker}} attacks {{territory}} from {{from}}' },
     choose: { nl: 'Verdedig dit gebied.', en: 'Defend this territory.' },
+    // B6: zichtbaar i.p.v. `choose` zolang de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen —
+    // de keuzeknoppen blijven gemount maar uitgeschakeld (geen apart scherm).
+    awaitingReroll: { nl: 'Aanvaller overweegt een herwerp…', en: 'Attacker is considering a reroll…' },
     noTimer: { nl: 'Geen timer — neem je tijd', en: 'No timer — take your time' },
     with1: { nl: 'dobbelsteen', en: 'die' },
     with2: { nl: 'dobbelstenen', en: 'dice' },

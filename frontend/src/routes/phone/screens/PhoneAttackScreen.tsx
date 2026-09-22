@@ -27,6 +27,7 @@ interface HeldDefend {
   fromTerritoryId: string
   toTerritoryId: string
   defenderArmyCount: number
+  awaitingRerollDecision: boolean
 }
 
 /**
@@ -43,6 +44,8 @@ export function PhoneAttackScreen({
   chooseDefenseDice,
   moveAfterConquest,
   abandonAttack,
+  rerollAttackDie,
+  keepAttackDice,
   endPhase,
   placeReinforcements,
   tradeInCards,
@@ -106,6 +109,7 @@ export function PhoneAttackScreen({
     fromTerritoryId: livePendingCombat.fromTerritoryId,
     toTerritoryId: livePendingCombat.toTerritoryId,
     defenderArmyCount: state.territories.find((t) => t.territoryId === livePendingCombat.toTerritoryId)?.armyCount ?? 1,
+    awaitingRerollDecision: livePendingCombat.awaitingRerollDecision,
   }
 
   // Aanpassen tijdens render (niet in een effect, zelfde adjusting-state-patroon als
@@ -149,6 +153,7 @@ export function PhoneAttackScreen({
         fromTerritoryId={defendToShow.fromTerritoryId}
         toTerritoryId={defendToShow.toTerritoryId}
         defenderArmyCount={defendToShow.defenderArmyCount}
+        awaitingRerollDecision={defendToShow.awaitingRerollDecision}
         onChooseDefenseDice={chooseDefenseDice}
         onDismiss={() => setHeldDefend(null)}
       />
@@ -210,6 +215,8 @@ export function PhoneAttackScreen({
         combat={combat as CombatBroadcastState | null}
         onDeclareAttack={declareAttack}
         onAbandonAttack={abandonAttack}
+        onRerollAttackDie={rerollAttackDie}
+        onKeepAttackDice={keepAttackDice}
         onEndPhase={endPhase}
       />
     )

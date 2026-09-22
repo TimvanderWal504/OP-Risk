@@ -28,6 +28,11 @@ export interface AttackFlowStepProps {
   /** "Ander gevecht" (FO §5.4): stopt de belegering van het huidige doelwit handmatig, zodat de
    *  beurttimer meteen hervat i.p.v. pas bij een volgende `onDeclareAttack`. */
   onAbandonAttack: () => Promise<void>
+  /** "Herwerp" (FO §8.1, plan-rollen taak 5): alleen aanroepbaar zolang
+   *  `pendingCombat.awaitingRerollDecision` waar is — zie `AttackRolledResult` hieronder. */
+  onRerollAttackDie: (dieIndex: number) => Promise<void>
+  /** "Doorgaan" (FO §8.1, A8): sluit de herwerp-beslissing zonder te herwerpen, verbruikt 'm niet. */
+  onKeepAttackDice: () => Promise<void>
   onEndPhase: () => Promise<void>
 }
 
@@ -52,6 +57,8 @@ export function AttackFlowStep({
   combat,
   onDeclareAttack,
   onAbandonAttack,
+  onRerollAttackDie,
+  onKeepAttackDice,
   onEndPhase,
 }: AttackFlowStepProps) {
   const { t } = useTranslation('attack')
@@ -348,6 +355,8 @@ export function AttackFlowStep({
           territories={territories}
           onAttackAgain={attackAgain}
           onOtherFight={otherFight}
+          onRerollAttackDie={onRerollAttackDie}
+          onKeepAttackDice={onKeepAttackDice}
           onEndPhase={onEndPhase}
         />
       )}
@@ -363,6 +372,8 @@ interface AttackRolledResultProps {
   territories: TerritoryDto[]
   onAttackAgain: () => void
   onOtherFight: () => Promise<void>
+  onRerollAttackDie: (dieIndex: number) => Promise<void>
+  onKeepAttackDice: () => Promise<void>
   onEndPhase: () => Promise<void>
 }
 
@@ -381,7 +392,9 @@ function resultLine(attackerLosses: number, defenderLosses: number) {
 /**
  * Toont het resultaat pas zodra `CombatNarrated` binnen is; de tussenliggende wachttoestand
  * (eigen worp al zichtbaar, verdediger nog bezig) is een gevolg van de echte server-round-trip.
- * Reroll-blok (Generaal-rol) bewust weggelaten — buiten scope, zie het Attack-bouwplan.
+ * Rol-herwerp (Generaal-rol, plan-rollen taak 5, DESIGN.md § Role Reroll) zit in die
+ * wachttoestand: zolang `pendingCombat.awaitingRerollDecision` waar is, vervangt het
+ * herwerp-aanbod (dobbelstenen tikbaar, "Herwerpen"/"Doorgaan") de kale wachtstip.
  */
 function AttackRolledResult({
   myColor,
@@ -391,16 +404,47 @@ function AttackRolledResult({
   territories,
   onAttackAgain,
   onOtherFight,
+  onRerollAttackDie,
+  onKeepAttackDice,
   onEndPhase,
 }: AttackRolledResultProps) {
   const { t } = useTranslation('attack')
+  const [selectedDieIndex, setSelectedDieIndex] = useState<number | null>(null)
+  const [rerollSubmitting, setRerollSubmitting] = useState(false)
   const attackerRolls = combat?.attackerRolls ?? []
   const narrated = combat?.narrated && combat.narrated.attackerId === playerId ? combat.narrated : null
   const waitingForDefense = pendingCombat !== null && narrated === null
+  const awaitingReroll = waitingForDefense && pendingCombat!.awaitingRerollDecision
+  // Naam+waarde van de zojuist herworpen steen (plan-rollen C5/B2) — gezocht op waarde i.p.v.
+  // bewaarde array-positie, want die kan door de hersortering van `RerollDie` verschuiven.
+  // Lukt de match niet (bv. dezelfde waarde komt dubbel voor), dan is de terugval simpelweg geen
+  // highlight (DESIGN.md § Role Reroll) — de keuze zelf blijft altijd bij de speler.
+  const rerollHighlightIndex = combat?.reroll ? attackerRolls.indexOf(combat.reroll.newValue) : -1
   // Aanvallen vereist minstens 2 legers op het brongebied (1 moet altijd achterblijven) — na
   // verliezen kan het brongebied nog maar 1 leger over hebben, waarmee "nog een keer aanvallen"
   // ongeldig wordt. Actuele legerstand, niet lokaal gecached — zelfde reden als `fromArmyCount`.
   const canAttackAgain = narrated !== null && (territories.find((t) => t.territoryId === narrated.fromTerritoryId)?.armyCount ?? 0) >= 2
+
+  const confirmReroll = async () => {
+    if (selectedDieIndex === null) return
+
+    setRerollSubmitting(true)
+    try {
+      await onRerollAttackDie(selectedDieIndex)
+    } finally {
+      setRerollSubmitting(false)
+      setSelectedDieIndex(null)
+    }
+  }
+
+  const keepDice = async () => {
+    setRerollSubmitting(true)
+    try {
+      await onKeepAttackDice()
+    } finally {
+      setRerollSubmitting(false)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col text-center">
@@ -413,37 +457,83 @@ function AttackRolledResult({
           <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{t('resultShort')}</span>
           {/* Zelfde `phDice`-tumble als de order-roll (`combatDie` in motion.ts), korter (.8s) en
               per dobbelsteen 0,12s gestaggerd. Draait pas zodra de server de worp heeft
-              geleverd (`attackerRolls`), dus de animatie loopt niet op de uitkomst vooruit. */}
+              geleverd (`attackerRolls`), dus de animatie loopt niet op de uitkomst vooruit. De
+              herworpen steen (`rerollHighlightIndex`) krijgt in plaats daarvan een losse
+              in-place-rotatie (`diceReroll`) — nooit de hele rij opnieuw, dat zou misrapporteren
+              welke steen daadwerkelijk veranderde (DESIGN.md § Role Reroll). */}
           <div className="flex gap-2.5">
-            {attackerRolls.map((value, index) => (
-              <Dice
-                key={index}
-                value={value as DiceValue}
-                colorHex={myColor?.hex ?? 'var(--surface-3)'}
-                context="phone"
-                size={58}
-                radius={13}
-                padding={8}
-                gap={3}
-                pipSize={9}
-                animation={phoneAnimations.combatDie(index)}
-              />
-            ))}
+            {attackerRolls.map((value, index) => {
+              const dice = (
+                <Dice
+                  value={value as DiceValue}
+                  colorHex={myColor?.hex ?? 'var(--surface-3)'}
+                  context="phone"
+                  size={58}
+                  radius={13}
+                  padding={8}
+                  gap={3}
+                  pipSize={9}
+                  animation={index === rerollHighlightIndex ? phoneAnimations.diceReroll : phoneAnimations.combatDie(index)}
+                />
+              )
+
+              // Tikbaar zolang de herwerp-beslissing open staat — de rand draagt de selectie
+              // (zelfde "border carries the state"-idioom als SelectableOption), geen tweede
+              // vinkje. Buiten die stap blijft de dobbelsteen precies zoals voorheen: geen extra
+              // interactieve laag.
+              if (!awaitingReroll) return <div key={index}>{dice}</div>
+
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  disabled={rerollSubmitting}
+                  onClick={() => setSelectedDieIndex(index)}
+                  className="rounded-2xl border-2 p-0.5 leading-none disabled:cursor-not-allowed"
+                  style={{ borderColor: selectedDieIndex === index ? 'var(--silver-400)' : 'transparent' }}
+                >
+                  {dice}
+                </button>
+              )
+            })}
           </div>
-          {waitingForDefense ? (
-            <div className="flex items-center gap-2.5 font-body text-sm text-fg-muted">
-              <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />
-            </div>
-          ) : (
-            narrated && (
-              <div className="font-display text-2xl font-black">
-                {t(...resultLine(narrated.attackerLosses, narrated.defenderLosses))}
+          {awaitingReroll ? (
+            <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('reroll.instruction')}</div>
+          ) : waitingForDefense ? (
+            <>
+              <div className="flex items-center gap-2.5 font-body text-sm text-fg-muted">
+                <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />
               </div>
-            )
+              <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
+            </>
+          ) : (
+            <>
+              {narrated && (
+                <div className="font-display text-2xl font-black">
+                  {t(...resultLine(narrated.attackerLosses, narrated.defenderLosses))}
+                </div>
+              )}
+              <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
+            </>
           )}
-          <div className="max-w-[260px] font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
         </GlassPanel>
       </div>
+
+      {awaitingReroll && (
+        <Footer>
+          <button
+            type="button"
+            disabled={selectedDieIndex === null || rerollSubmitting}
+            onClick={confirmReroll}
+            className="flex min-h-15 w-full items-center justify-center gap-2.5 rounded-2xl border-none bg-pitch-500 font-display text-lg font-black text-[var(--on-pitch)] shadow-[var(--shadow-glow-pitch)] disabled:opacity-60"
+          >
+            {t('reroll.confirm')}
+          </button>
+          <Button variant="secondary" onClick={keepDice} disabled={rerollSubmitting} className="min-h-14 text-body">
+            {t('reroll.keep')}
+          </Button>
+        </Footer>
+      )}
 
       {narrated && (
         <Footer>

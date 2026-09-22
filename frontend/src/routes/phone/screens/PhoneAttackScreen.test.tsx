@@ -7,7 +7,13 @@ import { fixtureState, fixtureProps } from './phoneScreenFixture'
 import { PhoneAttackScreen } from './PhoneAttackScreen'
 import { resolveAttackRole } from './resolveAttackRole'
 
-const pendingCombat: PendingCombatDto = { fromTerritoryId: 'alaska', toTerritoryId: 'kamchatka', attackDice: 2 }
+const pendingCombat: PendingCombatDto = {
+  fromTerritoryId: 'alaska',
+  toTerritoryId: 'kamchatka',
+  attackDice: 2,
+  attackerRolls: [4],
+  awaitingRerollDecision: false,
+}
 
 const attackState = (options: {
   activePlayerId: string
@@ -123,7 +129,7 @@ describe('PhoneAttackScreen', () => {
       conquered: false,
       state: resolvedState,
     })
-    const combatAfterChoice: CombatBroadcastState = { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], narrated: null }
+    const combatAfterChoice: CombatBroadcastState = { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, narrated: null }
 
     const { rerender } = render(
       <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />,
@@ -148,7 +154,7 @@ describe('PhoneAttackScreen', () => {
     // Een nieuwe aanval van dezelfde aanvaller op hetzelfde gebied (een verse 'defending'-sessie
     // na een tussenliggende bystander-render) moet het oude resultaat automatisch wegklikken en
     // de normale keuze-UI teruggeven.
-    const secondCombat: CombatBroadcastState = { correlationId: 'combat-2', attackerRolls: null, defenderRolls: null, narrated: null }
+    const secondCombat: CombatBroadcastState = { correlationId: 'combat-2', attackerRolls: null, defenderRolls: null, reroll: null, narrated: null }
     rerender(
       <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: secondCombat })} />,
     )
@@ -182,7 +188,7 @@ describe('PhoneAttackScreen', () => {
           playerId: 'bob',
           me: bob,
           chooseDefenseDice,
-          combat: { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], narrated: null },
+          combat: { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, narrated: null },
         })}
       />,
     )
