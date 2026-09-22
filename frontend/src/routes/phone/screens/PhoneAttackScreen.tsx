@@ -218,6 +218,7 @@ export function PhoneAttackScreen({
         onRerollAttackDie={rerollAttackDie}
         onKeepAttackDice={keepAttackDice}
         onEndPhase={endPhase}
+        error={error}
       />
     )
   }

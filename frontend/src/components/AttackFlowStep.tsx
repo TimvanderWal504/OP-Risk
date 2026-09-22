@@ -34,6 +34,12 @@ export interface AttackFlowStepProps {
   /** "Doorgaan" (FO §8.1, A8): sluit de herwerp-beslissing zonder te herwerpen, verbruikt 'm niet. */
   onKeepAttackDice: () => Promise<void>
   onEndPhase: () => Promise<void>
+  /** Alleen doorgegeven aan het herwerp-aanbod (elite-code-review-bevinding): een verloren
+   *  race tegen `AttackDiceKept`/een reeds gesloten beslissing (plan-rollen C8) liet de
+   *  herwerp-UI voorheen stilzwijgend verdwijnen zonder de speler iets te vertellen. De
+   *  overige stappen in dit scherm tonen al net zo min een foutmelding — dat blijft zo,
+   *  dit is bewust beperkt tot de nieuwe herwerp-actie. */
+  error: string | null
 }
 
 type Phase = 'src' | 'tgt' | 'dice' | 'rolled'
@@ -60,6 +66,7 @@ export function AttackFlowStep({
   onRerollAttackDie,
   onKeepAttackDice,
   onEndPhase,
+  error,
 }: AttackFlowStepProps) {
   const { t } = useTranslation('attack')
   const myUnfinishedCombat =
@@ -358,6 +365,7 @@ export function AttackFlowStep({
           onRerollAttackDie={onRerollAttackDie}
           onKeepAttackDice={onKeepAttackDice}
           onEndPhase={onEndPhase}
+          error={error}
         />
       )}
     </PhoneScreen>
@@ -375,6 +383,8 @@ interface AttackRolledResultProps {
   onRerollAttackDie: (dieIndex: number) => Promise<void>
   onKeepAttackDice: () => Promise<void>
   onEndPhase: () => Promise<void>
+  /** Alleen getoond op het herwerp-aanbod hieronder — zie de doc-comment op `AttackFlowStepProps.error`. */
+  error: string | null
 }
 
 /**
@@ -407,6 +417,7 @@ function AttackRolledResult({
   onRerollAttackDie,
   onKeepAttackDice,
   onEndPhase,
+  error,
 }: AttackRolledResultProps) {
   const { t } = useTranslation('attack')
   const [selectedDieIndex, setSelectedDieIndex] = useState<number | null>(null)
@@ -520,7 +531,7 @@ function AttackRolledResult({
       </div>
 
       {awaitingReroll && (
-        <Footer>
+        <Footer error={error}>
           <button
             type="button"
             disabled={selectedDieIndex === null || rerollSubmitting}
