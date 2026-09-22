@@ -21,7 +21,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error={null}
         onFortify={vi.fn()}
@@ -46,7 +46,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={partiallyConnected}
         error={null}
         onFortify={vi.fn()}
@@ -70,7 +70,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error={null}
         onFortify={vi.fn()}
@@ -97,7 +97,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error={null}
         onFortify={vi.fn()}
@@ -124,7 +124,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error={null}
         onFortify={onFortify}
@@ -139,6 +139,88 @@ describe('FortifyFlowStep', () => {
     expect(onFortify).toHaveBeenCalledWith('alaska', 'ontario', 1)
   })
 
+  it('toont na een geslaagde verplaatsing met resterende rolboost-moves de vervolgstaat i.p.v. de done-weergave', async () => {
+    const user = userEvent.setup()
+    const onFortify = vi.fn().mockResolvedValue(true)
+
+    const { rerender } = render(
+      <FortifyFlowStep
+        myTerritories={myTerritories}
+        myColor={myColor}
+        fortifiesRemaining={2}
+        reachableGroups={allConnected}
+        error={null}
+        onFortify={onFortify}
+        onEndTurn={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByText('Alaska'))
+    await user.click(screen.getByText('Ontario'))
+    await user.click(screen.getByRole('button', { name: 'Bevestig verplaatsing' }))
+
+    // Simuleert de server-push ná de geslaagde Fortify: nog 1 van de 2 rolboost-moves over.
+    rerender(
+      <FortifyFlowStep
+        myTerritories={myTerritories}
+        myColor={myColor}
+        fortifiesRemaining={1}
+        reachableGroups={allConnected}
+        error={null}
+        onFortify={onFortify}
+        onEndTurn={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Je hebt 1 legers verplaatst van Alaska naar Ontario.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Nog een verplaatsing' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Beurt beëindigen' })).toBeInTheDocument()
+  })
+
+  it('brengt "Nog een verplaatsing" terug naar de bron-picker voor de volgende move', async () => {
+    const user = userEvent.setup()
+    const onFortify = vi.fn().mockResolvedValue(true)
+
+    const { rerender } = render(
+      <FortifyFlowStep
+        myTerritories={myTerritories}
+        myColor={myColor}
+        fortifiesRemaining={2}
+        reachableGroups={allConnected}
+        error={null}
+        onFortify={onFortify}
+        onEndTurn={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByText('Alaska'))
+    await user.click(screen.getByText('Ontario'))
+    await user.click(screen.getByRole('button', { name: 'Bevestig verplaatsing' }))
+
+    rerender(
+      <FortifyFlowStep
+        myTerritories={myTerritories}
+        myColor={myColor}
+        fortifiesRemaining={1}
+        reachableGroups={allConnected}
+        error={null}
+        onFortify={onFortify}
+        onEndTurn={vi.fn()}
+      />,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Nog een verplaatsing' }))
+
+    expect(screen.getByText('Verplaats vanuit')).toBeInTheDocument()
+
+    await user.click(screen.getByText('Alaska'))
+    await user.click(screen.getByText('Brazilië'))
+    await user.click(screen.getByRole('button', { name: 'Bevestig verplaatsing' }))
+
+    // Nieuwe bevestiging na "Nog een verplaatsing" hergebruikt niet de vorige intentie.
+    expect(onFortify).toHaveBeenLastCalledWith('alaska', 'brazil', 1)
+  })
+
   it('blijft bij een mislukte verplaatsing op de aantal-stap met een foutmelding, en laat die verdwijnen bij een ander doel', async () => {
     const user = userEvent.setup()
     const onFortify = vi.fn().mockResolvedValue(false)
@@ -147,7 +229,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error="Er is geen aaneengesloten pad."
         onFortify={onFortify}
@@ -179,7 +261,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error="Kan de beurt nu niet beëindigen."
         onFortify={onFortify}
@@ -194,12 +276,12 @@ describe('FortifyFlowStep', () => {
     expect(await screen.findByText('Kan de beurt nu niet beëindigen.')).toBeInTheDocument()
   })
 
-  it('toont meteen de done-weergave zodra hasFortified server-waar is (reconnect zonder lokale intentie)', () => {
+  it('toont meteen de done-weergave zodra fortifiesRemaining 0 is (reconnect zonder lokale intentie)', () => {
     render(
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={true}
+        fortifiesRemaining={0}
         reachableGroups={allConnected}
         error={null}
         onFortify={vi.fn()}
@@ -219,7 +301,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={true}
+        fortifiesRemaining={0}
         reachableGroups={allConnected}
         error="Kan de beurt nu niet beëindigen."
         onFortify={vi.fn()}
@@ -241,7 +323,7 @@ describe('FortifyFlowStep', () => {
       <FortifyFlowStep
         myTerritories={myTerritories}
         myColor={myColor}
-        hasFortified={false}
+        fortifiesRemaining={1}
         reachableGroups={allConnected}
         error={null}
         onFortify={onFortify}

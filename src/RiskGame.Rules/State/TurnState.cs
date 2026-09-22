@@ -22,16 +22,17 @@ namespace RiskGame.Rules.State;
 /// nadien bijgewerkt door <c>ArmiesReinforced</c> (aftrek) en <c>CardsTraded</c> (optelling
 /// van de setwaarde). Buiten Versterken ongebruikt (0).
 /// </param>
-/// <param name="HasFortified">
-/// Of deze beurt al een <c>Fortified</c> is toegepast (FO §5.2 Kernregel: "één verplaatsing").
-/// Gezet door <see cref="Fortify.FortifyGuards.CanFortify"/> afgedwongen, niet alleen
-/// geregistreerd — een tweede <c>Fortify</c>-aanroep binnen dezelfde fase is ongeldig zolang dit
-/// waar is. Start op <see langword="false"/> bij elke nieuwe fase-intrede, want <c>PhaseChanged</c>
-/// bouwt altijd een geheel nieuwe <see cref="TurnState"/> op (nooit een <c>with</c> op de oude).
+/// <param name="FortifiesUsed">
+/// Hoeveel keer deze beurt al een <c>Fortified</c> is toegepast (FO §5.2 Kernregel: normaal
+/// "één verplaatsing", met een actieve <c>FortifyUpgrade/moves</c>-rolboost meerdere — FO §8.1).
+/// Afgedwongen door <see cref="Fortify.FortifyGuards.CanFortify"/> tegen
+/// <see cref="Fortify.FortifyGuards.MaxMoves"/>, niet alleen geregistreerd. Start op 0 bij elke
+/// nieuwe fase-intrede, want <c>PhaseChanged</c> bouwt altijd een geheel nieuwe
+/// <see cref="TurnState"/> op (nooit een <c>with</c> op de oude).
 /// </param>
 /// <param name="HasConqueredThisTurn">
 /// Of deze beurt al minstens één gebied is veroverd (FO §5.2: bepaalt of de beurt aan het
-/// einde een kaart trekt). Anders dan <see cref="HasFortified"/> moet deze vlag wél een
+/// einde een kaart trekt). Anders dan <see cref="FortifiesUsed"/> moet deze vlag wél een
 /// fase-overgang binnen dezelfde beurt overleven (Versterken → Aanvallen → Verplaatsen kunnen
 /// alle drie na een verovering volgen) — <c>PhaseChanged</c>'s vouwregel zet 'm daarom expliciet
 /// over vanuit de vorige <see cref="TurnState"/>, en pas terug op <see langword="false"/> zodra
@@ -42,7 +43,7 @@ namespace RiskGame.Rules.State;
 /// is opgegaan door plaatsing (FO §5.4, taak 4b: teruggedraaid bij een timeout in plaats van
 /// stilzwijgend vervallen — zie <see cref="CardTradeReversal"/>). Gevuld door de
 /// <c>CardsTraded</c>-vouwregel (append, meest recente laatst); leeg bij elke nieuwe
-/// <see cref="TurnState"/> — net als <see cref="HasFortified"/> bouwt <c>PhaseChanged</c> die
+/// <see cref="TurnState"/> — net als <see cref="FortifiesUsed"/> bouwt <c>PhaseChanged</c> die
 /// altijd helemaal opnieuw op, dus een voltooide fase (die <c>ArmiesRemaining == 0</c> al
 /// vereist) laat hier vanzelf niets achter.
 /// </param>
@@ -53,7 +54,7 @@ public sealed record TurnState(
     PendingCombat? PendingCombat,
     AttackEngagement? PausedAttackTarget = null,
     int ArmiesRemaining = 0,
-    bool HasFortified = false,
+    int FortifiesUsed = 0,
     bool HasConqueredThisTurn = false,
     IReadOnlyList<UnsettledTrade>? UnsettledTrades = null)
 {

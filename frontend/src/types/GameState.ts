@@ -82,8 +82,13 @@ export interface TurnStateDto {
   pendingCombat: PendingCombatDto | null
   timer: TurnTimerDto | null
   reinforcementBreakdown: ReinforcementBreakdownDto | null
-  /** Of deze beurt al een Fortify-verplaatsing is toegepast (FO §5.2 Kernregel: "één verplaatsing"). */
-  hasFortified: boolean
+  /**
+   * Hoeveel keer de actieve speler deze fase nog mag Fortify'en (normaal 1, met een actieve
+   * FortifyUpgrade/moves-rolboost meer — FO §8.1/§5.2 Kernregel). Al verrekend door de server;
+   * 0 betekent klaar deze fase — de telefoon mag deze spelregel niet zelf nabouwen
+   * (frontend/CLAUDE.md).
+   */
+  fortifiesRemaining: number
   /**
    * Of de actieve speler moet inleggen vóór elke andere actie — een andere drempel per fase
    * (Reinforce: 5+ kaarten, FO §5.2; Attack: 6+ ná een eliminatie, FO §7), `false` in Fortify.

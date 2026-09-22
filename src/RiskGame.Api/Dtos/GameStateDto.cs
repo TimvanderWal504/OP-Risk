@@ -150,6 +150,12 @@ public sealed record CardDto(string Id, string? TerritoryId, string Symbol);
 /// bij 5+ kaarten (FO §5.2), in <see cref="TurnPhaseDto.Attack"/> bij 6+ kaarten ná een
 /// eliminatie (FO §7); in elke andere fase <see langword="false"/>.
 /// </param>
+/// <param name="FortifiesRemaining">
+/// Hoeveel keer de actieve speler deze fase nog mag <c>Fortify</c>en (normaal 1, met een
+/// actieve <c>FortifyUpgrade/moves</c>-rolboost meer — FO §8.1). Al verrekend met
+/// <see cref="RiskGame.Rules.Fortify.FortifyGuards.MaxMoves"/>, dus de telefoon hoeft die
+/// spelregel niet zelf na te bouwen (frontend/CLAUDE.md) — 0 betekent klaar deze fase.
+/// </param>
 public sealed record TurnStateDto(
     string ActivePlayerId,
     TurnPhaseDto TurnPhase,
@@ -158,7 +164,7 @@ public sealed record TurnStateDto(
     TurnTimerDto? Timer,
     IReadOnlyList<IReadOnlyList<string>> ReachableFortifyGroups,
     ReinforcementBreakdownDto? ReinforcementBreakdown = null,
-    bool HasFortified = false,
+    int FortifiesRemaining = 0,
     bool MustTradeInCards = false);
 
 /// <summary>

@@ -32,7 +32,7 @@ public static class FortifyGuards
             return preconditions;
         }
 
-        if (state.TurnState!.HasFortified)
+        if (state.TurnState!.FortifiesUsed >= MaxMoves(state, playerId))
         {
             return ValidationResult.Failure("fortify.alreadyMoved");
         }
@@ -129,6 +129,18 @@ public static class FortifyGuards
 
     private static int MaxEnemyPasses(GameState state, string playerId) =>
         RoleEffects.Active<FortifyUpgradeEffect>(state, playerId) is { ThroughEnemy: true } ? 1 : 0;
+
+    /// <summary>
+    /// Hoeveel keer <paramref name="playerId"/> deze fase mag <c>Fortify</c>en (FO §5.2/§8.1):
+    /// standaard 1, of <see cref="FortifyUpgradeEffect.Moves"/> met een actieve boost. Bewust
+    /// niet gewoon <c>effect?.Moves ?? 1</c> — <c>safariranger</c>'s effect zet alleen
+    /// <c>ThroughEnemy</c> en laat <c>Moves</c> op 0 (geen <c>moves</c>-param in roles.json), en
+    /// dat mag geen 0 toegestane verplaatsingen opleveren. Gedeeld door <see cref="CanFortify"/>
+    /// (afdwingen) en <c>GameStateDtoMapper</c> (resterend-aantal voor de client) — dezelfde
+    /// spelregel op precies één plek, niet clientside nagebouwd (frontend/CLAUDE.md).
+    /// </summary>
+    public static int MaxMoves(GameState state, string playerId) =>
+        RoleEffects.Active<FortifyUpgradeEffect>(state, playerId) is { Moves: > 0 } effect ? effect.Moves : 1;
 
     /// <summary>
     /// BFS met een budget van maximaal <paramref name="maxEnemyPasses"/> niet-eigen

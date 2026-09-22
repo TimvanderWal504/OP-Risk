@@ -25,7 +25,7 @@ export interface PlayerEliminatedScreenProps {
  * waar die grijstinten voor getuned zijn.
  *
  * `grid`/`text-center`/`mx-auto` i.p.v. `justify-items-center`: zelfde patroon als
- * `FortifyFlowStep.tsx`'s `hasFortified`-/`amount`-blokken (`my-auto grid gap-* ... text-center`).
+ * `FortifyFlowStep.tsx`'s `fortifiesRemaining`-/`amount`-blokken (`my-auto grid gap-* ... text-center`).
  * Grid-items blijven op hun default `stretch`, zodat het paneel de volle kaartbreedte pakt en
  * tekst daarbinnen centreert; `justify-items-center` zou elke rij juist laten krimpen tot zijn
  * eigen inhoud, met een te smal/wisselend paneel als gevolg — vandaar de vaste `mx-auto` op de

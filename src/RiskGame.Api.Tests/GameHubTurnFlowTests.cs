@@ -433,7 +433,7 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// Anders dan <see cref="TurnState.HasFortified"/> moet <c>HasConqueredThisTurn</c> een
+    /// Anders dan <see cref="TurnState.FortifiesUsed"/> moet <c>HasConqueredThisTurn</c> een
     /// fase-overgang binnen dezelfde beurt overleven (Aanvallen → Verplaatsen). Bewezen
     /// indirect via het kaarttrekken: zou de vlag onderweg resetten, dan zou de latere
     /// <c>EndTurn</c> niets trekken.

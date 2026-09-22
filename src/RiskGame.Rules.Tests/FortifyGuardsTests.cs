@@ -79,7 +79,7 @@ public class FortifyGuardsTests
         var state = TestGame.InProgress(turnPhase: TurnPhase.Fortify)
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
-        state = state.WithTurnState(state.TurnState! with { HasFortified = true });
+        state = state.WithTurnState(state.TurnState! with { FortifiesUsed = 1 });
 
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
 
@@ -223,6 +223,62 @@ public class FortifyGuardsTests
         var result = FortifyGuards.CanFortify(state, "p1", "alaska", "quebec", armiesToMove: 2);
 
         Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
+    public void FortifyUpgrade_Moves_MetActieveRolEnEenVerplaatsingGebruikt_StaatTweedeVerplaatsingToe()
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "smokkelaar"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Fortify, settings: settings)
+            .WithTerritory(new TerritoryOwnership("north-africa", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
+        state = state.WithTurnState(state.TurnState! with { FortifiesUsed = 1 });
+
+        var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void FortifyUpgrade_Moves_MetActieveRolEnTweeVerplaatsingenGebruikt_WeigertDerdeVerplaatsing()
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "smokkelaar"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Fortify, settings: settings)
+            .WithTerritory(new TerritoryOwnership("north-africa", "p1", 1))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
+        state = state.WithTurnState(state.TurnState! with { FortifiesUsed = 2 });
+
+        var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("fortify.alreadyMoved", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void FortifyUpgrade_Moves_ZonderHerkomstlandInBezit_WeigertTweedeVerplaatsing()
+    {
+        // Rol toegewezen, maar het herkomstland (bv. in een eerdere beurt verloren) is nu van
+        // een ander — RoleEffects.Active geeft dan null, dus MaxMoves valt terug op de
+        // standaard 1 (FO §8.1), ook al staat FortifyUpgrade/moves in roles.json.
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: "smokkelaar"), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Fortify, settings: settings)
+            .WithTerritory(new TerritoryOwnership("north-africa", "p2", 1))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p1", 1));
+        state = state.WithTurnState(state.TurnState! with { FortifiesUsed = 1 });
+
+        var result = FortifyGuards.CanFortify(state, "p1", "alaska", "alberta", armiesToMove: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("fortify.alreadyMoved", result.Errors.Single().Code);
     }
 
     [Fact]

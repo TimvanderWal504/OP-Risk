@@ -64,7 +64,7 @@ public static class GameStateDtoMapper
                         ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId),
                         state.TurnState.UnsettledTrades.Sum(trade => trade.SetValue))
                     : null,
-                state.TurnState.HasFortified,
+                Math.Max(0, FortifyGuards.MaxMoves(state, state.TurnState.ActivePlayerId) - state.TurnState.FortifiesUsed),
                 (state.TurnState.TurnPhase == TurnPhase.Reinforce
                     && ReinforceGuards.MustTradeInCards(state, state.TurnState.ActivePlayerId))
                 || (state.TurnState.TurnPhase == TurnPhase.Attack

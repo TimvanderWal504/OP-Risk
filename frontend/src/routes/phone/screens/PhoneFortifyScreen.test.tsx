@@ -17,7 +17,7 @@ const fortifyState = {
     pendingCombat: null,
     timer: { remainingMs: 60_000, isPaused: false },
     reinforcementBreakdown: null,
-    hasFortified: false,
+    fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [['alaska', 'ontario']],
   },
@@ -49,11 +49,11 @@ describe('PhoneFortifyScreen', () => {
     expect(screen.queryByText('Verplaats vanuit')).not.toBeInTheDocument()
   })
 
-  it('toont meteen de done-weergave als hasFortified al server-waar is', () => {
+  it('toont meteen de done-weergave als fortifiesRemaining al 0 is', () => {
     render(
       <PhoneFortifyScreen
         {...fixtureProps({
-          state: { ...fortifyState, turnState: { ...fortifyState.turnState, hasFortified: true } },
+          state: { ...fortifyState, turnState: { ...fortifyState.turnState, fortifiesRemaining: 0 } },
         })}
       />,
     )

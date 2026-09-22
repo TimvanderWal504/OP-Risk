@@ -43,6 +43,7 @@ export const fortify = {
       en: 'You have already moved this turn.',
     },
     endTurn: { nl: 'Beurt beëindigen', en: 'End turn' },
+    moveAgain: { nl: 'Nog een verplaatsing', en: 'Move again' },
   },
 
   bystander: {

@@ -1187,7 +1187,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.PendingCombat, actual.PendingCombat);
         Assert.Equal(expected.PausedAttackTarget, actual.PausedAttackTarget);
         Assert.Equal(expected.ArmiesRemaining, actual.ArmiesRemaining);
-        Assert.Equal(expected.HasFortified, actual.HasFortified);
+        Assert.Equal(expected.FortifiesUsed, actual.FortifiesUsed);
         Assert.Equal(expected.HasConqueredThisTurn, actual.HasConqueredThisTurn);
         Assert.Equal(expected.UnsettledTrades, actual.UnsettledTrades);
     }

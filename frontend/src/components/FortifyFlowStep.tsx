@@ -11,9 +11,17 @@ import { PhoneScreen } from './ui/PhoneScreen'
 export interface FortifyFlowStepProps {
   myTerritories: TerritoryDto[]
   myColor: PlayerColorDto | null
-  /** Server-waarheid (FO §5.2 Kernregel: "één verplaatsing") — géén lokale substaat. Zodra dit
-   *  `true` wordt (ook na reconnect/refresh), toont dit component altijd de done-weergave. */
-  hasFortified: boolean
+  /**
+   * Server-waarheid (FO §5.2 Kernregel, §8.1 met een actieve `FortifyUpgrade/moves`-rolboost)
+   * — géén lokale substaat. `0` toont altijd de done-weergave (ook na reconnect/refresh, zonder
+   * lokale intentie). `> 0` ná een lokaal bevestigde `onFortify` (dus met `pendingIntent`) toont
+   * de tussenstap "nog een verplaatsing?" i.p.v. meteen terug naar de bron-picker — op reconnect
+   * zonder lokale intentie gaat een resterende verplaatsing direct naar de picker, zonder die
+   * tussenstap (er is geen server-veld om "al 1 van 2 gebruikt" van "nog nooit gefortify'd" te
+   * onderscheiden, en dat onderscheid is hier ook niet spelregel-kritisch — zie DESIGN.md
+   * "Fortify continuation state").
+   */
+  fortifiesRemaining: number
   /** `TurnStateDto.reachableFortifyGroups` — zie de doc-comment bovenaan dit bestand. */
   reachableGroups: string[][]
   error: string | null
@@ -50,7 +58,7 @@ interface PendingIntent {
 export function FortifyFlowStep({
   myTerritories,
   myColor,
-  hasFortified,
+  fortifiesRemaining,
   reachableGroups,
   error,
   onFortify,
@@ -83,22 +91,53 @@ export function FortifyFlowStep({
     }
   }
 
-  if (hasFortified) {
+  const confirmationText = pendingIntent
+    ? t('done.confirmationWithDetail', {
+        amount: pendingIntent.amount,
+        from: tDynamic(pendingIntent.from, 'territories'),
+        to: tDynamic(pendingIntent.to, 'territories'),
+      })
+    : t('done.genericConfirmation')
+
+  if (fortifiesRemaining === 0) {
     return (
       <PhoneScreen>
         <GlassPanel elevation="base" context="phone" padding="none" className="my-auto rounded-2xl p-4 text-center">
-          <div className="font-display text-h2 font-extrabold text-fg">
-            {pendingIntent
-              ? t('done.confirmationWithDetail', {
-                  amount: pendingIntent.amount,
-                  from: tDynamic(pendingIntent.from, 'territories'),
-                  to: tDynamic(pendingIntent.to, 'territories'),
-                })
-              : t('done.genericConfirmation')}
-          </div>
+          <div className="font-display text-h2 font-extrabold text-fg">{confirmationText}</div>
         </GlassPanel>
         <Footer error={endTurnFailed ? error : null}>
           <Button disabled={submitting} onClick={handleEndTurn}>
+            {t('done.endTurn')}
+          </Button>
+        </Footer>
+      </PhoneScreen>
+    )
+  }
+
+  // "Nog een verplaatsing": terug naar de bron-picker, en `pendingIntent` wissen zodat een
+  // volgende bevestiging zijn eigen detailtekst krijgt i.p.v. de vorige te hergebruiken.
+  const moveAgain = () => {
+    setPendingIntent(null)
+    setFromTerritoryId(null)
+    setToTerritoryId(null)
+    setPhase('src')
+  }
+
+  // Tussenstap ná een lokaal bevestigde verplaatsing, zolang er nog een rolboost-verplaatsing
+  // over is (DESIGN.md "Fortify continuation state") — `pendingIntent` is uitsluitend lokaal
+  // gezet door `confirmFortify` hieronder, dus op reconnect (geen `pendingIntent`) slaat dit
+  // over naar de gewone bron-picker in plaats van deze tussenstap opnieuw te tonen.
+  if (fortifiesRemaining > 0 && pendingIntent) {
+    return (
+      <PhoneScreen>
+        <GlassPanel elevation="base" context="phone" padding="none" className="my-auto rounded-2xl p-4 text-center">
+          <div className="font-display text-h2 font-extrabold text-fg">{confirmationText}</div>
+        </GlassPanel>
+        <Footer error={endTurnFailed ? error : null}>
+          <Button disabled={submitting} onClick={moveAgain}>
+            {t('done.moveAgain')}
+          </Button>
+          <Button variant="secondary" disabled={submitting} onClick={handleEndTurn}>
             {t('done.endTurn')}
           </Button>
         </Footer>
@@ -135,11 +174,16 @@ export function FortifyFlowStep({
   const confirmFortify = async () => {
     if (!fromTerritoryId || !toTerritoryId) return
 
-    setPendingIntent({ from: fromTerritoryId, to: toTerritoryId, amount: clamped })
     setSubmitting(true)
     try {
       const ok = await onFortify(fromTerritoryId, toTerritoryId, clamped)
-      if (!ok) {
+      // Pas ná succes gezet: anders zou een mislukte aanroep — of de disabled-staat terwijl de
+      // aanroep nog loopt — al `pendingIntent` zetten en zo, zodra `fortifiesRemaining` nog > 0
+      // is, per ongeluk meteen naar de "nog een verplaatsing?"-tussenstap springen i.p.v. op de
+      // aantal-stap te blijven staan met de foutmelding.
+      if (ok) {
+        setPendingIntent({ from: fromTerritoryId, to: toTerritoryId, amount: clamped })
+      } else {
         setLastFailedAttempt({ from: fromTerritoryId, to: toTerritoryId })
       }
     } finally {

@@ -389,16 +389,17 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         });
 
     /// <summary>
-    /// Eén vrije verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant). Zet naast de
-    /// legerverplaatsing ook <see cref="TurnState.HasFortified"/> — de Kernregel "één
-    /// verplaatsing" wordt daarmee afgedwongen door <see cref="Fortify.FortifyGuards.CanFortify"/>,
+    /// Eén verplaatsing tijdens Verplaatsen (FO §5.2, moderne variant; meerdere met een actieve
+    /// <c>FortifyUpgrade/moves</c>-rolboost, FO §8.1). Telt naast de legerverplaatsing
+    /// <see cref="TurnState.FortifiesUsed"/> op — de Kernregel wordt daarmee afgedwongen door
+    /// <see cref="Fortify.FortifyGuards.CanFortify"/> (tegen <see cref="Fortify.FortifyGuards.MaxMoves"/>),
     /// niet alleen geregistreerd.
     /// </summary>
     public GameState Apply(GameState state, Fortified @event)
     {
         state = MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
 
-        return state.WithTurnState(state.TurnState! with { HasFortified = true });
+        return state.WithTurnState(state.TurnState! with { FortifiesUsed = state.TurnState!.FortifiesUsed + 1 });
     }
 
     /// <summary>Haalt de genoemde kaart uit de trekstapel naar de hand van de speler (FO §5.2).</summary>

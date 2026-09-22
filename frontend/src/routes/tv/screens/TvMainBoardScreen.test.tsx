@@ -28,7 +28,7 @@ const stateInProgress = {
     pendingCombat: null,
     timer: { remainingMs: 120_000, isPaused: false },
     reinforcementBreakdown: null,
-    hasFortified: false,
+    fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
   },

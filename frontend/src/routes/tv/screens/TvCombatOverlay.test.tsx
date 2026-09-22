@@ -19,7 +19,7 @@ const baseState = {
     pendingCombat: { fromTerritoryId: 'alaska', toTerritoryId: 'ukraine', attackDice: 2 },
     timer: { remainingMs: 60_000, isPaused: true },
     reinforcementBreakdown: null,
-    hasFortified: false,
+    fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
   },

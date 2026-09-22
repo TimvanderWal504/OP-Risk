@@ -125,6 +125,19 @@ public class TurnGuardsTests
         Assert.True(result.IsSuccess);
     }
 
+    [Fact]
+    public void EndTurn_MetEenVanTweeRolVerplaatsingenGebruikt_IsGeldig()
+    {
+        // FO §8.1: FortifyUpgrade/moves geeft extra verplaatsingen, geen verplichting om ze
+        // allemaal te gebruiken — CanEndTurn kijkt (bewust) niet naar FortifiesUsed.
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Fortify);
+        state = state.WithTurnState(state.TurnState! with { FortifiesUsed = 1 });
+
+        var result = TurnGuards.CanEndTurn(state, "p1");
+
+        Assert.True(result.IsSuccess);
+    }
+
     [Theory]
     [InlineData(TurnPhase.Reinforce)]
     [InlineData(TurnPhase.Attack)]

@@ -16,7 +16,7 @@ export function PhoneFortifyScreen({ state, playerId, me, error, fortify, endTur
     return <PhonePlaceholderScreen />
   }
 
-  const { activePlayerId, hasFortified, reachableFortifyGroups } = state.turnState
+  const { activePlayerId, fortifiesRemaining, reachableFortifyGroups } = state.turnState
 
   if (activePlayerId !== playerId) {
     const activePlayer = state.players.find((player) => player.id === activePlayerId)
@@ -34,7 +34,7 @@ export function PhoneFortifyScreen({ state, playerId, me, error, fortify, endTur
     <FortifyFlowStep
       myTerritories={myTerritories}
       myColor={myColor}
-      hasFortified={hasFortified}
+      fortifiesRemaining={fortifiesRemaining}
       reachableGroups={reachableFortifyGroups}
       error={error}
       onFortify={fortify}

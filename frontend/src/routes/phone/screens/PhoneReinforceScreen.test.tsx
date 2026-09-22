@@ -14,7 +14,7 @@ const reinforceState = {
     pendingCombat: null,
     timer: { remainingMs: 120_000, isPaused: false },
     reinforcementBreakdown: { baseArmies: 3, continentBonus: 0, roleBonus: 0, eventBonus: 0, cardTradeBonus: 0 },
-    hasFortified: false,
+    fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
   },

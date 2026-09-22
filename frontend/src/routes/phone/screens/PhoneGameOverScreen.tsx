@@ -12,7 +12,7 @@ import phoneEliminated from '../../../styles/assets/phone-eliminated.webp'
  * naar `PlayerEliminatedScreen`'s "spel gaat door"-variant). "Opnieuw spelen" volgt als
  * aparte, latere taak (zie het bouwplan) — inclusief hoe de host dat voor beide uitkomsten
  * moet kunnen starten — dus bewust nog geen actieknop. Geen letterlijke DESIGN.md-sectie:
- * vorm geleend van `FortifyFlowStep.tsx`'s `hasFortified`-bevestigingsblok (gecentreerd
+ * vorm geleend van `FortifyFlowStep.tsx`'s `fortifiesRemaining`-bevestigingsblok (gecentreerd
  * `GlassPanel`, geen `Footer`/`Button`).
  *
  * Eigen achtergrondfoto i.p.v. de gedeelde `PhoneStageBackground`, zelfde ontsnappingsluik als
