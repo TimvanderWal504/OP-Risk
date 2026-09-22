@@ -9,6 +9,7 @@ import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { InstructionKicker } from '../../../components/ui/InstructionKicker'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
+import { tDynamic } from '../../../i18n/useT'
 import type { TvScreenProps } from './tvScreens'
 
 /**
@@ -197,7 +198,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                         TvMainBoardScreen. */}
                     {player.roleId && (
                       <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
-                        {state.roles.find((role) => role.id === player.roleId)?.name}
+                        {tDynamic(`${player.roleId}.name`, 'roles')}
                       </Badge>
                     )}
                   </div>

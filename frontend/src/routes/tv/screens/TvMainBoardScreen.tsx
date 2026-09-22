@@ -187,7 +187,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                         `getByText(name, { selector: 'div...' })`-tests laten falen. */}
                     {player.roleId && (
                       <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
-                        {state.roles.find((role) => role.id === player.roleId)?.name}
+                        {tDynamic(`${player.roleId}.name`, 'roles')}
                       </Badge>
                     )}
                   </div>
