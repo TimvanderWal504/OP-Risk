@@ -83,7 +83,7 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
 
   return (
     <GlassPanel elevation="base" context="tv" className="flex-none">
-      <p className="mb-2 text-[16px] font-extrabold tracking-[.14em] text-pitch-400 uppercase">
+      <p className="mb-2 text-label font-extrabold tracking-[.14em] text-pitch-400 uppercase">
         {t('settings.title')}
       </p>
       <dl className="grid grid-cols-2 gap-x-[26px] gap-y-[2px]">
@@ -92,8 +92,8 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
             key={label}
             className="flex items-center justify-between gap-3 border-b border-[var(--atlas-glass-border)] py-[9px]"
           >
-            <dt className="text-[16px] text-fg-secondary">{label}</dt>
-            <dd className="text-right font-display text-[16px] font-extrabold">
+            <dt className="text-label text-fg-secondary">{label}</dt>
+            <dd className="text-right font-display text-label font-extrabold">
               {value}
             </dd>
           </div>

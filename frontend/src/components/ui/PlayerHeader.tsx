@@ -167,7 +167,7 @@ function ActionIcon({ action }: { action: PlayerHeaderAction }) {
       {action.icon}
       {badgeCount > 0 && (
         <span
-          className={`absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-[3px] font-body text-[10px] font-extrabold text-ink-950 tabular-nums ${
+          className={`absolute -top-1.5 -right-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-[3px] font-body text-size1 font-extrabold text-ink-950 tabular-nums ${
             action.badgeVariant === 'warning' ? 'bg-warning' : 'bg-silver-400'
           }`}
           style={{ border: `1px solid ${action.badgeVariant === 'warning' ? 'var(--warning)' : glassBadgeBorder}` }}

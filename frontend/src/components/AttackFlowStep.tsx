@@ -454,7 +454,7 @@ function AttackRolledResult({
           i.p.v. het paneel te centreren. */}
       <div className="flex flex-1 items-center justify-center">
         <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-4 rounded-2xl px-5 py-4">
-          <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{t('resultShort')}</span>
+          <span className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">{t('resultShort')}</span>
           {/* Zelfde `phDice`-tumble als de order-roll (`combatDie` in motion.ts), korter (.8s) en
               per dobbelsteen 0,12s gestaggerd. Draait pas zodra de server de worp heeft
               geleverd (`attackerRolls`), dus de animatie loopt niet op de uitkomst vooruit. De

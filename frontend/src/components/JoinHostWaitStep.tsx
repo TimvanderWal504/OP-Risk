@@ -43,8 +43,8 @@ export function JoinHostWaitStep({
           samengevoegd draagt het gedeelde paneel de omkadering. */}
       <GlassPanel elevation="base" context="phone" className="rounded-2xl">
         <div className="flex items-center gap-2.5">
-          <p className="font-display text-[26px] font-black">{t('hostWait.title')}</p>
-          <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+          <p className="font-display text-size6 font-black">{t('hostWait.title')}</p>
+          <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-size1 font-extrabold tracking-[.08em] text-ink-950">
             {t('hostWait.hostBadge')}
           </span>
         </div>
@@ -60,10 +60,10 @@ export function JoinHostWaitStep({
           de startknop weg te duwen — `Footer` staat sowieso op `mt-auto` en blijft onderaan. */}
       <GlassPanel elevation="base" context="phone" className="mt-[18px] flex min-h-0 flex-col rounded-2xl">
         <div className="mb-2 flex items-center justify-between">
-          <span className="font-body text-[11px] font-extrabold tracking-[.12em] text-fg-muted uppercase">
+          <span className="font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase">
             {t('hostWait.joinedLabel')}
           </span>
-          <span className="font-display text-[18px] font-black text-pitch-400">
+          <span className="font-display text-size2 font-black text-pitch-400">
             {players.length} / {maxPlayers}
           </span>
         </div>
@@ -80,17 +80,17 @@ export function JoinHostWaitStep({
               >
                 <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-3 rounded-card p-[11px_13px]">
                   <span
-                    className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-[19px]"
+                    className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] text-size3"
                     style={{ background: color?.hex ?? 'var(--surface-3)', color: color?.onHex }}
                   >
                     {color?.symbol && <ColorSymbol symbol={color.symbol} />}
                   </span>
-                  <span className="flex-1 font-display text-[17px] font-extrabold">{player.name}</span>
+                  <span className="flex-1 font-display text-h3 font-extrabold">{player.name}</span>
                   <span className="text-xs text-fg-muted">
                     {color ? tDynamic(color.id, 'colors') : ''}
                   </span>
                   {player.isHost && (
-                    <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-[10px] font-extrabold tracking-[.08em] text-ink-950">
+                    <span className="rounded-[6px] bg-silver-400 px-2 py-0.5 font-body text-size1 font-extrabold tracking-[.08em] text-ink-950">
                       {t('hostWait.hostBadge')}
                     </span>
                   )}

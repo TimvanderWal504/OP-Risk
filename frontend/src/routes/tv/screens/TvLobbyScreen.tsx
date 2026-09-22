@@ -45,20 +45,20 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
             {t('header.badge')}
           </span>
           <div className="mt-[26px]">
-            <div className="font-display text-[132px] leading-[.92] font-black tracking-[-.01em] text-[#f7f9fc] [text-shadow:0_6px_40px_rgba(4,6,11,.9),0_2px_8px_rgba(4,6,11,.8)]">
+            <div className="font-display text-size14 leading-[.92] font-black tracking-[-.01em] text-[#f7f9fc] [text-shadow:0_6px_40px_rgba(4,6,11,.9),0_2px_8px_rgba(4,6,11,.8)]">
               OPERATIE
             </div>
-            <div className="font-display text-[132px] leading-[.92] font-black tracking-[-.01em] text-[#f7f9fc] [text-shadow:0_6px_40px_rgba(4,6,11,.9),0_2px_8px_rgba(4,6,11,.8)]">
+            <div className="font-display text-size14 leading-[.92] font-black tracking-[-.01em] text-[#f7f9fc] [text-shadow:0_6px_40px_rgba(4,6,11,.9),0_2px_8px_rgba(4,6,11,.8)]">
               ATLAS
             </div>
           </div>
           <div className="mt-[26px] flex items-center gap-4">
             <span className="inline-block h-[5px] w-16 rounded-full bg-pitch-500" />
-            <span className="font-body text-[20px] tracking-[.14em] text-[rgba(247,249,252,.82)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
+            <span className="font-body text-size4 tracking-[.14em] text-[rgba(247,249,252,.82)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
               CAMPAGNE-TERMINAL
             </span>
           </div>
-          <div className="mt-auto flex items-center gap-3 font-body text-[19px] text-[rgba(247,249,252,.72)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
+          <div className="mt-auto flex items-center gap-3 font-body text-size3 text-[rgba(247,249,252,.72)] [text-shadow:0_2px_12px_rgba(4,6,11,.9)]">
             <span
               className="h-3 w-3 rounded-full bg-pitch-500 shadow-[0_0_14px_rgba(161,194,58,.8)]"
               style={{ animation: tvAnimations.waitingDot }}

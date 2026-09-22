@@ -8,7 +8,7 @@ export interface PlayerAvatarProps {
 }
 
 const SIZE_CLASS: Record<NonNullable<PlayerAvatarProps['size']>, string> = {
-  xs: 'h-[42px] w-[42px] rounded-[11px] text-[22px]',
+  xs: 'h-[42px] w-[42px] rounded-[11px] text-h2',
   sm: 'h-14 w-14 rounded-2xl text-2xl',
   lg: 'h-20 w-20 rounded-2xl text-3xl',
 }

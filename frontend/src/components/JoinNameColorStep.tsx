@@ -53,13 +53,13 @@ export function JoinNameColorStep({
           van het geneste TextField uit; de rand blijft, zodat het nog als invoerveld leest. */}
       <div className="flex flex-1 flex-col gap-0 overflow-y-auto pr-0.5">
         <GlassPanel elevation="base" context="phone" className="rounded-2xl">
-          <h1 className="mb-3 font-display text-[24px] font-extrabold">{t('join:name.title')}</h1>
+          <h1 className="mb-3 font-display text-size5 font-extrabold">{t('join:name.title')}</h1>
           {fixedName ? (
             <GlassPanel
               elevation="raised"
               context="phone"
               padding="none"
-              className="flex items-center gap-2.5 rounded-[16px] p-[14px_18px] font-display text-[24px] font-bold"
+              className="flex items-center gap-2.5 rounded-[16px] p-[14px_18px] font-display text-size5 font-bold"
               style={{ borderColor: 'var(--silver-600)' }}
             >
               {fixedName}
@@ -74,7 +74,7 @@ export function JoinNameColorStep({
           )}
         </GlassPanel>
         <GlassPanel elevation="base" context="phone" className="mt-7 rounded-2xl">
-          <h2 className="mb-3 font-display text-[24px] font-extrabold">{t('join:color.title')}</h2>
+          <h2 className="mb-3 font-display text-size5 font-extrabold">{t('join:color.title')}</h2>
           <div role="radiogroup" aria-label={t('join:color.title')} className="grid grid-cols-2 gap-[11px]">
             {colors.map((color) => {
               const taken = takenColorIds.includes(color.id)
@@ -91,13 +91,13 @@ export function JoinNameColorStep({
                   disabledBorderVar="var(--border)"
                 >
                   <span
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-input text-[19px]"
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-input text-size3"
                     style={{ background: color.hex, color: color.onHex }}
                   >
                     <ColorSymbol symbol={color.symbol} />
                   </span>
                   <span className="flex flex-col gap-0.5">
-                    <span className="font-display text-[16px] font-bold">{tDynamic(color.id, 'colors')}</span>
+                    <span className="font-display text-label font-bold">{tDynamic(color.id, 'colors')}</span>
                     {taken && <span className="text-xs  text-left text-fg-muted">{t('join:color.taken')}</span>}
                   </span>
                 </SelectableOption>

@@ -39,7 +39,7 @@ export function JoinRoleStep({
     <PhoneScreen className="gap-4">
       <JoinProgressHeader currentStep={stepIndex} stepCount={stepCount} />
       <GlassPanel elevation="base" context="phone" padding="none" className="rounded-2xl px-4 py-2.5">
-        <h1 className="font-display text-[26px] font-extrabold">{t('role.title')}</h1>
+        <h1 className="font-display text-size6 font-extrabold">{t('role.title')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('role.sub')}</p>
       </GlassPanel>
       <div

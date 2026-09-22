@@ -44,7 +44,7 @@ export function Stepper({
             aria-label={t('stepper.decrement', { label })}
             disabled={!canDecrement}
             onClick={onDecrement}
-            className="flex h-full w-full cursor-pointer items-center justify-center text-[22px] font-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-full w-full cursor-pointer items-center justify-center text-h2 font-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             −
           </button>
@@ -60,7 +60,7 @@ export function Stepper({
           aria-label={t('stepper.increment', { label })}
           disabled={!canIncrement}
           onClick={onIncrement}
-          className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border-none bg-pitch-500 text-[22px] font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="h-11 w-11 flex-none cursor-pointer rounded-[11px] border-none bg-pitch-500 text-h2 font-black text-[var(--on-pitch)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           +
         </button>

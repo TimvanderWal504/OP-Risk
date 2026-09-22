@@ -148,7 +148,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
       />
 
       <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
-        <div className="mb-3 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+        <div className="mb-3 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('playersTitle')}
         </div>
         <div className="flex flex-col gap-3">
@@ -171,7 +171,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
               >
                 {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-silver-400" />}
                 <div
-                  className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-[28px]"
+                  className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-h1"
                   style={{ background: color.hex, color: color.onHex }}
                 >
                   <ColorSymbol symbol={color.symbol} />
@@ -199,10 +199,10 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="font-display text-[34px] font-black tabular-nums text-fg">
+                  <div className="font-display text-size8 font-black tabular-nums text-fg">
                     {armyTotalByPlayer[playerId] ?? 0}
                   </div>
-                  <div className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                  <div className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
                     {t('armiesLabel')}
                   </div>
                 </div>

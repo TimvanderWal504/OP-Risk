@@ -59,26 +59,26 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
         <div className="flex items-center gap-4.5">
           {activeColor && (
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-[16px] text-[34px]"
+              className="flex h-16 w-16 items-center justify-center rounded-[16px] text-size8"
               style={{ background: activeColor.hex, color: activeColor.onHex, boxShadow: `0 0 24px ${activeColor.hex}99` }}
             >
               <ColorSymbol symbol={activeColor.symbol} />
             </div>
           )}
-          <div className="font-display text-[34px] font-black leading-none">
+          <div className="font-display text-size8 font-black leading-none">
             {/* Dubbele punt, zelfde grammaticafix als TurnStatusHeader/ActivePlayerBanner. */}
             {t('board:turnOf')}: {activePlayer.name}{' '}
-            {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
+            {activeColor && <span className="text-size5 font-bold text-fg-muted">· {activeColor.name}</span>}
           </div>
         </div>
 
         <InstructionKicker>{t('claimKicker')}</InstructionKicker>
 
         <div className="flex flex-col items-end">
-          <span className="mb-1 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+          <span className="mb-1 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
             {t('claimCounterLabel')}
           </span>
-          <div className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-[56px] font-black leading-none tabular-nums text-fg">
+          <div className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-size11 font-black leading-none tabular-nums text-fg">
             {claimedCount} / {totalCount}
           </div>
         </div>
@@ -161,7 +161,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
       />
 
       <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
-        <div className="mb-3 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+        <div className="mb-3 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('claimPanelTitle')}
         </div>
         <div className="flex flex-col gap-3">
@@ -184,7 +184,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
               >
                 {isCurrent && <div className="absolute inset-y-0 left-0 w-[5px] bg-silver-400" />}
                 <div
-                  className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-[28px]"
+                  className="flex h-13.5 w-13.5 flex-none items-center justify-center rounded-[13px] text-h1"
                   style={{ background: color.hex, color: color.onHex }}
                 >
                   <ColorSymbol symbol={color.symbol} />
@@ -203,7 +203,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                   </div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">{color.name}</div>
                 </div>
-                <div className="font-display text-[34px] font-black tabular-nums text-fg">{count}</div>
+                <div className="font-display text-size8 font-black tabular-nums text-fg">{count}</div>
               </div>
             )
           })}

@@ -61,19 +61,19 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
         {activePlayer && activeColor ? (
           <div className="flex items-center gap-4.5">
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-[16px] text-[34px]"
+              className="flex h-16 w-16 items-center justify-center rounded-[16px] text-size8"
               style={{ background: activeColor.hex, color: activeColor.onHex, boxShadow: `0 0 24px ${activeColor.hex}99` }}
             >
               <ColorSymbol symbol={activeColor.symbol} />
             </div>
-            <div className="font-display text-[34px] font-black leading-none">
+            <div className="font-display text-size8 font-black leading-none">
               {/* Dubbele punt, zelfde grammaticafix als TurnStatusHeader/ActivePlayerBanner. */}
               {t('board:turnOf')}: {activePlayer.name}{' '}
-              <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>
+              <span className="text-size5 font-bold text-fg-muted">· {activeColor.name}</span>
             </div>
           </div>
         ) : (
-          <div className="font-display text-[34px] font-black leading-none">{t('placeEveryoneAtOnce')}</div>
+          <div className="font-display text-size8 font-black leading-none">{t('placeEveryoneAtOnce')}</div>
         )}
 
         <InstructionKicker>{t('placeTitle')}</InstructionKicker>

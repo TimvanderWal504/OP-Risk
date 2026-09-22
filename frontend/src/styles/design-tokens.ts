@@ -26,6 +26,20 @@ export const fontFamily = {
 // ---------------------------------------------------------------------------
 // Type scale — colors_and_type.css :root --text-*
 // ---------------------------------------------------------------------------
+// De oorspronkelijke 7 stappen (display..xs) zijn de enige met een eigen rol
+// (kop/label/lichaamstekst) en een meegeleverde line-height in twc-theme.css.
+// De rest hieronder is op 2026-09-22 alsnog geëxtraheerd (bevinding: 101
+// letterlijke `text-[Npx]`-waarden verspreid over de hele app, buiten deze
+// schaal om), zonder eigen line-height-koppeling — puur font-size, zodat een
+// bestaande expliciete of impliciete regelhoogte op een aanroepplek nooit
+// stilzwijgend verandert. Genummerd (`size1`..`size14`) i.p.v. Tailwinds eigen
+// lg/xl/2xl/3xl/...-namen: dit project herdefinieert die niet, maar Tailwind
+// zelf levert al standaardwaarden onder precies die namen (lg=18px,
+// xl=20px, 2xl=24px, 3xl=30px, ...) — 37 bestaande `text-lg`/`text-xl`/
+// `text-2xl`/`text-3xl`-aanroepen in de app leunen daar al op. Die namen hier
+// hergebruiken voor andere pixelwaarden zou die 37 aanroepen stilzwijgend
+// laten verspringen (bevinding tijdens het bouwen, vóór enige aanroepplek
+// aangepast was — vandaar de neutrale, botsingsvrije nummering).
 export const fontSize = {
   display: 40,
   h1: 28,
@@ -34,6 +48,22 @@ export const fontSize = {
   body: 15,
   sm: 13,
   xs: 11,
+  // Genummerde aanvulling (geen eigen line-height, zie hierboven), oplopend:
+  size1: 10,
+  label: 16, // DESIGN.md § Typography → Hierarchy: "Label" (800, 16px, 0.1em tracking, uppercase)
+  size2: 18,
+  size3: 19,
+  size4: 20,
+  size5: 24,
+  size6: 26,
+  size7: 30,
+  size8: 34,
+  size9: 44,
+  size10: 52,
+  size11: 56,
+  size12: 64,
+  size13: 88,
+  size14: 132,
 } as const;
 
 export const lineHeight = {

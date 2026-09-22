@@ -38,14 +38,14 @@ export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps)
     <PhoneScreen style={{ backgroundImage: `url(${phoneEliminated})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <GlassPanel elevation="base" context="phone" padding="none" className="my-auto grid gap-5 rounded-2xl p-4 text-center">
         <div
-          className="mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] text-[52px]"
+          className="mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] text-size10"
           style={{ background: myColor?.hex, color: myColor?.onHex }}
         >
           {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
         </div>
         <div>
-          <div className="font-display text-[34px] font-black tracking-[.02em] text-fg">{t('elim.title')}</div>
-          <div className="mx-auto mt-2.5 max-w-[280px] font-body text-[15px] text-fg-muted">{t('elim.subtitle')}</div>
+          <div className="font-display text-size8 font-black tracking-[.02em] text-fg">{t('elim.title')}</div>
+          <div className="mx-auto mt-2.5 max-w-[280px] font-body text-body text-fg-muted">{t('elim.subtitle')}</div>
         </div>
         <div className="flex items-center justify-center gap-2.5 font-body text-sm text-fg-muted">
           <span className="h-[11px] w-[11px] rounded-full bg-fg-muted" style={{ animation: phoneAnimations.waitingDot }} />

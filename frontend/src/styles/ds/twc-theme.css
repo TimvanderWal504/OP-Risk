@@ -96,6 +96,34 @@
   --text-sm:                   0.8125rem; /* 13 — secondary / labels         */
   --text-xs:                   0.6875rem; /* 11 — meta, badge text           */
 
+  /* ---- Genummerde aanvulling (2026-09-22, bevinding: 101 letterlijke
+     text-[Npx]-waarden buiten bovenstaande 7 stappen, verspreid door de hele
+     app — zie design-tokens.ts). Bewust GEEN --text-<naam>--line-height
+     companion: Tailwind v4 genereert dan een font-size-only utility, zodat
+     een bestaande expliciete/impliciete regelhoogte op een aanroepplek nooit
+     stilzwijgend meeverandert (in tegenstelling tot de 7 stappen hierboven,
+     die wél een line-height meesturen). Genummerd i.p.v. Tailwinds eigen
+     lg/xl/2xl/3xl-namen: dit thema definieerde die nooit zelf, dus Tailwind
+     levert daar zijn eigen standaardwaarden (lg=18px, xl=20px, 2xl=24px,
+     3xl=30px, ...) — 37 bestaande text-lg/text-xl/text-2xl/text-3xl-aanroepen
+     in de app leunen daar al op. Die namen hier overschrijven met andere
+     pixelwaarden had ze stilzwijgend laten verspringen. ---- */
+  --text-size1:  0.625rem;  /* 10 — kleinste chip-/badge-tekst */
+  --text-label:  1rem;      /* 16 — DESIGN.md § Typography → Hierarchy "Label" */
+  --text-size2:  1.125rem;  /* 18 */
+  --text-size3:  1.1875rem; /* 19 */
+  --text-size4:  1.25rem;   /* 20 */
+  --text-size5:  1.5rem;    /* 24 */
+  --text-size6:  1.625rem;  /* 26 */
+  --text-size7:  1.875rem;  /* 30 */
+  --text-size8:  2.125rem;  /* 34 */
+  --text-size9:  2.75rem;   /* 44 */
+  --text-size10: 3.25rem;   /* 52 */
+  --text-size11: 3.5rem;    /* 56 */
+  --text-size12: 4rem;      /* 64 */
+  --text-size13: 5.5rem;    /* 88 */
+  --text-size14: 8.25rem;   /* 132 */
+
   /* ---- Tracking (overrides Tailwind's defaults with the design-token values) ---- */
   --tracking-tight: -0.02em; /* display headlines               */
   --tracking-flat:   0em;

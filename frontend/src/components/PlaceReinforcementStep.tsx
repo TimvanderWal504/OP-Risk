@@ -180,14 +180,14 @@ export function PlaceReinforcementStep({
         <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
           {breakdown && (
             <GlassPanel elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
-              <div className="mb-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+              <div className="mb-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
                 {t('buildup')}
               </div>
               {breakdownRows.map((row) => (
                 <div key={row.label} className="flex items-center justify-between py-1">
-                  <span className="font-body text-[16px] text-fg-secondary">{row.label}</span>
+                  <span className="font-body text-label text-fg-secondary">{row.label}</span>
                   <span
-                    className={`font-display text-[16px] font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
+                    className={`font-display text-label font-extrabold ${row.value > 0 ? 'text-pitch-300' : 'text-fg-muted'}`}
                   >
                     +{row.value}
                   </span>
@@ -207,12 +207,12 @@ export function PlaceReinforcementStep({
                   collapsible={continentGroups.length >= 2}
                   defaultOpen={continentGroups.length < 2}
                   title={
-                    <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                    <span className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
                       {tDynamic(group.continent, 'continents')}
                     </span>
                   }
                   summary={
-                    <span className="font-body text-[16px] text-fg-muted">
+                    <span className="font-body text-label text-fg-muted">
                       {group.territoryIds.length}/{group.totalInContinent}
                       {stagedInGroup > 0 && ` · +${stagedInGroup}`}
                     </span>

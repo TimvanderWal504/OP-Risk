@@ -48,7 +48,7 @@ export function JoinWaitStep({ me, color, role, joinedCount, stepIndex, stepCoun
           {/* Chip-idioom, geen volle kaart; `QuoteCard` blijft ongewijzigd (draagt al zijn eigen
               achtergrond). */}
           <GlassPanel elevation="base" context="phone" padding="none" className="flex-1 rounded-2xl px-4 py-2.5">
-            <p className="font-display text-[26px] font-black">{t('wait.title')}</p>
+            <p className="font-display text-size6 font-black">{t('wait.title')}</p>
             <p className="mt-1.5 font-body text-h3 text-fg-muted">
               {me.name} · {color ? tDynamic(color.id, 'colors') : t('wait.noColor')}
             </p>

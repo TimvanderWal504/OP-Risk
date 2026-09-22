@@ -95,12 +95,12 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
       >
         <div className="flex items-center gap-[26px]" style={{ animation: tvAnimations.titleSlamShort }}>
           <div
-            className="flex h-[120px] w-[120px] items-center justify-center rounded-[26px] text-[64px] opacity-85"
+            className="flex h-[120px] w-[120px] items-center justify-center rounded-[26px] text-size12 opacity-85"
             style={{ background: eliminatedColor?.hex, color: eliminatedColor?.onHex }}
           >
             {eliminatedColor?.symbol && <ColorSymbol symbol={eliminatedColor.symbol} />}
           </div>
-          <h1 className="m-0 font-display text-[88px] font-black tracking-[-.01em] text-white">
+          <h1 className="m-0 font-display text-size13 font-black tracking-[-.01em] text-white">
             {t('eliminatedHeadline', { name: eliminated?.name ?? '' })}
           </h1>
         </div>
@@ -121,7 +121,7 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
         className="grid grid-rows-[1fr_auto_1fr] justify-items-center gap-y-[26px] p-6 px-6.5"
         style={{ animation: tvAnimations.combatStageIn }}
       >
-        <span className="self-end font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-silver-400">
+        <span className="self-end font-body text-label font-extrabold uppercase tracking-[.1em] text-silver-400">
           {t('kicker')}
         </span>
 
@@ -143,7 +143,7 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
             dice={combat.attackerRolls}
             rerollHighlightIndex={rerollHighlightIndex}
           />
-          <span className="col-start-2 row-span-3 row-start-1 font-display text-[44px] font-black text-fg-muted">{t('vs')}</span>
+          <span className="col-start-2 row-span-3 row-start-1 font-display text-size9 font-black text-fg-muted">{t('vs')}</span>
           <CombatSide side="defender" name={defender?.name} color={defenderColor} label={t('defenderLabel')} dice={combat.defenderRolls} />
         </div>
 
@@ -158,7 +158,7 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
               className="flex items-center gap-4 rounded-[14px] border px-[26px] py-3.5"
               style={{ background: 'color-mix(in srgb, var(--pitch-400) 16%, transparent)', borderColor: 'var(--pitch-600)', animation: tvAnimations.resultPop }}
             >
-              <span className="font-display text-[30px] font-black tracking-[.08em]" style={{ color: 'var(--pitch-600)' }}>
+              <span className="font-display text-size7 font-black tracking-[.08em]" style={{ color: 'var(--pitch-600)' }}>
                 {t('captured')}
               </span>
               <span className="font-body text-xl text-fg">{tDynamic(narrated.toTerritoryId, 'territories')}</span>
@@ -215,9 +215,9 @@ function CombatSide({ side, name, color, label, dice, rerollHighlightIndex = -1 
         >
           {color?.symbol && <ColorSymbol symbol={color.symbol} />}
         </span>
-        <span className="font-display text-[26px] font-extrabold">{name}</span>
+        <span className="font-display text-size6 font-extrabold">{name}</span>
       </div>
-      <span className={`${column} row-start-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted`}>
+      <span className={`${column} row-start-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted`}>
         {label}
       </span>
       <div className={`${column} row-start-3 flex items-center gap-4`}>

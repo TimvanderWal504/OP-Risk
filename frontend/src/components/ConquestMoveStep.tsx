@@ -45,7 +45,7 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
       {/* `my-auto`: de vrije ruimte valt gelijk boven en onder het paneel, gecentreerd in wat de
           CTA onderaan overlaat. Geen `flex-1` — dat zou het paneel weer uitrekken. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="my-auto grid gap-[22px] rounded-2xl p-4 text-center">
-        <div className="font-display text-[28px] font-black leading-[1.15] text-fg">
+        <div className="font-display text-h1 font-black leading-[1.15] text-fg">
           {t('conquest.captured', { territory: tDynamic(toTerritoryId, 'territories') })}
         </div>
 

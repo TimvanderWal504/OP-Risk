@@ -17,7 +17,7 @@ export function JoinProgressHeader({ currentStep, stepCount }: JoinProgressHeade
       {/* Geen eigen bovenmarge: het frame komt van `PhoneScreen`. Een marge hier zou erbovenop
           stapelen en de join-schermen lager zetten dan elk ander scherm. */}
       <div className="flex items-center gap-3">
-        <span className="font-display text-[22px] font-black tracking-[.1em]">{t('appTitle')}</span>
+        <span className="font-display text-h2 font-black tracking-[.1em]">{t('appTitle')}</span>
       </div>
       <div className="my-4 flex gap-1.5">
         {Array.from({ length: stepCount }).map((_, idx) => (

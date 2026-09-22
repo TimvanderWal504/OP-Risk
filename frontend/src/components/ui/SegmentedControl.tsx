@@ -29,7 +29,7 @@ export function SegmentedControl<T extends string | number>({
               type="button"
               aria-pressed={active}
               onClick={() => onChange(option.value)}
-              className="min-h-13 flex-1 rounded-[12px] border-2 border-pitch-500 bg-pitch-500/14 font-display text-[15px] font-extrabold text-fg"
+              className="min-h-13 flex-1 rounded-[12px] border-2 border-pitch-500 bg-pitch-500/14 font-display text-body font-extrabold text-fg"
             >
               {option.label}
             </button>
@@ -42,7 +42,7 @@ export function SegmentedControl<T extends string | number>({
               type="button"
               aria-pressed={active}
               onClick={() => onChange(option.value)}
-              className="flex h-full w-full items-center justify-center font-display text-[15px] font-extrabold text-fg-muted"
+              className="flex h-full w-full items-center justify-center font-display text-body font-extrabold text-fg-muted"
             >
               {option.label}
             </button>

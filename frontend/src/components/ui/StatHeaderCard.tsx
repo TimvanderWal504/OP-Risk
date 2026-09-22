@@ -63,8 +63,8 @@ export function StatHeaderCard({
           <div className="font-display text-h2 font-extrabold">{title}</div>
         </div>
         <div className="flex flex-none flex-row items-end gap-2">
-          <div className="font-display text-[34px] leading-none font-black text-fg">{statValue}</div>
-          <div className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">{statLabel}</div>
+          <div className="font-display text-size8 leading-none font-black text-fg">{statValue}</div>
+          <div className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">{statLabel}</div>
         </div>
       </div>
       {/* Typografie volgt de ondertitel op OrderRollWaitStep (`text-body`/`text-fg-muted`, geen

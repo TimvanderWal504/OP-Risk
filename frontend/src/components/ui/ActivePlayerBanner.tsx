@@ -44,7 +44,7 @@ export function ActivePlayerBanner({ turnOfLabel, playerName, color, subtitle, s
               met `PlayerHeader`'s timercijfer (zelfde hero-stat-conventie, zelfde `font-black`
               i.p.v. de ramp's h1-gewicht, zie de doc-comment daar). */}
           <div className="font-display text-h1 leading-none font-black text-silver-300">{stat.value}</div>
-          <div className="font-body text-[10px] text-fg-muted">{stat.label}</div>
+          <div className="font-body text-size1 text-fg-muted">{stat.label}</div>
         </div>
       )}
     </GlassPanel>

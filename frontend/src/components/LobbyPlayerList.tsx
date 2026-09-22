@@ -24,7 +24,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
         <span className="font-body text-h3 font-extrabold tracking-[.14em] text-pitch-400 uppercase">
           {t('players.title')}
         </span>
-        <span className="font-display text-[24px] font-black text-pitch-400">
+        <span className="font-display text-size5 font-black text-pitch-400">
           {players.length} / {maxPlayers}
         </span>
       </div>
@@ -46,7 +46,7 @@ export function LobbyPlayerList({ players, colors, roles, maxPlayers }: LobbyPla
                 colorSymbol={color?.symbol}
               />
               <div className="min-w-0">
-                <div className="truncate font-display text-[19px] leading-[1.1] font-extrabold text-fg">
+                <div className="truncate font-display text-size3 leading-[1.1] font-extrabold text-fg">
                   {player.name}
                 </div>
                 <div className="truncate text-sm text-pitch-500">

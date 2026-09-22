@@ -98,21 +98,21 @@ export function DefendStep({
       <div className="flex min-h-0 flex-1 flex-col justify-center">
         <GlassPanel elevation="raised" context="phone" className="flex flex-col items-center gap-3.5 text-center">
           <span
-            className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-live"
+            className="font-body text-label font-extrabold uppercase tracking-[.1em] text-live"
             style={{ textShadow: 'var(--glass-text-shadow)' }}
           >
             {t('defend.underAttack')}
           </span>
           <div className="flex items-center gap-3">
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-2xl text-[28px]"
+              className="flex h-14 w-14 items-center justify-center rounded-2xl text-h1"
               style={{ background: attackerColor?.hex, color: attackerColor?.onHex }}
             >
               {attackerColor?.symbol && <ColorSymbol symbol={attackerColor.symbol} />}
             </div>
             <span className="text-2xl text-fg-secondary">→</span>
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-2xl text-[28px]"
+              className="flex h-14 w-14 items-center justify-center rounded-2xl text-h1"
               style={{ background: myColor?.hex, color: myColor?.onHex }}
             >
               {myColor?.symbol && <ColorSymbol symbol={myColor.symbol} />}
@@ -124,7 +124,7 @@ export function DefendStep({
 
           {result === null && (
             <>
-              <div className="font-body text-[15px] text-fg-secondary">
+              <div className="font-body text-body text-fg-secondary">
                 {t(awaitingRerollDecision ? 'defend.awaitingReroll' : 'defend.choose')}
               </div>
               {/* Kleuridentiteit zit in tint + rand, niet in de tekst: `var(--pitch-400)` als
@@ -155,7 +155,7 @@ export function DefendStep({
                 className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[18px] text-fg disabled:opacity-60"
                 style={{ borderColor: 'var(--border-strong)' }}
               >
-                <span className="font-display text-[30px] font-black">1</span>
+                <span className="font-display text-size7 font-black">1</span>
                 <span className="font-body text-xs">{t('defend.with1')}</span>
               </button>
               <button
@@ -165,7 +165,7 @@ export function DefendStep({
                 className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[18px] text-fg disabled:cursor-not-allowed disabled:opacity-40"
                 style={{ borderColor: 'var(--pitch-400)', background: defenseDiceBlueTint }}
               >
-                <span className="font-display text-[30px] font-black" style={{ color: 'var(--pitch-400)' }}>
+                <span className="font-display text-size7 font-black" style={{ color: 'var(--pitch-400)' }}>
                   2
                 </span>
                 <span className="font-body text-xs">{t('defend.with2')}</span>
@@ -198,7 +198,7 @@ export function DefendStep({
               <div className="font-display text-xl font-black text-pitch-300" style={{ textShadow: 'var(--glass-text-shadow)' }}>
                 {t(...resultKey(result.attackerLosses, result.defenderLosses, result.conquered))}
               </div>
-              <div className="mt-1.5 font-body text-[13px] text-fg-muted">{t('detailsOnTv')}</div>
+              <div className="mt-1.5 font-body text-sm text-fg-muted">{t('detailsOnTv')}</div>
             </GlassPanel>
             {/* Genest in ModalShell (al een GlassPanel), dus de nesting-guard schakelt de blur hier
                 automatisch uit — rand en schaduw blijven over (No-Nested-Blur Rule). */}
@@ -212,7 +212,7 @@ export function DefendStep({
               <button
                 type="button"
                 onClick={onDismiss}
-                className="flex min-h-[60px] w-full items-center justify-center font-display text-[17px] font-extrabold text-fg"
+                className="flex min-h-[60px] w-full items-center justify-center font-display text-h3 font-extrabold text-fg"
               >
                 {t('defend.backToWait')}
               </button>

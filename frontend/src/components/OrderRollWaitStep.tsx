@@ -29,7 +29,7 @@ export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = n
           het bestaande chip-idioom (DESIGN.md § Components, "badge-silver-outline") i.p.v. een
           nieuw patroon. */}
       <GlassPanel elevation="base" context="phone" padding="none" className="flex flex-col items-center gap-1 rounded-2xl px-4 py-2.5">
-        <p className="font-display text-[26px] font-black">{t('title')}</p>
+        <p className="font-display text-size6 font-black">{t('title')}</p>
         <p className="max-w-[280px] text-body text-fg-muted">{t('sub')}</p>
       </GlassPanel>
 

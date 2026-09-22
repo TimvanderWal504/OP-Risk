@@ -43,9 +43,9 @@ export function ArmyStepperRow({
       <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-3 rounded-[14px] px-3 py-[9px]">
         <ColorAvatar color={color} variant="row" />
         <div className="min-w-0 flex-1">
-          <div className="font-display text-[16px] font-extrabold">{label}</div>
+          <div className="font-display text-label font-extrabold">{label}</div>
         </div>
-        <span className="min-w-[30px] text-right font-display text-[22px] font-black tabular-nums">
+        <span className="min-w-[30px] text-right font-display text-h2 font-black tabular-nums">
           {armyCount}
         </span>
         <button
@@ -68,7 +68,7 @@ export function ArmyStepperRow({
     <GlassPanel elevation="base" context="phone" padding="none" className="flex items-center gap-[10px] rounded-[14px] px-[10px] py-2">
       <ColorAvatar color={color} variant="reinforce" />
       <div className="min-w-0 flex-1">
-        <div className="font-display text-[15px] font-extrabold">{label}</div>
+        <div className="font-display text-body font-extrabold">{label}</div>
         <div className="text-[11.5px] text-fg-muted">
           {baseArmyCount} {'→'} <b className="text-pitch-300">{armyCount}</b>
         </div>

@@ -67,20 +67,20 @@ export function TvGameOverScreen({ state }: TvScreenProps) {
     <div className="flex h-full flex-col mx-auto max-w-[1550px] p-14 items-center justify-center">
       <GlassPanel elevation="base" context="tv" padding="none" className="max-h-full w-full overflow-y-auto rounded-2xl p-10">
         <div className="flex flex-col items-center gap-5">
-          <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-silver-400">
+          <span className="font-body text-label font-extrabold uppercase tracking-[.1em] text-silver-400">
             {t('heading')}
           </span>
           {winners.map(({ player, color }) => (
             <div key={player.id} className="flex items-center gap-[26px]">
               {color?.symbol && (
                 <span
-                  className="flex h-[120px] w-[120px] flex-none items-center justify-center rounded-[26px] text-[64px] opacity-85"
+                  className="flex h-[120px] w-[120px] flex-none items-center justify-center rounded-[26px] text-size12 opacity-85"
                   style={{ background: color.hex, color: color.onHex }}
                 >
                   <ColorSymbol symbol={color.symbol} />
                 </span>
               )}
-              <h1 className="m-0 font-display text-[88px] font-black tracking-[-.01em] text-fg">{player.name}</h1>
+              <h1 className="m-0 font-display text-size13 font-black tracking-[-.01em] text-fg">{player.name}</h1>
             </div>
           ))}
         </div>
@@ -88,14 +88,14 @@ export function TvGameOverScreen({ state }: TvScreenProps) {
         {rankedPlayers.length > 0 && (
           <div className="mt-10 flex flex-col gap-5 border-t border-silver-700 pt-8">
             <div className="text-center">
-              <span className="font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-silver-400">
+              <span className="font-body text-label font-extrabold uppercase tracking-[.1em] text-silver-400">
                 {t('finalScoreHeading')}
               </span>
             </div>
 
             <div className="flex flex-col">
               <div
-                className="grid gap-4 border-b border-silver-700 pb-2 font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-silver-400"
+                className="grid gap-4 border-b border-silver-700 pb-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-silver-400"
                 style={{ gridTemplateColumns: columns }}
               >
                 <span>{t('playerColumn')}</span>

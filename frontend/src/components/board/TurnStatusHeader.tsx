@@ -54,18 +54,18 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
       <div key={activePlayer.id} className="flex items-center gap-4.5" style={{ animation: tvAnimations.turnChipSwap }}>
         {activeColor && (
           <div
-            className="flex h-16 w-16 items-center justify-center rounded-[16px] text-[34px]"
+            className="flex h-16 w-16 items-center justify-center rounded-[16px] text-size8"
             style={{ background: activeColor.hex, color: activeColor.onHex, boxShadow: `0 0 24px ${activeColor.hex}99` }}
           >
             <ColorSymbol symbol={activeColor.symbol} />
           </div>
         )}
-        <div className="font-display text-[34px] font-black leading-none">
+        <div className="font-display text-size8 font-black leading-none">
           {/* Dubbele punt zoals op de telefoon (ActivePlayerBanner): "Aan de beurt Henk" is geen
               lopend Nederlands. Hier staat de kleurnaam achter de naam, niet een fasenaam — de
               fase heeft op de TV al zijn eigen pillenrij rechts. */}
           {t('turnOf')}: {activePlayer.name}{' '}
-          {activeColor && <span className="text-[24px] font-bold text-fg-muted">· {activeColor.name}</span>}
+          {activeColor && <span className="text-size5 font-bold text-fg-muted">· {activeColor.name}</span>}
         </div>
       </div>
 
@@ -91,12 +91,12 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
       </div>
 
       <div className="flex flex-row items-end">
-        <span className="mr-1 self-center font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted">
+        <span className="mr-1 self-center font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('timerLabel')}
         </span>
         {isPaused ? (
           <div
-            className="flex items-center gap-3 rounded-xl border-2 border-dashed border-border-strong px-5.5 py-3 font-display text-[30px] font-extrabold leading-none text-fg-muted"
+            className="flex items-center gap-3 rounded-xl border-2 border-dashed border-border-strong px-5.5 py-3 font-display text-size7 font-extrabold leading-none text-fg-muted"
             style={{ animation: tvAnimations.timerSwap }}
           >
             <span className="inline-flex gap-[5px]">
@@ -107,14 +107,14 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           </div>
         ) : isLow ? (
           <div
-            className="rounded-xl border-[3px] px-5.5 py-1 font-display text-[56px] font-black leading-none tabular-nums"
+            className="rounded-xl border-[3px] px-5.5 py-1 font-display text-size11 font-black leading-none tabular-nums"
             style={{ color: '#ff4d52', borderColor: '#ff4d52', boxShadow: '0 0 34px rgba(255,77,82,.6)', animation: tvAnimations.timerLow }}
           >
             {formatTimer(remainingMs)}
           </div>
         ) : (
           <div
-            className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-[56px] font-black leading-none tabular-nums text-fg"
+            className="rounded-xl border-2 border-border-strong px-5.5 py-1 font-display text-size11 font-black leading-none tabular-nums text-fg"
             style={{ animation: tvAnimations.timerSwap }}
           >
             {formatTimer(remainingMs)}

@@ -43,7 +43,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
         padding="none"
         className="mt-3 mb-1.5 flex flex-col items-center gap-1.5 px-10 py-5 text-center"
       >
-        <h1 className="font-display text-[64px] font-black leading-none tracking-[-.02em]">
+        <h1 className="font-display text-size12 font-black leading-none tracking-[-.02em]">
           {t('title')}
         </h1>
         <p className="text-h2 text-fg-muted">{t('sub')}</p>
@@ -114,7 +114,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
             elevation="base"
             context="tv"
             padding="none"
-            className="mb-3.5 inline-block px-4 py-1.5 text-center font-body text-[16px] font-extrabold uppercase tracking-[.1em] text-fg-muted"
+            className="mb-3.5 inline-block px-4 py-1.5 text-center font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted"
           >
             {t('turnOrder')}
           </GlassPanel>
@@ -134,7 +134,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                   className="flex max-w-[220px] flex-1 items-center gap-4 p-4"
                 >
                   <span
-                    className={`font-display text-[44px] font-black leading-none ${first ? 'text-silver-300' : 'text-fg-muted'}`}
+                    className={`font-display text-size9 font-black leading-none ${first ? 'text-silver-300' : 'text-fg-muted'}`}
                   >
                     {rank + 1}
                   </span>

@@ -43,9 +43,9 @@ export function LobbyQrPanel({ gameId, origin = window.location.origin }: LobbyQ
         dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
       />
       <div className="min-w-0">
-        <div className="font-display text-[26px] leading-[1.1] font-extrabold text-fg">{t('qr.scanToJoin')}</div>
-        <div className="mt-[10px] truncate font-body text-[16px] text-fg-muted">{joinUrl}</div>
-        <span className="mt-3 inline-block rounded-[10px] bg-pitch-500 px-4 py-1.5 font-body text-[24px] font-semibold tracking-[.18em] text-[var(--on-pitch)]">
+        <div className="font-display text-size6 leading-[1.1] font-extrabold text-fg">{t('qr.scanToJoin')}</div>
+        <div className="mt-[10px] truncate font-body text-label text-fg-muted">{joinUrl}</div>
+        <span className="mt-3 inline-block rounded-[10px] bg-pitch-500 px-4 py-1.5 font-body text-size5 font-semibold tracking-[.18em] text-[var(--on-pitch)]">
           {gameId}
         </span>
       </div>

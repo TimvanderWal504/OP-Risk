@@ -257,6 +257,20 @@ as the CSS fallback stack, not as the rendered fonts.
 - **Body** (400, 15px / 0.9375rem, 1.55 line-height): default UI copy.
 - **Label** (800/extrabold, 16px, 0.1em tracking, uppercase): kickers, badges, meta text — always uppercase and wide-tracked, never mixed-case at this size.
 
+**Extended sizes** (added 2026-09-22 — a design-token extraction pass found 101
+literal pixel font-sizes across the app outside the six named steps above).
+Unlike Display/H1/H2/H3/Body, these carry no fixed weight, tracking or
+line-height of their own — each call site keeps applying those separately, as
+it already did — the token only names the size itself: `size1` (10px, tiny
+chip/tag text), `size2` (18px), `size3` (19px, small avatar-circle glyphs and
+compact names), `size4` (20px), `size5` (24px, phone step titles), `size6`
+(26px, full-screen phone titles), `size7` (30px, dice-count numerals), `size8`
+(34px, shared phone/TV "big stat" — active-player headline, army/claim
+totals), `size9` (44px, order-roll die value, combat-overlay "VS"), `size10`
+(52px, large avatar-circle glyphs), `size11` (56px, timer/claim-counter
+numerals), `size12` (64px, XL avatar-circle glyphs), `size13` (88px,
+eliminated-player headline), `size14` (132px, TV lobby join-code digits).
+
 ### Named Rules
 **The Tabular Numerals Rule.** Any number that can change in place — timers, dice results, army counts, scores — uses `font-variant-numeric: tabular-nums` so digit width never shifts and adjacent UI doesn't reflow as the value updates.
 
