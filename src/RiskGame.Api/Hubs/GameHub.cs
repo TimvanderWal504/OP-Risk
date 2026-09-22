@@ -17,6 +17,11 @@ public sealed record OrderRollResponse(int Die1, int Die2, GameStateDto State);
 
 public sealed record DeclareAttackResponse(IReadOnlyList<int> AttackerRolls, GameStateDto State);
 
+/// <summary>RPC-antwoord op <c>RerollAttackDie</c> — zelfde velden als de bijbehorende <see cref="DiceRolledMessage"/>
+/// (<c>Context == "reroll"</c>), zodat de aanroeper zelf niet op de broadcast hoeft te wachten.</summary>
+public sealed record RerollAttackDieResponse(
+    IReadOnlyList<int> PreviousRolls, int RerolledDieIndex, int NewValue, IReadOnlyList<int> Rolls, GameStateDto State);
+
 public sealed record CombatResultResponse(
     IReadOnlyList<int> AttackerRolls,
     IReadOnlyList<int> DefenderRolls,
@@ -39,12 +44,36 @@ public sealed record CombatResultResponse(
 /// </summary>
 /// <remarks>
 /// Transiënt audit/weergave-event (geen state) voor elke dobbelworp die op de TV zichtbaar
-/// moet zijn: order-roll (FO §2.1) en de aanvals-/verdedigingsworp tijdens gevechten (FO §5.3).
-/// <c>Context</c> is bewust een string, geen enum — puur een weergave-label, geen domeinbegrip.
-/// <c>CorrelationId</c> is <c>null</c> bij order-roll (geen gevecht om aan te correleren) en
-/// gelijk aan <see cref="Rules.State.PendingCombat.CorrelationId"/> bij attack/defense.
+/// moet zijn: order-roll (FO §2.1), de aanvals-/verdedigingsworp tijdens gevechten (FO §5.3), en
+/// een rol-herwerp (FO §8.1, plan-rollen C5). <c>Context</c> is bewust een string, geen enum —
+/// puur een weergave-label, geen domeinbegrip. <c>CorrelationId</c> is <c>null</c> bij order-roll
+/// (geen gevecht om aan te correleren) en gelijk aan <see cref="Rules.State.PendingCombat.CorrelationId"/>
+/// bij attack/defense/reroll.
 /// </remarks>
-public sealed record DiceRolledMessage(string PlayerId, IReadOnlyList<int> Dice, string Context, Guid? CorrelationId);
+/// <param name="Dice">
+/// De worp die getoond moet worden — bij <c>Context == "reroll"</c> de nieuwe, gesorteerde worp
+/// ná de herwerp, zodat elke consument van deze narratieve familie hetzelfde "eindresultaat"-veld
+/// kan lezen ongeacht <c>Context</c>.
+/// </param>
+/// <param name="PreviousRolls">
+/// Alleen gevuld bij <c>Context == "reroll"</c>: de worp zoals die vóór de herwerp stond — de TV
+/// highlight <paramref name="RerolledDieIndex"/> hierin vóórdat 'm naar <paramref name="Dice"/>
+/// animeert (plan-rollen B2).
+/// </param>
+/// <param name="RerolledDieIndex">
+/// Alleen gevuld bij <c>Context == "reroll"</c>: de positie van de herworpen dobbelsteen in
+/// <paramref name="PreviousRolls"/> — vóór de hersortering door <see cref="Rules.Combat.CombatResolver.RerollDie"/>,
+/// dus een index in <paramref name="Dice"/> zou hier betekenisloos zijn (plan-rollen C5).
+/// </param>
+/// <param name="NewValue">Alleen gevuld bij <c>Context == "reroll"</c>: de nieuw gegooide waarde.</param>
+public sealed record DiceRolledMessage(
+    string PlayerId,
+    IReadOnlyList<int> Dice,
+    string Context,
+    Guid? CorrelationId,
+    IReadOnlyList<int>? PreviousRolls = null,
+    int? RerolledDieIndex = null,
+    int? NewValue = null);
 
 /// <summary>
 /// Combat-resolutie als narratief event (FO §5.3): wie viel wie aan, vanuit/naar welk
@@ -373,6 +402,44 @@ public sealed class GameHub(
             r => r.State,
             (r, s) => r with { State = s },
             _ => playerId);
+    }
+
+    /// <summary>"Herwerp" (FO §5.3 stap 3, §8.1): de aanvaller kiest zelf welke dobbelsteen van
+    /// zijn eigen worp opnieuw gegooid wordt — alleen mogelijk zolang de herwerp-stap open staat
+    /// (<see cref="RiskGame.Rules.Combat.AttackGuards.CanRerollAttackDie"/>).</summary>
+    public async Task<RerollAttackDieResponse> RerollAttackDie(string gameId, string playerId, int dieIndex)
+    {
+        var result = await attackCommands.RerollAttackDieAsync(gameId, playerId, dieIndex);
+
+        if (result.IsSuccess)
+        {
+            await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
+                playerId,
+                result.Value.Rolls,
+                "reroll",
+                result.Value.CorrelationId,
+                result.Value.PreviousRolls,
+                result.Value.RerolledDieIndex,
+                result.Value.NewValue));
+        }
+
+        return await UnwrapAndBroadcastAsync(
+            gameId,
+            result,
+            rerollResult => new RerollAttackDieResponse(
+                rerollResult.PreviousRolls, rerollResult.RerolledDieIndex, rerollResult.NewValue, rerollResult.Rolls, rerollResult.State),
+            r => r.State,
+            (r, s) => r with { State = s },
+            _ => playerId);
+    }
+
+    /// <summary>"Doorgaan" (FO §5.3 stap 3, §8.1): de aanvaller sluit de herwerp-stap zonder te
+    /// herwerpen — verbruikt de beschikbare herwerp voor dit doelgebied niet (plan-rollen A8).</summary>
+    public async Task<GameStateDto> KeepAttackDice(string gameId, string playerId)
+    {
+        var result = await attackCommands.KeepAttackDiceAsync(gameId, playerId);
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)

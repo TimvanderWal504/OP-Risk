@@ -207,7 +207,12 @@ public static class GameStateDtoMapper
 
     private static PendingCombatDto? ToDto(PendingCombat? pendingCombat) => pendingCombat is null
         ? null
-        : new PendingCombatDto(pendingCombat.FromTerritoryId, pendingCombat.ToTerritoryId, pendingCombat.AttackDice);
+        : new PendingCombatDto(
+            pendingCombat.FromTerritoryId,
+            pendingCombat.ToTerritoryId,
+            pendingCombat.AttackDice,
+            pendingCombat.AttackerRolls,
+            pendingCombat.AwaitingRerollDecision);
 
     /// <summary>
     /// <c>Remaining − (nu − LastUpdatedUtc)</c>, geklemd op 0 (zie doc-comment op

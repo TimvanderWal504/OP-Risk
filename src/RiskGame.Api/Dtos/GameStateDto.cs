@@ -181,8 +181,25 @@ public sealed record TurnStateDto(
 public sealed record ReinforcementBreakdownDto(
     int BaseArmies, int ContinentBonus, int RoleBonus, int EventBonus, int CardTradeBonus = 0);
 
-/// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.PendingCombat"/>.</summary>
-public sealed record PendingCombatDto(string FromTerritoryId, string ToTerritoryId, int AttackDice);
+/// <summary>
+/// Draad-representatie van <see cref="RiskGame.Rules.State.PendingCombat"/>.
+/// </summary>
+/// <param name="AttackerRolls">
+/// De actuele aanvalsworp — na een herwerp de nieuwe, gesorteerde worp (plan-rollen C5). Leidend
+/// voor de telefoon-/TV-weergave tijdens de herwerp-stap; de server gebruikt 'm ook zelf als
+/// bron voor <c>ChooseDefenseDice</c> (niet de losse <c>DiceRolled</c>-audittrail, FO §5.3).
+/// </param>
+/// <param name="AwaitingRerollDecision">
+/// Of de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen vóór de verdediger mag reageren (FO
+/// §5.3 stap 3, §8.1) — de telefoon/TV mogen deze stap niet zelf uit een actieve rol afleiden
+/// (frontend/CLAUDE.md), dus de server levert de vlag.
+/// </param>
+public sealed record PendingCombatDto(
+    string FromTerritoryId,
+    string ToTerritoryId,
+    int AttackDice,
+    IReadOnlyList<int> AttackerRolls,
+    bool AwaitingRerollDecision);
 
 /// <summary>
 /// Draad-representatie van <see cref="RiskGame.Rules.State.PhaseTimer"/> (FO §5.4) — bewust

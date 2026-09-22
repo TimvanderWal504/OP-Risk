@@ -12,6 +12,14 @@ namespace RiskGame.Api.Commands;
 
 public sealed record DeclareAttackResult(IReadOnlyList<int> AttackerRolls, Guid CorrelationId, GameStateDto State);
 
+public sealed record RerollAttackDieResult(
+    IReadOnlyList<int> PreviousRolls,
+    int RerolledDieIndex,
+    int NewValue,
+    IReadOnlyList<int> Rolls,
+    Guid CorrelationId,
+    GameStateDto State);
+
 public sealed record ChooseDefenseDiceResult(
     IReadOnlyList<int> AttackerRolls,
     IReadOnlyList<int> DefenderRolls,
@@ -94,6 +102,79 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         return Result<DeclareAttackResult>.Success(new DeclareAttackResult(attackerRolls, correlationId, updatedDto));
     }
 
+    /// <summary>
+    /// "Herwerp" (FO §5.3 stap 3, §8.1, plan-rollen A1/C5): de aanvaller herwerpt zelf één
+    /// dobbelsteen van zijn eigen worp. Sluit de herwerp-stap voor dit doelgebied (C1) — een
+    /// eventuele tweede, gelijktijdige beslissing (<see cref="KeepAttackDiceAsync"/>) vindt bij
+    /// het vouwen een al gesloten stap en is een no-op (plan-rollen C8).
+    /// </summary>
+    public async Task<Result<RerollAttackDieResult>> RerollAttackDieAsync(
+        string gameId, string playerId, int dieIndex)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<RerollAttackDieResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+        }
+
+        var validation = AttackGuards.CanRerollAttackDie(state, playerId, dieIndex);
+
+        if (!validation.IsSuccess)
+        {
+            return Result<RerollAttackDieResult>.Failure(validation.Errors);
+        }
+
+        var pendingCombat = state.TurnState!.PendingCombat!;
+        var previousRolls = pendingCombat.AttackerRolls;
+        var rerollResult = CombatResolver.RerollDie(previousRolls, dieIndex, random);
+        var newValue = rerollResult.Rolls[rerollResult.NewDieIndex];
+
+        session.Events.Append(gameId, new AttackDieRerolled(
+            gameId, playerId, pendingCombat.ToTerritoryId, previousRolls, dieIndex, newValue, rerollResult.Rolls));
+
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+
+        return Result<RerollAttackDieResult>.Success(new RerollAttackDieResult(
+            previousRolls, dieIndex, newValue, rerollResult.Rolls, pendingCombat.CorrelationId, updatedDto));
+    }
+
+    /// <summary>
+    /// "Doorgaan" (FO §5.3 stap 3, §8.1, plan-rollen A1/A8): de aanvaller sluit de herwerp-stap
+    /// zonder te herwerpen. Verbruikt het beschikbare herwerp voor dit doelgebied niet — alleen
+    /// het daadwerkelijk drukken op "Herwerp" doet dat (<see cref="RerollAttackDieAsync"/>).
+    /// </summary>
+    public async Task<Result<GameStateDto>> KeepAttackDiceAsync(string gameId, string playerId)
+    {
+        await using var session = store.LightweightSession();
+        var state = await session.LoadAsync<GameState>(gameId);
+
+        if (state is null)
+        {
+            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+        }
+
+        var validation = AttackGuards.CanKeepAttackDice(state, playerId);
+
+        if (!validation.IsSuccess)
+        {
+            return Result<GameStateDto>.Failure(validation.Errors);
+        }
+
+        session.Events.Append(gameId, new AttackDiceKept(gameId, playerId, state.TurnState!.PendingCombat!.ToTerritoryId));
+
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+
+        return Result<GameStateDto>.Success(updatedDto);
+    }
+
     public async Task<Result<ChooseDefenseDiceResult>> ChooseDefenseDiceAsync(
         string gameId, string playerId, int defenseDice)
     {
@@ -114,13 +195,9 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
 
         var pendingCombat = state.TurnState!.PendingCombat!;
         var attackerId = state.TurnState.ActivePlayerId;
-
-        var rawEvents = await session.Events.FetchStreamAsync(gameId);
-        var attackerRolls = rawEvents
-            .Select(rawEvent => rawEvent.Data)
-            .OfType<DiceRolled>()
-            .Last(diceRolled => diceRolled.PlayerId == attackerId)
-            .Rolls;
+        // C5/C6: PendingCombat.AttackerRolls is leidend, niet de DiceRolled-audittrail — na een
+        // herwerp staat daar nog de oorspronkelijke worp, PendingCombat is al bijgewerkt.
+        var attackerRolls = pendingCombat.AttackerRolls;
 
         var defenderRolls = CombatResolver.RollDice(defenseDice, random);
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, defenderRolls));

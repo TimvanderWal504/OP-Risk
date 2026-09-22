@@ -131,6 +131,217 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         return gameId;
     }
 
+    /// <summary>
+    /// Zelfde "alaska" (p1) tegen "alberta" (p2) opstelling als <see cref="SetUpAttackStateAsync"/>,
+    /// maar met rollen aan en Alice als "generaal" (Reroll-effect, herkomstland "china") —
+    /// nodig voor de plan-rollen taak 4 hub-tests (reroll/doorgaan) hieronder.
+    /// </summary>
+    private static async Task<string> SetUpAttackStateWithRerollRoleAsync(
+        WebApplicationFactory<Program> factory, int aliceArmies, int bobArmies)
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
+        var map = mapSource.Load("standaard-43");
+        var timeProviderNow = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow();
+
+        var settings = new GameSettings(
+            WinCondition.SecretMissions,
+            SetupMode.Claiming,
+            SettingsDto.StartingArmiesPresetId,
+            TurnTimer: TimeSpan.FromSeconds(SettingsDto.TurnTimerSeconds),
+            FortifyTimer: TimeSpan.FromSeconds(SettingsDto.FortifyTimerSeconds),
+            RolesEnabled: true,
+            RoleAssignment: RoleAssignmentMode.Random,
+            EventsEnabled: false);
+
+        var alice = new Player("p1", "Alice", "red", Hand: [], RoleId: "generaal", Mission: null, IsEliminated: false);
+        var bob = new Player("p2", "Bob", "blue", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => territory.Id switch
+            {
+                "china" => new TerritoryOwnership(territory.Id, "p1", ArmyCount: 1),
+                "alaska" => new TerritoryOwnership(territory.Id, "p1", aliceArmies),
+                "alberta" => new TerritoryOwnership(territory.Id, "p2", bobArmies),
+                _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
+            })
+            .ToArray();
+
+        var state = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            settings,
+            players: [alice, bob],
+            territories,
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState(
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+
+        await using var session = store.LightweightSession();
+        session.Store(state);
+        await session.SaveChangesAsync();
+
+        return gameId;
+    }
+
+    [Fact]
+    public async Task DeclareAttack_MetActieveRerollRol_OpentDeHerwerpBeslissing()
+    {
+        await using var factory = CreateFactory(4, 2);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 3);
+
+        var declared = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        Assert.True(declared.State.TurnState!.PendingCombat!.AwaitingRerollDecision);
+        Assert.Equal([4, 2], declared.State.TurnState.PendingCombat.AttackerRolls);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_ZolangDeHerwerpBeslissingOpenStaat_WordtGeweigerd()
+    {
+        // Plan-rollen taak 4: de verdediger mag pas kiezen ná "Herwerp" of "Doorgaan".
+        await using var factory = CreateFactory(4, 2);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2));
+
+        Assert.Contains("attack.awaitingRerollDecision", exception.Message);
+    }
+
+    [Fact]
+    public async Task RerollAttackDie_ZonderActieveRol_WordtGeweigerd()
+    {
+        // Zonder rollen aan staat er nooit een open herwerp-beslissing (AttackGuards.RerollAvailable).
+        await using var factory = CreateFactory(2, 3);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<RerollAttackDieResponse>("RerollAttackDie", gameId, "p1", 0));
+
+        Assert.Contains("attack.noRerollDecisionOpen", exception.Message);
+    }
+
+    [Fact]
+    public async Task RerollAttackDie_MetActieveRol_HerwerptDeGekozenSteenEnSluitDeBeslissing()
+    {
+        // Aanvalsworp [4, 2], daarna de herwerp van dieIndex 1 (waarde 2) naar 6, en tot slot een
+        // verdedigingsworp [2, 1] om te bewijzen dat ChooseDefenseDice de herworpen waarde gebruikt.
+        await using var factory = CreateFactory(4, 2, 6, 2, 1);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        var rerolled = await connection.InvokeAsync<RerollAttackDieResponse>("RerollAttackDie", gameId, "p1", 1);
+
+        Assert.Equal([4, 2], rerolled.PreviousRolls);
+        Assert.Equal(1, rerolled.RerolledDieIndex);
+        Assert.Equal(6, rerolled.NewValue);
+        Assert.Equal([6, 4], rerolled.Rolls);
+        Assert.False(rerolled.State.TurnState!.PendingCombat!.AwaitingRerollDecision);
+        Assert.Equal([6, 4], rerolled.State.TurnState.PendingCombat.AttackerRolls);
+
+        // Na de herwerp-beslissing mag de verdediger weer kiezen, en ChooseDefenseDice moet de
+        // nieuwe worp gebruiken (C5/C6) — niet de oorspronkelijke [4, 2] uit de DiceRolled-audittrail.
+        var combatResult = await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        Assert.Equal([6, 4], combatResult.AttackerRolls);
+    }
+
+    [Fact]
+    public async Task RerollAttackDie_BroadcastDiceRolledMetContextReroll_MetDeJuisteVelden()
+    {
+        await using var factory = CreateFactory(4, 2, 6);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var rerollReceived = new TaskCompletionSource<DiceRolledMessage>();
+        spectator.On<DiceRolledMessage>("DiceRolled", message =>
+        {
+            if (message.Context == "reroll")
+            {
+                rerollReceived.TrySetResult(message);
+            }
+        });
+
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+        await connection.InvokeAsync<RerollAttackDieResponse>("RerollAttackDie", gameId, "p1", 1);
+
+        var reroll = await rerollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal("p1", reroll.PlayerId);
+        Assert.Equal([6, 4], reroll.Dice);
+        Assert.Equal([4, 2], reroll.PreviousRolls);
+        Assert.Equal(1, reroll.RerolledDieIndex);
+        Assert.Equal(6, reroll.NewValue);
+    }
+
+    [Fact]
+    public async Task KeepAttackDice_SluitDeBeslissingZonderTeHerwerpenEnVerbruiktHetHerwerpNiet()
+    {
+        // A8: "Doorgaan" verbruikt de herwerp voor dit doelgebied niet — een volgende worp tegen
+        // hetzelfde doelgebied (na een afgeslagen aanval) biedt de beslissing opnieuw aan.
+        await using var factory = CreateFactory(4, 2, 6, 1, 4, 2);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 5);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        var kept = await connection.InvokeAsync<GameStateDto>("KeepAttackDice", gameId, "p1");
+
+        Assert.False(kept.TurnState!.PendingCombat!.AwaitingRerollDecision);
+        Assert.Equal([4, 2], kept.TurnState.PendingCombat.AttackerRolls);
+
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+
+        var second = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        Assert.True(second.State.TurnState!.PendingCombat!.AwaitingRerollDecision);
+    }
+
+    [Fact]
+    public async Task WatchGame_MetOpenHerwerpBeslissing_VultPendingCombatDto()
+    {
+        // Reconnect-herstel (plan-rollen taak 4): een client die pas ná DeclareAttack binnenkomt
+        // (of opnieuw verbindt) moet de open beslissing alsnog kunnen afleiden uit de state.
+        await using var factory = CreateFactory(4, 2);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpAttackStateWithRerollRoleAsync(factory, aliceArmies: 5, bobArmies: 3);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
+
+        await using var reconnecting = await ConnectAsync(factory, client);
+        var watched = await reconnecting.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.True(watched.TurnState!.PendingCombat!.AwaitingRerollDecision);
+        Assert.Equal([4, 2], watched.TurnState.PendingCombat.AttackerRolls);
+    }
+
     [Fact]
     public async Task DeclareAttack_ZonderVerovering_TeltVerliezenAfEnLeegtGevecht()
     {
