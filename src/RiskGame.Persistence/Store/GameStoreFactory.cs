@@ -50,6 +50,12 @@ public static class GameStoreFactory
             // van vóór deze wijziging worden niet ondersteund en horen weggegooid te worden.
             options.Events.MapEventType<PhaseChanged>("phase_changed_v2");
             options.Events.MapEventType<CardsTraded>("cards_traded_v2");
+            // AttackDeclared draagt sinds de rol-herwerp (plan-rollen C1/C2/C7) ook de
+            // aanvalsworp en de open-herwerp-vlag. Zelfde reden als hierboven: een oude stream
+            // mist beide velden en zou stilzwijgend naar een lege worp/`false` deserialiseren
+            // (o.a. `PendingCombat.AttackerRolls` leeg, terwijl `CanChooseDefenseDice` daar nu op
+            // leunt) — hernoemen laat een oude stream hard falen i.p.v. stil verkeerd vouwen.
+            options.Events.MapEventType<AttackDeclared>("attack_declared_v2");
 
             options.Projections.Add(new GameProjection(mapSource), ProjectionLifecycle.Inline);
             options.UseSystemTextJsonForSerialization(

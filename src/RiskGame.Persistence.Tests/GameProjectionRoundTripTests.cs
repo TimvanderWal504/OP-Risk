@@ -65,6 +65,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 gameId, "p1", TurnPhase.Attack, Settings.TurnTimer, now.AddSeconds(1), ArmiesGranted: null),
             new AttackDeclared(
                 gameId, "p1", "alaska", "northwest-territory", AttackDice: 2,
+                AttackerRolls: [6, 4], AwaitingRerollDecision: false,
                 Remaining: Settings.TurnTimer, OccurredAtUtc: now.AddSeconds(2), CorrelationId: Guid.NewGuid()),
             new DiceRolled(gameId, "p1", [6, 4]),
             new DiceRolled(gameId, "p2", [3]),
@@ -1123,12 +1124,13 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <remarks>
-    /// <see cref="Player"/>, <see cref="DeckState"/> en (sinds taak 4b) <see cref="TurnState"/>
-    /// (<c>UnsettledTrades</c>) hebben zelf een lijst-property. De record-gegenereerde
-    /// <c>Equals</c> daarvan vergelijkt zo'n lijst niet inhoudelijk maar via
-    /// <c>object.Equals</c> (arrays/lijsten overschrijven die niet) — twee inhoudelijk
-    /// gelijke maar apart opgebouwde lege lijsten (hier: JSON-deserialisatie levert een
-    /// <c>List&lt;Card&gt;</c>, in-memory een <c>Card[]</c>) tellen dan als ongelijk. Daarom
+    /// <see cref="Player"/>, <see cref="DeckState"/>, <see cref="TurnState"/> (sinds taak 4b
+    /// <c>UnsettledTrades</c>, sinds plan-rollen ook <c>RerolledTargetTerritoryIds</c>) en
+    /// (sinds plan-rollen) <see cref="PendingCombat"/> (<c>AttackerRolls</c>) hebben zelf een
+    /// lijst-property. De record-gegenereerde <c>Equals</c> daarvan vergelijkt zo'n lijst niet
+    /// inhoudelijk maar via <c>object.Equals</c> (arrays/lijsten overschrijven die niet) — twee
+    /// inhoudelijk gelijke maar apart opgebouwde lege lijsten (hier: JSON-deserialisatie levert
+    /// een <c>List&lt;Card&gt;</c>, in-memory een <c>Card[]</c>) tellen dan als ongelijk. Daarom
     /// hier per veld vergelijken in plaats van in één keer op het record: zo doet xUnit de
     /// inhoudelijke lijstvergelijking zelf, in plaats van te stuiten op die shortcut.
     /// </remarks>
@@ -1172,7 +1174,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>Zie de doc-comment op <see cref="AssertIdenticalGameState"/>: <c>UnsettledTrades</c>
-    /// is de lijst-property die hier per veld vergeleken moet worden.</summary>
+    /// en <c>RerolledTargetTerritoryIds</c> zijn de lijst-properties die hier per veld vergeleken
+    /// moeten worden; <c>PendingCombat</c> heeft zelf zo'n property (<c>AttackerRolls</c>) en
+    /// krijgt daarom zijn eigen helper (<see cref="AssertPendingCombatEqual"/>) i.p.v. in één
+    /// keer vergeleken te worden.</summary>
     private static void AssertTurnStateEqual(TurnState? expected, TurnState? actual)
     {
         if (expected is null || actual is null)
@@ -1184,11 +1189,30 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.ActivePlayerId, actual.ActivePlayerId);
         Assert.Equal(expected.TurnPhase, actual.TurnPhase);
         Assert.Equal(expected.Timer, actual.Timer);
-        Assert.Equal(expected.PendingCombat, actual.PendingCombat);
+        AssertPendingCombatEqual(expected.PendingCombat, actual.PendingCombat);
         Assert.Equal(expected.PausedAttackTarget, actual.PausedAttackTarget);
         Assert.Equal(expected.ArmiesRemaining, actual.ArmiesRemaining);
         Assert.Equal(expected.FortifiesUsed, actual.FortifiesUsed);
         Assert.Equal(expected.HasConqueredThisTurn, actual.HasConqueredThisTurn);
         Assert.Equal(expected.UnsettledTrades, actual.UnsettledTrades);
+        Assert.Equal(expected.RerolledTargetTerritoryIds, actual.RerolledTargetTerritoryIds);
+    }
+
+    /// <summary>Zie de doc-comment op <see cref="AssertIdenticalGameState"/>: <c>AttackerRolls</c>
+    /// is de lijst-property die hier apart vergeleken moet worden.</summary>
+    private static void AssertPendingCombatEqual(PendingCombat? expected, PendingCombat? actual)
+    {
+        if (expected is null || actual is null)
+        {
+            Assert.Equal(expected, actual);
+            return;
+        }
+
+        Assert.Equal(expected.FromTerritoryId, actual.FromTerritoryId);
+        Assert.Equal(expected.ToTerritoryId, actual.ToTerritoryId);
+        Assert.Equal(expected.AttackDice, actual.AttackDice);
+        Assert.Equal(expected.AttackerRolls, actual.AttackerRolls);
+        Assert.Equal(expected.AwaitingRerollDecision, actual.AwaitingRerollDecision);
+        Assert.Equal(expected.CorrelationId, actual.CorrelationId);
     }
 }

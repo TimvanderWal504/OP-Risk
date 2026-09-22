@@ -81,7 +81,7 @@ public class CombatResolverTests
 
         var herworpen = CombatResolver.RerollDie([5, 2], dieIndex: 1, random);
 
-        Assert.Equal([6, 5], herworpen);
+        Assert.Equal([6, 5], herworpen.Rolls);
     }
 
     [Fact]
@@ -91,6 +91,46 @@ public class CombatResolverTests
 
         Assert.Throws<ArgumentOutOfRangeException>(
             () => CombatResolver.RerollDie([5, 2], dieIndex: 2, random));
+    }
+
+    [Fact]
+    public void Herwerp_NieuweWaardeSpringtNaarVoren_NieuwePositieWijstDaarNaartoe()
+    {
+        // Dobbelsteen op index 1 (waarde 2) herwerpt naar 6: springt na het sorteren naar
+        // voren (index 0) — een kale "dieIndex: 1" zou hier de verkeerde steen aanwijzen.
+        var random = new FixedRandomSource(6);
+
+        var herworpen = CombatResolver.RerollDie([5, 2], dieIndex: 1, random);
+
+        Assert.Equal([6, 5], herworpen.Rolls);
+        Assert.Equal(0, herworpen.NewDieIndex);
+    }
+
+    [Fact]
+    public void Herwerp_NieuweWaardeZaktNaarAchteren_NieuwePositieWijstDaarNaartoe()
+    {
+        // Dobbelsteen op index 0 (waarde 5) herwerpt naar 1: zakt na het sorteren naar
+        // achteren (index 1).
+        var random = new FixedRandomSource(1);
+
+        var herworpen = CombatResolver.RerollDie([5, 3], dieIndex: 0, random);
+
+        Assert.Equal([3, 1], herworpen.Rolls);
+        Assert.Equal(1, herworpen.NewDieIndex);
+    }
+
+    [Fact]
+    public void Herwerp_GelijkeWaardeAlsEenAndereDobbelsteen_VindtTochDeJuisteHerworpenSteenTerug()
+    {
+        // Herwerp index 0 (waarde 5) naar een 3 — gelijk aan de al aanwezige 3 op index 1.
+        // Zonder de eigen "IsRerolled"-markering zou een kale waarde-vergelijking hier niet
+        // kunnen onderscheiden welke van de twee 3'en de zojuist herworpen steen is.
+        var random = new FixedRandomSource(3);
+
+        var herworpen = CombatResolver.RerollDie([5, 3], dieIndex: 0, random);
+
+        Assert.Equal([3, 3], herworpen.Rolls);
+        Assert.Equal(0, herworpen.NewDieIndex);
     }
 
     [Fact]
@@ -104,9 +144,9 @@ public class CombatResolverTests
         var herworpenWorp = CombatResolver.RerollDie(eersteWorp, dieIndex: 0, random);
         var verdedigersworp = CombatResolver.RollDice(1, random);
 
-        var outcome = CombatResolver.Compare(herworpenWorp, verdedigersworp);
+        var outcome = CombatResolver.Compare(herworpenWorp.Rolls, verdedigersworp);
 
-        Assert.Equal([6], herworpenWorp);
+        Assert.Equal([6], herworpenWorp.Rolls);
         Assert.Equal(0, outcome.AttackerLosses);
         Assert.Equal(1, outcome.DefenderLosses);
     }

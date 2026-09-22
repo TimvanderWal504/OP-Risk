@@ -216,7 +216,7 @@ public class ReinforceGuardsTests
         var state = TestGame.InProgress(
             players: players,
             turnPhase: TurnPhase.Attack,
-            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()));
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, AttackerRolls: [4], AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()));
 
         Assert.False(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
     }

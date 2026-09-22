@@ -47,6 +47,15 @@ namespace RiskGame.Rules.State;
 /// altijd helemaal opnieuw op, dus een voltooide fase (die <c>ArmiesRemaining == 0</c> al
 /// vereist) laat hier vanzelf niets achter.
 /// </param>
+/// <param name="RerolledTargetTerritoryIds">
+/// Doelgebieden die deze beurt al een <c>Reroll</c>-herwerp hebben gehad (FO §8.1, plan-rollen
+/// A7: per doelgebied per beurt, niet per worp en niet per aanvalswisseling — een ander
+/// doelgebied heeft zijn eigen, onafhankelijke herwerp). Gevuld door <c>AttackDieRerolled</c> —
+/// **niet** door <c>AttackDiceKept</c> (A8: "Doorgaan" verbruikt niets). Leeg bij elke nieuwe
+/// <see cref="TurnState"/>, zelfde reden als <see cref="FortifiesUsed"/>/<see cref="UnsettledTrades"/>:
+/// Aanvallen is één fase per beurt, dus "leeg bij een nieuwe fase" ís hier "leeg bij een nieuwe
+/// beurt".
+/// </param>
 public sealed record TurnState(
     string ActivePlayerId,
     TurnPhase TurnPhase,
@@ -56,7 +65,9 @@ public sealed record TurnState(
     int ArmiesRemaining = 0,
     int FortifiesUsed = 0,
     bool HasConqueredThisTurn = false,
-    IReadOnlyList<UnsettledTrade>? UnsettledTrades = null)
+    IReadOnlyList<UnsettledTrade>? UnsettledTrades = null,
+    IReadOnlyList<string>? RerolledTargetTerritoryIds = null)
 {
     public IReadOnlyList<UnsettledTrade> UnsettledTrades { get; init; } = UnsettledTrades ?? [];
+    public IReadOnlyList<string> RerolledTargetTerritoryIds { get; init; } = RerolledTargetTerritoryIds ?? [];
 }

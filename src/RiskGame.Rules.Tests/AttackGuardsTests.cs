@@ -99,7 +99,7 @@ public class AttackGuardsTests
     {
         var state = TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()))
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, AttackerRolls: [4], AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()))
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("alberta", "p2", 1));
 
@@ -172,7 +172,7 @@ public class AttackGuardsTests
     {
         var state = TestGame.InProgress(
             turnPhase: TurnPhase.Attack,
-            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()),
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, AttackerRolls: [4], AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()),
             pausedAttackTarget: new AttackEngagement("alaska", "alberta"));
 
         var result = AttackGuards.CanAbandonAttack(state, "p1");
@@ -243,7 +243,7 @@ public class AttackGuardsTests
     private static GameState PendingAlaskaVsAlberta(int albertaArmies = 2) =>
         TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, CorrelationId: Guid.NewGuid()))
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, AttackerRolls: [5, 3], AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()))
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("alberta", "p2", albertaArmies));
 
@@ -336,6 +336,155 @@ public class AttackGuardsTests
         var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
 
         Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Verdedigen_ZolangDeHerwerpBeslissingOpenStaat_IsOngeldig()
+    {
+        var state = TestGame.InProgress(
+                turnPhase: TurnPhase.Attack,
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, AttackerRolls: [5, 3], AwaitingRerollDecision: true, CorrelationId: Guid.NewGuid()))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 2));
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.awaitingRerollDecision", result.Errors.Single().Code);
+    }
+
+    private static GameState AlaskaVsAlbertaMetOpenHerwerp() =>
+        TestGame.InProgress(
+                turnPhase: TurnPhase.Attack,
+                pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 2, AttackerRolls: [5, 3], AwaitingRerollDecision: true, CorrelationId: Guid.NewGuid()))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 2));
+
+    [Fact]
+    public void Herwerpen_MetOpenBeslissing_IsGeldig()
+    {
+        var state = AlaskaVsAlbertaMetOpenHerwerp();
+
+        var result = AttackGuards.CanRerollAttackDie(state, "p1", dieIndex: 1);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Herwerpen_ZonderOpenBeslissing_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta(); // AwaitingRerollDecision: false
+
+        var result = AttackGuards.CanRerollAttackDie(state, "p1", dieIndex: 0);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.noRerollDecisionOpen", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void Herwerpen_DoorNietDeAanvaller_IsOngeldig()
+    {
+        var state = AlaskaVsAlbertaMetOpenHerwerp();
+
+        var result = AttackGuards.CanRerollAttackDie(state, "p2", dieIndex: 0);
+
+        Assert.False(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Herwerpen_MetOngeldigeDobbelsteenIndex_IsOngeldig()
+    {
+        var state = AlaskaVsAlbertaMetOpenHerwerp(); // 2 dobbelstenen: index 0-1 geldig
+
+        var result = AttackGuards.CanRerollAttackDie(state, "p1", dieIndex: 2);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.invalidRerollDieIndex", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void Doorgaan_MetOpenBeslissing_IsGeldig()
+    {
+        var state = AlaskaVsAlbertaMetOpenHerwerp();
+
+        var result = AttackGuards.CanKeepAttackDice(state, "p1");
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public void Doorgaan_ZonderOpenBeslissing_IsOngeldig()
+    {
+        var state = PendingAlaskaVsAlberta();
+
+        var result = AttackGuards.CanKeepAttackDice(state, "p1");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.noRerollDecisionOpen", result.Errors.Single().Code);
+    }
+
+    /// <summary>Plan-rollen A7/A8: rolboost-herwerp is per doelgebied per beurt, "Doorgaan"
+    /// verbruikt niets, en een ander doelgebied heeft zijn eigen, onafhankelijke herwerp.</summary>
+    private static GameState AlaskaVsAlbertaMetRol(
+        string roleId, IReadOnlyList<string>? rerolledTargetTerritoryIds = null, string roleOriginTerritoryOwner = "p1")
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true };
+        var players = new[] { TestGame.Player("p1", "red", roleId: roleId), TestGame.Player("p2", "blue") };
+
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack, settings: settings)
+            .WithTerritory(new TerritoryOwnership("china", roleOriginTerritoryOwner, 1))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 1))
+            .WithTerritory(new TerritoryOwnership("ontario", "p2", 1));
+
+        return state.WithTurnState(
+            state.TurnState! with { RerolledTargetTerritoryIds = rerolledTargetTerritoryIds ?? [] });
+    }
+
+    [Fact]
+    public void RerollAvailable_MetActieveRolEnNogNietHerworpenDoelgebied_IsWaar()
+    {
+        var state = AlaskaVsAlbertaMetRol("generaal");
+
+        Assert.True(AttackGuards.RerollAvailable(state, "p1", "alberta"));
+    }
+
+    [Fact]
+    public void RerollAvailable_ZonderActieveRol_IsOnwaar()
+    {
+        var state = AlaskaVsAlbertaMetRol("generaal", roleOriginTerritoryOwner: "p2");
+
+        Assert.False(AttackGuards.RerollAvailable(state, "p1", "alberta"));
+    }
+
+    [Fact]
+    public void RerollAvailable_MetAlHerworpenDoelgebied_IsOnwaar_OokNaEenTussentijdseAanvalElders()
+    {
+        // "alberta" is deze beurt al herworpen (bv. via een eerdere worp tegen dat doelwit); een
+        // tussentijdse aanval op "ontario" verandert daar niets aan — A7 is per doelgebied.
+        var state = AlaskaVsAlbertaMetRol("generaal", rerolledTargetTerritoryIds: ["alberta"]);
+
+        Assert.False(AttackGuards.RerollAvailable(state, "p1", "alberta"));
+    }
+
+    [Fact]
+    public void RerollAvailable_AnderDoelgebiedDatNogNietHerworpenIs_IsWaar()
+    {
+        var state = AlaskaVsAlbertaMetRol("generaal", rerolledTargetTerritoryIds: ["alberta"]);
+
+        Assert.True(AttackGuards.RerollAvailable(state, "p1", "ontario"));
+    }
+
+    [Fact]
+    public void RerollAvailable_NieuweBeurt_RerolledTargetsZijnLeeg()
+    {
+        // Simuleert PhaseChanged's vouwregel: een gloednieuwe TurnState (nooit een `with` op de
+        // oude), dus RerolledTargetTerritoryIds is weer leeg — schone lei (plan-rollen C1).
+        var state = AlaskaVsAlbertaMetRol("generaal", rerolledTargetTerritoryIds: ["alberta"]);
+        state = state.WithTurnState(new TurnState(
+            "p1", TurnPhase.Attack, state.TurnState!.Timer, PendingCombat: null));
+
+        Assert.True(AttackGuards.RerollAvailable(state, "p1", "alberta"));
     }
 
     /// <summary>FO §7 (taak 4): eerst de ≥6-inleg na een eliminatie afhandelen, vóór verder vechten.</summary>

@@ -1,5 +1,6 @@
 using RiskGame.Rules.Effects;
 using RiskGame.Rules.Reinforcement;
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -159,10 +160,79 @@ public static class AttackGuards
     }
 
     /// <summary>
+    /// Of een herwerp-aanbod hoort te volgen op een aanvalsworp tegen <paramref name="toTerritoryId"/>
+    /// (FO §5.3 stap 3, §8.1, plan-rollen A1/A2/A7): de <c>Reroll</c>-boost moet actief zijn én
+    /// dit doelgebied mag deze beurt nog niet herworpen zijn. Gedeeld door de commandhandler
+    /// (die hiermee <c>AttackDeclared.AwaitingRerollDecision</c> vult, plan-rollen C2 — de
+    /// vouwregel zelf blijft een domme feiten-toepasser) en <see cref="CanRerollAttackDie"/>/
+    /// <see cref="CanKeepAttackDice"/> hieronder.
+    /// </summary>
+    public static bool RerollAvailable(GameState state, string playerId, string toTerritoryId) =>
+        RoleEffects.Active<RerollEffect>(state, playerId) is not null
+        && !state.TurnState!.RerolledTargetTerritoryIds.Contains(toTerritoryId);
+
+    /// <summary>
+    /// Of <paramref name="playerId"/> — de aanvaller — dobbelsteen <paramref name="dieIndex"/>
+    /// van zijn eigen worp mag herwerpen (FO §5.3 stap 3, §8.1). Alleen geldig zolang
+    /// <see cref="PendingCombat.AwaitingRerollDecision"/> nog open staat; zodra die al op
+    /// <see langword="false"/> staat (herworpen, gehouden, of nooit aangeboden) is dit ongeldig
+    /// — ook bij een dubbele/gelijktijdige aanroep (plan-rollen C8).
+    /// </summary>
+    public static ValidationResult CanRerollAttackDie(GameState state, string playerId, int dieIndex)
+    {
+        var preconditions = ValidationResult.Combine(
+            Guards.IsActivePlayer(state, playerId),
+            Guards.IsInTurnPhase(state, TurnPhase.Attack));
+
+        if (!preconditions.IsSuccess)
+        {
+            return preconditions;
+        }
+
+        var pendingCombat = state.TurnState!.PendingCombat;
+
+        if (pendingCombat is null || !pendingCombat.AwaitingRerollDecision)
+        {
+            return ValidationResult.Failure("attack.noRerollDecisionOpen");
+        }
+
+        return dieIndex >= 0 && dieIndex < pendingCombat.AttackerRolls.Count
+            ? ValidationResult.Success()
+            : ValidationResult.Failure(
+                "attack.invalidRerollDieIndex",
+                new Dictionary<string, string> { ["count"] = pendingCombat.AttackerRolls.Count.ToString() });
+    }
+
+    /// <summary>
+    /// Of <paramref name="playerId"/> — de aanvaller — mag "Doorgaan" zonder te herwerpen (FO
+    /// §5.3 stap 3, §8.1, plan-rollen A8: dit verbruikt het herwerp voor dit doelgebied niet).
+    /// Zelfde openstaande-beslissing-eis als <see cref="CanRerollAttackDie"/>.
+    /// </summary>
+    public static ValidationResult CanKeepAttackDice(GameState state, string playerId)
+    {
+        var preconditions = ValidationResult.Combine(
+            Guards.IsActivePlayer(state, playerId),
+            Guards.IsInTurnPhase(state, TurnPhase.Attack));
+
+        if (!preconditions.IsSuccess)
+        {
+            return preconditions;
+        }
+
+        var pendingCombat = state.TurnState!.PendingCombat;
+
+        return pendingCombat is not null && pendingCombat.AwaitingRerollDecision
+            ? ValidationResult.Success()
+            : ValidationResult.Failure("attack.noRerollDecisionOpen");
+    }
+
+    /// <summary>
     /// Of <paramref name="playerId"/> — de verdediger, niet de actieve speler — met
     /// <paramref name="defenseDice"/> dobbelstenen mag verdedigen tegen het lopende gevecht
     /// (FO §5.3 stap 4, TO §4.1). Harde regel: een verdediger met nog maar 1 leger in het
-    /// doelgebied kan alleen met 1 dobbelsteen verdedigen.
+    /// doelgebied kan alleen met 1 dobbelsteen verdedigen. Blokkeert zolang de aanvaller nog
+    /// een open herwerp-beslissing heeft (FO §5.3 stap 3, plan-rollen B6/A1: de verdediger mag
+    /// pas kiezen ná "Herwerp" of "Doorgaan").
     /// </summary>
     public static ValidationResult CanChooseDefenseDice(
         GameState state, string playerId, int defenseDice)
@@ -183,6 +253,11 @@ public static class AttackGuards
         if (pendingCombat is null)
         {
             return ValidationResult.Failure("attack.noCombatToDefend");
+        }
+
+        if (pendingCombat.AwaitingRerollDecision)
+        {
+            return ValidationResult.Failure("attack.awaitingRerollDecision");
         }
 
         if (state.Territory(pendingCombat.ToTerritoryId).OwnerPlayerId != playerId)

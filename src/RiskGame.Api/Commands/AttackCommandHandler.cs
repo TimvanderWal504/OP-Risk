@@ -75,12 +75,16 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             : timer.Tick(now - timer.LastUpdatedUtc).Remaining;
 
         var correlationId = Guid.NewGuid();
+        // Plan-rollen C2: de commandhandler bepaalt dit via de guard, niet de vouwregel — die
+        // blijft een domme feiten-toepasser en kopieert de vlag alleen naar PendingCombat.
+        var awaitingRerollDecision = AttackGuards.RerollAvailable(state, playerId, toTerritoryId);
 
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
         session.Events.Append(
             gameId,
             new AttackDeclared(
-                gameId, playerId, fromTerritoryId, toTerritoryId, attackDice, remaining, now, correlationId));
+                gameId, playerId, fromTerritoryId, toTerritoryId, attackDice,
+                attackerRolls, awaitingRerollDecision, remaining, now, correlationId));
 
         await session.SaveChangesAsync();
 

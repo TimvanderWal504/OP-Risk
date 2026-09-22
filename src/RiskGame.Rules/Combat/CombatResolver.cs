@@ -58,11 +58,13 @@ public static class CombatResolver
 
     /// <summary>
     /// Herwerpt de dobbelsteen op <paramref name="dieIndex"/> in <paramref name="rolls"/> en
-    /// levert de opnieuw aflopend gesorteerde worp. Puur de dobbelsteen-mechaniek van de
+    /// levert de opnieuw aflopend gesorteerde worp, plus waar de herworpen waarde na het
+    /// sorteren staat (<see cref="RerollResult.NewDieIndex"/> — zie de doc-comment daar voor
+    /// waarom een kale index hier niet volstaat). Puur de dobbelsteen-mechaniek van de
     /// `Reroll`-rol (FO §8) — of de speler dit nog mag (aantal per beurt) bepaalt de
     /// aanroeper via <see cref="Roles.RoleEffects.Active{TEffect}"/>.
     /// </summary>
-    public static IReadOnlyList<int> RerollDie(IReadOnlyList<int> rolls, int dieIndex, IRandomSource random)
+    public static RerollResult RerollDie(IReadOnlyList<int> rolls, int dieIndex, IRandomSource random)
     {
         ArgumentNullException.ThrowIfNull(rolls);
         ArgumentNullException.ThrowIfNull(random);
@@ -73,10 +75,18 @@ public static class CombatResolver
                 nameof(dieIndex), dieIndex, $"Er zijn maar {rolls.Count} dobbelstenen om te herwerpen.");
         }
 
-        var updated = rolls.ToArray();
-        updated[dieIndex] = random.Next(1, 7);
+        // Elke steen draagt tijdens het sorteren mee of hij de zojuist herworpen steen is, want
+        // na het sorteren is de waarde alleen (bij gelijke ogen) niet genoeg om 'm terug te
+        // vinden. `OrderByDescending` is stabiel (LINQ-garantie), dus de niet-herworpen stenen
+        // behouden hun onderlinge volgorde — precies zoals de kale `SortDescending` hieronder ze
+        // ook al zou sorteren.
+        var tagged = rolls.Select((value, index) => (Value: value, IsRerolled: index == dieIndex)).ToArray();
+        tagged[dieIndex] = (random.Next(1, 7), true);
 
-        return SortDescending(updated);
+        var sorted = tagged.OrderByDescending(die => die.Value).ToArray();
+        var newDieIndex = Array.FindIndex(sorted, die => die.IsRerolled);
+
+        return new RerollResult(sorted.Select(die => die.Value).ToArray(), newDieIndex);
     }
 
     /// <summary>Vergelijkt een (eventueel herworpen) aanvalsworp met de verdedigingsworp.</summary>

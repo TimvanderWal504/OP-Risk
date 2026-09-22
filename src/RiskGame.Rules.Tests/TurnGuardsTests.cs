@@ -61,7 +61,7 @@ public class TurnGuardsTests
     {
         var state = TestGame.InProgress(
             turnPhase: TurnPhase.Attack,
-            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, CorrelationId: Guid.NewGuid()));
+            pendingCombat: new PendingCombat("alaska", "alberta", AttackDice: 1, AttackerRolls: [4], AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()));
 
         var result = TurnGuards.CanEndPhase(state, "p1");
 

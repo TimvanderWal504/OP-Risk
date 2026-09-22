@@ -298,15 +298,65 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// waarde (geen verandering), bij een nieuw doelwit vervangt het de vorige — de
     /// command handler heeft <see cref="AttackDeclared.Remaining"/> in dat laatste geval al
     /// verrekend met de tussenliggende tijd (<see cref="PhaseTimer.ResumeAndTick"/>).
+    /// <see cref="PendingCombat.AttackerRolls"/> en <see cref="PendingCombat.AwaitingRerollDecision"/>
+    /// komen rechtstreeks van het event over — de commandhandler heeft die uitkomst al bepaald
+    /// via <c>AttackGuards.RerollAvailable</c> (plan-rollen C2), deze vouwregel blijft een domme
+    /// feiten-toepasser.
     /// </summary>
     public GameState Apply(GameState state, AttackDeclared @event) =>
         state.WithTurnState(state.TurnState! with
         {
             PendingCombat = new PendingCombat(
-                @event.FromTerritoryId, @event.ToTerritoryId, @event.AttackDice, @event.CorrelationId),
+                @event.FromTerritoryId,
+                @event.ToTerritoryId,
+                @event.AttackDice,
+                @event.AttackerRolls,
+                @event.AwaitingRerollDecision,
+                @event.CorrelationId),
             PausedAttackTarget = new AttackEngagement(@event.FromTerritoryId, @event.ToTerritoryId),
             Timer = state.TurnState!.Timer!.Pause(@event.Remaining, @event.OccurredAtUtc),
         });
+
+    /// <summary>
+    /// De aanvaller kiest "Herwerp" (FO §5.3 stap 3, §8.1, plan-rollen A1/A7/C8). Een no-op als
+    /// er geen open herwerp-beslissing (meer) is — een <see cref="PendingCombat"/> dat al
+    /// afgehandeld is, of waar <see cref="AttackDiceKept"/> deze beslissing al gesloten heeft
+    /// (gelijktijdige commando's tegen dezelfde snapshot, plan-rollen C8: de tweede die vouwt
+    /// wint niet, <see cref="Rules.State.PendingCombat.AwaitingRerollDecision"/> gaat nooit terug
+    /// naar waar).
+    /// </summary>
+    public GameState Apply(GameState state, AttackDieRerolled @event)
+    {
+        if (state.TurnState?.PendingCombat is not { AwaitingRerollDecision: true } pendingCombat)
+        {
+            return state;
+        }
+
+        return state.WithTurnState(state.TurnState with
+        {
+            PendingCombat = pendingCombat with { AttackerRolls = @event.Rolls, AwaitingRerollDecision = false },
+            RerolledTargetTerritoryIds = [.. state.TurnState.RerolledTargetTerritoryIds, @event.ToTerritoryId],
+        });
+    }
+
+    /// <summary>
+    /// De aanvaller kiest "Doorgaan" (FO §5.3 stap 3, §8.1, plan-rollen A1/A8): sluit de
+    /// beslissing zonder de worp te wijzigen en zonder <see cref="Rules.State.TurnState.RerolledTargetTerritoryIds"/>
+    /// aan te vullen — het doelgebied houdt zijn herwerp. Zelfde no-op-op-dubbele-beslissing
+    /// als <see cref="Apply(GameState, AttackDieRerolled)"/> hierboven (plan-rollen C8).
+    /// </summary>
+    public GameState Apply(GameState state, AttackDiceKept @event)
+    {
+        if (state.TurnState?.PendingCombat is not { AwaitingRerollDecision: true } pendingCombat)
+        {
+            return state;
+        }
+
+        return state.WithTurnState(state.TurnState with
+        {
+            PendingCombat = pendingCombat with { AwaitingRerollDecision = false },
+        });
+    }
 
     /// <summary>
     /// Trekt de verliezen af van beide legeraantallen en gebruikt
