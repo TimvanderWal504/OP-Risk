@@ -7,6 +7,7 @@ import {
   glassPanelRadius,
   glassSaturate,
   glassShadow,
+  glassSurface,
   glassSurfaceOpaque,
   type GlassElevation,
   type GlassPanelContext,
@@ -46,6 +47,14 @@ const GlassNestingContext = createContext(false)
  * radius en (optioneel) padding — nooit layout, positionering of grootte; dat
  * blijft aan de aanroeper (`className`/`style` voor zulke concerns).
  *
+ * `--glass-bg` (2026-09-22, bewuste tv-leesbaarheidswijziging, zie
+ * frontend/CLAUDE.md-afwijkingenlijst): eerder was dit "clear glass" — alleen
+ * blur/rand/schaduw, geen achtergrondtint (bevestigd 2026-08-11). Op een
+ * tv-scherm op afstand bleek de vervaagde stage-illustratie zelf nog te veel
+ * ruis achter tekst te laten staan; `GlassPanel` zet nu alsnog de bestaande
+ * `glassSurface`-tint als echte achtergrond. `--glass-bg-opaque` (de
+ * `@supports`/`prefers-reduced-transparency`-fallback) blijft ongewijzigd.
+ *
  * Backdrop-filter valt terug op een niet-filterende, ondoorzichtige surface in
  * drie gevallen, alle drie in `index.css` (`.glass-panel` + varianten):
  * - geneste GlassPanel (zie `GlassNestingContext` hierboven — hier al, vóór CSS)
@@ -66,6 +75,7 @@ export function GlassPanel({
   const blurPx = glassPanelBlurPx(elevation, context)
 
   const vars = {
+    '--glass-bg': glassSurface[elevation],
     '--glass-bg-opaque': glassSurfaceOpaque[elevation],
     '--glass-border': glassBorder,
     '--glass-inner-highlight': glassInnerHighlight,

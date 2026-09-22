@@ -5,6 +5,7 @@ import {
   glassBadgeBorder,
   glassBlur,
   glassSaturate,
+  glassSurface,
   glassSurfaceOpaque,
   lobbyPanelScrim,
 } from '../../../styles/glass-tokens'
@@ -36,6 +37,7 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
             data-glass-filter="on"
             style={
               {
+                '--glass-bg': glassSurface.raised,
                 '--glass-bg-opaque': glassSurfaceOpaque.raised,
                 '--glass-border': glassBadgeBorder,
                 '--glass-filter': `blur(${glassBlur.sm}px) saturate(${glassSaturate})`,

@@ -1,10 +1,12 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
 import {
+  buttonPrimaryGlassTint,
   buttonPrimaryGlassTintOpaque,
   glassBorder,
   glassInnerHighlight,
   glassPanelBlurPx,
   glassSaturate,
+  glassSurface,
   glassSurfaceOpaque,
 } from '../../styles/glass-tokens'
 
@@ -39,6 +41,7 @@ export function Button({
   const isPrimary = variant === 'primary'
 
   const glassVars = {
+    '--glass-bg': isPrimary ? buttonPrimaryGlassTint : glassSurface.base,
     '--glass-bg-opaque': isPrimary ? buttonPrimaryGlassTintOpaque : glassSurfaceOpaque.base,
     '--glass-border': isPrimary ? glassBorder : 'var(--border-strong)',
     '--glass-inner-highlight': glassInnerHighlight,

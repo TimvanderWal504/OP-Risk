@@ -22,28 +22,47 @@ import { layout, palette, playerColors, radius, type PlayerColorId } from './des
 // ---------------------------------------------------------------------------
 // Blur / saturate — backdrop-filter waarden, 3 stappen + één centrale saturate
 // ---------------------------------------------------------------------------
+// Blur opgehoogd (2026-09-22, bewuste, expliciet opgedragen tv-leesbaarheids-
+// wijziging — zie frontend/CLAUDE.md-afwijkingenlijst): op een tv van 3 meter
+// afstand bekeken loste 16px op een 1080p/4K-frame de illustratie erachter
+// niet genoeg op — soldaten/vlaggen bleven als herkenbare ruis zichtbaar
+// achter tekst. Verdubbeld over alle drie stappen (schaalt mee door
+// `GLASS_CONTEXT_BLUR_SCALE`, dus telefoon-blur stijgt evenredig mee).
 export const glassBlur = {
-  sm: 8, // px — kleine chips/badges op glas
-  md: 16, // px — kaarten/panelen
-  lg: 28, // px — sheets/overlays over illustratie
+  sm: 14, // px — kleine chips/badges op glas
+  md: 32, // px — kaarten/panelen
+  lg: 44, // px — sheets/overlays over illustratie
 } as const;
 
-export const glassSaturate = 1.4 as const; // backdrop-filter: saturate() — één centrale waarde, geen per-niveau variant gevraagd
+// Was 1.4: gecombineerd met de opgehoogde blur hierboven maakte een hogere
+// saturatie de vervaagde achtergrond juist feller/rumoeriger i.p.v. rustiger
+// (2026-09-22, zelfde bewuste tv-leesbaarheidswijziging). 1.0 = geen
+// saturatie-boost meer, alleen nog blur + surface-tint dempen de illustratie.
+export const glassSaturate = 1.0 as const;
 
 // ---------------------------------------------------------------------------
 // Surface tints — 3 niveaus, dark-only (de app kent nog maar één thema).
 // Bouwt voort op de bestaande --atlas-glass* (lobby-glas) in colors_and_type.css
 // zonder die te overschrijven; dit is de bredere, 3-niveau opvolger daarvan.
+//
+// Alpha's opgehoogd (2026-09-22, bewuste, expliciet opgedragen tv-leesbaarheids-
+// wijziging): deze tint werd tot nu toe nergens als achtergrond gezet (zie de
+// "clear glass"-uitzondering, hersteld in frontend/CLAUDE.md) — `GlassPanel`
+// zette alleen blur/rand/schaduw. Op een tv-scherm met een drukke, felle
+// stage-illustratie erachter bleek dat onvoldoende contrastvloer voor tekst.
+// Deze wijziging voegt de tint alsnog toe als echte achtergrond (zie
+// `GlassPanel.tsx`/`.glass-panel` in index.css) en verhoogt de alpha's zodat
+// een paneel een rustige, donkere ondergrond geeft i.p.v. te blijven "ademen".
 // ---------------------------------------------------------------------------
 export const glassSurface = {
-  recessed: 'rgba(4, 6, 11, 0.55)', // ink-950-achtig, voor ingezonken/inactieve glaspanelen
-  base: 'rgba(20, 29, 44, 0.46)', // ~ink-850/surface-2, standaardpaneel
-  raised: 'rgba(36, 50, 70, 0.38)', // ~surface-3, actief/nadruk-paneel — lager alpha, meer doorschijnend
+  recessed: 'rgba(4, 6, 11, 0.55)', // ink-950-achtig, voor ingezonken/inactieve glaspanelen — ongewijzigd
+  base: 'rgba(20, 29, 44, 0.72)', // ~ink-850/surface-2, standaardpaneel — was 0.46
+  raised: 'rgba(36, 50, 70, 0.62)', // ~surface-3, actief/nadruk-paneel — was 0.38
   // overlay: nieuw t.o.v. de recessed/base/raised-drieslag hierboven — geen bestaande
   // tier past op een modal (recessed is juist bedoeld voor ingezonken/inactief, het
   // tegenovergestelde van "moet alles eronder overstemmen"). Hoogste alpha van de vier,
   // want een modal (gebeurteniskaart) moet als enige element domineren, niet ademen.
-  overlay: 'rgba(4, 6, 11, 0.62)',
+  overlay: 'rgba(4, 6, 11, 0.85)', // was 0.62
 } as const;
 
 /**

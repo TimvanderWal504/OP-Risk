@@ -227,6 +227,12 @@ export const boardViewBox = { w: 1500, h: 790 } as const;
  * Waarden in `boardViewBox`-eenheden. `ringSwHl` (1.75) hoort bij de
  * selectie-/gevechtsstaat, die nog niet gebouwd is.
  */
+// nameFontSize/nameStrokeWidth opgehoogd (2026-09-22, bewuste, expliciet
+// opgedragen tv-leesbaarheidswijziging — zie frontend/CLAUDE.md-afwijkingen-
+// lijst): 14.5 (oorspronkelijke TV-design-waarde) bleek op 3 meter kijkafstand
+// niet leesbaar naast de 26px-legerteller op hetzelfde bord. Naar 20, met een
+// evenredig dikkere contourrand zodat de rand-verhouding t.o.v. de tekst
+// gelijk blijft (3.2/14.5 ≈ 0.22 → 4.4/20).
 export const boardMarkerTok = {
   discR: 20,
   ringSwOwn: 1.5,
@@ -234,8 +240,8 @@ export const boardMarkerTok = {
   ringSwHl: 1.75,
   armyFontSize: 26,
   nameOffsetY: 35,
-  nameFontSize: 14.5,
-  nameStrokeWidth: 3.2,
+  nameFontSize: 20, // was 14.5
+  nameStrokeWidth: 4.4, // was 3.2
   nameStrokeOpacity: 0.85,
 } as const;
 

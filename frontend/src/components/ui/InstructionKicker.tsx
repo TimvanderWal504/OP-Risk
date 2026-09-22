@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { GlassPanel } from './GlassPanel'
-import { kickerGlassTintOpaque } from '../../styles/glass-tokens'
+import { kickerGlassTint, kickerGlassTintOpaque } from '../../styles/glass-tokens'
 
 export interface InstructionKickerProps {
   children: ReactNode
@@ -23,6 +23,7 @@ export function InstructionKicker({ children }: InstructionKickerProps) {
       style={
         {
           border: '1px solid var(--pitch-700)',
+          '--glass-bg': kickerGlassTint,
           '--glass-bg-opaque': kickerGlassTintOpaque,
         } as CSSProperties
       }
