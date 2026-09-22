@@ -4,6 +4,7 @@ import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { claimMarker, territoryGlow } from '../../../map/boardVisualTokens'
 import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
+import { Badge } from '../../../components/ui/Badge'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { InstructionKicker } from '../../../components/ui/InstructionKicker'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
@@ -18,11 +19,14 @@ import type { TvScreenProps } from './tvScreens'
  * zoals bij `TvInitialPlacementScreen`.
  *
  * 3-rijen grid (`96px_1fr_146px`): anders herberekent `boardScale.ts` de kaartviewport bij elke
- * fase-overgang en springt de kaart zichtbaar van formaat op een TV. De 146px-rij blijft leeg,
- * zelfde scope-afspraak als het ontbrekende spelerspaneel/de feed-strip op `TvMainBoardScreen`.
- * Continent-labels, zee-scrim en de onderrand-bijschriftbalk zijn hier bewust weggelaten,
- * consistent met diezelfde bestaande omissie op `TvMainBoardScreen` — gemelde bevinding, niet
- * in deze taak opgelost.
+ * fase-overgang en springt de kaart zichtbaar van formaat op een TV. De 146px-rij (feed-strip)
+ * blijft leeg — zelfde scope-afspraak als op `TvMainBoardScreen`, die evenmin een server-databron
+ * heeft (geen log/event-DTO). Het rechterspelerspaneel zelf bestáát wel (`col-start-2`
+ * hieronder, gelijk aan `TvMainBoardScreen`), inclusief de rol-badge sinds plan-rollen taak 6 —
+ * frontend/CLAUDE.md's afwijkingenlijst noemde dit paneel eerder ten onrechte samen met de
+ * feed-strip als ontbrekend, gecorrigeerd in dezelfde taak (bevinding 2). Continent-labels,
+ * zee-scrim en de onderrand-bijschriftbalk zijn hier bewust weggelaten, consistent met diezelfde
+ * bestaande omissie op `TvMainBoardScreen` — gemelde bevinding, niet in deze taak opgelost.
  *
  * "Laatst geclaimd" komt uit het `TerritoryClaimed`-narratief-event (`useTvGame.tsx`,
  * `lastClaimedTerritoryId`), niet uit het vergelijken van twee `territories`-snapshots — zie
@@ -186,7 +190,17 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
+                  <div className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none">
+                    {player.name}
+                    {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge) — zelfde behandeling,
+                        inclusief de "geen span om de naam"-reden, als de tegenhanger op
+                        TvMainBoardScreen. */}
+                    {player.roleId && (
+                      <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
+                        {state.roles.find((role) => role.id === player.roleId)?.name}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">{color.name}</div>
                 </div>
                 <div className="font-display text-[34px] font-black tabular-nums text-fg">{count}</div>

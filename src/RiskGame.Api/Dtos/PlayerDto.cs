@@ -19,11 +19,19 @@ namespace RiskGame.Api.Dtos;
 /// publiek, de kaarten zelf niet"), dus dat veld blijft ongemoeid buiten beide redactiemethodes
 /// — zelfde openbare behandeling als <see cref="RoleId"/>.
 /// </summary>
+/// <param name="IsRoleActive">
+/// Of de rol van deze speler momenteel een actief boost-effect geeft (plan-rollen C4,
+/// <see cref="RiskGame.Rules.Roles.RoleEffects.IsActive"/>) — <see langword="false"/> als
+/// <see cref="RoleId"/> <see langword="null"/> is. Net zo openbaar als <see cref="RoleId"/> zelf
+/// (FO §8: rollen staan permanent op de TV); de rol-badge op TV/telefoon mag deze
+/// "bezit ik nog mijn herkomstland"-afleiding niet zelf nabouwen (frontend/CLAUDE.md).
+/// </param>
 public sealed record PlayerDto(
     string Id,
     string Name,
     string? ColorId,
     string? RoleId,
+    bool IsRoleActive,
     bool IsHost,
     bool IsEliminated,
     IReadOnlyList<CardDto> Hand,

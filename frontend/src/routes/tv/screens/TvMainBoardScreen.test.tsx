@@ -120,6 +120,49 @@ describe('TvMainBoardScreen', () => {
     expect(screen.queryByText(/kaarten/)).not.toBeInTheDocument()
   })
 
+  describe('rol-badge (plan-rollen B3/C4)', () => {
+    const stateWithRole = {
+      ...stateInProgress,
+      roles: [{ id: 'generaal', name: 'Generaal', description: '', originTerritory: 'china' }],
+      players: stateInProgress.players.map((player) =>
+        player.id === 'alice' ? { ...player, roleId: 'generaal', isRoleActive: true } : player,
+      ),
+    }
+
+    it('toont de rolnaam als badge naast de naam zodra de speler een rol heeft', () => {
+      render(<TvMainBoardScreen state={stateWithRole} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+      expect(screen.getByText('Generaal')).toBeInTheDocument()
+    })
+
+    it('toont geen badge voor een speler zonder rol (The Invisible Design Rule)', () => {
+      render(<TvMainBoardScreen state={stateWithRole} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+      // Bob heeft in deze fixture geen roleId — alleen Alice's badge hoort te bestaan.
+      expect(screen.queryAllByText('Generaal')).toHaveLength(1)
+    })
+
+    it('toont niets extra op geen van beide spelers zolang rollen uit staan (roleId altijd null)', () => {
+      render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+      expect(screen.queryByText('Generaal')).not.toBeInTheDocument()
+    })
+
+    it('wisselt de badge-toon op isRoleActive: pitch-solid actief, silver-outline inactief', () => {
+      const stateWithInactiveRole = {
+        ...stateWithRole,
+        players: stateWithRole.players.map((player) => (player.id === 'alice' ? { ...player, isRoleActive: false } : player)),
+      }
+      const { rerender } = render(<TvMainBoardScreen state={stateWithRole} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+      expect(screen.getByText('Generaal')).toHaveClass('bg-pitch-400')
+
+      rerender(<TvMainBoardScreen state={stateWithInactiveRole} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+      expect(screen.getByText('Generaal')).toHaveClass('border-silver-700')
+    })
+  })
+
   it('dimt een uitgeschakelde speler in het spelerspaneel', () => {
     const stateWithElimination = {
       ...stateInProgress,

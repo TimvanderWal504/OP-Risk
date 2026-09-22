@@ -10,8 +10,8 @@ const colors = [
 ]
 
 const players = [
-  { id: '1', name: 'Alice', colorId: 'red', roleId: null, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
-  { id: '2', name: 'Bob', colorId: 'blue', roleId: null, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: '1', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: '2', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
 ]
 
 describe('OrderRollTvPanel', () => {

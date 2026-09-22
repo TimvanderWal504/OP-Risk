@@ -8,6 +8,7 @@ import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { marker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { boardTok } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
+import { Badge } from '../../../components/ui/Badge'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import type { TvScreenProps } from './tvScreens'
@@ -176,7 +177,20 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-display text-2xl font-extrabold leading-none">{player.name}</div>
+                  <div className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none">
+                    {player.name}
+                    {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge): alleen zichtbaar
+                        met rollen aan (roleId !== null, The Invisible Design Rule) — de toon
+                        draagt actief/inactief, dus geen extra "(in)actief"-woord. Geen `<span>`
+                        om de naam heen: die zou `player.name` uit de directe tekst-kinderen van
+                        deze `div` halen (`getNodeText` leest niet-recursief), en zo bestaande
+                        `getByText(name, { selector: 'div...' })`-tests laten falen. */}
+                    {player.roleId && (
+                      <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
+                        {state.roles.find((role) => role.id === player.roleId)?.name}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">
                     {t('territoriesCount', { count: territoryCountByPlayer[playerId] ?? 0 })}
                     {/* FO §7: handaantal is publiek, kaarten zelf niet (taak 6) — alleen

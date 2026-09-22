@@ -62,6 +62,19 @@ describe('TvClaimingScreen', () => {
     expect(screen.getByText('Bob', { selector: 'div.font-display.text-2xl.font-extrabold' })).toBeInTheDocument()
   })
 
+  it('toont de rolnaam als badge naast de naam zodra de speler een rol heeft (plan-rollen B3/C4)', () => {
+    const stateWithRole = {
+      ...claimingState,
+      roles: [{ id: 'generaal', name: 'Generaal', description: '', originTerritory: 'china' }],
+      players: claimingState.players.map((player) => (player.id === 'bob' ? { ...player, roleId: 'generaal', isRoleActive: true } : player)),
+    }
+    render(<TvClaimingScreen state={stateWithRole} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Generaal')).toBeInTheDocument()
+    // Alice heeft in deze fixture geen roleId — geen badge op haar rij.
+    expect(screen.queryAllByText('Generaal')).toHaveLength(1)
+  })
+
   it('toont de flare-ring alleen op het laatst geclaimde gebied, niet zonder event', async () => {
     const { container, rerender } = render(
       <TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />,

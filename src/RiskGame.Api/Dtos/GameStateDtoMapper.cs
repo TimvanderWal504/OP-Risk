@@ -1,6 +1,7 @@
 using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Reinforcement;
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 using RiskGame.Rules.TurnFlow;
 using RiskGame.Rules.Validation;
@@ -36,6 +37,7 @@ public static class GameStateDtoMapper
                 player.Name,
                 player.ColorId,
                 player.RoleId,
+                RoleEffects.IsActive(state, player.Id),
                 player.IsHost,
                 player.IsEliminated,
                 player.Hand.Select(ToDto).ToArray(),

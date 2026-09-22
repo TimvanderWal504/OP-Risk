@@ -6,6 +6,11 @@ export interface PlayerDto {
   name: string
   colorId: string | null
   roleId: string | null
+  /** Of deze speler zijn rol-herkomstland nog bezit en dus een actief boost-effect heeft
+   *  (plan-rollen C4) — `false` als `roleId` `null` is. Net zo openbaar als `roleId` zelf
+   *  (FO §8: rollen staan permanent op de TV); niet zelf herafleiden uit territoriumbezit
+   *  (frontend/CLAUDE.md: geen spelregels client-side). */
+  isRoleActive: boolean
   isHost: boolean
   isEliminated: boolean
   /** Alleen gevuld voor de ontvangende speler zelf (TO §6.1); voor elke andere speler/de TV

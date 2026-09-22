@@ -40,4 +40,13 @@ public static class RoleEffects
             ? effect
             : null;
     }
+
+    /// <summary>
+    /// Of <paramref name="playerId"/>'s eigen rol — ongeacht het effect-type — momenteel actief
+    /// is (plan-rollen C4, <c>PlayerDto.IsRoleActive</c>, boost-status op TV/telefoon): dezelfde
+    /// voorwaarde als <see cref="Active{TEffect}"/>, hier zonder een concreet effect-type nodig
+    /// omdat <see cref="RoleDefinition.Effect"/> altijd van het gemeenschappelijke <see cref="RoleEffect"/>-
+    /// type is.
+    /// </summary>
+    public static bool IsActive(GameState state, string playerId) => Active<RoleEffect>(state, playerId) is not null;
 }

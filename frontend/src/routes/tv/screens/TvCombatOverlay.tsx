@@ -64,6 +64,12 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
   // puur voor de typechecker (TvScreenProps.combat is breder dan wat dit scherm nodig heeft).
   if (!combat) return null
 
+  // Rol-herwerp (plan-rollen B2/DESIGN.md § Role Reroll): alleen de aanvallerzijde kan herwerpen
+  // (FO §8.1), dus alleen daar de vervangende animatie. Gezocht op waarde i.p.v. de bewaarde
+  // `rerolledDieIndex` (die wijst nog naar de vóór-hersortering-positie) — lukt de match niet
+  // (bv. dubbele waarde), dan is de terugval simpelweg geen highlight, geen crash.
+  const rerollHighlightIndex = combat.reroll ? (combat.attackerRolls?.indexOf(combat.reroll.newValue) ?? -1) : -1
+
   const pendingCombat = state.turnState?.pendingCombat ?? null
   const attackerId = narrated?.attackerId ?? state.turnState?.activePlayerId ?? null
   const defenderId =
@@ -129,7 +135,14 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
             gridTemplateRows: `auto auto ${TV_DIE_SIZE}px`,
           }}
         >
-          <CombatSide side="attacker" name={attacker?.name} color={attackerColor} label={t('attackerLabel')} dice={combat.attackerRolls} />
+          <CombatSide
+            side="attacker"
+            name={attacker?.name}
+            color={attackerColor}
+            label={t('attackerLabel')}
+            dice={combat.attackerRolls}
+            rerollHighlightIndex={rerollHighlightIndex}
+          />
           <span className="col-start-2 row-span-3 row-start-1 font-display text-[44px] font-black text-fg-muted">{t('vs')}</span>
           <CombatSide side="defender" name={defender?.name} color={defenderColor} label={t('defenderLabel')} dice={combat.defenderRolls} />
         </div>
@@ -181,13 +194,16 @@ interface CombatSideProps {
   color: { hex: string; onHex: string; symbol: string } | null
   label: string
   dice: number[] | null
+  /** Index in `dice` van de zojuist herworpen steen (plan-rollen B2) — alleen op de
+   *  aanvallerzijde relevant, `-1` (default) op de verdedigerzijde en zolang er niets herworpen is. */
+  rerollHighlightIndex?: number
 }
 
 /**
  * De drie cellen van één zijde. Geen eigen wrapper-element: de cellen zijn directe kinderen van
  * het gedeelde gevechtsraster, anders zouden links en rechts elk hun eigen rijhoogtes krijgen.
  */
-function CombatSide({ side, name, color, label, dice }: CombatSideProps) {
+function CombatSide({ side, name, color, label, dice, rerollHighlightIndex = -1 }: CombatSideProps) {
   const { column, die } = SIDE_LAYOUT[side]
 
   return (
@@ -216,7 +232,10 @@ function CombatSide({ side, name, color, label, dice }: CombatSideProps) {
             padding={13}
             gap={5}
             pipSize={16}
-            animation={die(index)}
+            // Herworpen steen (plan-rollen B2): dezelfde bare `atlasReroll`-rotatie als de
+            // telefoonkant, nooit de hele rij opnieuw tumbelen (DESIGN.md § Role Reroll) — geen
+            // aparte glow/chip, de beweging zelf is het signaal.
+            animation={index === rerollHighlightIndex ? tvAnimations.diceRerollAttacker : die(index)}
           />
         ))}
       </div>

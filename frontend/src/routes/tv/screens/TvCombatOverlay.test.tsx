@@ -50,6 +50,44 @@ describe('TvCombatOverlay', () => {
     expect(screen.getByText('Bob')).toBeInTheDocument()
   })
 
+  it('geeft alleen de herworpen dobbelsteen de reroll-animatie, de rest blijft de gewone tumble (plan-rollen B2)', () => {
+    // newValue (6) staat na de herwerp vooraan (attackerRolls is de nieuwe, gesorteerde worp) —
+    // rerollHighlightIndex wordt op waarde gezocht, niet op de oude array-positie (die schuift
+    // door de hersortering van RerollDie).
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [6, 4],
+      defenderRolls: null,
+      reroll: { previousRolls: [4, 2], rerolledDieIndex: 1, newValue: 6, rolls: [6, 4] },
+      narrated: null,
+    }
+
+    render(<TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
+
+    // Geen verdedigingsworp in deze combat-fixture, dus alleen de twee aanvallersdobbelstenen.
+    const dice = screen.getAllByRole('img')
+    expect(dice).toHaveLength(2)
+    expect(dice[0].parentElement?.style.animation).toContain('atlasReroll')
+    expect(dice[1].parentElement?.style.animation).toContain('atlasRollL')
+  })
+
+  it('valt terug op de gewone tumble-animatie zolang er geen reroll heeft plaatsgevonden', () => {
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [5, 4],
+      defenderRolls: null,
+      reroll: null,
+      narrated: null,
+    }
+
+    render(<TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
+
+    const dice = screen.getAllByRole('img')
+    for (const die of dice) {
+      expect(die.parentElement?.style.animation).not.toContain('atlasReroll')
+    }
+  })
+
   it('toont het resultaat en de VEROVERD-badge zodra CombatNarrated een verovering meldt', () => {
     const combat: CombatBroadcastState = {
       correlationId: 'c1',
