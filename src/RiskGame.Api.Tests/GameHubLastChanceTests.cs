@@ -84,7 +84,7 @@ public sealed class GameHubLastChanceTests(PostgresFixture postgres)
             {
                 return new EliminatePlayerMission(
                     $"eliminate-{target.TargetColor}", "Naam", "Beschrijving", RequiresOwnTurn: false,
-                    TargetColor: target.TargetColor, FallbackMissionId: "territory-24");
+                    TargetColor: target.TargetColor);
             }
 
             return null;

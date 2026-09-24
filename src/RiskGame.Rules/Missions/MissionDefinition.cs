@@ -107,25 +107,24 @@ public sealed record TerritoryCountMinArmiesMission(
 
 /// <summary>
 /// Schakel een tegenstander (op kleur) uit. Wordt het doelwit de speler zelf, of doet die
-/// kleur niet mee, dan geldt <see cref="FallbackMissionId"/> in plaats hiervan (FO §6.1) —
-/// die vervanging is missie-toewijzing (<see cref="MissionAssignmentCalculator.Assign"/>),
-/// niet iets wat hier getoetst wordt: op het moment dat deze missie aan een speler hangt,
-/// bestaat het doelwit al.
+/// kleur niet mee, dan krijgt de speler in plaats daarvan automatisch een willekeurige,
+/// nog-niet-gebruikte <see cref="ConquerContinentsMission"/> (FO §6.1) — die vervanging kiest
+/// <see cref="MissionAssignmentCalculator.Assign"/>, niet iets wat hier getoetst wordt: op het
+/// moment dat deze missie aan een speler hangt, bestaat het doelwit al.
 /// </summary>
 /// <remarks>
 /// Telt alleen als de missiehouder zélf het doelwit uitschakelde (FO §6.1): schakelt een
 /// andere speler het doelwit uit, dan is deze missie niet vervuld en krijgt de missiehouder
-/// in plaats daarvan automatisch <see cref="FallbackMissionId"/> — die herwijzing gebeurt in
-/// <see cref="MissionAssignmentCalculator.ResolveFallbacksAfterElimination"/>, aangeroepen
-/// vanuit <c>AttackCommandHandler</c> direct na het <c>PlayerEliminated</c>-event.
+/// in plaats daarvan automatisch een fallback-missie uit dezelfde categorie — die herwijzing
+/// gebeurt in <see cref="MissionAssignmentCalculator.ResolveFallbacksAfterElimination"/>,
+/// aangeroepen vanuit <c>AttackCommandHandler</c> direct na het <c>PlayerEliminated</c>-event.
 /// </remarks>
 public sealed record EliminatePlayerMission(
     string Id,
     string Name,
     string Description,
     bool RequiresOwnTurn,
-    string TargetColor,
-    string FallbackMissionId)
+    string TargetColor)
     : MissionDefinition(Id, Name, Description, RequiresOwnTurn)
 {
     /// <summary>

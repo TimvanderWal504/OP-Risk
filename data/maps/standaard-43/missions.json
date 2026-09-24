@@ -1,5 +1,5 @@
 {
-  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. De twee TerritoryCount(MinArmies)-missies dienen zowel als zelfstandige missie als als fallbackMissionId voor de eliminate-missies (FO: 'is het doelwit de speler zelf, of doet die kleur niet mee -> direct de fallback-missie'). 'territory-18-min2' heeft 'minPlayers: 4': bij minder spelers telt hij niet mee in de trekpool en wijkt een eliminate-missie die er (via fallbackMissionId) naar verwijst uit naar 'territory-24' in plaats van naar deze missie.",
+  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. Is het doelwit van een EliminatePlayer-missie de speler zelf, of doet die kleur niet mee, dan kiest MissionAssignmentCalculator zelf een nog ongebruikte ConquerContinents-missie als fallback (geen 'fallbackMissionId' meer nodig in de data) — dat voorkomt dat twee spelers dezelfde fallback-missie krijgen. 'territory-18-min2' en 'territory-24' hebben elk een 'minPlayers': bij minder spelers tellen ze niet mee in de trekpool; ze spelen geen rol meer als fallback-doel.",
   "missions": [
     {
       "id": "conquer-asia-south-america",
@@ -47,6 +47,7 @@
       "id": "territory-24",
       "type": "TerritoryCount",
       "params": { "count": 24 },
+      "minPlayers": 3,
       "name": "Bezit 24 gebieden",
       "description": "Bezit op enig moment 24 gebieden, ongeacht welke."
     },
@@ -62,7 +63,6 @@
       "id": "eliminate-red",
       "type": "EliminatePlayer",
       "params": { "targetColor": "red" },
-      "fallbackMissionId": "territory-24",
       "name": "Schakel de rode speler uit",
       "description": "Vernietig alle legers van de rode speler."
     },
@@ -70,7 +70,6 @@
       "id": "eliminate-blue",
       "type": "EliminatePlayer",
       "params": { "targetColor": "blue" },
-      "fallbackMissionId": "territory-24",
       "name": "Schakel de blauwe speler uit",
       "description": "Vernietig alle legers van de blauwe speler."
     },
@@ -78,7 +77,6 @@
       "id": "eliminate-green",
       "type": "EliminatePlayer",
       "params": { "targetColor": "green" },
-      "fallbackMissionId": "territory-18-min2",
       "name": "Schakel de groene speler uit",
       "description": "Vernietig alle legers van de groene speler."
     },
@@ -86,7 +84,6 @@
       "id": "eliminate-yellow",
       "type": "EliminatePlayer",
       "params": { "targetColor": "yellow" },
-      "fallbackMissionId": "territory-24",
       "name": "Schakel de gele speler uit",
       "description": "Vernietig alle legers van de gele speler."
     },
@@ -94,7 +91,6 @@
       "id": "eliminate-purple",
       "type": "EliminatePlayer",
       "params": { "targetColor": "purple" },
-      "fallbackMissionId": "territory-18-min2",
       "name": "Schakel de paarse speler uit",
       "description": "Vernietig alle legers van de paarse speler."
     },
@@ -102,7 +98,6 @@
       "id": "eliminate-orange",
       "type": "EliminatePlayer",
       "params": { "targetColor": "orange" },
-      "fallbackMissionId": "territory-24",
       "name": "Schakel de oranje speler uit",
       "description": "Vernietig alle legers van de oranje speler."
     },
@@ -110,7 +105,6 @@
       "id": "eliminate-turquoise",
       "type": "EliminatePlayer",
       "params": { "targetColor": "turquoise" },
-      "fallbackMissionId": "territory-18-min2",
       "name": "Schakel de turquoise speler uit",
       "description": "Vernietig alle legers van de turquoise speler."
     }

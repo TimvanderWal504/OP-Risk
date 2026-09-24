@@ -105,8 +105,6 @@ internal sealed class MissionJson
 
     public bool? RequiresOwnTurn { get; init; }
 
-    public string? FallbackMissionId { get; init; }
-
     /// <summary>Minimaal spelersaantal waarbij deze missie mag worden toegewezen (trekpool
     /// én als fallback-doel); ontbreekt dit veld, dan geldt geen minimum (FO §6.1).</summary>
     public int? MinPlayers { get; init; }

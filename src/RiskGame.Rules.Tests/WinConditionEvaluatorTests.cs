@@ -102,7 +102,7 @@ public class WinConditionEvaluatorTests
         // EliminatePlayer is onomkeerbaar (FO §6.2) — blijft direct, zelfs onder een
         // laatste-kans-instelling.
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "fallback");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
         var state = TestGame.InProgress(
             [
                 TestGame.Player("p1", "red", mission: mission),
@@ -312,7 +312,7 @@ public class WinConditionEvaluatorTests
     public void LastChanceEligibleWinners_MetVervuldeEliminatePlayerMissie_TeltNietMee()
     {
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "fallback");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
         var state = TestGame.InProgress(
             [
                 TestGame.Player("p1", "red", mission: mission),

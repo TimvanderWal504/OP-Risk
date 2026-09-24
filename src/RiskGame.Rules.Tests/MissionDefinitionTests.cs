@@ -107,7 +107,7 @@ public class MissionDefinitionTests
     public void EliminatePlayer_MetDoorMissiehouderUitgeschakeldDoelwit_IsBehaald()
     {
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
         var state = TestGame.InProgress(
             [
                 TestGame.Player("p1", "red"),
@@ -126,7 +126,7 @@ public class MissionDefinitionTests
     public void EliminatePlayer_MetDoorEenAndereSpelerUitgeschakeldDoelwit_IsNietBehaald()
     {
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
         var state = TestGame.InProgress(
             [
                 TestGame.Player("p1", "red"),
@@ -141,7 +141,7 @@ public class MissionDefinitionTests
     public void EliminatePlayer_MetNogActiefDoelwit_IsNietBehaald()
     {
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
         var state = TestGame.InProgress(
             [TestGame.Player("p1", "red"), TestGame.Player("p2", "blue")]);
 
@@ -152,7 +152,7 @@ public class MissionDefinitionTests
     public void EliminatePlayerMission_RequiresLastChance_IsOnwaar()
     {
         var mission = new EliminatePlayerMission(
-            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue", FallbackMissionId: "f");
+            "m", "Naam", "Beschrijving", RequiresOwnTurn: false, TargetColor: "blue");
 
         Assert.False(mission.RequiresLastChance);
     }

@@ -684,8 +684,12 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
     {
         // Carol (p3) houdt "eliminate-blue" (Bob se kleur) — maar Alice (p1), niet Carol,
         // elimineert Bob. FO §6.1: Carol se missie is dan niet vervuld en ze komt automatisch
-        // op de fallback-missie uit.
-        await using var factory = CreateFactory(6, 5, 1, 2, 1);
+        // op een fallback-missie uit. De 5 dobbelwaarden dekken de aanval (3) en verdediging
+        // (2); de 6e is de willekeurige fallback-categoriekeuze die na de eliminatie volgt
+        // (ResolveFallbacksAfterElimination) — met alle 6 ConquerContinents-missies nog
+        // ongebruikt maakt de exacte waarde niet uit voor welke van de 6 Carol krijgt, dus de
+        // assertie hieronder toetst categorielidmaatschap, niet een specifieke id.
+        await using var factory = CreateFactory(6, 5, 1, 2, 1, 0);
         using var client = factory.CreateClient();
         await using var connection = await ConnectAsync(factory, client);
 
@@ -709,7 +713,9 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await using var session = store.QuerySession();
         var state = await session.LoadAsync<GameState>(gameId);
         var carol = state!.Players.Single(p => p.Id == "p3");
-        Assert.Equal(carolMission.FallbackMissionId, carol.Mission?.Id);
+        Assert.NotEqual(carolMission.Id, carol.Mission?.Id);
+        Assert.Contains(
+            carol.Mission?.Id, map.Missions.OfType<ConquerContinentsMission>().Select(mission => mission.Id));
     }
 
     [Fact]

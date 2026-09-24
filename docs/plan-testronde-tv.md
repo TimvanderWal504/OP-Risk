@@ -39,6 +39,14 @@ dus komt een speler via de fallback alsnog op deze missie uit
 - [x] FO §6.1 bijwerken.
 - [x] Unit tests voor 2, 3 en 4 spelers (pool én fallback).
 
+**Nabewerking (zelfde sessie).** De aanpak-bullets hierboven beschreven nog een vaste
+`fallbackMissionId` per eliminate-missie met `territory-24` als vangnet bij een niet-toegestaan
+spelersaantal. Op verzoek van de gebruiker is dat mechanisme vervangen: `fallbackMissionId`
+bestaat niet meer, en `MissionAssignmentCalculator` kiest zelf willekeurig een nog ongebruikte
+`ConquerContinents`-missie als fallback — dat voorkomt dat twee spelers dezelfde fallback-missie
+krijgen (wat met de oude, vaste fallback-ketens wél kon gebeuren). Zie FO §6.1 en
+`MissionAssignmentCalculator.cs` voor de huidige stand.
+
 ### 6. Streep in de "V" van "VS"
 
 **Bevinding (screenshot 2026-09-23).** De blauwe lijn zit ín de letter V. De tekst staat als

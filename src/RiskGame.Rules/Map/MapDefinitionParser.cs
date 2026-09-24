@@ -494,14 +494,8 @@ public static class MapDefinitionParser
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(model.FallbackMissionId))
-                    {
-                        errors.Add($"missions.json: EliminatePlayer-missie '{model.Id}' heeft geen 'fallbackMissionId'.");
-                        continue;
-                    }
-
                     missions.Add(new EliminatePlayerMission(
-                        model.Id, name, description, requiresOwnTurn, p.TargetColor, model.FallbackMissionId)
+                        model.Id, name, description, requiresOwnTurn, p.TargetColor)
                     { MinPlayers = minPlayers });
                     break;
 
@@ -524,9 +518,6 @@ public static class MapDefinitionParser
     {
         var continentIds = continents.Select(continent => continent.Id).ToHashSet(StringComparer.Ordinal);
         var colorIds = colors.Select(color => color.Id).ToHashSet(StringComparer.Ordinal);
-        var missionsById = missions
-            .GroupBy(mission => mission.Id, StringComparer.Ordinal)
-            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
         foreach (var mission in missions)
         {
@@ -551,15 +542,6 @@ public static class MapDefinitionParser
                         errors.Add($"missions.json: missie '{eliminate.Id}' verwijst naar onbekende kleur '{eliminate.TargetColor}'.");
                     }
 
-                    if (!missionsById.TryGetValue(eliminate.FallbackMissionId, out var fallback))
-                    {
-                        errors.Add($"missions.json: missie '{eliminate.Id}' verwijst naar onbekende fallbackMissionId '{eliminate.FallbackMissionId}'.");
-                    }
-                    else if (fallback is EliminatePlayerMission)
-                    {
-                        errors.Add($"missions.json: fallbackMissionId '{eliminate.FallbackMissionId}' van missie '{eliminate.Id}' mag zelf geen EliminatePlayer-missie zijn.");
-                    }
-
                     break;
             }
         }
@@ -574,6 +556,15 @@ public static class MapDefinitionParser
         foreach (var color in colors.Where(color => !targetedColors.Contains(color.Id)))
         {
             errors.Add($"missions.json: geen EliminatePlayer-missie voor kleur '{color.Id}'; de missieset is niet dekkend (FO §6.1).");
+        }
+
+        // De fallback-categorie voor EliminatePlayer-missies (FO §6.1,
+        // MissionAssignmentCalculator.PickFallback): zonder minstens één ConquerContinents-
+        // missie kan een speler die zijn eigen kleur of een afwezige kleur treft, nooit een
+        // fallback krijgen.
+        if (!missions.OfType<ConquerContinentsMission>().Any())
+        {
+            errors.Add("missions.json: geen enkele ConquerContinents-missie; die missies dienen ook als automatische fallback-categorie voor EliminatePlayer-missies (FO §6.1) en moeten dus minstens één keer voorkomen.");
         }
     }
 

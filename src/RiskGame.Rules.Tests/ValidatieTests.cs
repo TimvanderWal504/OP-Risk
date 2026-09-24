@@ -37,10 +37,18 @@ public class ValidatieTests
         """;
 
     // De minimale kaart heeft alleen kleur 'red'; de missieset dekt die met één eliminate-red
-    // plus de bijbehorende fallback-missie (FO §6.1).
+    // plus minstens één ConquerContinents-missie, want die vormen samen de fallback-categorie
+    // (FO §6.1) waar MissionAssignmentCalculator uit put.
     private const string GeldigeMissions = """
         {
           "missions": [
+            {
+              "id": "conquer-c1",
+              "type": "ConquerContinents",
+              "params": { "continents": ["c1"], "extraAnyContinent": false },
+              "name": "Verover C1",
+              "description": "Verover C1."
+            },
             {
               "id": "territory-2",
               "type": "TerritoryCount",
@@ -52,7 +60,6 @@ public class ValidatieTests
               "id": "eliminate-red",
               "type": "EliminatePlayer",
               "params": { "targetColor": "red" },
-              "fallbackMissionId": "territory-2",
               "name": "Schakel rood uit",
               "description": "Vernietig rood."
             }
@@ -363,7 +370,6 @@ public class ValidatieTests
                   "id": "eliminate-red",
                   "type": "EliminatePlayer",
                   "params": { "targetColor": "red" },
-                  "fallbackMissionId": "m1",
                   "name": "Eliminate red",
                   "description": "D"
                 }
@@ -391,7 +397,6 @@ public class ValidatieTests
                   "id": "eliminate-groen",
                   "type": "EliminatePlayer",
                   "params": { "targetColor": "green" },
-                  "fallbackMissionId": "territory-2",
                   "name": "Eliminate groen",
                   "description": "D"
                 }
@@ -403,7 +408,7 @@ public class ValidatieTests
     }
 
     [Fact]
-    public void EliminatePlayerMissieMetOnbekendeFallback_IsOngeldig()
+    public void MissiesetZonderConquerContinents_IsOngeldig()
     {
         const string missions = """
             {
@@ -412,7 +417,6 @@ public class ValidatieTests
                   "id": "eliminate-red",
                   "type": "EliminatePlayer",
                   "params": { "targetColor": "red" },
-                  "fallbackMissionId": "bestaat-niet",
                   "name": "Eliminate red",
                   "description": "D"
                 }
@@ -420,7 +424,7 @@ public class ValidatieTests
             }
             """;
 
-        Parse(missions: missions).AssertFailure("onbekende fallbackMissionId");
+        Parse(missions: missions).AssertFailure("geen enkele ConquerContinents-missie");
     }
 
     [Fact]
@@ -441,7 +445,6 @@ public class ValidatieTests
                   "id": "eliminate-red",
                   "type": "EliminatePlayer",
                   "params": { "targetColor": "red" },
-                  "fallbackMissionId": "territory-2",
                   "name": "Schakel rood uit",
                   "description": "Vernietig rood."
                 }
