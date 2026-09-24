@@ -74,7 +74,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
           phase === turnPhase ? (
             <div
               key={phase}
-              className="rounded-xl bg-pitch-400 px-6.5 py-3 font-display text-2xl font-black tracking-[.01em] text-[var(--on-pitch)]"
+              className="rounded-xl bg-pitch-400 px-6.5 py-3 font-display text-size5 leading-[calc(2/1.5)] font-black tracking-[.01em] text-[var(--on-pitch)]"
               style={{ animation: tvAnimations.phasePillPop, boxShadow: '0 0 30px color-mix(in srgb, var(--pitch-400) 55%, transparent)' }}
             >
               {t(PHASE_LABEL_KEY[phase])}

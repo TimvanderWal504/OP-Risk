@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { marker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
+import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
+import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
 import { boardTok } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
@@ -32,6 +33,8 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
+  // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
+  const marker = scaledMarker(useTvDisplayScale().text)
 
   // Zelfde "vergelijk en pas aan tijdens render"-patroon als TvMainBoardScreen, voor de
   // telrichting van de A1-teldemo-animatie — een lokaal presentatiedetail over een getal dat

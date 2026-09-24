@@ -17,14 +17,19 @@ colors:
   field-ink-700: "#243246"
   field-ink-400: "#6f7e97"
   field-ink-100: "#eef2f8"
+  glass-surface-base: "rgba(20, 29, 44, 0.72)"
+  glass-surface-raised: "rgba(36, 50, 70, 0.62)"
+  glass-surface-overlay: "rgba(4, 6, 11, 0.85)"
+  glass-tint-pitch-button: "rgba(121, 143, 70, 0.45)"
+  glass-tint-pitch-kicker: "rgba(121, 143, 70, 0.16)"
   glass-surface-base-opaque: "#1b2738"
   glass-surface-raised-opaque: "#243246"
   glass-surface-overlay-opaque: "#243246"
   glass-surface-recessed-opaque: "#080c14"
   glass-border: "rgba(255, 255, 255, 0.14)"
   glass-fg: "#eef2f8"
-  glass-fg-secondary: "color-mix(in srgb, #eef2f8 80%, transparent)"
-  glass-fg-muted: "color-mix(in srgb, #eef2f8 60%, transparent)"
+  glass-fg-secondary: "color-mix(in srgb, #eef2f8 90%, transparent)"
+  glass-fg-muted: "color-mix(in srgb, #eef2f8 75%, transparent)"
 typography:
   display:
     fontFamily: "Lexend, Archivo, ui-sans-serif, system-ui, sans-serif"
@@ -61,13 +66,13 @@ spacing:
   tabbar: "4.25rem"
 components:
   button-primary:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.glass-tint-pitch-button}"
     textColor: "{colors.field-ink-100}"
     rounded: "{rounded.card}"
     padding: "16px 24px"
     height: "64px"
   button-secondary:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.glass-surface-base}"
     textColor: "{colors.field-ink-100}"
     rounded: "{rounded.card}"
     padding: "16px 24px"
@@ -87,14 +92,17 @@ components:
     rounded: "{rounded.chip}"
     padding: "6px 16px"
   glass-panel-base:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.glass-surface-base}"
     rounded: "{rounded.card}"
   glass-panel-raised:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.glass-surface-raised}"
     rounded: "{rounded.card}"
   glass-panel-overlay:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.glass-surface-overlay}"
     rounded: "{rounded.sheet}"
+  slider:
+    textColor: "{colors.field-ink-100}"
+    height: "52px"
 ---
 
 # Design System: Operatie Atlas
@@ -110,19 +118,23 @@ board-game skeuomorphism — still holds for type, color, and motion, but the
 surface material has evolved: every TV and phone shell now renders a persistent,
 full-bleed war-room illustration (commanders around a map table, a lit
 battlefield) behind the UI, and every card, panel, button, and modal is a pane
-of **clear glass** set over it (`GlassPanel`, and `Button`'s own glass surface).
-Clear, deliberately: a glass surface carries no background color or tint of its
-own at all — only `backdrop-filter: blur() saturate(1.4)`, a hairline border, an
-inner highlight, and a shadow. The surface's apparent color is entirely
-whatever's blurred behind it; the glass itself never paints anything over that.
-The room the player is standing in didn't change; the walls did, and the walls
-are actual glass, not smoked glass. Legibility is still the reason for every
-bold choice — black-weight display type still has to read at distance, tabular
-numerals still exist so a glanced-at number registers instantly — and because
-there's no tint to lean on for contrast, legibility on glass is carried entirely
-by two other mechanisms: a shared text-shadow plus opacity-stepped light text
-(see **The On-Glass Text Rule**) and the shell's own stage scrim sitting behind
-everything (see **Layout**).
+of **dark-tinted glass** set over it (`GlassPanel`, and `Button`'s own glass
+surface): a translucent Field Ink tint per elevation tier (`glass-surface-*`),
+a heavy `backdrop-filter: blur()` with no saturation boost, a hairline border,
+an inner highlight, and a shadow. Until 2026-09-22 this was *clear* glass — no
+tint at all, the apparent color entirely whatever was blurred behind it. Viewed
+on a real TV from across a room, that let the busy illustration read as noise
+behind text, so the tint and a doubled blur were added deliberately as a
+legibility floor: the glass now calms what's behind it rather than just
+distorting it. The room the player is standing in didn't change; the walls
+did, and they're smoked glass now, not clear. Legibility is still the reason
+for every bold choice — black-weight display type still has to read at
+distance, tabular numerals still exist so a glanced-at number registers
+instantly — and it rests on three layers together: the tint itself, a shared
+text-shadow plus opacity-stepped light text (see **The On-Glass Text Rule**),
+and the shell's own stage scrim sitting behind everything (see **Layout**). On
+the TV, the host can tune tint, blur, type and dice size per game from their
+phone (see **Layout → TV display settings**).
 
 The mood follows from that constraint, not from an aesthetic preference:
 contrast is spent only where state needs to register from across a room, and
@@ -147,7 +159,8 @@ light-mode glass surface fallback colors exist yet).
 - Black-weight (800), display-font headlines and scores; body copy stays lighter and calmer.
 - Dark-forced game shells; a parallel light theme exists in tokens but isn't wired to any current screen, and doesn't extend to the glass layer.
 - A persistent, full-bleed illustration + directional scrim sits behind every TV and phone screen, crossfading its intensity per phase — see **Layout**, below.
-- Nearly every surface — cards, panels, buttons, modals — is clear glass (blur + saturate + hairline border + inner highlight + shadow, *no background tint*) floating over that illustration, not a flat tonal layer.
+- Nearly every surface — cards, panels, buttons, modals — is dark-tinted glass (translucent Field Ink tint + heavy blur + hairline border + inner highlight + shadow) floating over that illustration, not a flat opaque layer.
+- On the TV, the host can scale type (including map markers), glass tint/blur and dice from their phone; 50% is always exactly this design (see **Layout → TV display settings**).
 - The primary CTA still carries the system's one signature glow, now composited as the `--glass-shadow` on top of its glass surface rather than a shadow on a flat fill.
 - Uppercase, wide-tracked eyebrow/label text throughout (kickers, badges, stat headers).
 - Tabular numerals everywhere a value could change in place (timers, scores, dice results).
@@ -178,19 +191,19 @@ that both the TV and phone game shells run on by default.
 - **Caution Amber** (`--warning`, `#b5790a` light / `#f2c14e` dark): this is the one place the old gold-family hex values are still used deliberately — amber-for-caution is a standalone functional convention, not the decorative "trophy" accent that Recon Silver replaced, so it wasn't touched.
 
 ### Glass surfaces
-`GlassPanel` is clear glass: it never sets a background color of its own. There
-is no `glass-surface-*` tint token to reach for — that would be smoked glass,
-not this system. Only four things carry a glass surface's identity:
+`GlassPanel` is dark-tinted glass (revised 2026-09-22 from clear glass, see
+**Overview**). Five things carry a glass surface's identity:
+- **Surface tint** (`glass-surface-base` / `-raised` / `-overlay`, translucent Field Ink at alpha 0.72 / 0.62 / 0.85): the panel's own background, one per elevation tier — Overlay is the darkest because a modal must dominate everything under it. Never hand-pick a tint per component: use a tier, or a tint derived with `deriveGlassTint` (the primary button's pitch tint `glass-tint-pitch-button`, the board kicker's `glass-tint-pitch-kicker`).
 - **Glass Border** (`rgba(255, 255, 255, 0.14)`): the 1px hairline on every glass surface, plus a matching `inset 0 1px 0 rgba(255,255,255,0.16)` inner top highlight that reads as a bevel catching light — never a second, differently-colored border.
-- **Blur + saturate** (`backdrop-filter: blur() saturate(1.4)`, blur radius 8/16/28px by role — see **Elevation & Depth**): the only thing that touches what's behind the glass, and the only source of a glass surface's apparent color.
+- **Blur** (`backdrop-filter: blur()`, 14/32/44px by role — see **Elevation & Depth**; saturation stays at 1.0, no boost): calms the illustration behind the tint rather than making it more vivid.
 - **A tier-appropriate shadow** (Base/Raised/Overlay — see **Shadow Vocabulary**).
-- **On-glass text** (`--glass-fg`/`--glass-fg-secondary`/`--glass-fg-muted` + a shared text-shadow): since there's no tint to sit on, legibility is carried entirely by this treatment — see **Typography → The On-Glass Text Rule**.
+- **On-glass text** (`--glass-fg`/`--glass-fg-secondary`/`--glass-fg-muted` + a shared text-shadow) — see **Typography → The On-Glass Text Rule**.
 
 The `glass-surface-*-opaque` hexes (e.g. `#1b2738` for Base, i.e. Field Ink 800)
-are **not** a tint — they're the fully opaque fallback fill used only when
-`backdrop-filter` can't run: nested inside another glass panel, unsupported
-browser, or `prefers-reduced-transparency: reduce`. In every other case the
-surface paints nothing; see **Elevation & Depth**.
+are the fully opaque fallback fill, used only when `backdrop-filter` can't run:
+nested inside another glass panel, unsupported browser, or
+`prefers-reduced-transparency: reduce`. They are the same Field Ink steps the
+translucent tints approximate, at full alpha; see **Elevation & Depth**.
 
 ### Player seat colors (separate system — do not treat as brand tokens)
 Up to seven player seats each get a fill + on-color + colorblind-safe symbol
@@ -274,7 +287,9 @@ eliminated-player headline), `size14` (132px, TV lobby join-code digits).
 ### Named Rules
 **The Tabular Numerals Rule.** Any number that can change in place — timers, dice results, army counts, scores — uses `font-variant-numeric: tabular-nums` so digit width never shifts and adjacent UI doesn't reflow as the value updates.
 
-**The On-Glass Text Rule.** Text rendered directly on any `GlassPanel` tier (or the glass `Button`) never uses the standard `--fg`/`--fg-secondary`/`--fg-muted` gray-scale — that scale was tuned for a flat, dark card, and since glass carries no background tint of its own (see **Colors → Glass surfaces**), a mid-tone gray has nothing but the raw stage illustration to sit on and loses legibility against its brightest patches no matter how far up the scale it sits. Instead, on-glass text stays on one light color (`--fg1`/`#eef2f8`) at three opacity steps — `--glass-fg` (100%), `--glass-fg-secondary` (80%), `--glass-fg-muted` (60%) — carrying hierarchy through opacity, not hue-lightness, paired with a shared dark `text-shadow` (`0 1px 3px rgba(4,6,11,.55)`, the same ink triplet as `--on-pitch`/the stage scrim) that supplies the actual contrast floor regardless of what's behind the blur. Applied automatically in CSS to any `.text-fg`/`.text-fg-secondary`/`.text-fg-muted` descendant of a glass surface (`index.css`) — never opted into per component, and never limited to a subset of tiers: `overlay` (full-screen modals like the combat result) needs this exactly as much as `base`/`raised`, since it has no dark wash of its own to fall back on either. Text on non-glass, opaque surfaces is unaffected and keeps the standard `--fg`/`--fg-secondary`/`--fg-muted` scale.
+**The On-Glass Text Rule.** Text rendered directly on any `GlassPanel` tier (or the glass `Button`) never uses the standard `--fg`/`--fg-secondary`/`--fg-muted` gray-scale — that scale was tuned for a flat, opaque card, and a translucent tint over a busy photo still lets a mid-tone gray lose against its brightest patches no matter how far up the scale it sits. Instead, on-glass text stays on one light color (`--fg1`/`#eef2f8`) at three opacity steps — `--glass-fg` (100%), `--glass-fg-secondary` (90%), `--glass-fg-muted` (75%) — carrying hierarchy through opacity, not hue-lightness, paired with a shared dark `text-shadow` (`0 2px 6px rgba(4,6,11,.85)`, the same ink triplet as `--on-pitch`/the stage scrim) that supplies a contrast floor regardless of what's behind the glass. (Raised from 80/60% and a lighter `0 1px 3px .55` shadow on 2026-09-22, together with the glass tint, after viewing on a real TV at ~3m.) Applied automatically in CSS to any `.text-fg`/`.text-fg-secondary`/`.text-fg-muted` descendant of a filtering glass surface (`index.css`) — never opted into per component, and never limited to a subset of tiers. Text on non-glass, opaque surfaces is unaffected and keeps the standard `--fg`/`--fg-secondary`/`--fg-muted` scale.
+
+**The Scalable Type Rule.** On the TV, every size comes from the type scale — the six named steps or the numbered `size1`–`size14` (`text-h1`, `text-size5`, …) — never Tailwind's own `text-lg`/`text-xl`/`text-2xl` or a literal `text-[Npx]`. The host's text-size setting overrides exactly those `--text-*` variables inside `TvShell` (see **Layout → TV display settings**); anything sized outside the scale silently stays put while the rest of the screen grows. Five such call sites were moved onto their pixel-equal steps on 2026-09-24 (18/20/24px → `size2`/`size4`/`size5`), keeping Tailwind's own line-height literally where no `leading-*` was set, so nothing shifted at the default setting.
 
 ## Layout
 
@@ -322,39 +337,54 @@ from the pre-glass system). This stage is what every glass panel is, literally,
 floating over — the reason a translucent surface reads as "glass" rather than
 "dimmed" is that there is always a real image behind it to distort.
 
+### TV display settings (host-controlled)
+Added 2026-09-24 (`docs/plan-testronde-tv.md` point 2). TVs, rooms and viewing
+distances differ too much for one fixed size, so the host tunes the TV per game
+from their phone; the server stores it (`GameStateDto.tvDisplay`) and a reloaded
+TV gets the same look back. Five settings: **text size**, **panel opacity**,
+**blur behind panels**, **dice size**, and the **TV language** (NL/EN — the only
+place the language follows the server instead of the browser).
+
+- **One scale for all four sizes.** A slider position from 0 to 100 in steps of 5, where **50 is exactly this design**. Below 50 the factor runs linearly from 0.25× (at 0) to 1×; above 50 every step adds 10% of the design (55 → 1.1×, 100 → 2×). The conversion lives in one place (`styles/tvDisplay.ts`, `sliderToMultiplier`).
+- **Text** multiplies every `--text-*` step of the type scale, set as literal `rem` values on `TvShell` itself (a `:root` variable that references another variable resolves at `:root` and would never see a shell-level factor). Hence **The Scalable Type Rule**. **Map markers** (SVG, in design units) scale with the same factor, but always as a whole: disc, ring, army count, territory name, its outline and its distance to the disc — and while claiming, the symbol and the flare ring too. Scaling only the number would push it out of its disc. Territory outlines belong to the map and never scale.
+- **Glass** multiplies the tint's alpha (capped at fully opaque) and the blur radius of every TV glass surface — `GlassPanel` with `context="tv"` and the lobby's kicker badge. The board's instruction kicker carries its own pitch tint, so only its blur follows. Values are computed in JS, never as CSS `calc()`/`min()` in a color: an invalid value there drops the whole declaration, and older TV browsers would silently fall back to untinted glass.
+- **Dice** scale as a whole object — size, radius, padding, pip size and gap, blur, cast shadow and perspective — with one floor: the seat-colored border never drops below 1px, because it carries the seat identity (see **Components → Dice**). The combat grid and the order-roll waiting slot reserve the same scaled size, so the sides and "VS" stay put. Gaps between dice and the fly-in path of the roll animation belong to the screen, not the die, and don't scale.
+- **The phone never scales.** Every factor applies only to `context="tv"` inside a `TvShell` that carries settings; outside it (phone, tests, the connecting state) everything is exactly the design.
+
 ## Elevation & Depth
 
-Glass is the default surface treatment, not an occasional accent — and it is
-**clear** glass: no surface, at any elevation, paints a background color or
-tint of its own. Nearly every raised surface — cards, panels, buttons, modals —
-is a `GlassPanel` (or shares its CSS class directly, as `Button` does):
-`backdrop-filter: blur() saturate(1.4)`, a 1px white-alpha hairline border, an
-inset top highlight that reads as a light-catching bevel, and a drop shadow —
-composited together, not a flat tonal wash and not a tinted pane. Three
-elevation tiers exist (Base / Raised / Overlay), differing only in blur radius
-(16px / 16px / 28px) and shadow weight, heaviest on Overlay so a modal detaches
-from the entire TV stage behind it rather than just its neighbors — never in
-background color, since none of the three has one. The old flat, tonal-overlay
-approach (`--atlas-t02`–`t12` washes with no blur) is retired as the system
-default; it remains only where a surface deliberately opts out of glass (none
-currently documented — flag any surface still using a bare tonal wash as a
-candidate for migration, not as an accepted second tier).
+Glass is the default surface treatment, not an occasional accent — and since
+2026-09-22 it is **dark-tinted** glass (see **Colors → Glass surfaces**).
+Nearly every raised surface — cards, panels, buttons, modals — is a
+`GlassPanel` (or shares its CSS class directly, as `Button` does): a
+translucent Field Ink tint, `backdrop-filter: blur()` at saturation 1.0, a 1px
+white-alpha hairline border, an inset top highlight that reads as a
+light-catching bevel, and a drop shadow — composited together, not a flat
+opaque wash. Three elevation tiers exist (Base / Raised / Overlay), differing
+in tint alpha (0.72 / 0.62 / 0.85), blur radius (32px / 32px / 44px on the TV,
+half that on the phone) and shadow weight — heaviest and darkest on Overlay so
+a modal detaches from the entire TV stage behind it rather than just its
+neighbors. Small chips and badges directly on the illustration use the
+smallest blur step (14px). The old flat, tonal-overlay approach
+(`--atlas-t02`–`t12` washes with no blur) is retired as the system default; it
+remains only where a surface deliberately opts out of glass (none currently
+documented — flag any surface still using a bare tonal wash as a candidate for
+migration, not as an accepted second tier).
 
-Every glass surface degrades to a fully opaque fill in three independent
-cases, all handled in CSS (`index.css` `.glass-panel`), not per-component:
-a `GlassPanel` nested inside another `GlassPanel` drops its own
+A `GlassPanel` nested inside another `GlassPanel` drops its own
 `backdrop-filter` entirely (a React context guard forces this — no double
-blur, no glass-on-glass compounding); a browser without `backdrop-filter`
-support (`@supports not (...)`) gets the opaque fallback color; and
-`prefers-reduced-transparency: reduce` forces the same opaque fallback
-regardless of support. All three routes land on the same
-`glass-surface-*-opaque` hex per tier — the *only* case any glass surface
-ever has a background color at all — never a separately-tuned fallback color.
+blur, no glass-on-glass compounding) and keeps only its tint, border and
+shadow. Every glass surface degrades to a fully opaque fill in two
+independent cases, handled in CSS (`index.css` `.glass-panel`), not
+per-component: a browser without `backdrop-filter` support
+(`@supports not (...)`), and `prefers-reduced-transparency: reduce`. Both land
+on the same `glass-surface-*-opaque` hex per tier — never a separately-tuned
+fallback color.
 
-The one signature glow survives the shift to glass: the primary button's
-`--glass-shadow` is still `shadow-glow-pitch` (unchanged value), now sitting
-on a clear glass surface instead of a flat fill — see **The One Glow Rule**
-below.
+The one signature glow is specified to survive the shift to glass: the
+primary button's `--glass-shadow` is `shadow-glow-pitch` (unchanged value),
+sitting on its pitch-tinted glass surface instead of a flat fill — see **The
+One Glow Rule** below.
 
 ### Shadow Vocabulary
 - **Pitch glow** (`box-shadow: 0 8px 22px color-mix(in srgb, var(--pitch-500) 35%, transparent)`): the primary-button-only ambient glow, now composited as the `--glass-shadow` on the button's glass surface.
@@ -365,7 +395,7 @@ below.
 - **Sheet** (`0 -8px 40px -12px rgba(10,14,23,.35)`): legacy bottom-sheet shadow; superseded by Glass Overlay.
 
 ### Named Rules
-**The Glass-By-Default Rule** (supersedes the former Flat-By-Default Rule). Raised surfaces are glass at rest: blur, hairline border, inner highlight, and a tier-appropriate shadow, together — never a flat tonal wash, never a shadow alone, and never a background tint (glass is clear — see **Colors → Glass surfaces**). A surface only goes flat/opaque under one of the three fallback conditions above; that fallback is an accessibility/compatibility floor, not a second style to reach for by choice.
+**The Glass-By-Default Rule** (supersedes the former Flat-By-Default Rule). Raised surfaces are glass at rest: tier tint, blur, hairline border, inner highlight, and a tier-appropriate shadow, together — never a flat opaque wash, never a shadow alone, and never a hand-picked tint (only the tier tints or a `deriveGlassTint` result — see **Colors → Glass surfaces**). A surface only goes flat/opaque under one of the three fallback conditions above; that fallback is an accessibility/compatibility floor, not a second style to reach for by choice.
 
 **The One Glow Rule.** The glow shadow (`shadow-glow-pitch`) is reserved for the single primary CTA on a screen, now expressed as that button's `--glass-shadow`. It is a scarcity signal riding on top of the glass system, not a separate elevation tier.
 
@@ -385,8 +415,8 @@ focus states.
 ### Buttons
 - **Shape:** `16px` radius (`rounded-card`), full-width, `64px` minimum height — large touch/click targets for a shared-room device.
 - **Surface:** both variants render on the shared glass-panel CSS class directly on the `<button>` element (no nested `GlassPanel` — that would only add a redundant DOM layer), phone-scale blur (currently the only device Button appears on).
-- **Primary:** clear glass (no tint, same as every other glass surface) plus the pitch glow shadow as its `--glass-shadow` — the system's only glowing element; the glow, not a color fill, is what marks it as primary. Text is `--fg` (the standard light ink color), not `--on-pitch`: `--on-pitch` was tuned for text on a fully opaque pitch fill and read as nearly unreadable on clear glass (finding, resolved 2026-08-07).
-- **Secondary:** the same clear glass surface with a `border-strong` outline instead of the glow — visually quieter, same `--fg` text color as primary. Primary and secondary differ only in border color and the presence of the glow shadow, never in background.
+- **Primary:** glass with the brand's pitch tint (`glass-tint-pitch-button`, Territory Green derived at alpha 0.45) plus the pitch glow shadow as its `--glass-shadow` — the system's only glowing element. Text is `--fg` (the standard light ink color), not `--on-pitch`: `--on-pitch` was tuned for text on a fully opaque pitch fill and read as nearly unreadable on translucent glass (finding, resolved 2026-08-07).
+- **Secondary:** the neutral Base tint (`glass-surface-base`) with a `border-strong` outline and no glow — visually quieter, same `--fg` text color as primary. Primary and secondary differ in tint, border color and the glow; never in shape or text color. A secondary sits above the primary when both stack in a footer (e.g. "TV-weergave" above "Start spel").
 - **Disabled:** 50% opacity, `cursor: not-allowed`, no other state change — no fade transition (no motion token exists for a disabled-state fade; an instant state switch is intentional, not an oversight).
 
 ### Inputs
@@ -398,24 +428,27 @@ focus states.
 - **Pitch solid:** Territory Green fill, on-pitch text — reserved for the rare badge that needs to read as an active/confirmed state rather than a neutral label.
 
 ### Glass Panel (`GlassPanel`)
-- **Character:** the system's shared surface primitive — glass, not chrome, and clear, not tinted. It controls only surface (blur/saturate, border + top highlight, shadow, radius, optional padding — deliberately no background color), never layout, position, or size; callers own those via `className`/`style`.
-- **Axes:** two independent props compose the final look — `elevation` (`base` · `raised` · `overlay`, differ only in blur radius and shadow weight — see **Elevation & Depth**) and `context` (`tv` full blur · `phone` half blur, since phone stacks more filtering elements per screen and backdrop-filter is GPU-costly on mobile).
-- **Nesting:** enforced flat via React context — see **The No-Nested-Blur Rule**.
-- **Fallbacks:** opaque background under `@supports not (backdrop-filter)` and `prefers-reduced-transparency: reduce` — the *only* cases a `GlassPanel` has a background color at all — see **Elevation & Depth**.
+- **Character:** the system's shared surface primitive — glass, not chrome, dark-tinted since 2026-09-22. It controls only surface (tier tint, blur, border + top highlight, shadow, radius, optional padding), never layout, position, or size; callers own those via `className`/`style`.
+- **Axes:** two independent props compose the final look — `elevation` (`base` · `raised` · `overlay`, differ in tint alpha, blur radius and shadow weight — see **Elevation & Depth**) and `context` (`tv` full blur · `phone` half blur, since phone stacks more filtering elements per screen and backdrop-filter is GPU-costly on mobile).
+- **TV display settings:** with `context="tv"` inside a `TvShell` that carries settings, the tint alpha and blur follow the host's panel-opacity and blur settings (see **Layout → TV display settings**). The phone context never does.
+- **Nesting:** enforced unblurred via React context — see **The No-Nested-Blur Rule**; the nested panel keeps its tint.
+- **Fallbacks:** opaque background under `@supports not (backdrop-filter)` and `prefers-reduced-transparency: reduce` — see **Elevation & Depth**.
 
 ### Cards / Panels
 - **Corner style:** `16px` (card) or `20–24px` for larger feature cards (e.g. `QuoteCard`); modals/sheets step up to `24px` as a `GlassPanel overlay`.
-- **Background:** none — a `GlassPanel` is clear glass over the shell's persistent stage illustration, not a flat tonal overlay and not a tinted pane.
+- **Background:** the tier tint of a `GlassPanel` (`glass-surface-base`/`-raised`/`-overlay`) over the shell's persistent stage illustration — translucent, never a flat opaque fill outside the fallback cases.
 - **Border:** the shared `glass-border` hairline (white-alpha) plus its inset top highlight; Recon Silver borders remain for non-glass emphasis contexts (e.g. `SelectableOption`).
 - **Shadow:** tier-appropriate glass shadow (Base/Raised/Overlay) — see **Shadow Vocabulary**.
 
 ### Player Header / Stat rows
 - Combines a colored player avatar (from the seat-color system, not this palette), display-font name/status text, and tabular-numeral timer text that swaps color (`normal` → ink, `low` → Alert Red, pulsing) based on state — a good example of the system's "state changes color, not shape" convention.
 - **Action badge:** a header action icon (e.g. "Mijn kaarten") can carry a small tabular-numeral count badge in its corner — silver-outline by default, Caution Amber when the count represents a mandatory action (a required card trade-in). Only rendered at count ≥ 1 (**The Invisible Design Rule** — nothing to report at zero is no badge, not a badge showing "0"); never a text suffix on the label itself, since a counter inside a label reads as part of the name rather than a separate signal.
+- **Host-only action ("TV-weergave", `TvIcon`):** the host gets a fourth action next to Mijn kaarten / Mijn missie / Spelinfo — a line-style TV (screen plus stand, same 16×16 `stroke=currentColor` convention as the other header icons). Other players don't get a disabled version; the action simply doesn't exist for them (**The Invisible Design Rule**). The four actions share the row equally (`flex-1`).
 - **TV player-roster row (`TvMainBoardScreen`'s "Spelers" panel):** a different context from the action badge above — this is a stat line, not an actionable label, so a second stat joins inline with a middle-dot separator (`"{{count}} gebieden · {{count}} kaarten"`), the same inline-suffix pattern already used for a staged delta (`· +N`) elsewhere. The card count (FO §7: publicly visible, unlike the cards themselves) follows the same Invisible Design Rule as the action badge — omitted entirely at 0, never shown as "0 kaarten".
 
 ### Dice (`Dice`)
-- **Character:** its own glass surface, not a `GlassPanel` — a die is a chip-scale object, not a panel/card/modal, so it owns a dedicated blur base (`DICE_GLASS_BLUR_BASE`, 12px pre-context-scale, between `glassBlur.sm`'s 8px and `glassBlur.md`) instead of reusing `glassBlur.sm`. Context scaling (tv full blur, phone halved) and `saturate(1.4)` still reuse the shared `GLASS_CONTEXT_BLUR_SCALE`/`glassSaturate`.
+- **Character:** its own glass surface, not a `GlassPanel` — a die is a chip-scale object, not a panel/card/modal, so it owns a dedicated blur base (`DICE_GLASS_BLUR_BASE`, 12px pre-context-scale; the 2026-09-22 blur increase did not change it, so it now sits just below `glassBlur.sm`'s 14px instead of between `sm` and `md`). Context scaling (tv full blur, phone halved) and saturation (`glassSaturate`, 1.0) still reuse the shared `GLASS_CONTEXT_BLUR_SCALE`/`glassSaturate`.
+- **TV dice size:** on the TV, a die scales as a whole with the host's dice-size setting — size, radius, padding, pip size and gap, blur, cast shadow and perspective (`perspective(400px)` becomes `perspective(800px)` at 2×, so the plate keeps the same apparent tilt) — while the seat-colored border never drops below 1px. Callers always pass design sizes; `Dice` scales itself, and a caller that reserves layout for dice (the combat grid, the order-roll waiting slot) reserves the same scaled size. Phone dice never scale.
 - **Surface fill:** the seat-color `player.diceFace.*` two-stop gradient (see **Colors → Player seat colors**) rather than a flat fill — deliberately translucent so the combat scene behind it stays visible. Falls back to the neutral `glassSurface.raised` tone for the one caller that has no resolved seat color yet (`DefendStep`/`AttackFlowStep`'s "unknown player" placeholder).
 - **Border:** the solid seat color at 60% alpha (`color-mix(in srgb, colorHex 60%, transparent)`) — carries the seat-color identity that the now-translucent fill no longer can by itself.
 - **Shadow:** a fixed top-left light source (`diceGlassShadow`) — inset top/left highlight, inset bottom/right shadow edge, a top-edge band suggesting plate thickness, plus a cast shadow so the die reads as floating above its panel. A `perspective(400px) rotateX(5deg)` transform (`diceGlassPerspective`) adds plate depth independent of any roll animation.
@@ -454,12 +487,27 @@ Design brief for `docs/plan-rollen.md` §3B (B5). Needs `TurnState.HasFortified`
 - At `fortifiesRemaining === 1` (one of two role-granted moves used): the same confirmation `GlassPanel` as today's terminal state, but with two `Footer` actions instead of one — primary "Nog een verplaatsing" (pitch-glow, same "do the same kind of action again" idiom as `AttackFlowStep`'s "Nog een keer aanvallen"; returns to the `src` picker, clearing the remembered intent) and secondary "Beurt beëindigen" (unchanged).
 - At `fortifiesRemaining === 0` (both moves used, or the role/boost isn't active): identical to the current terminal state — confirmation text plus only "Beurt beëindigen".
 
+### Slider (`Slider`)
+Added 2026-09-24 (`docs/plan-testronde-tv.md` point 2) — the system's only continuous control, built on a native `<input type="range">` rather than a custom track.
+- **Anatomy:** a label row above the control — the label in body type (`--fg-secondary`, so it takes the on-glass treatment inside a panel) on the left, the current value on the right in display type at H3 size, extrabold, tabular numerals (**The Tabular Numerals Rule**) — then the native track at the same 52px row height as a `SegmentedControl` option, colored only through `accent-color: Territory Green` (`--pitch-500`, the same accent as a selected segment). No custom thumb, track or fill: the native control already reads as a slider and stays accessible.
+- **Commit, not stream:** dragging updates only the shown value; the change is committed once, on release (the native `change` event — mouse, touch and keyboard alike). If the commit is refused, the slider snaps back to the confirmed value — it never shows a value that isn't in effect.
+- **Focus / disabled:** the global `--ring` focus-visible outline; disabled at 50% opacity with `cursor: not-allowed`, like `Button`.
+
+### TV Display Panel (`TvDisplayPanel`) / TV display access (`TvDisplayAccess`)
+Added 2026-09-24 (`docs/plan-testronde-tv.md` point 2). Host-only; see **Layout → TV display settings** for what each setting does.
+- **Panel:** a full-screen `ModalShell` on the phone, the same pattern and stacking level as the Mission panel — a voluntary "adjust something" action, so a combat modal can always appear above it. H1 title "TV-weergave" with a one-line intro ("50% is de standaard"), then three raised `GlassPanel` sections, each headed by the same uppercase extrabold kicker as the Mission panel: **Scherm** (text size, panel opacity, blur behind panels — three `Slider`s), **Dobbelstenen** (dice size — its own section, because dice scale as a whole object, separate from text), and **Taal op de TV** (a two-option `SegmentedControl`, Nederlands/Engels). Values read as percentages ("50%"). The sections scroll when the phone is short; the footer stays put.
+- **Footer:** two secondary buttons — "Standaard" (sends the server's default set; disabled while everything already matches it) and "Sluiten". No primary CTA and no glow: nothing here is the screen's main action. Errors only appear when they came from a change made in this panel, never a leftover from before it opened.
+- **No optimistic display:** the panel shows what the server confirmed; each change is sent as the full set, built on the last *sent* set so two quick changes never undo each other.
+- **Access:** during play, via the host-only header action (see **Player Header**). On the three host screens without a header — the lobby, the order roll, and the eliminated screen — a secondary "TV-weergave" button (`TvDisplayAccess`) sits at the bottom: in the lobby's footer above "Start spel", on the order roll below "Gooien" / the waiting line, and under the eliminated message. Not on the game-over screen.
+
 ## Do's and Don'ts
 
 ### Do:
 - **Do** build new raised surfaces on `GlassPanel` (or its shared CSS class, as `Button` does) rather than a flat tonal background — see **The Glass-By-Default Rule**.
 - **Do** reserve the glow shadow (`shadow-glow-pitch`) for the single primary CTA on a screen, expressed as its `--glass-shadow` — it's a scarcity signal, not decoration.
-- **Do** let a `GlassPanel` (or glass button) inside another glass surface render flat via the nesting context — never force a second `backdrop-filter` pass.
+- **Do** let a `GlassPanel` (or glass button) inside another glass surface render unblurred via the nesting context — never force a second `backdrop-filter` pass.
+- **Do** size TV text from the type scale (`text-h1`…, `text-size1`…`size14`) so it follows the host's text-size setting — see **The Scalable Type Rule**.
+- **Do** read `useTvDisplayScale()` for any TV element that draws its own glass, markers or dice outside `GlassPanel`/`Dice`, and scale it as a whole — including the layout that reserves room for it — so the host's settings reach it and 50% stays exactly the design.
 - **Do** use the on-glass text treatment (`--glass-fg-*` opacity steps + shared text-shadow) for any text on any glass surface, including `overlay`, instead of the standard gray scale — see **The On-Glass Text Rule**.
 - **Do** use tabular numerals (`.tnum` / `font-variant-numeric: tabular-nums`) for any value that updates in place.
 - **Do** keep uppercase + wide letter-spacing (`0.1em`) for kicker/label/eyebrow text at 16px, extrabold weight.
@@ -471,9 +519,11 @@ Design brief for `docs/plan-rollen.md` §3B (B5). Needs `TurnState.HasFortified`
 
 ### Don't:
 - **Don't** reintroduce a gold/trophy accent color for UI chrome — Recon Silver replaced it deliberately (2026-08-04) because the "trophy/World Cup" association didn't fit a conquest game. Caution Amber (`--warning`) is the one exception, since it's a functional status color, not decoration.
-- **Don't** reach for the legacy flat tonal overlay (`--atlas-t0X`) as a first choice for a new card/panel/row — that's the retired default; glass is. It remains valid only as one of the three defined fallback routes (unsupported browser, reduced transparency, nested glass), never as a stylistic alternative.
-- **Don't** apply your own `backdrop-filter`/blur value outside `glassBlur`'s three steps (8/16/28px) or invent a new elevation tier beyond Base/Raised/Overlay — extend `glass-tokens.ts`, don't hardcode a one-off in a component. `Dice`'s own `DICE_GLASS_BLUR_BASE` (see **Components → Dice**) is the one documented exception: a die is chip-scale, not a panel/card/modal, so it isn't an elevation tier and was never meant to share `glassBlur.sm`.
-- **Don't** add a background color or tint to a `GlassPanel`/glass `Button` — glass is clear by design; the `glass-surface-*-opaque` hexes exist only for the three defined fallback cases (nested, unsupported browser, reduced transparency), never as a stylistic tint.
+- **Don't** reach for the legacy flat tonal overlay (`--atlas-t0X`) as a first choice for a new card/panel/row — that's the retired default; glass is. The opaque `glass-surface-*-opaque` fills exist only for the two defined fallback routes (unsupported browser, reduced transparency), never as a stylistic alternative.
+- **Don't** apply your own `backdrop-filter`/blur value outside `glassBlur`'s three steps (14/32/44px) or invent a new elevation tier beyond Base/Raised/Overlay — extend `glass-tokens.ts`, don't hardcode a one-off in a component. `Dice`'s own `DICE_GLASS_BLUR_BASE` (see **Components → Dice**) is the one documented exception: a die is chip-scale, not a panel/card/modal, so it isn't an elevation tier and was never meant to share `glassBlur.sm`.
+- **Don't** hand-pick a tint for a `GlassPanel`/glass `Button` — use the tier tint (`glass-surface-base`/`-raised`/`-overlay`) or a `deriveGlassTint` result (as the primary button and the board kicker do); a literal `rgba()` in a component drifts the moment the tiers are retuned.
+- **Don't** size TV text with Tailwind's own `text-lg`/`text-xl`/`text-2xl` or a literal `text-[Npx]` — it won't follow the host's text-size setting (**The Scalable Type Rule**).
+- **Don't** express a TV display factor as CSS `calc()`/`min()` inside a color or filter — compute it in JS; an invalid value there drops the whole declaration on older TV browsers.
 - **Don't** try to fix on-glass legibility by picking a different/darker gray or by lightening one further up the standard `--fg`/`--fg-secondary`/`--fg-muted` scale — any mid-tone color loses against an arbitrary bright photo patch. Use the opacity-stepped `--glass-fg-*` + text-shadow treatment instead.
 - **Don't** assume the light theme is unused/dead — it's a maintained half of the token system, just not wired to the TV/phone game shells, and the glass layer specifically has no light-mode tints at all today (a gap, not a design decision, if a light glass surface is ever needed).
 - **Don't** use a decorative unicode emoji or glyph as a stand-in icon (🎲, ⚔, 👑, 📺, ⏱, ›, ◌, ✓). `ColorSymbol`'s player-seat glyphs (`▲ ● ■ ★ ✚ ⬡ ◆`) are the one exception — they're colorblind-accessibility data sourced from frozen `data/colors.json`, not decoration standing in for missing UI (removed across the phone screens, 2026-08-05).

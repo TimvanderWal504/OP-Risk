@@ -5,6 +5,7 @@ import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { ModalShell } from '../../../components/ui/ModalShell'
 import { tvAnimations } from '../../../styles/motion'
 import { tDynamic } from '../../../i18n/useT'
+import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
 import type { TvScreenProps } from './tvScreens'
 
 /**
@@ -23,6 +24,10 @@ import type { TvScreenProps } from './tvScreens'
  */
 export function TvCombatOverlay({ state, combat }: TvScreenProps) {
   const { t } = useTranslation('attackTv')
+  // `Dice` schaalt zichzelf met de TV-dobbelsteeninstelling; het gevechtsraster reserveert
+  // dezelfde geschaalde maat, zodat de zijden en `VS` op hun plek blijven (plan-testronde-tv punt 2).
+  const dieSize = TV_DIE_SIZE * useTvDisplayScale().dice
+  const sideColumnPx = dieSize * 3 + TV_DIE_GAP * 2
 
   /**
    * Kiest de verhalende uitkomstregel, altijd vanuit de aanvallende kleur. Sluit over `t` i.p.v.
@@ -105,7 +110,9 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
           </h1>
         </div>
         {eliminatedBy && (
-          <div className="font-body text-lg text-fg-muted">{t('eliminatedBy', { name: eliminatedBy.name })}</div>
+          <div className="font-body text-size2 leading-[calc(1.75/1.125)] text-fg-muted">
+            {t('eliminatedBy', { name: eliminatedBy.name })}
+          </div>
         )}
       </ModalShell>
     )
@@ -131,8 +138,8 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
         <div
           className="grid items-center justify-items-center gap-x-11 gap-y-4"
           style={{
-            gridTemplateColumns: `${SIDE_COLUMN_PX}px auto ${SIDE_COLUMN_PX}px`,
-            gridTemplateRows: `auto auto ${TV_DIE_SIZE}px`,
+            gridTemplateColumns: `${sideColumnPx}px auto ${sideColumnPx}px`,
+            gridTemplateRows: `auto auto ${dieSize}px`,
           }}
         >
           <CombatSide
@@ -174,7 +181,9 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
               <span className="font-display text-size7 font-black tracking-[.08em]" style={{ color: 'var(--pitch-600)' }}>
                 {t('captured')}
               </span>
-              <span className="font-body text-xl text-fg">{tDynamic(narrated.toTerritoryId, 'territories')}</span>
+              <span className="font-body text-size4 leading-[calc(1.75/1.25)] text-fg">
+                {tDynamic(narrated.toTerritoryId, 'territories')}
+              </span>
             </div>
           )}
         </div>
@@ -183,17 +192,18 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
   )
 }
 
-/** TV-dobbelsteengeometrie, zoals hieronder aan `Dice` doorgegeven. */
+/** TV-dobbelsteengeometrie (design-maat), zoals hieronder aan `Dice` doorgegeven. */
 const TV_DIE_SIZE = 96
-/** Tussenruimte in de dobbelsteenrij — `gap-4`, gelijk aan de rij-gap van het gevechtsraster. */
-const TV_DIE_GAP = 16
 /**
- * Vaste kolombreedte per zijde: de breedste worp die een zijde kan tonen (drie dobbelstenen).
- * Beide zijden krijgen dezelfde reservering, zodat `VS` op de middenlijn blijft en er niets
- * horizontaal verspringt wanneer de verdedigerworp binnenkomt — die start bewust een halve
- * seconde later dan de aanvallerworp (`tvAnimations.defenderDie`).
+ * Tussenruimte in de dobbelsteenrij — `gap-4`, gelijk aan de rij-gap van het gevechtsraster.
+ *
+ * De kolombreedte per zijde (`sideColumnPx` in het component) is de breedste worp die een zijde
+ * kan tonen: drie geschaalde dobbelstenen plus deze twee tussenruimtes. Beide zijden krijgen
+ * dezelfde reservering, zodat `VS` op de middenlijn blijft en er niets horizontaal verspringt
+ * wanneer de verdedigerworp binnenkomt — die start bewust een halve seconde later dan de
+ * aanvallerworp (`tvAnimations.defenderDie`).
  */
-const SIDE_COLUMN_PX = TV_DIE_SIZE * 3 + TV_DIE_GAP * 2
+const TV_DIE_GAP = 16
 
 /** Kolom + inkomstrichting per zijde; de rijen zijn gedeeld met de andere zijde. */
 const SIDE_LAYOUT = {

@@ -502,10 +502,10 @@ public sealed class GameHub(
     /// zelfde stijl als de overige hub-methodes.
     /// </summary>
     public async Task<GameStateDto> SetTvDisplay(
-        string gameId, string playerId, int textScale, int glassOpacity, int glassBlur, TvLanguageDto language)
+        string gameId, string playerId, int textScale, int glassOpacity, int glassBlur, TvLanguageDto language, int diceScale)
     {
         var result = await tvDisplayCommands.SetTvDisplayAsync(
-            gameId, playerId, new TvDisplaySettingsDto(textScale, glassOpacity, glassBlur, language));
+            gameId, playerId, new TvDisplaySettingsDto(textScale, glassOpacity, glassBlur, language, diceScale));
 
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }

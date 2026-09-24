@@ -54,6 +54,16 @@ export function CrownIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+/** TV-scherm op een voet — de "TV-weergave"-actie van de host (plan-testronde-tv punt 2). */
+export function TvIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1.8" y="2.6" width="12.4" height="8.4" rx="1.4" />
+      <path d="M5.6 13.6h4.8M8 11v2.6" />
+    </svg>
+  )
+}
+
 /**
  * Territoriumkaart-symbolen (FO §4.4, "Mijn kaarten"-paneel): sinds taak 5-vervolg de door de
  * gebruiker aangeleverde gevulde silhouetten in `./cardSymbolIcons.tsx` (bewuste, benoemde

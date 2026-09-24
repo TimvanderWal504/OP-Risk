@@ -5,13 +5,15 @@ import { PlayerHeader } from './ui/PlayerHeader'
 import { MissionPanel } from './ui/MissionPanel'
 import { MissionChangedNotice } from './ui/MissionChangedNotice'
 import { CardsPanel } from './CardsPanel'
-import { CardsIcon, InfoIcon, MissionIcon } from './ui/icons'
+import { TvDisplayPanel } from './TvDisplayPanel'
+import { CardsIcon, InfoIcon, MissionIcon, TvIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
 import { resolvePhoneHeaderStatus } from '../routes/phone/screens/resolvePhoneHeaderStatus'
 import { TurnPhaseDto } from '../types/GameState'
 import type { GameStateDto, GamePhaseDto as GamePhaseDtoType } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
+import type { TvDisplaySettingsDto } from '../types/TvDisplay'
 import { tDynamic } from '../i18n/useT'
 
 export interface PhonePlayerHeaderProps {
@@ -23,6 +25,8 @@ export interface PhonePlayerHeaderProps {
   /** Nodig omdat de header nu zelf een `CardsPanel`-instantie bezit (vrijwillige "Mijn
    *  kaarten"-toegang) — zelfde `useGameState`-functies als elk ander scherm ontvangt. */
   tradeInCards: (cardIds: string[]) => Promise<void>
+  /** TV-weergave instellen (plan-testronde-tv punt 2) — de actie staat alleen bij de host. */
+  setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
   error: string | null
 }
 
@@ -44,12 +48,13 @@ export interface PhonePlayerHeaderProps {
  * mount. `useMissionPanel` mag de hook daarom onvoorwaardelijk aanroepen (nooit `null`, wel
  * eventueel `''` voor WorldDomination-potjes zonder missies).
  */
-export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: PhonePlayerHeaderProps) {
-  const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common'])
+export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay, error }: PhonePlayerHeaderProps) {
+  const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay'])
   const color = state.colors.find((c) => c.id === me.colorId)
   const mission = useMissionPanel(me.missionId ?? '')
   const { timer, timerState } = usePhoneHeaderTimer(state.turnState?.timer ?? null)
   const [cardsOpen, setCardsOpen] = useState(false)
+  const [tvDisplayOpen, setTvDisplayOpen] = useState(false)
 
   const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null)
 
@@ -111,6 +116,18 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
       onClick: me.missionId ? mission.openPanel : undefined,
     },
     { icon: <InfoIcon className="h-[18px] w-[18px]" />, label: t('common:playerHeader.actions.info') },
+    // Alleen de host bedient de TV (plan-testronde-tv punt 2) — voor andere spelers bestaat deze
+    // actie niet, in plaats van een uitgeschakelde knop (The Invisible Design Rule).
+    ...(me.isHost
+      ? [
+          {
+            icon: <TvIcon className="h-[18px] w-[18px]" />,
+            label: t('tvDisplay:title'),
+            onClick: () => setTvDisplayOpen(true),
+            active: tvDisplayOpen,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -138,6 +155,15 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, error }: Pho
           initialMode="browse"
           onTradeInCards={tradeInCards}
           onClose={() => setCardsOpen(false)}
+          error={error}
+        />
+      )}
+      {me.isHost && tvDisplayOpen && (
+        <TvDisplayPanel
+          settings={state.tvDisplay}
+          defaults={state.tvDisplayDefault}
+          onChange={setTvDisplay}
+          onClose={() => setTvDisplayOpen(false)}
           error={error}
         />
       )}

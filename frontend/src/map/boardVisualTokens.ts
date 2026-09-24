@@ -23,6 +23,48 @@ export const marker = {
   nameStrokeOpacity: boardMarkerTok.nameStrokeOpacity,
 } as const
 
+/**
+ * Vermenigvuldigt de genoemde lengtes in een marker-tokenset met `factor`; de rest (opacities,
+ * randen van de gebiedspolygonen) blijft zoals hij is. Bij `factor === 1` komt exact dezelfde set
+ * terug.
+ */
+function scaleLengths<T extends Record<string, number>>(tokens: T, factor: number, keys: readonly (keyof T)[]): T {
+  if (factor === 1) return tokens
+
+  const scaled = { ...tokens }
+  for (const key of keys) {
+    scaled[key] = (tokens[key] * factor) as T[keyof T]
+  }
+
+  return scaled
+}
+
+/**
+ * `marker` geschaald met de TV-tekstschaal (plan-testronde-tv punt 2). De hele marker schaalt als
+ * geheel — schijf, ring, legertal, gebiedsnaam, contour en de afstand tot de naam — zodat het
+ * getal in z'n schijf blijft passen en de naam er niet in schuift.
+ */
+export function scaledMarker(factor: number) {
+  return scaleLengths(marker, factor, [
+    'discR',
+    'ringSwOwn',
+    'ringSwEnemy',
+    'armyFontSize',
+    'nameOffsetY',
+    'nameFontSize',
+    'nameStrokeWidth',
+  ])
+}
+
+/**
+ * `claimMarker` geschaald met de TV-tekstschaal: schijf, ring, symbool en de flare-ring eromheen
+ * (die moet om de schijf heen blijven passen). De randdiktes van de gebiedspolygonen
+ * (`territorySw*`) horen bij de kaart zelf, niet bij het label, en schalen niet mee.
+ */
+export function scaledClaimMarker(factor: number) {
+  return scaleLengths(claimMarker, factor, ['discR', 'ringSw', 'symFontSize', 'flareR', 'flareSw'])
+}
+
 /** Randdikte van de gebiedspolygonen, idem omgerekend. */
 export const territoryStroke = {
   own: designToMap(boardTok.ownSw),

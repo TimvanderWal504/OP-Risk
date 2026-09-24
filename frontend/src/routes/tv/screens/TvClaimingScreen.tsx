@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { claimMarker, territoryGlow } from '../../../map/boardVisualTokens'
+import { scaledClaimMarker, territoryGlow } from '../../../map/boardVisualTokens'
+import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
 import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
 import { Badge } from '../../../components/ui/Badge'
@@ -42,6 +43,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
+  // Claim-markers (schijf, symbool, flare) schalen mee met de TV-tekstschaal (plan-testronde-tv punt 2).
+  const claimMarker = scaledClaimMarker(useTvDisplayScale().text)
 
   const activePlayerId = state.setupState?.activePlayerId
   const activePlayer = state.players.find((p) => p.id === activePlayerId)
@@ -191,7 +194,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none">
+                  <div className="flex items-center gap-2 font-display text-size5 font-extrabold leading-none">
                     {player.name}
                     {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge) — zelfde behandeling,
                         inclusief de "geen span om de naam"-reden, als de tegenhanger op

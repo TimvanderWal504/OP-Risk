@@ -47,8 +47,14 @@ export const errors = {
       en: 'Too many attempts to join; try again in a few minutes.',
     },
   },
+  tvDisplay: {
+    invalidValue: {
+      nl: 'Deze TV-weergave-instelling is ongeldig.',
+      en: 'This TV display setting is invalid.',
+    },
+  },
   lobby: {
-    notHost: { nl: "Speler '{{playerId}}' is geen host.", en: "Player '{{playerId}}' is not the host." },
+    notHost:{ nl: "Speler '{{playerId}}' is geen host.", en: "Player '{{playerId}}' is not the host." },
     minimumPlayers: {
       nl: 'Er zijn minimaal {{minimum}} spelers nodig om te starten.',
       en: 'At least {{minimum}} players are needed to start.',

@@ -574,7 +574,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>
     public GameState Apply(GameState state, TvDisplaySettingsChanged @event) =>
         state.WithTvDisplay(new TvDisplaySettings(
-            @event.TextScale, @event.GlassOpacity, @event.GlassBlur, @event.Language));
+            @event.TextScale, @event.GlassOpacity, @event.GlassBlur, @event.Language, @event.DiceScale));
 
     /// <summary>
     /// Gedeelde leger-verplaatsing tussen twee gebieden (bron −<paramref name="amount"/>,

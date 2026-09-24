@@ -9,9 +9,11 @@ import {
   glassShadow,
   glassSurface,
   glassSurfaceOpaque,
+  scaleGlassSurfaceAlpha,
   type GlassElevation,
   type GlassPanelContext,
 } from '../../styles/glass-tokens'
+import { useTvDisplayScale } from '../../hooks/useTvDisplayScale'
 
 export interface GlassPanelProps {
   /** Diepte-as: `base` (zijpanelen, instellingen) · `raised` (actieve speler, CTA-blok) · `overlay` (modals). */
@@ -71,11 +73,14 @@ export function GlassPanel({
   children,
 }: GlassPanelProps) {
   const nested = useContext(GlassNestingContext)
+  // TV-weergave-instelling (plan-testronde-tv punt 2): alleen op TV-panelen, en alleen binnen een
+  // `TvShell` die de factoren zet — daarbuiten (en op de telefoon) blijft het design ongewijzigd.
+  const scale = useTvDisplayScale(context)
   const filtered = !nested
-  const blurPx = glassPanelBlurPx(elevation, context)
+  const blurPx = Math.round(glassPanelBlurPx(elevation, context) * scale.glassBlur)
 
   const vars = {
-    '--glass-bg': glassSurface[elevation],
+    '--glass-bg': scaleGlassSurfaceAlpha(glassSurface[elevation], scale.glassOpacity),
     '--glass-bg-opaque': glassSurfaceOpaque[elevation],
     '--glass-border': glassBorder,
     '--glass-inner-highlight': glassInnerHighlight,

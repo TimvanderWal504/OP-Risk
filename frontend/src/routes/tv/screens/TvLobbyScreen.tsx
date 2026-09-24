@@ -8,7 +8,9 @@ import {
   glassSurface,
   glassSurfaceOpaque,
   lobbyPanelScrim,
+  scaleGlassSurfaceAlpha,
 } from '../../../styles/glass-tokens'
+import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
 import { LobbyPlayerList } from '../../../components/LobbyPlayerList'
 import { LobbyQrPanel } from '../../../components/LobbyQrPanel'
 import { LobbySettingsSummary } from '../../../components/LobbySettingsSummary'
@@ -24,6 +26,8 @@ import type { TvScreenProps } from './tvScreens'
  */
 export function TvLobbyScreen({ state }: TvScreenProps) {
   const { t } = useTranslation('lobby')
+  // De kicker-badge is glas buiten `GlassPanel` om; volgt dezelfde TV-glasinstelling (plan-testronde-tv punt 2).
+  const scale = useTvDisplayScale()
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -37,10 +41,10 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
             data-glass-filter="on"
             style={
               {
-                '--glass-bg': glassSurface.raised,
+                '--glass-bg': scaleGlassSurfaceAlpha(glassSurface.raised, scale.glassOpacity),
                 '--glass-bg-opaque': glassSurfaceOpaque.raised,
                 '--glass-border': glassBadgeBorder,
-                '--glass-filter': `blur(${glassBlur.sm}px) saturate(${glassSaturate})`,
+                '--glass-filter': `blur(${Math.round(glassBlur.sm * scale.glassBlur)}px) saturate(${glassSaturate})`,
               } as CSSProperties
             }
           >

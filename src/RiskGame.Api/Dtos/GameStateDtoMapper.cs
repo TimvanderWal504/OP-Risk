@@ -182,7 +182,7 @@ public static class GameStateDtoMapper
         ToDto(settings.DefenseDiceRule));
 
     private static TvDisplaySettingsDto ToDto(TvDisplaySettings tvDisplay) => new(
-        tvDisplay.TextScale, tvDisplay.GlassOpacity, tvDisplay.GlassBlur, ToDto(tvDisplay.Language));
+        tvDisplay.TextScale, tvDisplay.GlassOpacity, tvDisplay.GlassBlur, ToDto(tvDisplay.Language), tvDisplay.DiceScale);
 
     private static TvLanguageDto ToDto(TvLanguage language) => language switch
     {
@@ -298,7 +298,7 @@ public static class GameStateDtoMapper
     /// dan als gewone regelfout (<c>tvDisplay.invalidValue</c>) i.p.v. een exception.
     /// </summary>
     public static TvDisplaySettings ToDomain(TvDisplaySettingsDto dto) => new(
-        dto.TextScale, dto.GlassOpacity, dto.GlassBlur, ToDomain(dto.Language));
+        dto.TextScale, dto.GlassOpacity, dto.GlassBlur, ToDomain(dto.Language), dto.DiceScale);
 
     private static TvLanguage ToDomain(TvLanguageDto dto) => dto switch
     {

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { fixtureProps, fixtureState } from './phoneScreenFixture'
 import { PhoneOrderRollScreen } from './PhoneOrderRollScreen'
+import { TvLanguageDto } from '../../../types/TvDisplay'
 
 describe('PhoneOrderRollScreen', () => {
   it('laat gooien zodra de server aangeeft dat er nog gegooid mag worden', async () => {
@@ -59,6 +60,22 @@ describe('PhoneOrderRollScreen', () => {
       />,
     )
     expect(screen.getByRole('button', { name: 'Gooien' })).toBeInTheDocument()
+  })
+
+  it('geeft de host toegang tot de TV-weergave, ook tijdens de volgorde-worp (plan-testronde-tv punt 2)', async () => {
+    const setTvDisplay = vi.fn().mockResolvedValue(true)
+    render(<PhoneOrderRollScreen {...fixtureProps({ setTvDisplay })} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'TV-weergave' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Engels' }))
+
+    expect(setTvDisplay).toHaveBeenCalledWith({ ...fixtureState.tvDisplay, language: TvLanguageDto.En })
+  })
+
+  it('toont de TV-weergave niet aan een speler die geen host is', () => {
+    render(<PhoneOrderRollScreen {...fixtureProps({ playerId: 'bob', me: fixtureState.players[1] })} />)
+
+    expect(screen.queryByRole('button', { name: 'TV-weergave' })).not.toBeInTheDocument()
   })
 
   it('toont wachtstatus als niemand meer hoeft te gooien', () => {

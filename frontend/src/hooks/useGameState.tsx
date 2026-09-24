@@ -12,7 +12,9 @@ import type {
   RerollAttackDieResponse,
 } from '../types/HubResponses'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
+import type { TvDisplaySettingsDto } from '../types/TvDisplay'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
+import { rememberTvDisplay } from '../storage/rememberedTvDisplay'
 import { apiUrl } from '../config/apiConfig'
 
 const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
@@ -415,6 +417,35 @@ export function useGameState(gameId: string) {
     return updated !== undefined
   }, [invoke, gameId, playerId])
 
+  // TV-weergave (plan-testronde-tv punt 2), alleen de host. Na bevestiging onthoudt deze telefoon
+  // de waarden voor een volgend spel — de server-respons, niet de invoer. `Promise<boolean>`
+  // (zelfde reden als `fortify`): het paneel moet bij een weigering zijn slider terugzetten en
+  // zijn basis voor een volgende wijziging loslaten.
+  const setTvDisplay = useCallback(
+    async (settings: TvDisplaySettingsDto): Promise<boolean> => {
+      if (!playerId) return false
+
+      const updated = await invoke<GameStateDto>(
+        'SetTvDisplay',
+        gameId,
+        playerId,
+        settings.textScale,
+        settings.glassOpacity,
+        settings.glassBlur,
+        settings.language,
+        settings.diceScale,
+      )
+
+      if (updated) {
+        applyState(updated)
+        rememberTvDisplay(updated.tvDisplay)
+      }
+
+      return updated !== undefined
+    },
+    [invoke, gameId, playerId],
+  )
+
   const combat = useCombatBroadcast(connection)
 
   return {
@@ -444,5 +475,6 @@ export function useGameState(gameId: string) {
     endPhase,
     fortify,
     endTurn,
+    setTvDisplay,
   }
 }

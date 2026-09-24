@@ -50,7 +50,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new ColorChosen(gameId, "p1", "red"),
             new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
             new ColorChosen(gameId, "p2", "blue"),
-            new TvDisplaySettingsChanged(gameId, TextScale: 70, GlassOpacity: 30, GlassBlur: 55, TvLanguage.En),
+            new TvDisplaySettingsChanged(
+                gameId, TextScale: 70, GlassOpacity: 30, GlassBlur: 55, TvLanguage.En, DiceScale: 65),
             new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
             new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),
             new TurnOrderDetermined(gameId, ["p1", "p2"]),
@@ -96,7 +97,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         // 45 staan nog op de trekstapel.
         Assert.Equal(45, live!.Deck.DrawPile.Count);
         Assert.Empty(live.Deck.DiscardPile);
-        Assert.Equal(new TvDisplaySettings(70, 30, 55, TvLanguage.En), live.TvDisplay);
+        Assert.Equal(new TvDisplaySettings(70, 30, 55, TvLanguage.En, 65), live.TvDisplay);
 
         AssertIdenticalGameState(live, replayed!);
     }
@@ -154,6 +155,51 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         Assert.NotNull(reloaded);
         Assert.Equal(TvDisplaySettings.Default, reloaded!.TvDisplay);
+    }
+
+    /// <summary>
+    /// <see cref="TvDisplaySettings.DiceScale"/> kwam later bij (eigen dobbelsteen-onderdeel). Een
+    /// opgeslagen TV-instelling zonder dat veld — zowel in het <see cref="GameState"/>-document als
+    /// in een <see cref="TvDisplaySettingsChanged"/>-event op de stream — levert het design (50) op
+    /// voor de dobbelstenen, en laat de overige velden intact.
+    /// </summary>
+    [Fact]
+    public async Task TvInstellingZonderDiceScale_LaadtDeDobbelstenenOpHetDesign()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using (var session = store.LightweightSession())
+        {
+            session.Events.StartStream<GameState>(
+                gameId,
+                new GameCreated(gameId, "standaard-43", Settings),
+                new TvDisplaySettingsChanged(gameId, 70, 30, 55, TvLanguage.En, DiceScale: 80));
+            await session.SaveChangesAsync();
+        }
+
+        // Martens standaard-tabelnamen: mt_doc_<typenaam> resp. mt_events. Alleen de top-level
+        // properties van het document schrijft `GameStateJsonConverter` zelf (camelCase); geneste
+        // records en events serialiseert Marten met de eigenschapsnamen zoals ze zijn (PascalCase).
+        var schema = store.Options.DatabaseSchemaName;
+
+        await using (var session = store.LightweightSession())
+        {
+            session.QueueSqlCommand(
+                $"update {schema}.mt_doc_gamestate set data = data #- '{{tvDisplay,DiceScale}}' where id = ?", gameId);
+            session.QueueSqlCommand(
+                $"update {schema}.mt_events set data = data - 'DiceScale' where stream_id = ?", gameId);
+            await session.SaveChangesAsync();
+        }
+
+        await using var readSession = store.LightweightSession();
+        var reloaded = await readSession.LoadAsync<GameState>(gameId);
+        var replayed = await ReplayFromRawEventsAsync(readSession, gameId, mapSource);
+
+        var expected = new TvDisplaySettings(70, 30, 55, TvLanguage.En, TvDisplaySettings.DesignValue);
+        Assert.Equal(expected, reloaded!.TvDisplay);
+        Assert.Equal(expected, replayed.TvDisplay);
     }
 
     /// <summary>

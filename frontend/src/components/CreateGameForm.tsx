@@ -7,6 +7,7 @@ import {
   RoleAssignmentModeDto,
   SetupModeDto,
   WinConditionDto,
+  type CreateGameRequest,
   type CreateGameResponse,
   type GameSettingsDto,
   type StartingArmiesPresetDto,
@@ -22,6 +23,7 @@ import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
 import { tDynamic } from '../i18n/useT'
 import { apiUrl } from '../config/apiConfig'
+import { readRememberedTvDisplay } from '../storage/rememberedTvDisplay'
 
 /** FO §10-standaardwaarden. Roltoewijzing en verplaatsen-timer hebben geen bediening
  * in het design (Instellingen-scherm) en blijven daarom op hun default staan — geen
@@ -84,11 +86,15 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     setSubmitting(true)
     setError(null)
 
+    // Onthouden TV-weergave van een vorig spel op deze telefoon (plan-testronde-tv punt 2),
+    // alleen als die er is en geldig is — anders kiest de server het design.
+    const request: CreateGameRequest = { mapId, settings, tvDisplay: readRememberedTvDisplay() }
+
     try {
       const response = await fetch(apiUrl('/games'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mapId, settings }),
+        body: JSON.stringify(request),
       })
 
       if (!response.ok) {

@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { PlayerDto } from '../types/Player'
+import type { TvDisplaySettingsDto } from '../types/TvDisplay'
+import { TvDisplayAccess } from './TvDisplayAccess'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { Button } from './ui/Button'
@@ -16,6 +18,10 @@ export interface JoinHostWaitStepProps {
   canStart: boolean
   onStart: () => void
   onRemovePlayer: (playerId: string) => void
+  /** TV-weergave (plan-testronde-tv punt 2): de host stelt de TV al vóór de start bij. */
+  tvDisplay: TvDisplaySettingsDto
+  tvDisplayDefault: TvDisplaySettingsDto
+  onSetTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
   error?: string | null
 }
 
@@ -31,6 +37,9 @@ export function JoinHostWaitStep({
   canStart,
   onStart,
   onRemovePlayer,
+  tvDisplay,
+  tvDisplayDefault,
+  onSetTvDisplay,
   error = null,
 }: JoinHostWaitStepProps) {
   const { t } = useTranslation('join')
@@ -102,6 +111,7 @@ export function JoinHostWaitStep({
       </GlassPanel>
 
       <Footer error={error} hint={!canStart ? t('hostWait.waitingForPlayers') : undefined}>
+        <TvDisplayAccess settings={tvDisplay} defaults={tvDisplayDefault} onChange={onSetTvDisplay} error={error} />
         <Button disabled={!canStart} onClick={onStart}>
           {canStart ? t('hostWait.startGame') : t('hostWait.startGameWait')}
         </Button>

@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { GlassPanel } from './GlassPanel'
-import { glassPanelBlurPx, glassPanelPadding, glassPanelRadius } from '../../styles/glass-tokens'
+import {
+  glassPanelBlurPx,
+  glassPanelPadding,
+  glassPanelRadius,
+  glassSurface,
+  scaleGlassSurfaceAlpha,
+} from '../../styles/glass-tokens'
 
 describe('GlassPanel', () => {
   it('rendert children en zet backdrop-filter aan op een niet-geneste instantie', () => {
@@ -50,6 +56,20 @@ describe('GlassPanel', () => {
     // in jsdom ongeacht het componentgedrag. De rauwe `style.padding` toont direct wat het
     // component daadwerkelijk zet (niets) en is de eigenlijke bewering van deze test.
     expect(screen.getByText('Zonder padding').style.padding).toBe('')
+  })
+
+  it('gebruikt buiten een TvShell met weergave-instelling exact de design-tint', () => {
+    render(
+      <GlassPanel elevation="raised" context="tv">
+        Designpaneel
+      </GlassPanel>,
+    )
+    expect(screen.getByText('Designpaneel').style.getPropertyValue('--glass-bg')).toBe(glassSurface.raised)
+  })
+
+  it('begrenst een opgeschaalde glasdekking op volledig dekkend', () => {
+    expect(scaleGlassSurfaceAlpha(glassSurface.overlay, 2)).toBe('rgba(4, 6, 11, 1)')
+    expect(scaleGlassSurfaceAlpha(glassSurface.base, 1)).toBe(glassSurface.base)
   })
 
   it('gebruikt de gedeelde padding-token als default', () => {

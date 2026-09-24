@@ -16,6 +16,7 @@ public static class TvDisplayGuards
         var valid = IsValidScale(settings.TextScale)
             && IsValidScale(settings.GlassOpacity)
             && IsValidScale(settings.GlassBlur)
+            && IsValidScale(settings.DiceScale)
             && Enum.IsDefined(settings.Language);
 
         return valid ? ValidationResult.Success() : ValidationResult.Failure("tvDisplay.invalidValue");

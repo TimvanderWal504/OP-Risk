@@ -1,3 +1,5 @@
+import type { TvDisplaySettingsDto } from './TvDisplay'
+
 /**
  * Spiegelt RiskGame.Api.Dtos.GameSettingsDto en de bijbehorende enums
  * (src/RiskGame.Api/Dtos/GameSettingsDto.cs) 1-op-1, inclusief enum-volgorde: enums
@@ -70,6 +72,8 @@ export interface StartingArmiesPresetDto {
 export interface CreateGameRequest {
   mapId: string
   settings: GameSettingsDto
+  /** Onthouden TV-weergave van een vorig spel (plan-testronde-tv punt 2); `null` = het design. */
+  tvDisplay: TvDisplaySettingsDto | null
 }
 
 export interface CreateGameResponse {

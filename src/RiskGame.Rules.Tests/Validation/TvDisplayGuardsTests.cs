@@ -12,7 +12,7 @@ public sealed class TvDisplayGuardsTests
     [InlineData(100)]
     public void ValuesAreValid_SchaalwaardeOpEenStapBinnenHetBereik_IsGeldig(int value)
     {
-        var settings = new TvDisplaySettings(value, value, value, TvLanguage.En);
+        var settings = new TvDisplaySettings(value, value, value, TvLanguage.En, value);
 
         Assert.True(TvDisplayGuards.ValuesAreValid(settings).IsSuccess);
     }
@@ -38,13 +38,20 @@ public sealed class TvDisplayGuardsTests
     public void ValuesAreValid_GlasblurBuitenBereikOfNietOpEenStap_IsOngeldig(int value) =>
         AssertInvalid(TvDisplaySettings.Default with { GlassBlur = value });
 
+    [Theory]
+    [InlineData(-5)]
+    [InlineData(105)]
+    [InlineData(7)]
+    public void ValuesAreValid_DobbelsteenschaalBuitenBereikOfNietOpEenStap_IsOngeldig(int value) =>
+        AssertInvalid(TvDisplaySettings.Default with { DiceScale = value });
+
     [Fact]
     public void ValuesAreValid_OnbekendeTaal_IsOngeldig() =>
         AssertInvalid(TvDisplaySettings.Default with { Language = (TvLanguage)99 });
 
     [Fact]
     public void Default_IsHetDesignOpAlleSchalenInHetNederlands() =>
-        Assert.Equal(new TvDisplaySettings(50, 50, 50, TvLanguage.Nl), TvDisplaySettings.Default);
+        Assert.Equal(new TvDisplaySettings(50, 50, 50, TvLanguage.Nl, 50), TvDisplaySettings.Default);
 
     private static void AssertInvalid(TvDisplaySettings settings)
     {

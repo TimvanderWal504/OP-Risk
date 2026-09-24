@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
 import { atlasRoughTok } from '../../../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from '../../../map/boardScale'
+import { marker } from '../../../map/boardVisualTokens'
+import { TvShell } from '../../../components/ui/TvShell'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { fixtureState } from './tvScreenFixture'
 
@@ -91,6 +93,21 @@ describe('TvMainBoardScreen', () => {
 
     const path = container.querySelector('path')
     expect(path?.closest('g')?.getAttribute('filter')).toBe('url(#atlasRough)')
+  })
+
+  it('schaalt de kaartmarkers als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2)', async () => {
+    const { container } = render(
+      <TvShell display={{ ...stateInProgress.tvDisplay, textScale: 100 }}>
+        <TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />
+      </TvShell>,
+    )
+    const svg = container.querySelector('svg')! as unknown as HTMLElement
+    await waitFor(() => expect(within(svg).getByText('3')).toBeInTheDocument())
+
+    // Tekstschaal 100 = 2×: legertal, schijf en gebiedsnaam groeien samen.
+    expect(within(svg).getByText('3').getAttribute('font-size')).toBe(String(marker.armyFontSize * 2))
+    expect(within(svg).getByText('3').previousElementSibling?.getAttribute('r')).toBe(String(marker.discR * 2))
+    expect(within(svg).getByText('Alaska').getAttribute('font-size')).toBe(String(marker.nameFontSize * 2))
   })
 
   it('toont het spelerspaneel met gebieds- en legertotalen per speler', () => {

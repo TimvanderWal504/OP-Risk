@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useTvGame } from '../../hooks/useTvGame'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
+import { useTvLanguage } from '../../hooks/useTvLanguage'
 import { TvShell } from '../../components/ui/TvShell'
 import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
 
@@ -15,6 +16,7 @@ export function TvPage() {
   const { t } = useTranslation('lobby')
   const { state, error, orderRollThrows, lastClaimedTerritoryId, combat } = useTvGame(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
+  useTvLanguage(state?.tvDisplay.language)
 
   if (error) {
     return (
@@ -38,7 +40,7 @@ export function TvPage() {
   // createElement en niet <Screen …/>: zie PhonePage — het schermtype is dynamisch, de
   // referentie komt uit het module-level register.
   return (
-    <TvShell scrimLevel={resolveStageScrimLevel(displayPhase)}>
+    <TvShell scrimLevel={resolveStageScrimLevel(displayPhase)} display={state.tvDisplay}>
       {createElement(resolveTvScreen(displayPhase), screenProps)}
       {overlay && createElement(overlay, screenProps)}
     </TvShell>

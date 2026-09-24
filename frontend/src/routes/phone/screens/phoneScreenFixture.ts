@@ -7,6 +7,7 @@ import {
   SetupModeDto,
   WinConditionDto,
 } from '../../../types/GameSettings'
+import { TvLanguageDto } from '../../../types/TvDisplay'
 import type { PhoneScreenProps } from './phoneScreens'
 
 /**
@@ -47,6 +48,8 @@ export const fixtureState: GameStateDto = {
   stateVersion: 1,
   winners: [],
   pendingWinnerPlayerId: null,
+  tvDisplay: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
+  tvDisplayDefault: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
 }
 
 /** De door de server afgeleide setup-state; tests zetten alleen wat hun gedrag stuurt. */
@@ -83,5 +86,6 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   keepAttackDice: vi.fn(),
   fortify: vi.fn(),
   endTurn: vi.fn(),
+  setTvDisplay: vi.fn(),
   ...overrides,
 })

@@ -21,6 +21,7 @@ export function PhoneLobbyScreen({
   selectRole,
   startGame,
   removePlayer,
+  setTvDisplay,
 }: PhoneScreenProps) {
   // Terug-navigatie vanaf de rolstap: er is geen RenamePlayer-hub-methode, dus
   // "terug" laat alleen een andere kleur kiezen (naam blijft vast op me.name).
@@ -73,6 +74,9 @@ export function PhoneLobbyScreen({
         canStart
         onStart={startGame}
         onRemovePlayer={removePlayer}
+        tvDisplay={state.tvDisplay}
+        tvDisplayDefault={state.tvDisplayDefault}
+        onSetTvDisplay={setTvDisplay}
         error={error}
       />
     )

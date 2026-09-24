@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dice, type DiceValue } from './ui/Dice'
 import { Button } from './ui/Button'
@@ -11,6 +12,9 @@ export interface OrderRollWaitStepProps {
   canRoll: boolean
   onRoll: () => void
   error?: string | null
+  /** Extra actie(s) alleen voor de host, onderaan het scherm — nu de TV-weergave
+   *  (`TvDisplayAccess`, plan-testronde-tv punt 2). De aanroeper beslist wie host is. */
+  hostActions?: ReactNode
 }
 
 /**
@@ -19,7 +23,7 @@ export interface OrderRollWaitStepProps {
  * niet leeg) — de server wijst een ongeldige poging af, de client repliceert de
  * tie-break-regel niet (frontend/CLAUDE.md, server-authoritative).
  */
-export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = null }: OrderRollWaitStepProps) {
+export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = null, hostActions }: OrderRollWaitStepProps) {
   const { t } = useTranslation('orderRoll')
 
   return (
@@ -82,6 +86,8 @@ export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = n
       ) : (
         <p className="w-full pt-1.5 text-sm text-fg-muted">{t('waitingForOthers')}</p>
       )}
+
+      {hostActions && <div className="flex w-full flex-col gap-3 pt-3">{hostActions}</div>}
     </PhoneScreen>
   )
 }

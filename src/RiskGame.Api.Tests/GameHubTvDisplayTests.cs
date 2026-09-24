@@ -25,7 +25,7 @@ public sealed class GameHubTvDisplayTests(PostgresFixture postgres) : IAsyncLife
         RoleAssignment: RoleAssignmentModeDto.Random,
         EventsEnabled: false);
 
-    private static readonly TvDisplaySettingsDto DefaultTvDisplay = new(50, 50, 50, TvLanguageDto.Nl);
+    private static readonly TvDisplaySettingsDto DefaultTvDisplay = new(50, 50, 50, TvLanguageDto.Nl, 50);
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
@@ -63,7 +63,7 @@ public sealed class GameHubTvDisplayTests(PostgresFixture postgres) : IAsyncLife
         HubConnection connection, string gameId, string playerId, TvDisplaySettingsDto settings) =>
         connection.InvokeAsync<GameStateDto>(
             "SetTvDisplay", gameId, playerId,
-            settings.TextScale, settings.GlassOpacity, settings.GlassBlur, settings.Language);
+            settings.TextScale, settings.GlassOpacity, settings.GlassBlur, settings.Language, settings.DiceScale);
 
     [Fact]
     public async Task WatchGame_ZonderInstelling_LevertDeDefaultAlsWaardeEnAlsStandaard()
@@ -81,7 +81,7 @@ public sealed class GameHubTvDisplayTests(PostgresFixture postgres) : IAsyncLife
     public async Task SetTvDisplay_DoorDeHost_LegtDeWaardenVastEnPushtZeNaarDeTv()
     {
         var gameId = await CreateGameAsync();
-        var wanted = new TvDisplaySettingsDto(75, 30, 0, TvLanguageDto.En);
+        var wanted = new TvDisplaySettingsDto(75, 30, 0, TvLanguageDto.En, 80);
 
         await using var tv = await ConnectAsync();
         var initial = await tv.InvokeAsync<GameStateDto>("WatchGame", gameId);
@@ -141,6 +141,19 @@ public sealed class GameHubTvDisplayTests(PostgresFixture postgres) : IAsyncLife
     }
 
     [Fact]
+    public async Task SetTvDisplay_MetOngeldigeDobbelsteenschaal_WordtGeweigerd()
+    {
+        var gameId = await CreateGameAsync();
+        await using var connection = await ConnectAsync();
+        var alice = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            SetTvDisplayAsync(connection, gameId, alice.PlayerId, DefaultTvDisplay with { DiceScale = 110 }));
+
+        Assert.Contains("tvDisplay.invalidValue", exception.Message);
+    }
+
+    [Fact]
     public async Task SetTvDisplay_BuitenDeLobby_IsToegestaan()
     {
         var gameId = await CreateGameAsync();
@@ -188,7 +201,7 @@ public sealed class GameHubTvDisplayTests(PostgresFixture postgres) : IAsyncLife
     [Fact]
     public async Task CreateGame_MetOnthoudenTvDisplay_StartMetDieWaarden()
     {
-        var remembered = new TvDisplaySettingsDto(65, 45, 90, TvLanguageDto.En);
+        var remembered = new TvDisplaySettingsDto(65, 45, 90, TvLanguageDto.En, 35);
         var gameId = await CreateGameAsync(remembered);
         await using var tv = await ConnectAsync();
 

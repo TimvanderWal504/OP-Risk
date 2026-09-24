@@ -66,6 +66,28 @@ export const glassSurface = {
 } as const;
 
 /**
+ * Vermenigvuldigt de alpha van een `rgba(r, g, b, a)`-surface-tint met `factor`, begrensd op 1
+ * (TV-weergave-instelling "glasdekking", plan-testronde-tv punt 2). Geen nieuwe kleur: rgb blijft
+ * die van de bestaande token, bij `factor === 1` komt exact de token-waarde terug. Bewust in JS en
+ * niet als CSS-`calc()`/`min()` in de alpha: een ongeldige waarde daar maakt de hele declaratie
+ * ongeldig, en oudere TV-browsers vallen dan stil terug op doorzichtig glas.
+ */
+export function scaleGlassSurfaceAlpha(rgba: string, factor: number): string {
+  if (factor === 1) return rgba
+
+  const match = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/.exec(rgba)
+
+  if (!match) {
+    throw new Error(`Geen rgba()-surface-tint: ${rgba}`)
+  }
+
+  const [, r, g, b, alpha] = match
+  const scaled = Math.min(1, Number(alpha) * factor)
+
+  return `rgba(${r}, ${g}, ${b}, ${Number(scaled.toFixed(3))})`
+}
+
+/**
  * Opaque tegenhanger van `glassSurface`, voor de `@supports`/`prefers-reduced-
  * transparency`-fallback in `index.css` (`.glass-panel`). Geen nieuwe kleuren:
  * dit zijn de bestaande Field Ink-treden uit DESIGN.md § Colors/Elevation

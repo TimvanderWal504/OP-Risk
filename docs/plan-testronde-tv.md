@@ -11,9 +11,9 @@ van §1. Vink een punt pas af als code, tests en (waar genoemd) FO/`DESIGN.md` b
 - [x] **5** — Missie "18 gebieden met ≥ 2 legers" alleen bij 4+ spelers
 - [ ] **6** — Streep in de "V" van "VS" op het TV-gevechtsoverlay (TV-verificatie nog open)
 - [x] **1** — Legerstand van de verdediger tonen op de telefoon
-- [ ] **8** — Engelse teksten tussen de Nederlandse (open bevinding: Engels onbereikbaar zonder taalknop)
+- [x] **8** — Engelse teksten tussen de Nederlandse (de open bevinding "Engels onbereikbaar zonder taalknop" is opgelost via de NL/EN-toggle van punt 2)
 - [x] **7** — Lobby-instelling dobbelregel + nieuwe verdedigingsrollen (Brazilië/Indonesië/IJsland)
-- [ ] **2** — TV-weergave-instellingen (tekstschaal, glas) vanaf de host-telefoon
+- [ ] **2** — TV-weergave-instellingen (tekstschaal, glas) vanaf de host-telefoon (code, tests en `DESIGN.md` af; echte-TV-check op slider 0/50/100 nog open)
 - [ ] **4** — Nieuwsbanner met de laatste 10 acties op de TV
 - [ ] **3** — Spelinfo op de telefoon
 
@@ -295,19 +295,28 @@ verandert hier niet.
 - [x] Backend: hub-methode (alleen host) + opslag in de state + meesturen in `GameStateDto`.
       Taal hoort in dezelfde payload/hub-methode als tekstschaal/glas (één "TV-weergave"-
       instellingenset), niet als los mechanisme.
-- [ ] `TvShell`: `--tv-text-scale`, `--tv-glass-opacity`, `--tv-glass-blur`; `--text-*` alleen
+- [x] `TvShell`: `--tv-text-scale`, `--tv-glass-opacity`, `--tv-glass-blur`; `--text-*` alleen
       binnen de TV-shell overschrijven, telefoon ongemoeid.
-- [ ] `GlassPanel` (`context="tv"`): tint en blur vermenigvuldigen met de variabelen.
-- [ ] **Taal:** de TV-route roept bij het laden/bij state-updates `i18next.changeLanguage`
+- [x] `GlassPanel` (`context="tv"`): tint en blur vermenigvuldigen met de variabelen.
+- [x] **Taal:** de TV-route roept bij het laden/bij state-updates `i18next.changeLanguage`
       aan op basis van het server-veld i.p.v. de gebruikelijke `localStorage`/`fallbackLng`-
       detectie (`i18n/index.ts`) — de TV is de ene plek waar de servertoestand de taal
       bepaalt, niet de browser. **Bijgesteld (elite-code-review 2026-09-24, bevinding 6):**
       alleen `i18n.changeLanguage`, níet `useLocale().setLang` — die schrijft ook naar dezelfde
       `localStorage`-key als de telefoonroute, terwijl de server hier de bron is.
-- [ ] Host-telefoon: menu "TV-weergave" met schuifregelaars, NL/EN-toggle, en reset.
-- [ ] `DESIGN.md` bijwerken via `/impeccable document`.
-- [ ] Tests (incl. taaltoggle: hub-methode, DTO-veld, TV past de taal toe). Backend-deel af,
-      frontend-deel volgt.
+- [x] Host-telefoon: menu "TV-weergave" met schuifregelaars, NL/EN-toggle, en reset. Met een
+      **eigen onderdeel "Dobbelstenen"** (besluit gebruiker 2026-09-24, zie "Uitvoering TV-kant").
+- [x] `DESIGN.md` bijwerken via `/impeccable document`. Samengevoegd (2026-09-24): nieuwe
+      subsectie Layout → TV display settings, The Scalable Type Rule, componenten Slider en
+      TV Display Panel/access, host-actie + `TvIcon` in de header, dobbelsteen-schaling. Op
+      verzoek van de gebruiker meteen ook de glas-drift van 2026-09-22 hersteld (clear glass →
+      getint glas, blur 14/32/44, saturate 1.0, on-glass-tekst 90/75%). Sidecar mee bijgewerkt.
+      **Bevinding, open:** `Button.tsx` zet sinds e43cad2 (2026-09-16, zonder motivering)
+      `--glass-shadow: 'none'`, terwijl DESIGN.md's One Glow Rule de primaire knop de pitch-gloed
+      geeft (`AttackFlowStep` en `ConquestMoveStep` hebben wél een gloed op hun eigen knoppen).
+      Kort hersteld en weer teruggedraaid: de gebruiker twijfelt of de gloed een goed idee is.
+      Code en spec wijken hier dus af tot er een besluit is.
+- [x] Tests (incl. taaltoggle: hub-methode, DTO-veld, TV past de taal toe).
 
 **Beslissingen (2026-09-24, bij het bouwplan).** Nieuw `ui/Slider`-component; slider 0–100 in
 stappen van 5, 50 = het huidige design, 0 = 25% van het huidige effect, 100 = 2×; knop in de
@@ -322,6 +331,74 @@ DTO (`TvDisplayDefault`). Echte-TV-check op slider 0/50/100 hoort bij de afrondi
 probeert een botsende gelijktijdige append tot 3× opnieuw — zonder die retry faalt de
 gelijktijdigheidstest 5 van de 5 keer. **Bevinding, buiten scope:** de overige command
 handlers hebben diezelfde botsingskans zonder retry. TO §4.1 bijgewerkt.
+
+**Uitvoering TV-kant (2026-09-24).** Afwijkend van de bullets hierboven: geen `--tv-*`-CSS-
+variabelen met `calc()`, maar kant-en-klare waarden in JS (elite-code-review bevinding 2 —
+een ongeldige `calc()`/`min()` in een kleur-alpha valt op oudere TV-browsers stil terug op
+doorzichtig glas).
+- `styles/tvDisplay.ts` (`sliderToMultiplier`) is de enige plek met de omrekenformule.
+- `TvShell` (prop `display`) zet elke `--text-<stap>` uit `fontSize` als letterlijke `rem`, en
+  levert de glas-factoren via `TvGlassScaleContext`.
+- `GlassPanel` met `context="tv"` schaalt daarmee tint (`scaleGlassSurfaceAlpha`, begrensd op 1)
+  en blur. Buiten een `TvShell` met instelling, en op de telefoon, blijft alles op het design.
+- `useTvLanguage` zet de TV-taal met alleen `changeLanguage`. `i18n/index.ts` staat nu op
+  `caches: []`: de detector schreef anders bij élke `changeLanguage` naar `localStorage`, ook
+  zonder `setLang`. `setLang` slaat een telefoonkeuze nog steeds zelf expliciet op.
+
+**Nabewerking TV-kant (2026-09-24, besluiten gebruiker).** Eerst als beperking gemeld, daarna op
+verzoek opgelost:
+- **Tailwind-standaardgroottes → typeschaal.** De 5 plekken met `text-lg`/`text-xl`/`text-2xl`
+  (`TvClaimingScreen`, `TvMainBoardScreen`, `TurnStatusHeader`, 2× `TvCombatOverlay`) staan nu op
+  de pixel-gelijke `sizeN`-stap (18/20/24px → `size2`/`size4`/`size5`), met Tailwinds eigen
+  regelhoogte letterlijk overgenomen waar geen `leading-*` stond. Op 50 verspringt er niets.
+- **Kaartmarkers** schalen mee met de tekstschaal, en wel als geheel (`scaledMarker`/
+  `scaledClaimMarker`): schijf, ring, legertal, naam, contour, afstand tot de naam, en bij claimen
+  ook symbool en flare-ring. Alleen het getal schalen zou het uit de schijf laten lopen. De randen
+  van de gebiedspolygonen horen bij de kaart en schalen niet.
+- **Lobby-badge** volgt glasdekking en -blur.
+- **Dobbelstenen: eigen instelling `diceScale`** (backend: veld op `TvDisplaySettings`/event/DTO/
+  hub, optioneel met default 50). Een TV-`Dice` schaalt als geheel: maat, radius, padding, pips,
+  rand, blur, schaduw en perspectief. Het gevechtsraster (`TvCombatOverlay`) en de wachtplek in
+  `OrderRollTvPanel` reserveren dezelfde geschaalde maat, zodat `VS` en de rijen op hun plek
+  blijven. Tussenruimtes tussen dobbelstenen en de invliegbaan (`atlasTumble`, `motion.ts`,
+  bevroren) schalen niet: die horen bij het scherm, niet bij de dobbelsteen. Telefoon-dobbelstenen
+  blijven ongemoeid. Het menu krijgt er een eigen onderdeel voor (zie aanpak-bullet).
+- De glas-context heet nu `TvDisplayScaleContext` (alle factoren, `hooks/`), te lezen met
+  `useTvDisplayScale`.
+
+**Resterend:** `InstructionKicker` schaalt alleen in blur, want hij zet een eigen merk-tint over
+`--glass-bg` heen.
+
+**Uitvoering host-telefoon (2026-09-24).**
+- `TvDisplayPanel`: full-screen `ModalShell` (zelfde patroon en `z-50` als `MissionPanel`) met
+  drie onderdelen — Scherm (tekstgrootte, dekking, vervaging), **Dobbelstenen** (eigen
+  onderdeel) en Taal op de TV (NL/EN-`SegmentedControl`) — plus "Standaard" (stuurt
+  `tvDisplayDefault`, uitgeschakeld zolang alles al op de default staat) en "Sluiten". Geen
+  optimistic update.
+- Nieuw `ui/Slider` op een native `<input type="range">`, alleen bestaande tokens
+  (`accent-pitch-500`, `min-h-13`, body-label, tabular-numeral-waarde). Commit via het native
+  `change`-event: één event op de spelstream per afgeronde keuze, niet per pixel.
+- Nieuw `TvIcon` (lijnstijl, 16×16) in `ui/icons.tsx`.
+- Bereikbaar via een actie in `PhonePlayerHeader` die alleen de host ziet (geen uitgeschakelde
+  knop voor anderen) en via een secundaire knop "TV-weergave" boven "Start spel" op
+  `JoinHostWaitStep`.
+- `useGameState.setTvDisplay` onthoudt na bevestiging de server-respons
+  (`storage/rememberedTvDisplay.ts`, key `riskop:tvDisplay`); `CreateGameForm` stuurt een geldige
+  onthouden set mee, een ongeldige/onleesbare cache wordt weggegooid.
+- **Elite-code-review (2026-09-24), opgelost:** het paneel bouwt een wijziging voort op de laatst
+  *verstuurde* set, zodat twee snelle wijzigingen elkaar niet terugdraaien; `setTvDisplay` geeft
+  `Promise<boolean>` en een geweigerde slider springt terug naar de bevestigde waarde; het paneel
+  toont alleen fouten van een eigen wijziging; de dobbelsteenrand blijft minimaal 1px (besluit
+  gebruiker); een onbekende taalwaarde start de detectie niet opnieuw; test voor een opgeslagen
+  instelling/event zonder `DiceScale`. De schaalcontext staat nu in `hooks/TvDisplayScaleContext.ts`
+  (naast `GameHubProvider`), de test-`Storage` in `test/memoryStorage.ts`.
+- Nieuwe namespace `locales/tvDisplay.ts`; `errors.ts` kent `tvDisplay.invalidValue`.
+
+**Bereikbaarheid (besluit gebruiker 2026-09-24).** De header bestaat alleen tijdens
+Claiming/InitialPlacement/InProgress. Daarbuiten krijgt de host dezelfde toegang via
+`TvDisplayAccess` (knop "TV-weergave" + paneel): in de lobby (`JoinHostWaitStep`), tijdens de
+**volgorde-worp** (`OrderRollWaitStep`, `hostActions`-slot) en als **uitgeschakelde host**
+(`PlayerEliminatedScreen`, `hostActions`-slot). Het eindscherm hoeft niet (besluit gebruiker).
 
 ### 4. Nieuwsbanner met de laatste 10 acties
 

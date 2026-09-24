@@ -13,6 +13,8 @@ import {
   glassSurface,
   type GlassPanelContext,
 } from '../../styles/glass-tokens'
+import { scaleCssPx } from '../../styles/tvDisplay'
+import { useTvDisplayScale } from '../../hooks/useTvDisplayScale'
 
 export type DiceValue = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -95,13 +97,33 @@ function pipRecessedShadow(pipSize: number, glowColor: string): string {
  * staat weer vast linksboven zodra de worp settelt (elke tumble-keyframe eindigt op
  * `rotate(0)`).
  */
-export function Dice({ value, colorHex, context, size, radius, padding, gap, pipSize, animation }: DiceProps) {
+export function Dice({
+  value,
+  colorHex,
+  context,
+  size: baseSize,
+  radius: baseRadius,
+  padding: basePadding,
+  gap: baseGap,
+  pipSize: basePipSize,
+  animation,
+}: DiceProps) {
   const { t } = useTranslation('common')
+  // TV-weergave-instelling "dobbelstenen" (plan-testronde-tv punt 2): de hele dobbelsteen schaalt
+  // als geheel — elke lengte hieronder, ook rand, blur, schaduw en perspectief — zodat hij er op
+  // elke maat hetzelfde uitziet. Alleen op de TV binnen een `TvShell` met instelling; de
+  // aanroeper geeft altijd de design-maten mee.
+  const scale = useTvDisplayScale(context).dice
+  const size = baseSize * scale
+  const radius = baseRadius * scale
+  const padding = basePadding * scale
+  const gap = baseGap * scale
+  const pipSize = basePipSize * scale
   const pips = PIP_LAYOUT[value]
   const isHex = HEX_PATTERN.test(colorHex)
   const surfaceFill = isHex ? deriveDiceGlassGradient(colorHex) : glassSurface.raised
   const pipGlow = isHex ? dicePipGlow(colorHex) : 'transparent'
-  const blurPx = diceGlassBlurPx(context)
+  const blurPx = diceGlassBlurPx(context) * scale
   const recessedShadow = pipRecessedShadow(pipSize, pipGlow)
 
   const surface = (
@@ -118,9 +140,11 @@ export function Dice({ value, colorHex, context, size, radius, padding, gap, pip
         background: surfaceFill,
         backdropFilter: `blur(${blurPx}px) saturate(${glassSaturate})`,
         WebkitBackdropFilter: `blur(${blurPx}px) saturate(${glassSaturate})`,
-        border: `1px solid color-mix(in srgb, ${colorHex} 60%, transparent)`,
-        boxShadow: diceGlassShadow,
-        transform: diceGlassPerspective,
+        // Minimaal 1px (besluit gebruiker 2026-09-24): de rand draagt de spelerskleur (DESIGN.md
+        // § Dice) en mag op de kleinste stand niet onder een hairline zakken en wegvallen.
+        border: `${Math.max(1, scale)}px solid color-mix(in srgb, ${colorHex} 60%, transparent)`,
+        boxShadow: scaleCssPx(diceGlassShadow, scale),
+        transform: scaleCssPx(diceGlassPerspective, scale),
       }}
     >
       {Array.from({ length: 9 }).map((_, cell) => (

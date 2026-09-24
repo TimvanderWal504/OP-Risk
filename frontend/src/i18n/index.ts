@@ -32,10 +32,15 @@ i18next
     // bevinding 8) — zonder een opgeslagen keuze in localStorage valt dit altijd terug op
     // `fallbackLng` ('nl'), nooit op de taal van het apparaat. `en` blijft beschikbaar via
     // `useLocale().setLang`, dat de keuze in dezelfde localStorage-key opslaat.
+    //
+    // `caches: []`: de detector schrijft anders bij élke `changeLanguage` naar localStorage. Dat
+    // mag niet op de TV, waar de server de taal bepaalt (`useTvLanguage`, plan-testronde-tv
+    // punt 2) — anders zou de TV-taal de opgeslagen keuze van een telefoon in dezelfde browser
+    // overschrijven. Een bewuste keuze op de telefoon slaat `setLang` zelf expliciet op.
     detection: {
       order: ['localStorage'],
       lookupLocalStorage: LANGUAGE_STORAGE_KEY,
-      caches: ['localStorage'],
+      caches: [],
     },
     interpolation: {
       escapeValue: false,

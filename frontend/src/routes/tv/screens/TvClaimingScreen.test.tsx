@@ -59,7 +59,7 @@ describe('TvClaimingScreen', () => {
     // én los in het rechterpaneel — beide horen er te zijn (uit het oorspronkelijke design),
     // niet dubbel geteld als bug.
     expect(screen.getByText(/Aan de beurt: Bob/)).toBeInTheDocument()
-    expect(screen.getByText('Bob', { selector: 'div.font-display.text-2xl.font-extrabold' })).toBeInTheDocument()
+    expect(screen.getByText('Bob', { selector: 'div.font-display.text-size5.font-extrabold' })).toBeInTheDocument()
   })
 
   it('toont de rolnaam als badge naast de naam zodra de speler een rol heeft (plan-rollen B3/C4)', () => {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
@@ -8,6 +9,9 @@ import phoneEliminated from '../styles/assets/phone-eliminated.webp'
 
 export interface PlayerEliminatedScreenProps {
   myColor: PlayerColorDto | null
+  /** Extra actie(s) alleen voor de host — nu de TV-weergave (`TvDisplayAccess`,
+   *  plan-testronde-tv punt 2): een uitgeschakelde host blijft de TV bedienen. */
+  hostActions?: ReactNode
 }
 
 /**
@@ -31,7 +35,7 @@ export interface PlayerEliminatedScreenProps {
  * eigen inhoud, met een te smal/wisselend paneel als gevolg — vandaar de vaste `mx-auto` op de
  * badge en de breedte-begrensde subtitle.
  */
-export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps) {
+export function PlayerEliminatedScreen({ myColor, hostActions }: PlayerEliminatedScreenProps) {
   const { t } = useTranslation('attack')
 
   return (
@@ -52,6 +56,7 @@ export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps)
           {t('elim.gameContinues')}
         </div>
       </GlassPanel>
+      {hostActions && <div className="flex flex-col gap-3">{hostActions}</div>}
     </PhoneScreen>
   )
 }

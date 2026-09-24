@@ -6,6 +6,7 @@ import { ColorSymbol } from './ui/ColorSymbol'
 import { Dice, type DiceValue } from './ui/Dice'
 import { GlassPanel } from './ui/GlassPanel'
 import { tvAnimations } from '../styles/motion'
+import { useTvDisplayScale } from '../hooks/useTvDisplayScale'
 
 export interface OrderRollTvPanelProps {
   players: PlayerDto[]
@@ -15,11 +16,18 @@ export interface OrderRollTvPanelProps {
   order?: string[]
 }
 
+/**
+ * Design-maat van een order-roll-dobbelsteen. De "wacht op worp"-plek houdt dezelfde breedte aan
+ * als een dobbelsteen, ook wanneer `Dice` zichzelf met de TV-dobbelsteeninstelling schaalt.
+ */
+const ORDER_DIE_SIZE = 118
+
 /** Order-roll-weergave op de TV (FO §2.1): per
  * speler 2 dobbelstenen in zijn eigen kleur, of "wacht op worp"; daaronder de
  * eindvolgorde zodra de server die aanlevert. */
 export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTvPanelProps) {
   const { t } = useTranslation('orderRoll')
+  const dieScale = useTvDisplayScale().dice
   /** Onthoudt de laatst getoonde worp per speler, zodat alleen een écht
    * gewijzigde worp (tie-break-herworp) `diceRerollOrder` krijgt i.p.v. de
    * mount-only `orderRollDie`-entrance (motion.ts A3, inventory §2). */
@@ -68,7 +76,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                       value={dice[0] as DiceValue}
                       colorHex={color.hex}
                       context="tv"
-                      size={118}
+                      size={ORDER_DIE_SIZE}
                       radius={22}
                       padding={16}
                       gap={6}
@@ -80,7 +88,7 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                       value={dice[1] as DiceValue}
                       colorHex={color.hex}
                       context="tv"
-                      size={118}
+                      size={ORDER_DIE_SIZE}
                       radius={22}
                       padding={16}
                       gap={6}
@@ -89,7 +97,10 @@ export function OrderRollTvPanel({ players, colors, throws, order }: OrderRollTv
                     />
                   </>
                 ) : (
-                  <div className="flex h-full w-[118px] items-center justify-center text-sm text-fg-muted">
+                  <div
+                    className="flex h-full items-center justify-center text-sm text-fg-muted"
+                    style={{ width: ORDER_DIE_SIZE * dieScale }}
+                  >
                     {t('waitingForRoll')}
                   </div>
                 )}

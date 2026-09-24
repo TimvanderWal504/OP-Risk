@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
 import { fixtureState } from './tvScreenFixture'
 import { TvCombatOverlay } from './TvCombatOverlay'
+import { TvShell } from '../../../components/ui/TvShell'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
 
 const baseState = {
@@ -49,6 +50,29 @@ describe('TvCombatOverlay', () => {
     expect(screen.getByText('Gevecht')).toBeInTheDocument()
     expect(screen.getByText('Alice')).toBeInTheDocument()
     expect(screen.getByText('Bob')).toBeInTheDocument()
+  })
+
+  it('reserveert in het gevechtsraster de geschaalde dobbelsteenmaat (plan-testronde-tv punt 2)', () => {
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [5, 4],
+      defenderRolls: [3],
+      reroll: null,
+      defenseBoostUsed: false,
+      narrated: null,
+    }
+
+    render(
+      <TvShell display={{ ...baseState.tvDisplay, diceScale: 100 }}>
+        <TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />
+      </TvShell>,
+    )
+
+    // Dobbelsteen 96 → 192; kolom = drie dobbelstenen + twee ongeschaalde tussenruimtes van 16.
+    const grid = screen.getByText('VS').parentElement!
+    expect(grid.style.gridTemplateRows).toBe('auto auto 192px')
+    expect(grid.style.gridTemplateColumns).toBe('608px auto 608px')
+    expect(screen.getByRole('img', { name: 'Dobbelsteen 5' }).style.width).toBe('192px')
   })
 
   it('noemt de verdedigingsrol in het verdedigerlabel zodra de DefenseBoost is ingezet (FO §8.1)', () => {

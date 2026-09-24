@@ -6,6 +6,7 @@ import {
   SetupModeDto,
   WinConditionDto,
 } from '../../../types/GameSettings'
+import { TvLanguageDto } from '../../../types/TvDisplay'
 
 /** Basis-state voor de host-schermtests; elke test overschrijft wat zijn gedrag stuurt. */
 export const fixtureState: GameStateDto = {
@@ -42,4 +43,6 @@ export const fixtureState: GameStateDto = {
   stateVersion: 1,
   winners: [],
   pendingWinnerPlayerId: null,
+  tvDisplay: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
+  tvDisplayDefault: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
 }

@@ -1,5 +1,6 @@
 import type { PlayerDto } from './Player'
 import type { GameSettingsDto } from './GameSettings'
+import type { TvDisplaySettingsDto } from './TvDisplay'
 
 /**
  * Spiegelt RiskGame.Api.Dtos.GameStateDto en aanverwante types
@@ -155,4 +156,8 @@ export interface GameStateDto {
    * `phase === GamePhaseDto.Finished`.
    */
   pendingWinnerPlayerId: string | null
+  /** De TV-weergave van dit spel (plan-testronde-tv punt 2); de TV past 'm toe via `TvShell`. */
+  tvDisplay: TvDisplaySettingsDto
+  /** De server-default, voor de knop "Standaard" op de host-telefoon — niet zelf nabouwen. */
+  tvDisplayDefault: TvDisplaySettingsDto
 }

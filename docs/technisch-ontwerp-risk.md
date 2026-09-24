@@ -139,7 +139,7 @@ Commando binnen (SignalR)
 | `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter, `TurnState.FortifiesUsed` < toegestane verplaatsingen (1, of `moves` van een actieve `FortifyUpgrade`-rol — FO §5.2) |
 | `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt |
 | `SetAutoPass` (host) | elke | Aanroeper is host; doel is afwezige speler |
-| `SetTvDisplay` (host) | elke | Aanroeper is host; tekstschaal/glasdekking/glasblur 0–100 in stappen van 5, taal NL/EN. Weergave-instelling van de TV, geen spelregel; bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
+| `SetTvDisplay` (host) | elke | Aanroeper is host; tekstschaal/glasdekking/glasblur/dobbelsteenschaal 0–100 in stappen van 5, taal NL/EN. Weergave-instelling van de TV, geen spelregel; bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
 | `VoteReplay` / `HostRestart` (host) | Finished | — |
 
 ### 4.2 Server-side dobbelen

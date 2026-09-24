@@ -62,7 +62,7 @@ public sealed class TvDisplayCommandHandler(IDocumentStore store, TimeProvider t
         }
 
         session.Events.Append(gameId, new TvDisplaySettingsChanged(
-            gameId, settings.TextScale, settings.GlassOpacity, settings.GlassBlur, settings.Language));
+            gameId, settings.TextScale, settings.GlassOpacity, settings.GlassBlur, settings.Language, settings.DiceScale));
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);

@@ -5,6 +5,7 @@ import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { PhonePlayerHeader } from '../../components/PhonePlayerHeader'
+import { TvDisplayAccess } from '../../components/TvDisplayAccess'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto } from '../../types/GameState'
 import { resolvePhoneScreen, resolveStageScrimLevel } from './screens/phoneScreens'
@@ -44,6 +45,7 @@ export function PhonePage() {
     keepAttackDice,
     fortify,
     endTurn,
+    setTvDisplay,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
 
@@ -78,7 +80,21 @@ export function PhonePage() {
 
     return (
       <PhoneShell scrimLevel={scrimLevel}>
-        <PlayerEliminatedScreen myColor={myColor} />
+        <PlayerEliminatedScreen
+          myColor={myColor}
+          hostActions={
+            // Een uitgeschakelde host houdt de TV-bediening (plan-testronde-tv punt 2): dit scherm
+            // vervangt de hele route, dus ook de header met z'n TV-weergave-actie.
+            me.isHost && (
+              <TvDisplayAccess
+                settings={state.tvDisplay}
+                defaults={state.tvDisplayDefault}
+                onChange={setTvDisplay}
+                error={error}
+              />
+            )
+          }
+        />
       </PhoneShell>
     )
   }
@@ -104,6 +120,7 @@ export function PhonePage() {
           me={me}
           phase={headerPhase}
           tradeInCards={tradeInCards}
+          setTvDisplay={setTvDisplay}
           error={error}
         />
       )}
@@ -133,6 +150,7 @@ export function PhonePage() {
         keepAttackDice,
         fortify,
         endTurn,
+        setTvDisplay,
       })}
     </PhoneShell>
   )

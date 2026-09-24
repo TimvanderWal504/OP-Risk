@@ -6,6 +6,7 @@ import type { PlayerDto } from '../../../types/Player'
 import type { TerritoryCatalogDto } from '../../../types/TerritoryCatalog'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
 import type { CombatResultResponse } from '../../../types/HubResponses'
+import type { TvDisplaySettingsDto } from '../../../types/TvDisplay'
 import { PhoneClaimingScreen } from './PhoneClaimingScreen'
 import { PhoneInitialPlacementScreen } from './PhoneInitialPlacementScreen'
 import { PhoneInProgressScreen } from './PhoneInProgressScreen'
@@ -57,6 +58,9 @@ export interface PhoneScreenProps {
   fortify: (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number) => Promise<boolean>
   /** Beëindigt de beurt vanuit Verplaatsen (FO §5.5) — zelfde `Promise<boolean>`-reden als `fortify`. */
   endTurn: () => Promise<boolean>
+  /** TV-weergave instellen (plan-testronde-tv punt 2), alleen de host — vanuit de host-lobby.
+   *  `Promise<boolean>`: of de server de wijziging accepteerde. */
+  setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
 }
 
 export type PhoneScreen = (props: PhoneScreenProps) => ReactNode

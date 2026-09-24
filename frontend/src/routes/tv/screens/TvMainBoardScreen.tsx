@@ -5,7 +5,8 @@ import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
-import { marker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
+import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
+import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
 import { boardTok } from '../../../styles/design-tokens'
 import { tvAnimations } from '../../../styles/motion'
 import { Badge } from '../../../components/ui/Badge'
@@ -26,6 +27,8 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { t } = useTranslation('board')
   const { data: geometry } = useTerritoryGeometry()
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
+  // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
+  const marker = scaledMarker(useTvDisplayScale().text)
 
   // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen voor de
   // A1-teldemo-animatie. Bijgewerkt tijdens render (niet via een ref of effect,
@@ -177,7 +180,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none">
+                  <div className="flex items-center gap-2 font-display text-size5 font-extrabold leading-none">
                     {player.name}
                     {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge): alleen zichtbaar
                         met rollen aan (roleId !== null, The Invisible Design Rule) — de toon
