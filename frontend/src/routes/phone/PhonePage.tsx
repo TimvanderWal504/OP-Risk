@@ -5,7 +5,6 @@ import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { PhonePlayerHeader } from '../../components/PhonePlayerHeader'
-import { TvDisplayAccess } from '../../components/TvDisplayAccess'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto } from '../../types/GameState'
 import { resolvePhoneScreen, resolveStageScrimLevel } from './screens/phoneScreens'
@@ -69,40 +68,6 @@ export function PhonePage() {
     )
   }
 
-  // Geldt door élke fase heen zolang de speler is uitgeschakeld en het spel nog loopt — vóór
-  // de fase-dispatch, want eliminatie is geen speleigenschap van één fase. Bij `Finished` juist
-  // NIET: dan moet ook een eerder uitgeschakelde speler de winnaars-aankondiging zien
-  // (`PhoneGameOverScreen`) in plaats van voor altijd op "spel gaat door" te blijven hangen.
-  // `displayPhase` (niet `state.phase`) om consistent te blijven met `resolvePhoneScreen`
-  // hieronder — dezelfde `useHeldPhase`-vertraging geldt dan ook hier.
-  if (me.isEliminated && displayPhase !== GamePhaseDto.Finished) {
-    const myColor = state.colors.find((color) => color.id === me.colorId) ?? null
-
-    return (
-      <PhoneShell scrimLevel={scrimLevel}>
-        <PlayerEliminatedScreen
-          myColor={myColor}
-          hostActions={
-            // Een uitgeschakelde host houdt de TV-bediening (plan-testronde-tv punt 2): dit scherm
-            // vervangt de hele route, dus ook de header met z'n TV-weergave-actie.
-            me.isHost && (
-              <TvDisplayAccess
-                settings={state.tvDisplay}
-                defaults={state.tvDisplayDefault}
-                onChange={setTvDisplay}
-                error={error}
-              />
-            )
-          }
-        />
-      </PhoneShell>
-    )
-  }
-
-  // createElement en niet <Screen …/>: het schermtype is hier per definitie dynamisch. De
-  // referentie komt uit het module-level register, dus binnen één fase is hij stabiel (geen
-  // remount); bij een fasewissel hóórt het scherm te wisselen.
-  //
   // `headerPhase`/de `resolvePhoneHeaderStatus`-check bepaalt hier ook óf `PhonePlayerHeader`
   // gemount wordt, niet alleen wát erin staat: de component zelf `null` laten renderen
   // (in plaats van 'm hier weg te laten) zou 'm al vanaf Lobby laten bestaan — `useMissionPanel`
@@ -112,6 +77,22 @@ export function PhonePage() {
   const headerPhase = displayPhase ?? state.phase
   const showHeader = resolvePhoneHeaderStatus(headerPhase, state.turnState?.turnPhase ?? null) !== null
 
+  // Geldt door élke fase heen zolang de speler is uitgeschakeld en het spel nog loopt — vóór
+  // de fase-dispatch, want eliminatie is geen speleigenschap van één fase. Bij `Finished` juist
+  // NIET: dan moet ook een eerder uitgeschakelde speler de winnaars-aankondiging zien
+  // (`PhoneGameOverScreen`) in plaats van voor altijd op "spel gaat door" te blijven hangen.
+  // `displayPhase` (niet `state.phase`) om consistent te blijven met `resolvePhoneScreen`
+  // hieronder — dezelfde `useHeldPhase`-vertraging geldt dan ook hier.
+  const isEliminatedView = me.isEliminated && displayPhase !== GamePhaseDto.Finished
+
+  // Eén return, met de header als vaste eerste child van `PhoneShell` boven zowel het
+  // uitgeschakeld-scherm als het faseschem (plan-testronde-tv punt 3): bij uitschakeling blijft het
+  // dezelfde header-instantie, dus een open paneel (spelinfo, TV-weergave) sluit niet vanzelf. Een
+  // uitgeschakelde host heeft zo ook z'n TV-weergave-actie in de header.
+  //
+  // createElement en niet <Screen …/>: het schermtype is hier per definitie dynamisch. De
+  // referentie komt uit het module-level register, dus binnen één fase is hij stabiel (geen
+  // remount); bij een fasewissel hóórt het scherm te wisselen.
   return (
     <PhoneShell scrimLevel={scrimLevel}>
       {showHeader && (
@@ -124,34 +105,38 @@ export function PhonePage() {
           error={error}
         />
       )}
-      {createElement(resolvePhoneScreen(displayPhase), {
-        state,
-        playerId,
-        me,
-        error,
-        orderRollThrows,
-        territoryCatalog,
-        chooseColor,
-        selectRole,
-        startGame,
-        removePlayer,
-        rollForOrder,
-        claimTerritory,
-        placeInitialArmy,
-        placeReinforcements,
-        tradeInCards,
-        endPhase,
-        combat,
-        declareAttack,
-        chooseDefenseDice,
-        moveAfterConquest,
-        abandonAttack,
-        rerollAttackDie,
-        keepAttackDice,
-        fortify,
-        endTurn,
-        setTvDisplay,
-      })}
+      {isEliminatedView ? (
+        <PlayerEliminatedScreen myColor={state.colors.find((color) => color.id === me.colorId) ?? null} />
+      ) : (
+        createElement(resolvePhoneScreen(displayPhase), {
+          state,
+          playerId,
+          me,
+          error,
+          orderRollThrows,
+          territoryCatalog,
+          chooseColor,
+          selectRole,
+          startGame,
+          removePlayer,
+          rollForOrder,
+          claimTerritory,
+          placeInitialArmy,
+          placeReinforcements,
+          tradeInCards,
+          endPhase,
+          combat,
+          declareAttack,
+          chooseDefenseDice,
+          moveAfterConquest,
+          abandonAttack,
+          rerollAttackDie,
+          keepAttackDice,
+          fortify,
+          endTurn,
+          setTvDisplay,
+        })
+      )}
     </PhoneShell>
   )
 }

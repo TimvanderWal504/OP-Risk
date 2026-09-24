@@ -8,17 +8,11 @@ import {
   type GameSettingsDto,
 } from '../types/GameSettings'
 import { tDynamic } from '../i18n/useT'
+import { formatMinutes } from '../i18n/formatMinutes'
 import { GlassPanel } from './ui/GlassPanel'
 
 export interface LobbySettingsSummaryProps {
   settings: GameSettingsDto
-}
-
-function formatSeconds(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const rest = seconds % 60
-
-  return rest === 0 ? `${minutes} min` : `${minutes}:${rest.toString().padStart(2, '0')} min`
 }
 
 /**
@@ -85,7 +79,7 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
       tDynamic(`startingArmies.preset.${settings.startingArmiesPresetId}.title`, 'createGame'),
       'var(--fg1)',
     ],
-    [t('settings.turnTimer'), formatSeconds(settings.turnTimerSeconds), 'var(--fg1)'],
+    [t('settings.turnTimer'), formatMinutes(settings.turnTimerSeconds), 'var(--fg1)'],
   ]
 
   return (

@@ -1,11 +1,11 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModalShell } from './ui/ModalShell'
-import { GlassPanel } from './ui/GlassPanel'
 import { Button } from './ui/Button'
 import { Footer } from './ui/Footer'
 import { Slider } from './ui/Slider'
 import { SegmentedControl } from './ui/SegmentedControl'
+import { PanelSection } from './ui/PanelSection'
 import { TvLanguageDto, type TvDisplaySettingsDto } from '../types/TvDisplay'
 import { TV_DISPLAY_MAX_VALUE, TV_DISPLAY_MIN_VALUE, TV_DISPLAY_STEP } from '../styles/tvDisplay'
 
@@ -102,15 +102,15 @@ export function TvDisplayPanel({ settings, defaults, onChange, onClose, error = 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
-        <Section label={t('sections.screen')}>
+        <PanelSection label={t('sections.screen')}>
           {slider('textScale')}
           {slider('glassOpacity')}
           {slider('glassBlur')}
-        </Section>
+        </PanelSection>
 
-        <Section label={t('sections.dice')}>{slider('diceScale')}</Section>
+        <PanelSection label={t('sections.dice')}>{slider('diceScale')}</PanelSection>
 
-        <Section label={t('sections.language')}>
+        <PanelSection label={t('sections.language')}>
           <SegmentedControl
             options={[
               { value: TvLanguageDto.Nl, label: t('languages.nl') },
@@ -122,7 +122,7 @@ export function TvDisplayPanel({ settings, defaults, onChange, onClose, error = 
               if (language !== current.language) void send({ ...current, language })
             }}
           />
-        </Section>
+        </PanelSection>
       </div>
 
       <Footer error={ownError ? error : null}>
@@ -134,15 +134,5 @@ export function TvDisplayPanel({ settings, defaults, onChange, onClose, error = 
         </Button>
       </Footer>
     </ModalShell>
-  )
-}
-
-/** Eén onderdeel van het paneel: een label-kicker boven een glazen blok (zelfde kicker als `MissionPanel`). */
-function Section({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <GlassPanel elevation="raised" context="phone" className="flex flex-col gap-3">
-      <span className="font-body text-xs font-extrabold tracking-[.12em] text-fg-muted uppercase">{label}</span>
-      {children}
-    </GlassPanel>
   )
 }

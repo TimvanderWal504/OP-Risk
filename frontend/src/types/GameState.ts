@@ -160,4 +160,32 @@ export interface GameStateDto {
   tvDisplay: TvDisplaySettingsDto
   /** De server-default, voor de knop "Standaard" op de host-telefoon — niet zelf nabouwen. */
   tvDisplayDefault: TvDisplaySettingsDto
+  /** Continenten met bonus en eventuele eigenaar (spelinfo). De server bepaalt het bezit. */
+  continents: ContinentDto[]
+  /** De gebeurteniskaarten van deze kaartvariant (spelinfo); naam/omschrijving via `locales/events.ts`. */
+  events: EventSummaryDto[]
+  /** Wat de volgende kaarteninleg oplevert — het voorbeeld bij de inlegregel in spelinfo. */
+  nextCardTradeValue: number
+  /** Startlegers per speler in dit spel; `null` in de lobby. */
+  startingArmies: number | null
+}
+
+/** Spiegelt RiskGame.Api.Dtos.ContinentDto; weergavenaam via `tDynamic(id, 'continents')`. */
+export interface ContinentDto {
+  id: string
+  bonus: number
+  ownerPlayerId: string | null
+}
+
+/** Spiegelt RiskGame.Api.Dtos.EventDurationDto (int-serialisatie, zelfde volgorde). */
+export const EventDurationDto = {
+  Instant: 0,
+  OneRound: 1,
+} as const
+export type EventDurationDto = (typeof EventDurationDto)[keyof typeof EventDurationDto]
+
+/** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */
+export interface EventSummaryDto {
+  id: string
+  duration: EventDurationDto
 }

@@ -35,9 +35,12 @@ const DEFAULT_SETTINGS: GameSettingsDto = {
   startingArmiesPresetId: 'classic',
   turnTimerSeconds: 180,
   fortifyTimerSeconds: 60,
-  rolesEnabled: true,
+  // Rollen en gebeurtenisronde standaard uit, zoals FO §9/§10 voorschrijven ("kaal klassiek is
+  // het vertrekpunt") — stonden sinds de eerste versie ten onrechte aan (besluit gebruiker
+  // 2026-09-24).
+  rolesEnabled: false,
   roleAssignment: RoleAssignmentModeDto.Random,
-  eventsEnabled: true,
+  eventsEnabled: false,
   missionWinTiming: MissionWinTimingDto.EndOfTurn,
   defenseDiceRule: DefenseDiceRuleDto.HouseRule,
 }

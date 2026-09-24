@@ -1,4 +1,5 @@
 using RiskGame.Rules.Combat;
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Reinforcement;
@@ -102,13 +103,37 @@ public static class GameStateDtoMapper
                 ? pendingWin.AchieverPlayerId
                 : null;
 
+        var continents = state.Map.Continents
+            .Select(continent => new ContinentDto(
+                continent.Id,
+                continent.Bonus,
+                state.Players.FirstOrDefault(player => state.OwnsEntireContinent(player.Id, continent.Id))?.Id))
+            .ToArray();
+
+        var events = state.Map.Events
+            .Select(definition => new EventSummaryDto(definition.Id, ToDto(definition.Effect.Duration)))
+            .ToArray();
+
+        // Pas betekenisvol zodra de lobby dicht is: het spelersaantal ligt dan vast (zie ook de
+        // setup-afleiding hierboven, die dezelfde resolver gebruikt). TryResolve: puur weergave,
+        // dus een spelersaantal buiten het preset levert geen fout maar geen getal.
+        int? startingArmiesPerPlayer = state.Phase == GamePhase.Lobby ? null : StartingArmiesResolver.TryResolve(state);
+
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
             colors, roles, ToDto(state.Settings), state.Winners,
             ToDto(state.TvDisplay), ToDto(TvDisplaySettings.Default),
+            continents, events, state.Deck.NextTradeValue,
             state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
-            setupState, StateVersion: 0, pendingWinnerPlayerId);
+            setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer);
     }
+
+    private static EventDurationDto ToDto(EffectDuration duration) => duration switch
+    {
+        EffectDuration.Instant => EventDurationDto.Instant,
+        EffectDuration.OneRound => EventDurationDto.OneRound,
+        _ => throw new ArgumentOutOfRangeException(nameof(duration), duration, "Onbekende gebeurtenisduur."),
+    };
 
     /// <summary>
     /// De privacy-grens (TO §6.1, src/CLAUDE.md API-grens-kader): voor de TV-groep gaan

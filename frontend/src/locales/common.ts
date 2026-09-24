@@ -33,5 +33,8 @@ export const common = {
     // zodat het aansluit bij de omringende zin-stijl status-tekst i.p.v. de uppercase badge.
     roleActive: { nl: 'actief', en: 'active' },
     roleInactive: { nl: 'inactief', en: 'inactive' },
+    // Statusregel van een uitgeschakelde speler (spelinfo, plan-testronde-tv punt 3) — ook het
+    // label bij een uitgeschakelde speler in de stand van `GameInfoPanel`.
+    eliminated: { nl: 'Uitgeschakeld', en: 'Eliminated' },
   },
 } satisfies LocaleTree

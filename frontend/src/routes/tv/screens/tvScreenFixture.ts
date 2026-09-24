@@ -45,4 +45,8 @@ export const fixtureState: GameStateDto = {
   pendingWinnerPlayerId: null,
   tvDisplay: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
   tvDisplayDefault: { textScale: 50, glassOpacity: 50, glassBlur: 50, language: TvLanguageDto.Nl, diceScale: 50 },
+  continents: [],
+  events: [],
+  nextCardTradeValue: 4,
+  startingArmies: null,
 }

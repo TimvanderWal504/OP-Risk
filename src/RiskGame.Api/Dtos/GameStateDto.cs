@@ -25,6 +25,17 @@ namespace RiskGame.Api.Dtos;
 /// <see cref="RiskGame.Rules.State.TvDisplaySettings.Default"/>, zodat de knop "Standaard" op de
 /// host-telefoon de server-default verstuurt i.p.v. een eigen kopie ervan bij te houden.
 /// </param>
+/// <param name="Continents">Continenten met bonus en eventuele eigenaar, voor spelinfo (plan-testronde-tv punt 3).</param>
+/// <param name="Events">De gebeurteniskaarten van deze kaartvariant, voor spelinfo (plan-testronde-tv punt 3).</param>
+/// <param name="NextCardTradeValue">
+/// Hoeveel legers de volgende kaarteninleg oplevert (<see cref="RiskGame.Rules.State.DeckState.NextTradeValue"/>) —
+/// het voorbeeld bij de inlegregel in spelinfo, zodat de reeks uit <c>cards.json</c> nergens in tekst
+/// herhaald hoeft te worden.
+/// </param>
+/// <param name="StartingArmies">
+/// Startlegers per speler in dit spel (<see cref="RiskGame.Rules.TurnFlow.StartingArmiesResolver"/>) —
+/// <c>null</c> in de lobby, waar het spelersaantal nog niet vaststaat.
+/// </param>
 public sealed record GameStateDto(
     string GameId,
     GamePhaseDto Phase,
@@ -44,10 +55,38 @@ public sealed record GameStateDto(
     IReadOnlyList<string> Winners,
     TvDisplaySettingsDto TvDisplay,
     TvDisplaySettingsDto TvDisplayDefault,
+    IReadOnlyList<ContinentDto> Continents,
+    IReadOnlyList<EventSummaryDto> Events,
+    int NextCardTradeValue,
     OrderRollStateDto? OrderRollState = null,
     SetupStateDto? SetupState = null,
     int StateVersion = 0,
-    string? PendingWinnerPlayerId = null);
+    string? PendingWinnerPlayerId = null,
+    int? StartingArmies = null);
+
+/// <summary>
+/// Een continent met z'n bonus en, als één speler het volledig bezit, wie dat is (spelinfo,
+/// plan-testronde-tv punt 3). De server bepaalt het bezit (<see cref="RiskGame.Rules.State.GameState.OwnsEntireContinent"/>)
+/// — dezelfde voorwaarde als de continentbonus bij het versterken; de client rekent het niet na
+/// (frontend/CLAUDE.md). De weergavenaam komt client-side uit <c>locales/continents.ts</c>.
+/// </summary>
+public sealed record ContinentDto(string Id, int Bonus, string? OwnerPlayerId);
+
+/// <summary>
+/// Een gebeurteniskaart uit de catalogus van de kaartvariant (FO §9.2) — de "mogelijke kaarten" in
+/// spelinfo. Naam en omschrijving komen client-side uit <c>locales/events.ts</c>. Niet gefilterd op
+/// <see cref="GameSettingsDto.EventsEnabled"/>, net zoals <see cref="GameStateDto.Roles"/> niet op
+/// <see cref="GameSettingsDto.RolesEnabled"/>: de client verbergt de sectie als gebeurtenissen uit
+/// staan.
+/// </summary>
+public sealed record EventSummaryDto(string Id, EventDurationDto Duration);
+
+/// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>
+public enum EventDurationDto
+{
+    Instant,
+    OneRound,
+}
 
 /// <summary>
 /// Alles wat een client tijdens <see cref="GamePhaseDto.Claiming"/>/

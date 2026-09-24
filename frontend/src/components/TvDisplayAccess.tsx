@@ -13,9 +13,9 @@ export interface TvDisplayAccessProps {
 
 /**
  * Knop "TV-weergave" plus het paneel dat hij opent (plan-testronde-tv punt 2) — voor de
- * host-schermen zonder `PhonePlayerHeader`: de lobby, de volgorde-worp en het
- * uitgeschakeld-scherm. Tijdens het spel zelf zit dezelfde toegang als actie in de header. De
- * aanroeper beslist of de speler host is; dit component rendert altijd.
+ * host-schermen zonder `PhonePlayerHeader`: de lobby en de volgorde-worp. Tijdens het spel (ook
+ * als de host is uitgeschakeld) zit dezelfde toegang als actie in de header. De aanroeper beslist
+ * of de speler host is; dit component rendert altijd.
  */
 export function TvDisplayAccess({ settings, defaults, onChange, error = null }: TvDisplayAccessProps) {
   const { t } = useTranslation('tvDisplay')

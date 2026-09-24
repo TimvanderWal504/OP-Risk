@@ -15,7 +15,7 @@ van §1. Vink een punt pas af als code, tests en (waar genoemd) FO/`DESIGN.md` b
 - [x] **7** — Lobby-instelling dobbelregel + nieuwe verdedigingsrollen (Brazilië/Indonesië/IJsland)
 - [ ] **2** — TV-weergave-instellingen (tekstschaal, glas) vanaf de host-telefoon (code, tests en `DESIGN.md` af; echte-TV-check op slider 0/50/100 nog open)
 - [ ] **4** — Nieuwsbanner met de laatste 10 acties op de TV
-- [ ] **3** — Spelinfo op de telefoon
+- [x] **3** — Spelinfo op de telefoon
 
 Kleine, afgebakende fixes eerst; 4 is het grootste werk en 3 leunt deels op dezelfde
 stand-/catalogusdata.
@@ -429,14 +429,52 @@ Claiming/InitialPlacement/InProgress. Daarbuiten krijgt de host dezelfde toegang
 **Beslissing.** Alleen op de telefoon.
 
 **Aanpak.** `GameInfoPanel`, opgebouwd zoals `CardsPanel`/`MissionPanel`, met tabbladen:
-- [ ] **Stand:** per speler gebieden, legers, aantal kaarten, continenten in bezit, uitgeschakeld.
+- [x] **Stand:** per speler gebieden, legers, aantal kaarten, continenten in bezit, uitgeschakeld.
       Alleen openbare informatie (geen missies).
-- [ ] **Spelregels:** beknopte uitleg volgens het FO, afgestemd op de lobby-instellingen van dit spel
+- [x] **Spelregels:** beknopte uitleg volgens het FO, afgestemd op de lobby-instellingen van dit spel
       (winconditie, timers, startopstelling, dobbelregel uit punt 7).
-- [ ] **Rollen** (alleen als rollen aan staan): eigen rol uitgelicht, alle rollen met effect in gewone
+- [x] **Rollen** (alleen als rollen aan staan): eigen rol uitgelicht, alle rollen met effect in gewone
       taal, herkomstland en wie de rol heeft.
-- [ ] **Gebeurteniskaart** (alleen als gebeurtenissen aan staan): actieve kaart, wat die doet en hoe
-      lang nog, plus de lijst met mogelijke kaarten.
-- [ ] Controleren of rol- en gebeurteniscatalogus met effectdetails al in `GameStateDto` zitten;
+- [x] **Gebeurteniskaart** (alleen als gebeurtenissen aan staan): actieve kaart, wat die doet en hoe
+      lang nog, plus de lijst met mogelijke kaarten. *Bijgesteld, zie hieronder: nu een sectie
+      onder Regels met alleen de mogelijke kaarten.*
+- [x] Controleren of rol- en gebeurteniscatalogus met effectdetails al in `GameStateDto` zitten;
       zo niet, DTO uitbreiden.
-- [ ] Tests.
+- [x] Tests.
+
+**Beslissingen (2026-09-24, na elite-code-review van het plan).**
+- Continenten in bezit **met bonus**.
+- De header komt ook op het **uitgeschakeld-scherm** (spelinfo alleen via de header).
+- Regelconstanten **in woorden én met een voorbeeld**.
+- **Gebeurtenissen horen bij de regels:** een sectie onder Regels, geen eigen tabblad. Live
+  gebeurtenisdata (actief / laatst getrokken) komt pas met de gebeurtenisronde.
+- **Alle instellingen sturen wat er getoond wordt:** wat uit staat, wordt niet genoemd.
+- **Standaardwaarden naar het FO:** rollen en gebeurtenisronde staan standaard **uit** in
+  `CreateGameForm` (stonden sinds de eerste versie ten onrechte aan).
+
+**Uitvoering (2026-09-24).**
+- **Backend:** `GameStateDto` kreeg `Continents` (`ContinentDto`: id, bonus, eigenaar via
+  `OwnsEntireContinent`), `Events` (`EventSummaryDto`: id, duur), `NextCardTradeValue` en
+  `StartingArmies`. De voorbeelden in de regels komen zo van de server in plaats van uit tekst.
+  `StartingArmiesResolver.TryResolve` geeft `null` voor een spelersaantal buiten het preset, want
+  voor weergave is dat geen fout.
+- **Frontend:**
+  - `GameInfoPanel` met drie tabbladen (`SegmentedControl`), opgebouwd uit
+    `GameInfoStandings`, `GameInfoRules` en `GameInfoRoles`.
+  - Het gedeelde blok `ui/PanelSection` komt uit `TvDisplayPanel`.
+  - `formatMinutes` is gedeeld met het lobbyoverzicht.
+  - Nieuwe namespace `locales/gameInfo.ts`.
+  - De header zit nu op een vaste plek boven zowel het uitgeschakeld-scherm als het faseschem. Bij
+    uitschakeling blijft hij dezelfde instantie, en de status is dan "Uitgeschakeld". Het
+    `hostActions`-slot op het uitgeschakeld-scherm is vervallen, want de TV-weergave zit nu in de
+    header.
+- **Afwijking van het bouwplan:** de `createGame`-beschrijvingen zijn níet hergebruikt voor de
+  regels. Ze zijn geschreven als toelichting bij een keuze ("Zoals hiernaast…"), en de klassieke
+  dobbelregel noemt de verdedigingsrollen ook als rollen uit staan. Dat botst met de
+  instellingsafhankelijkheid, dus spelinfo heeft eigen regelzinnen; alleen de titels zijn gedeeld.
+- `DESIGN.md` bijgewerkt: Game Info Panel, de header op het uitgeschakeld-scherm, en de gewijzigde
+  toegang tot de TV-weergave.
+
+**Bevinding, buiten scope:** de gebeurtenisronde (FO §9.2) bestaat niet in de backend. De sectie
+Gebeurtenissen legt hem uit zoals het FO hem beschrijft, maar in een echt spel wordt nog geen kaart
+getrokken.

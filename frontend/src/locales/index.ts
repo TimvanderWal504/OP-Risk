@@ -23,6 +23,7 @@ import { missions } from './missions'
 import { missionPanel } from './missionPanel'
 import { cardsPanel } from './cardsPanel'
 import { tvDisplay } from './tvDisplay'
+import { gameInfo } from './gameInfo'
 import { events } from './events'
 import { cards } from './cards'
 import { quotes } from './quotes'
@@ -53,6 +54,7 @@ export const trees = {
   missionPanel,
   cardsPanel,
   tvDisplay,
+  gameInfo,
   events,
   cards,
   quotes,

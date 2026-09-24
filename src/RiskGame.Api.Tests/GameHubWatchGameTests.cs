@@ -71,6 +71,23 @@ public sealed class GameHubWatchGameTests(PostgresFixture postgres) : IAsyncLife
     }
 
     [Fact]
+    public async Task WatchGame_LevertDeSpelinfoCatalogiMee()
+    {
+        var gameId = await CreateGameAsync();
+        await using var connection = await ConnectAsync();
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        // Plan-testronde-tv punt 3: continenten (nog van niemand), gebeurteniskaarten en de eerste
+        // inlegwaarde gaan mee; startlegers pas buiten de lobby.
+        Assert.NotEmpty(state.Continents);
+        Assert.All(state.Continents, continent => Assert.Null(continent.OwnerPlayerId));
+        Assert.NotEmpty(state.Events);
+        Assert.True(state.NextCardTradeValue > 0);
+        Assert.Null(state.StartingArmies);
+    }
+
+    [Fact]
     public async Task WatchGame_MetOnbekendeGameId_WordtGeweigerd()
     {
         await using var connection = await ConnectAsync();

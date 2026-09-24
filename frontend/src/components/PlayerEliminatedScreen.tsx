@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PlayerColorDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
@@ -9,16 +8,14 @@ import phoneEliminated from '../styles/assets/phone-eliminated.webp'
 
 export interface PlayerEliminatedScreenProps {
   myColor: PlayerColorDto | null
-  /** Extra actie(s) alleen voor de host — nu de TV-weergave (`TvDisplayAccess`,
-   *  plan-testronde-tv punt 2): een uitgeschakelde host blijft de TV bedienen. */
-  hostActions?: ReactNode
 }
 
 /**
  * "9 ELIMINATED"-scherm. Route-level (`PhonePage.tsx`): geldt door élke fase heen zolang
  * `me.isEliminated` waar is. Bewust géén koppeling aan de combat-narratief-state van het
  * gevecht dat de speler eruit gooide — het drama hoort op de TV (`atlasSlam`), de telefoon is
- * een controller (zie het Attack-bouwplan).
+ * een controller (zie het Attack-bouwplan). `PhonePage` zet de `PhonePlayerHeader` erboven, dus
+ * spelinfo en (voor de host) de TV-weergave blijven bereikbaar zonder eigen knoppen hier.
  *
  * Eigen achtergrondfoto (`phone-eliminated.webp`) i.p.v. de gedeelde `PhoneStageBackground`
  * (`phone-battlefield.webp`) erachter — via `PhoneScreen`'s `style`-ontsnappingsluik, dat
@@ -35,7 +32,7 @@ export interface PlayerEliminatedScreenProps {
  * eigen inhoud, met een te smal/wisselend paneel als gevolg — vandaar de vaste `mx-auto` op de
  * badge en de breedte-begrensde subtitle.
  */
-export function PlayerEliminatedScreen({ myColor, hostActions }: PlayerEliminatedScreenProps) {
+export function PlayerEliminatedScreen({ myColor }: PlayerEliminatedScreenProps) {
   const { t } = useTranslation('attack')
 
   return (
@@ -56,7 +53,6 @@ export function PlayerEliminatedScreen({ myColor, hostActions }: PlayerEliminate
           {t('elim.gameContinues')}
         </div>
       </GlassPanel>
-      {hostActions && <div className="flex flex-col gap-3">{hostActions}</div>}
     </PhoneScreen>
   )
 }

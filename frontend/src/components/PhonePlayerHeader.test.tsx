@@ -24,6 +24,43 @@ describe('PhonePlayerHeader', () => {
     expect(screen.queryByText('Beurttijd')).not.toBeInTheDocument()
   })
 
+  describe('Spelinfo (plan-testronde-tv punt 3)', () => {
+    it('opent het spelinfo-paneel via de actie in de header', async () => {
+      render(
+        <PhonePlayerHeader
+          state={fixtureState}
+          me={fixtureState.players[1]}
+          phase={GamePhaseDto.Claiming}
+          tradeInCards={vi.fn()}
+          setTvDisplay={vi.fn()}
+          error={null}
+        />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: 'Spelinfo' }))
+
+      expect(screen.getByRole('heading', { name: 'Spelinfo' })).toBeInTheDocument()
+    })
+
+    it('toont voor een uitgeschakelde speler "Uitgeschakeld" als status, zonder fase of rol', () => {
+      const eliminated = { ...fixtureState.players[1], isEliminated: true, roleId: 'generaal', isRoleActive: true }
+      render(
+        <PhonePlayerHeader
+          state={{ ...fixtureState, players: [fixtureState.players[0], eliminated] }}
+          me={eliminated}
+          phase={GamePhaseDto.Claiming}
+          tradeInCards={vi.fn()}
+          setTvDisplay={vi.fn()}
+          error={null}
+        />,
+      )
+
+      expect(screen.getByText('Uitgeschakeld')).toBeInTheDocument()
+      expect(screen.queryByText(/Gebieden claimen/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/actief/)).not.toBeInTheDocument()
+    })
+  })
+
   describe('TV-weergave (plan-testronde-tv punt 2)', () => {
     it('geeft de host een TV-weergave-actie die het paneel opent en wijzigingen doorstuurt', async () => {
       const setTvDisplay = vi.fn()

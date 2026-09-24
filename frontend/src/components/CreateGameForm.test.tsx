@@ -75,6 +75,21 @@ describe('CreateGameForm', () => {
     expect(body.tvDisplay).toEqual(remembered)
   })
 
+  it('zet rollen en gebeurtenisronde standaard uit, zoals FO §9/§10', async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
+    fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
+
+    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    const body = JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)
+    expect(body.settings.rolesEnabled).toBe(false)
+    expect(body.settings.eventsEnabled).toBe(false)
+  })
+
   it('stuurt tvDisplay null mee zolang deze telefoon niets onthouden heeft', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)

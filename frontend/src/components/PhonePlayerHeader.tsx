@@ -6,6 +6,7 @@ import { MissionPanel } from './ui/MissionPanel'
 import { MissionChangedNotice } from './ui/MissionChangedNotice'
 import { CardsPanel } from './CardsPanel'
 import { TvDisplayPanel } from './TvDisplayPanel'
+import { GameInfoPanel } from './GameInfoPanel'
 import { CardsIcon, InfoIcon, MissionIcon, TvIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
@@ -55,6 +56,7 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay
   const { timer, timerState } = usePhoneHeaderTimer(state.turnState?.timer ?? null)
   const [cardsOpen, setCardsOpen] = useState(false)
   const [tvDisplayOpen, setTvDisplayOpen] = useState(false)
+  const [gameInfoOpen, setGameInfoOpen] = useState(false)
 
   const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null)
 
@@ -86,9 +88,13 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay
   // hierboven ("{name} · {colorName}"), hier als extra segment ná de fasenaam. `me.isRoleActive`
   // komt al kant-en-klaar van de server (RoleEffects.IsActive, plan-rollen C4) — de telefoon mag
   // "bezit ik nog mijn herkomstland" niet zelf naspelen (frontend/CLAUDE.md).
-  const statusWithRole = me.roleId
-    ? `${status} · ${tDynamic(`${me.roleId}.name`, 'roles')} · ${t(me.isRoleActive ? 'common:playerHeader.roleActive' : 'common:playerHeader.roleInactive')}`
-    : status
+  // Een uitgeschakelde speler kijkt alleen nog mee (plan-testronde-tv punt 3): de fasenaam en de
+  // rol-status zouden suggereren dat hij nog meedoet, dus alleen "Uitgeschakeld".
+  const statusWithRole = me.isEliminated
+    ? t('common:playerHeader.eliminated')
+    : me.roleId
+      ? `${status} · ${tDynamic(`${me.roleId}.name`, 'roles')} · ${t(me.isRoleActive ? 'common:playerHeader.roleActive' : 'common:playerHeader.roleInactive')}`
+      : status
 
   const myTerritoryIds = new Set(
     state.territories.filter((territory) => territory.ownerPlayerId === me.id).map((territory) => territory.territoryId),
@@ -115,7 +121,12 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay
       label: t('common:playerHeader.actions.mission'),
       onClick: me.missionId ? mission.openPanel : undefined,
     },
-    { icon: <InfoIcon className="h-[18px] w-[18px]" />, label: t('common:playerHeader.actions.info') },
+    {
+      icon: <InfoIcon className="h-[18px] w-[18px]" />,
+      label: t('common:playerHeader.actions.info'),
+      onClick: () => setGameInfoOpen(true),
+      active: gameInfoOpen,
+    },
     // Alleen de host bedient de TV (plan-testronde-tv punt 2) — voor andere spelers bestaat deze
     // actie niet, in plaats van een uitgeschakelde knop (The Invisible Design Rule).
     ...(me.isHost
@@ -158,6 +169,7 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay
           error={error}
         />
       )}
+      {gameInfoOpen && <GameInfoPanel state={state} me={me} onClose={() => setGameInfoOpen(false)} />}
       {me.isHost && tvDisplayOpen && (
         <TvDisplayPanel
           settings={state.tvDisplay}
