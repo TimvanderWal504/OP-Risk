@@ -440,6 +440,7 @@ public static class MapDefinitionParser
             var name = model.Name ?? model.Id;
             var description = model.Description ?? string.Empty;
             var requiresOwnTurn = model.RequiresOwnTurn ?? false;
+            var minPlayers = model.MinPlayers ?? 0;
             var p = model.Params;
 
             switch (model.Type)
@@ -452,7 +453,8 @@ public static class MapDefinitionParser
                     }
 
                     missions.Add(new ConquerContinentsMission(
-                        model.Id, name, description, requiresOwnTurn, continents, p.ExtraAnyContinent ?? false));
+                        model.Id, name, description, requiresOwnTurn, continents, p.ExtraAnyContinent ?? false)
+                    { MinPlayers = minPlayers });
                     break;
 
                 case "TerritoryCount":
@@ -463,7 +465,8 @@ public static class MapDefinitionParser
                     }
 
                     missions.Add(new TerritoryCountMission(
-                        model.Id, name, description, requiresOwnTurn, territoryCount));
+                        model.Id, name, description, requiresOwnTurn, territoryCount)
+                    { MinPlayers = minPlayers });
                     break;
 
                 case "TerritoryCountMinArmies":
@@ -480,7 +483,8 @@ public static class MapDefinitionParser
                     }
 
                     missions.Add(new TerritoryCountMinArmiesMission(
-                        model.Id, name, description, requiresOwnTurn, countMin, minArmies));
+                        model.Id, name, description, requiresOwnTurn, countMin, minArmies)
+                    { MinPlayers = minPlayers });
                     break;
 
                 case "EliminatePlayer":
@@ -497,7 +501,8 @@ public static class MapDefinitionParser
                     }
 
                     missions.Add(new EliminatePlayerMission(
-                        model.Id, name, description, requiresOwnTurn, p.TargetColor, model.FallbackMissionId));
+                        model.Id, name, description, requiresOwnTurn, p.TargetColor, model.FallbackMissionId)
+                    { MinPlayers = minPlayers });
                     break;
 
                 default:
@@ -525,6 +530,11 @@ public static class MapDefinitionParser
 
         foreach (var mission in missions)
         {
+            if (mission.MinPlayers != 0 && !SupportedPlayerCounts.Contains(mission.MinPlayers))
+            {
+                errors.Add($"missions.json: missie '{mission.Id}' heeft een ongeldige 'minPlayers' ({mission.MinPlayers}); moet tussen 2 en 7 liggen.");
+            }
+
             switch (mission)
             {
                 case ConquerContinentsMission conquer:

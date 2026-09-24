@@ -241,7 +241,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
                 // missiehouder automatisch op de fallback-missie uit.
                 var eliminatedColorId = state.Player(defenderId).ColorId!;
                 var fallbacks = MissionAssignmentCalculator.ResolveFallbacksAfterElimination(
-                    state.Players, eliminatedColorId, attackerId);
+                    state.Players, state.Map.Missions, eliminatedColorId, attackerId);
 
                 foreach (var (holderId, fallbackMissionId) in fallbacks)
                 {

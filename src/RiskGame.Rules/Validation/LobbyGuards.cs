@@ -120,9 +120,14 @@ public static class LobbyGuards
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.insufficientRoles");
 
-    /// <summary>Analoog aan <see cref="RolePoolIsLargeEnough"/>, voor geheime missies (FO §6.1).</summary>
+    /// <summary>
+    /// Analoog aan <see cref="RolePoolIsLargeEnough"/>, voor geheime missies (FO §6.1). Telt
+    /// alleen missies die bij dit spelersaantal ook daadwerkelijk trekbaar zijn
+    /// (<see cref="Missions.MissionDefinition.MinPlayers"/>) — een missie met een hoger minimum
+    /// telt hier niet mee, ook al staat hij wel in de volledige pool.
+    /// </summary>
     public static ValidationResult MissionPoolIsLargeEnough(GameState state) =>
-        state.Map.Missions.Count >= state.Players.Count
+        state.Map.Missions.Count(mission => mission.MinPlayers <= state.Players.Count) >= state.Players.Count
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.insufficientMissions");
 }

@@ -424,6 +424,35 @@ public class ValidatieTests
     }
 
     [Fact]
+    public void MissieMetMinPlayersBuitenBereik_IsOngeldig()
+    {
+        const string missions = """
+            {
+              "missions": [
+                {
+                  "id": "territory-2",
+                  "type": "TerritoryCount",
+                  "params": { "count": 2 },
+                  "minPlayers": 1,
+                  "name": "Bezit 2 gebieden",
+                  "description": "Bezit 2 gebieden."
+                },
+                {
+                  "id": "eliminate-red",
+                  "type": "EliminatePlayer",
+                  "params": { "targetColor": "red" },
+                  "fallbackMissionId": "territory-2",
+                  "name": "Schakel rood uit",
+                  "description": "Vernietig rood."
+                }
+              ]
+            }
+            """;
+
+        Parse(missions: missions).AssertFailure("ongeldige 'minPlayers'");
+    }
+
+    [Fact]
     public void MissiesetZonderEliminateVoorAlleKleuren_IsOngeldig()
     {
         const string colors = """

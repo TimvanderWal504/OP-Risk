@@ -204,6 +204,11 @@ Missies staan in JSON en zijn zelf uit te breiden. Ondersteunde missietypes (rul
 | `EliminatePlayer` | `targetColor`, `fallbackMissionId` | Schakel Geel uit |
 | `WorldDomination` | — | Verover alles |
 
+Elk missietype kent daarnaast een optioneel, missie-breed veld `minPlayers`: het minimale
+spelersaantal waarbij de missie mag worden toegewezen. Ontbreekt het veld, dan geldt geen
+minimum. `territory-18-min2` ("Bezit 18 gebieden met elk ≥ 2 legers") heeft `minPlayers: 4`:
+bij 2 of 3 spelers wordt hij niet toegewezen.
+
 ```json
 {
   "id": "eliminate-yellow",
@@ -220,6 +225,10 @@ Missies staan in JSON en zijn zelf uit te breiden. Ondersteunde missietypes (rul
 Regels rond `EliminatePlayer`:
 - Is het doelwit de speler zelf (eigen kleur) of doet die kleur niet mee → direct de fallback-missie.
 - Wordt het doelwit door een **andere** speler uitgeschakeld → speler krijgt automatisch de fallback-missie (melding op eigen telefoon, niet op TV).
+- Is de data-driven `fallbackMissionId` bij het huidige spelersaantal niet toegestaan (`minPlayers`
+  hierboven) → speler krijgt in plaats daarvan `territory-24` (die kent zelf geen minimum). Zo kan
+  een missie met een spelersminimum nooit via de fallback-route alsnog bij een te klein aantal
+  spelers terechtkomen.
 - Bij 7 spelers moet de missieset dekkend zijn voor 7 kleuren; de set wordt bij de start gevalideerd (server weigert een start met inconsistente missiedata).
 
 ### 6.2 Timing van missie-overwinningen

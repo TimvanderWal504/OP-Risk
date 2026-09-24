@@ -1,5 +1,5 @@
 {
-  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. De twee TerritoryCount(MinArmies)-missies dienen zowel als zelfstandige missie als als fallbackMissionId voor de eliminate-missies (FO: 'is het doelwit de speler zelf, of doet die kleur niet mee -> direct de fallback-missie').",
+  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. De twee TerritoryCount(MinArmies)-missies dienen zowel als zelfstandige missie als als fallbackMissionId voor de eliminate-missies (FO: 'is het doelwit de speler zelf, of doet die kleur niet mee -> direct de fallback-missie'). 'territory-18-min2' heeft 'minPlayers: 4': bij minder spelers telt hij niet mee in de trekpool en wijkt een eliminate-missie die er (via fallbackMissionId) naar verwijst uit naar 'territory-24' in plaats van naar deze missie.",
   "missions": [
     {
       "id": "conquer-asia-south-america",
@@ -54,6 +54,7 @@
       "id": "territory-18-min2",
       "type": "TerritoryCountMinArmies",
       "params": { "count": 18, "minArmies": 2 },
+      "minPlayers": 4,
       "name": "Bezit 18 gebieden met elk minstens 2 legers",
       "description": "Bezit op enig moment 18 gebieden, elk bezet met minstens 2 legers."
     },

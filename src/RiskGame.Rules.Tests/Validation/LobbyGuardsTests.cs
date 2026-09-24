@@ -146,4 +146,28 @@ public sealed class LobbyGuardsTests
 
         Assert.False(LobbyGuards.TargetIsRemovable(state, "onbekend").IsSuccess);
     }
+
+    // Regressie: 'territory-18-min2' in de echte kaartdata heeft 'minPlayers: 4', dus de
+    // gefilterde pool (12 van de 13 missies) blijft ruim voldoende voor elk ondersteund
+    // spelersaantal — MissionPoolIsLargeEnough moet dat niet als tekort zien.
+    [Fact]
+    public void MissionPoolIsLargeEnough_MetTweeSpelers_IsGeldig()
+    {
+        var state = LobbyState([TestGame.Player("p1", "red"), TestGame.Player("p2", "blue")]);
+
+        Assert.True(LobbyGuards.MissionPoolIsLargeEnough(state).IsSuccess);
+    }
+
+    [Fact]
+    public void MissionPoolIsLargeEnough_MetVierSpelers_IsGeldig()
+    {
+        var map = Standaard43Data.Load();
+        var players = map.Colors
+            .Take(4)
+            .Select((color, index) => TestGame.Player($"p{index}", color.Id))
+            .ToArray();
+        var state = LobbyState(players);
+
+        Assert.True(LobbyGuards.MissionPoolIsLargeEnough(state).IsSuccess);
+    }
 }

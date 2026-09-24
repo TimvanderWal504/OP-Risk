@@ -12,6 +12,15 @@ public abstract record MissionDefinition(string Id, string Name, string Descript
     : IMission
 {
     /// <summary>
+    /// Minimaal spelersaantal waarbij deze missie mag worden toegewezen — in de trekpool
+    /// (<see cref="Missions.MissionAssignmentCalculator.Assign"/>) én als bereikbaar
+    /// fallback-doel (FO §6.1). <c>0</c> (default) betekent geen minimum. Init-only i.p.v.
+    /// een positionele parameter, zodat de bestaande constructors van de afgeleide types
+    /// ongewijzigd blijven voor de meeste missies, die geen minimum kennen.
+    /// </summary>
+    public int MinPlayers { get; init; }
+
+    /// <summary>
     /// Bewust <c>abstract</c>, geen <c>virtual</c>-default: elk missietype — ook toekomstige —
     /// moet expliciet opgeven of het onomkeerbaar is (FO §6.2), zodat een nieuw missietype
     /// nooit stilzwijgend de verkeerde classificatie erft.
