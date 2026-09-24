@@ -29,4 +29,15 @@ export const cardsPanel = {
   tradeConfirm: { nl: 'Inleggen', en: 'Trade in' },
   tradeSkip: { nl: 'Niet inleggen', en: "Don't trade" },
   close: { nl: 'Sluiten', en: 'Close' },
+  /** Selectievoortgang tijdens trade-modus (impeccable-kritiek 2026-09-21, P1: geen
+   *  voortgangssignaal — de speler telde zelf omrande tegels). `{{count}}` is 0-3;
+   *  het maximum staat vast op `TRADE_SET_SIZE`, dus letterlijk "/3" i.p.v. een tweede var. */
+  tradeSelectedCount: { nl: '{{count}}/3 geselecteerd', en: '{{count}}/3 selected' },
+  /** Setregel, letterlijk uit FO §4.4 ("Geldige sets: 3× hetzelfde symbool of 1 van elk; een
+   *  joker vervangt elk symbool"). Zelfde kritiek-ronde, P1: de verplichte inleg-stap had geen
+   *  uitweg én geen uitleg — de speler moest de regel van buiten dit scherm kennen. */
+  tradeSetRuleHint: {
+    nl: '3 kaarten met hetzelfde symbool, of 1 van elk symbool — een Joker vervangt elk symbool.',
+    en: 'Three cards with the same symbol, or one of each symbol — a Joker replaces any symbol.',
+  },
 } satisfies LocaleTree

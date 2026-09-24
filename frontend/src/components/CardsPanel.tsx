@@ -112,6 +112,11 @@ export function CardsPanel({
         <p className="text-center font-body text-body text-fg-secondary">
           {mode === 'trade' && mustTradeInCards ? t('tradeMandatory') : t('intro')}
         </p>
+        {mode === 'trade' && (
+          <p className="text-center text-xs font-semibold tabular-nums text-fg-muted">
+            {t('tradeSelectedCount', { count: selectedIds.length })}
+          </p>
+        )}
 
         {mode === 'browse' &&
           (hand.length === 0 ? (
@@ -148,7 +153,7 @@ export function CardsPanel({
         )}
       </div>
 
-      <Footer error={error}>
+      <Footer error={error} hint={mode === 'trade' ? t('tradeSetRuleHint') : undefined}>
         {mode === 'browse' ? (
           <>
             {hasTradeableCardSet && (

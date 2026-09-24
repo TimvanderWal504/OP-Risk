@@ -219,6 +219,53 @@ describe('CardsPanel', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('toont de setregel en een selectieteller die meetelt in trade-modus (impeccable-kritiek 2026-09-21)', async () => {
+    render(
+      <CardsPanel
+        hand={hand}
+        myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
+        mustTradeInCards={false}
+        initialMode="trade"
+        onTradeInCards={vi.fn()}
+        onClose={vi.fn()}
+        error={null}
+      />,
+    )
+
+    expect(
+      screen.getByText('3 kaarten met hetzelfde symbool, of 1 van elk symbool — een Joker vervangt elk symbool.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('0/3 geselecteerd')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /Alaska/ }))
+    expect(screen.getByText('1/3 geselecteerd')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /Alberta/ }))
+    await userEvent.click(screen.getByRole('checkbox', { name: /Ontario/ }))
+    expect(screen.getByText('3/3 geselecteerd')).toBeInTheDocument()
+  })
+
+  it('toont geen selectieteller of setregel in browse-modus', () => {
+    render(
+      <CardsPanel
+        hand={hand}
+        myTerritoryIds={new Set()}
+        hasTradeableCardSet={true}
+        mustTradeInCards={false}
+        initialMode="browse"
+        onTradeInCards={vi.fn()}
+        onClose={vi.fn()}
+        error={null}
+      />,
+    )
+
+    expect(screen.queryByText(/geselecteerd/)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('3 kaarten met hetzelfde symbool, of 1 van elk symbool — een Joker vervangt elk symbool.'),
+    ).not.toBeInTheDocument()
+  })
+
   it('toont een servergeweigerde-set-foutmelding wanneer meegegeven', () => {
     render(
       <CardsPanel
