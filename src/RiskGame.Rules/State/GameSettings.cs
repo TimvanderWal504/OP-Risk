@@ -27,6 +27,10 @@ namespace RiskGame.Rules.State;
 /// FO §6.2: wanneer een vervulde bezit-missie daadwerkelijk wint. Betekenisloos bij
 /// <see cref="State.WinCondition.WorldDomination"/> (er zijn dan geen missies).
 /// </param>
+/// <param name="DefenseDiceRule">
+/// FO §5.3 stap 4/§10: Huisregel (standaard) of Klassiek. Bepaalt ook of de
+/// <c>DefenseBoost</c>-rollen in de rolpool zitten (<see cref="Roles.RolePool"/>).
+/// </param>
 public sealed record GameSettings(
     WinCondition WinCondition,
     SetupMode SetupMode,
@@ -36,4 +40,5 @@ public sealed record GameSettings(
     bool RolesEnabled,
     RoleAssignmentMode RoleAssignment,
     bool EventsEnabled,
-    MissionWinTiming MissionWinTiming = MissionWinTiming.EndOfTurn);
+    MissionWinTiming MissionWinTiming = MissionWinTiming.EndOfTurn,
+    DefenseDiceRule DefenseDiceRule = DefenseDiceRule.HouseRule);

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { LobbySettingsSummary } from './LobbySettingsSummary'
-import { MissionWinTimingDto, RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../types/GameSettings'
+import { DefenseDiceRuleDto, MissionWinTimingDto, RoleAssignmentModeDto, SetupModeDto, WinConditionDto } from '../types/GameSettings'
 
 describe('LobbySettingsSummary', () => {
   it('vertaalt de instellingen naar leesbare rijen', () => {
@@ -17,6 +17,7 @@ describe('LobbySettingsSummary', () => {
           roleAssignment: RoleAssignmentModeDto.Random,
           eventsEnabled: false,
           missionWinTiming: MissionWinTimingDto.EndOfTurn,
+          defenseDiceRule: DefenseDiceRuleDto.HouseRule,
         }}
       />,
     )
@@ -27,5 +28,7 @@ describe('LobbySettingsSummary', () => {
     expect(screen.getByText('3 min')).toBeInTheDocument()
     expect(screen.queryByText('1 min')).not.toBeInTheDocument()
     expect(screen.getAllByText('Uit')).toHaveLength(2)
+    expect(screen.getByText('Dobbelregel')).toBeInTheDocument()
+    expect(screen.getByText('Huisregel')).toBeInTheDocument()
   })
 })

@@ -125,7 +125,7 @@ public class Standaard43Tests
     {
         var roles = Standaard43Data.Load().Roles;
 
-        Assert.Equal(15, roles.Count);
+        Assert.Equal(18, roles.Count);
         Assert.Equal(
             roles.Count,
             roles.Select(role => role.OriginTerritory).Distinct(StringComparer.Ordinal).Count());

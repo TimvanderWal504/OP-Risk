@@ -227,15 +227,37 @@ public static class AttackGuards
     }
 
     /// <summary>
+    /// Of <paramref name="playerId"/> zijn <c>DefenseBoost</c>-rol (FO §8.1) nu kan inzetten:
+    /// Huisregel actief, de boost actief (herkomstland in bezit) en deze ronde nog niet gebruikt.
+    /// Gedeeld door de guard hieronder en <c>PlayerDto.DefenseBoostAvailable</c>.
+    /// </summary>
+    public static bool DefenseBoostAvailable(GameState state, string playerId) =>
+        state.Settings.DefenseDiceRule == DefenseDiceRule.HouseRule
+        && !state.Player(playerId).DefenseBoostUsed
+        && RoleEffects.Active<DefenseBoostEffect>(state, playerId) is not null;
+
+    /// <summary>
+    /// Of verdedigen met <paramref name="defenseDice"/> in het lopende gevecht alleen mag mét
+    /// inzet van de boost (FO §5.3 stap 4, Huisregel: aanvaller gooit 1 → verdediger ook 1). De
+    /// commandhandler gebruikt dit om te bepalen of de boost daadwerkelijk verbruikt wordt.
+    /// </summary>
+    public static bool DefenseBoostRequired(GameState state, int defenseDice) =>
+        defenseDice == MaxDefenseDice
+        && state.Settings.DefenseDiceRule == DefenseDiceRule.HouseRule
+        && state.TurnState?.PendingCombat is { AttackDice: MinAttackDice };
+
+    /// <summary>
     /// Of <paramref name="playerId"/> — de verdediger, niet de actieve speler — met
     /// <paramref name="defenseDice"/> dobbelstenen mag verdedigen tegen het lopende gevecht
     /// (FO §5.3 stap 4, TO §4.1). Harde regel: een verdediger met nog maar 1 leger in het
-    /// doelgebied kan alleen met 1 dobbelsteen verdedigen. Blokkeert zolang de aanvaller nog
+    /// doelgebied kan alleen met 1 dobbelsteen verdedigen. Bij de Huisregel geldt bovendien:
+    /// tegen een aanval met 1 dobbelsteen alleen 2 met <paramref name="useDefenseBoost"/> én een
+    /// beschikbare boost (<see cref="DefenseBoostAvailable"/>). Blokkeert zolang de aanvaller nog
     /// een open herwerp-beslissing heeft (FO §5.3 stap 3, plan-rollen B6/A1: de verdediger mag
     /// pas kiezen ná "Herwerp" of "Doorgaan").
     /// </summary>
     public static ValidationResult CanChooseDefenseDice(
-        GameState state, string playerId, int defenseDice)
+        GameState state, string playerId, int defenseDice, bool useDefenseBoost = false)
     {
         var preconditions = ValidationResult.Combine(
             Guards.PlayerExists(state, playerId),
@@ -276,11 +298,18 @@ public static class AttackGuards
                     new Dictionary<string, string> { ["territoryId"] = pendingCombat.ToTerritoryId });
         }
 
-        return defenseDice is MinDefenseDice or MaxDefenseDice
-            ? ValidationResult.Success()
-            : ValidationResult.Failure(
+        if (defenseDice is not (MinDefenseDice or MaxDefenseDice))
+        {
+            return ValidationResult.Failure(
                 "attack.invalidDefenseDiceCount",
                 new Dictionary<string, string> { ["min"] = MinDefenseDice.ToString(), ["max"] = MaxDefenseDice.ToString() });
+        }
+
+        return DefenseBoostRequired(state, defenseDice) && !(useDefenseBoost && DefenseBoostAvailable(state, playerId))
+            ? ValidationResult.Failure(
+                "attack.mustDefendWithOneDieHouseRule",
+                new Dictionary<string, string> { ["territoryId"] = pendingCombat.ToTerritoryId })
+            : ValidationResult.Success();
     }
 
     /// <summary>

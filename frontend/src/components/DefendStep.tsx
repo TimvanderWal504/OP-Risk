@@ -16,14 +16,25 @@ export interface DefendStepProps {
   myColor: PlayerColorDto | null
   fromTerritoryId: string
   toTerritoryId: string
-  /** Legerstand van `toTerritoryId` (mijn gebied) — bepaalt de gedwongen 1-dobbelsteen-regel. */
+  /** Legerstand van `toTerritoryId` (mijn gebied) — bepaalt de gedwongen 1-dobbelsteen-regel én
+   *  wordt getoond op de regel onder de kleurblokken (TV-testronde bevinding 1). */
   defenderArmyCount: number
+  /** Legerstand van `fromTerritoryId` (het brongebied van de aanvaller) — alleen ter info op
+   *  dezelfde regel, staat al in de state (frontend/CLAUDE.md: geen client-side afleiding nodig). */
+  attackerArmyCount: number
   /** B6: of de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen — zolang dat zo is, blijven de
    *  keuzeknoppen gemount maar uitgeschakeld, met een wachtregel i.p.v. `defend.choose`. Komt
    *  rechtstreeks van `PendingCombatDto.awaitingRerollDecision` (frontend/CLAUDE.md: geen
    *  spelregels client-side afleiden). */
   awaitingRerollDecision: boolean
-  onChooseDefenseDice: (defenseDice: number) => Promise<CombatResultResponse | undefined>
+  /** Dobbelregel = Huisregel én de aanvaller gooit met 1 (FO §5.3 stap 4) — rechtstreeks uit
+   *  `settings.defenseDiceRule` en `pendingCombat.attackDice`; puur UI-uitgrijzing, de server
+   *  dwingt de regel af (`AttackGuards.CanChooseDefenseDice`). */
+  houseRuleLimitsToOneDie: boolean
+  /** Rol-id van mijn `DefenseBoost`-rol als die nu inzetbaar is (`PlayerDto.defenseBoostAvailable`,
+   *  server-berekend), anders `null`. */
+  defenseBoostRoleId: string | null
+  onChooseDefenseDice: (defenseDice: number, useDefenseBoost?: boolean) => Promise<CombatResultResponse | undefined>
   /** "Terug naar wachten": de verdediger heeft zijn eigen worp gezien en klikt 'm zelf weg.
    *  `PhoneAttackScreen` houdt dit component gemount tot dit vuurt (of tot een nieuwe aanval 'm
    *  automatisch vervangt) — zie de doc-comment daar voor waarom dat nodig is. */
@@ -62,7 +73,10 @@ export function DefendStep({
   fromTerritoryId,
   toTerritoryId,
   defenderArmyCount,
+  attackerArmyCount,
   awaitingRerollDecision,
+  houseRuleLimitsToOneDie,
+  defenseBoostRoleId,
   onChooseDefenseDice,
   onDismiss,
 }: DefendStepProps) {
@@ -70,12 +84,20 @@ export function DefendStep({
   const [result, setResult] = useState<CombatResultResponse | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const forcedToOneDie = defenderArmyCount === 1
+  const onlyOneArmy = defenderArmyCount === 1
+  const boostOffered = houseRuleLimitsToOneDie && !onlyOneArmy && defenseBoostRoleId !== null
+  const forcedToOneDie = onlyOneArmy || (houseRuleLimitsToOneDie && !boostOffered)
+
+  const hint = boostOffered
+    ? t('defend.boost', { role: tDynamic(`${defenseBoostRoleId}.name`, 'roles') })
+    : houseRuleLimitsToOneDie && !onlyOneArmy
+      ? t('defend.houseRuleOneDie')
+      : t('defend.tip')
 
   const choose = async (defenseDice: number) => {
     setSubmitting(true)
     try {
-      const response = await onChooseDefenseDice(defenseDice)
+      const response = await onChooseDefenseDice(defenseDice, defenseDice === 2 && boostOffered)
       if (response) setResult(response)
     } finally {
       setSubmitting(false)
@@ -124,6 +146,15 @@ export function DefendStep({
 
           {result === null && (
             <>
+              {/* Legerstand-regel: alleen zolang er nog geen uitkomst is. `defenderArmyCount`/
+                  `attackerArmyCount` zijn de stand van vóór de worp — na `result` tonen de
+                  dobbelstenen/uitkomst eronder de nieuwe werkelijkheid, dus zou deze regel dan
+                  een verouderd, tegenstrijdig aantal laten zien (elite-code-review, 2026-09-24). */}
+              <div className="font-body text-sm text-fg-muted">
+                {t('defend.myArmies', { territory: tDynamic(toTerritoryId, 'territories'), count: defenderArmyCount })}
+                {' · '}
+                {t('defend.attackerArmies', { territory: tDynamic(fromTerritoryId, 'territories'), count: attackerArmyCount })}
+              </div>
               <div className="font-body text-body text-fg-secondary">
                 {t(awaitingRerollDecision ? 'defend.awaitingReroll' : 'defend.choose')}
               </div>
@@ -163,7 +194,9 @@ export function DefendStep({
                 disabled={submitting || forcedToOneDie || awaitingRerollDecision}
                 onClick={() => choose(2)}
                 className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 py-[18px] text-fg disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderColor: 'var(--pitch-400)', background: defenseDiceBlueTint }}
+                // Boost-aanbod: de rand draagt de status (Recon Silver, zelfde selectiering als het
+                // herwerp-aanbod in AttackFlowStep — DESIGN.md § Role Defense Boost), geen extra icoon.
+                style={{ borderColor: boostOffered ? 'var(--silver-400)' : 'var(--pitch-400)', background: defenseDiceBlueTint }}
               >
                 <span className="font-display text-size7 font-black" style={{ color: 'var(--pitch-400)' }}>
                   2
@@ -171,7 +204,7 @@ export function DefendStep({
                 <span className="font-body text-xs">{t('defend.with2')}</span>
               </button>
             </div>
-            <div className="mt-[10px] text-center font-body text-[11.5px] text-fg-muted">{t('defend.tip')}</div>
+            <div className="mt-[10px] text-center font-body text-[11.5px] text-fg-muted">{hint}</div>
           </GlassPanel>
         ) : (
           <div className="text-center">

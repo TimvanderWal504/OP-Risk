@@ -11,7 +11,7 @@ describe('LobbyPlayerList', () => {
     render(
       <LobbyPlayerList
         players={[
-          { id: '1', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+          { id: '1', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
         ]}
         colors={colors}
         roles={[]}
@@ -29,7 +29,7 @@ describe('LobbyPlayerList', () => {
     render(
       <LobbyPlayerList
         players={[
-          { id: '1', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+          { id: '1', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
         ]}
         colors={colors}
         roles={[]}
@@ -46,7 +46,7 @@ describe('LobbyPlayerList', () => {
     render(
       <LobbyPlayerList
         players={[
-          { id: '1', name: 'Alice', colorId: 'red', roleId: 'president', isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+          { id: '1', name: 'Alice', colorId: 'red', roleId: 'president', isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
         ]}
         colors={colors}
         roles={roles}

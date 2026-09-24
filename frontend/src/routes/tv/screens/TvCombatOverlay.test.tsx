@@ -40,6 +40,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [5, 4],
       defenderRolls: [3],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: null,
     }
 
@@ -48,6 +49,42 @@ describe('TvCombatOverlay', () => {
     expect(screen.getByText('Gevecht')).toBeInTheDocument()
     expect(screen.getByText('Alice')).toBeInTheDocument()
     expect(screen.getByText('Bob')).toBeInTheDocument()
+  })
+
+  it('noemt de verdedigingsrol in het verdedigerlabel zodra de DefenseBoost is ingezet (FO §8.1)', () => {
+    const state = {
+      ...baseState,
+      players: baseState.players.map((player) => (player.id === 'bob' ? { ...player, roleId: 'pendekar' } : player)),
+    }
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [4],
+      defenderRolls: [6, 5],
+      reroll: null,
+      defenseBoostUsed: true,
+      narrated: null,
+    }
+
+    render(<TvCombatOverlay state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
+
+    const label = screen.getByText('Verdediger · Pendekar')
+    expect(label).toHaveClass('text-silver-400')
+    expect(screen.queryByText('Verdediger')).not.toBeInTheDocument()
+  })
+
+  it('toont het gewone verdedigerlabel zonder ingezette DefenseBoost', () => {
+    const combat: CombatBroadcastState = {
+      correlationId: 'c1',
+      attackerRolls: [4],
+      defenderRolls: [6],
+      reroll: null,
+      defenseBoostUsed: false,
+      narrated: null,
+    }
+
+    render(<TvCombatOverlay state={baseState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={combat} />)
+
+    expect(screen.getByText('Verdediger')).toHaveClass('text-fg-muted')
   })
 
   it('geeft alleen de herworpen dobbelsteen de reroll-animatie, de rest blijft de gewone tumble (plan-rollen B2)', () => {
@@ -59,6 +96,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [6, 4],
       defenderRolls: null,
       reroll: { previousRolls: [4, 2], rerolledDieIndex: 1, newValue: 6, rolls: [6, 4] },
+      defenseBoostUsed: false,
       narrated: null,
     }
 
@@ -77,6 +115,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [5, 4],
       defenderRolls: null,
       reroll: null,
+      defenseBoostUsed: false,
       narrated: null,
     }
 
@@ -94,6 +133,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [5, 4],
       defenderRolls: [1],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',
@@ -126,6 +166,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [5, 4],
       defenderRolls: [6, 6],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',
@@ -151,6 +192,7 @@ describe('TvCombatOverlay', () => {
       attackerRolls: [6, 6],
       defenderRolls: [1],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: {
         correlationId: 'c1',
         attackerId: 'alice',

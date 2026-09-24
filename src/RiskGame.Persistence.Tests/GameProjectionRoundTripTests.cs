@@ -50,6 +50,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             new ColorChosen(gameId, "p1", "red"),
             new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
             new ColorChosen(gameId, "p2", "blue"),
+            new TvDisplaySettingsChanged(gameId, TextScale: 70, GlassOpacity: 30, GlassBlur: 55, TvLanguage.En),
             new OrderRolled(gameId, "p1", Die1: 6, Die2: 4),
             new OrderRolled(gameId, "p2", Die1: 3, Die2: 2),
             new TurnOrderDetermined(gameId, ["p1", "p2"]),
@@ -95,8 +96,64 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         // 45 staan nog op de trekstapel.
         Assert.Equal(45, live!.Deck.DrawPile.Count);
         Assert.Empty(live.Deck.DiscardPile);
+        Assert.Equal(new TvDisplaySettings(70, 30, 55, TvLanguage.En), live.TvDisplay);
 
         AssertIdenticalGameState(live, replayed!);
+    }
+
+    /// <summary>
+    /// Plan-testronde-tv punt 2: een stream zonder TV-instelling in <see cref="GameCreated"/>
+    /// (ook elke stream van vóór dat veld) start op <see cref="TvDisplaySettings.Default"/>; een
+    /// meegegeven waarde (de door de host-telefoon onthouden instelling) wordt overgenomen.
+    /// </summary>
+    [Fact]
+    public void GameCreated_ZonderTvDisplay_StartOpDeDefault_EnMetTvDisplay_NeemtDieOver()
+    {
+        var projection = new GameProjection(new MapDefinitionSource(MapsRoot));
+        var remembered = new TvDisplaySettings(80, 50, 20, TvLanguage.En);
+
+        var withoutTvDisplay = projection.Create(new GameCreated("game-a", "standaard-43", Settings));
+        var withTvDisplay = projection.Create(new GameCreated("game-b", "standaard-43", Settings, remembered));
+
+        Assert.Equal(TvDisplaySettings.Default, withoutTvDisplay.TvDisplay);
+        Assert.Equal(remembered, withTvDisplay.TvDisplay);
+    }
+
+    /// <summary>
+    /// Een opgeslagen <see cref="GameState"/>-document van vóór plan-testronde-tv punt 2 heeft
+    /// geen <c>tvDisplay</c>-property; <see cref="Serialization.GameStateJsonConverter"/> moet
+    /// dat als <see cref="TvDisplaySettings.Default"/> lezen i.p.v. te falen.
+    /// </summary>
+    [Fact]
+    public async Task OudDocumentZonderTvDisplay_LaadtMetDeDefault()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using (var session = store.LightweightSession())
+        {
+            session.Events.StartStream<GameState>(
+                gameId,
+                new GameCreated(gameId, "standaard-43", Settings),
+                new TvDisplaySettingsChanged(gameId, 70, 30, 55, TvLanguage.En));
+            await session.SaveChangesAsync();
+        }
+
+        // Martens standaard-tabelnaam voor een document-type: mt_doc_<typenaam in kleine letters>.
+        var table = $"{store.Options.DatabaseSchemaName}.mt_doc_gamestate";
+
+        await using (var session = store.LightweightSession())
+        {
+            session.QueueSqlCommand($"update {table} set data = data - 'tvDisplay' where id = ?", gameId);
+            await session.SaveChangesAsync();
+        }
+
+        await using var querySession = store.QuerySession();
+        var reloaded = await querySession.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(TvDisplaySettings.Default, reloaded!.TvDisplay);
     }
 
     /// <summary>
@@ -1115,6 +1172,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 PendingWinNarrowed pendingWinNarrowed => projection.Apply(state!, pendingWinNarrowed),
                 PendingWinBroken pendingWinBroken => projection.Apply(state!, pendingWinBroken),
                 GameWon gameWon => projection.Apply(state!, gameWon),
+                TvDisplaySettingsChanged tvDisplayChanged => projection.Apply(state!, tvDisplayChanged),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
@@ -1145,6 +1203,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.ActiveEffects, actual.ActiveEffects);
         Assert.Equal(expected.Winners, actual.Winners);
         AssertPendingWinEqual(expected.PendingWin, actual.PendingWin);
+        Assert.Equal(expected.TvDisplay, actual.TvDisplay);
 
         Assert.Equal(expected.Deck.NextTradeValue, actual.Deck.NextTradeValue);
         Assert.Equal(expected.Deck.DrawPile, actual.Deck.DrawPile);

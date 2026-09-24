@@ -9,13 +9,13 @@ import type { LocaleTree } from '../i18n/types'
  */
 export const territories = {
   alaska: { nl: 'Alaska', en: 'Alaska' },
-  'northwest-territory': { nl: 'Northwest Territory', en: 'Northwest Territory' },
+  'northwest-territory': { nl: 'Noordwest-Territorium', en: 'Northwest Territory' },
   greenland: { nl: 'Groenland', en: 'Greenland' },
   alberta: { nl: 'Alberta', en: 'Alberta' },
   ontario: { nl: 'Ontario', en: 'Ontario' },
   quebec: { nl: 'Quebec', en: 'Quebec' },
-  'western-united-states': { nl: 'Western United States', en: 'Western United States' },
-  'eastern-united-states': { nl: 'Eastern United States', en: 'Eastern United States' },
+  'western-united-states': { nl: 'West-VS', en: 'Western United States' },
+  'eastern-united-states': { nl: 'Oost-VS', en: 'Eastern United States' },
   'central-america': { nl: 'Centraal-Amerika', en: 'Central America' },
   venezuela: { nl: 'Venezuela', en: 'Venezuela' },
   peru: { nl: 'Peru', en: 'Peru' },
@@ -48,7 +48,7 @@ export const territories = {
   afghanistan: { nl: 'Afghanistan', en: 'Afghanistan' },
   indonesia: { nl: 'Indonesië', en: 'Indonesia' },
   'new-guinea': { nl: 'Nieuw-Guinea', en: 'New Guinea' },
-  'western-australia': { nl: 'Western Australia', en: 'Western Australia' },
-  'eastern-australia': { nl: 'Eastern Australia', en: 'Eastern Australia' },
+  'western-australia': { nl: 'West-Australië', en: 'Western Australia' },
+  'eastern-australia': { nl: 'Oost-Australië', en: 'Eastern Australia' },
   'new-zealand': { nl: 'Nieuw-Zeeland', en: 'New Zealand' },
 } satisfies LocaleTree

@@ -144,7 +144,20 @@ export function TvCombatOverlay({ state, combat }: TvScreenProps) {
             rerollHighlightIndex={rerollHighlightIndex}
           />
           <span className="col-start-2 row-span-3 row-start-1 font-display text-size9 font-black text-fg-muted">{t('vs')}</span>
-          <CombatSide side="defender" name={defender?.name} color={defenderColor} label={t('defenderLabel')} dice={combat.defenderRolls} />
+          {/* DefenseBoost ingezet (FO §8.1, DESIGN.md § Role Defense Boost): het label van de
+              verdediger noemt de rol en kleurt Recon Silver — zelfde rij, dus geen layoutsprong. */}
+          <CombatSide
+            side="defender"
+            name={defender?.name}
+            color={defenderColor}
+            label={
+              combat.defenseBoostUsed && defender?.roleId
+                ? t('defenderLabelBoost', { role: tDynamic(`${defender.roleId}.name`, 'roles') })
+                : t('defenderLabel')
+            }
+            labelAccent={combat.defenseBoostUsed}
+            dice={combat.defenderRolls}
+          />
         </div>
 
         <div className="flex flex-col items-center gap-4 self-start">
@@ -193,6 +206,8 @@ interface CombatSideProps {
   name: string | undefined
   color: { hex: string; onHex: string; symbol: string } | null
   label: string
+  /** Label in Recon Silver i.p.v. muted — alleen bij een ingezette `DefenseBoost` (FO §8.1). */
+  labelAccent?: boolean
   dice: number[] | null
   /** Index in `dice` van de zojuist herworpen steen (plan-rollen B2) — alleen op de
    *  aanvallerzijde relevant, `-1` (default) op de verdedigerzijde en zolang er niets herworpen is. */
@@ -203,7 +218,7 @@ interface CombatSideProps {
  * De drie cellen van één zijde. Geen eigen wrapper-element: de cellen zijn directe kinderen van
  * het gedeelde gevechtsraster, anders zouden links en rechts elk hun eigen rijhoogtes krijgen.
  */
-function CombatSide({ side, name, color, label, dice, rerollHighlightIndex = -1 }: CombatSideProps) {
+function CombatSide({ side, name, color, label, labelAccent = false, dice, rerollHighlightIndex = -1 }: CombatSideProps) {
   const { column, die } = SIDE_LAYOUT[side]
 
   return (
@@ -217,7 +232,9 @@ function CombatSide({ side, name, color, label, dice, rerollHighlightIndex = -1 
         </span>
         <span className="font-display text-size6 font-extrabold">{name}</span>
       </div>
-      <span className={`${column} row-start-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted`}>
+      <span
+        className={`${column} row-start-2 font-body text-label font-extrabold uppercase tracking-[.1em] ${labelAccent ? 'text-silver-400' : 'text-fg-muted'}`}
+      >
         {label}
       </span>
       <div className={`${column} row-start-3 flex items-center gap-4`}>

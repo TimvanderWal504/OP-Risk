@@ -28,8 +28,12 @@ i18next
     supportedLngs: ['nl', 'en'],
     defaultNS: 'common',
     ns: Object.keys(trees),
+    // Geen 'navigator': de browser-/TV-taal mag de standaardtaal niet meer bepalen (TV-testronde
+    // bevinding 8) — zonder een opgeslagen keuze in localStorage valt dit altijd terug op
+    // `fallbackLng` ('nl'), nooit op de taal van het apparaat. `en` blijft beschikbaar via
+    // `useLocale().setLang`, dat de keuze in dezelfde localStorage-key opslaat.
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       lookupLocalStorage: LANGUAGE_STORAGE_KEY,
       caches: ['localStorage'],
     },

@@ -1,5 +1,6 @@
 import { GamePhaseDto, type GameStateDto } from '../../../types/GameState'
 import {
+  DefenseDiceRuleDto,
   MissionWinTimingDto,
   RoleAssignmentModeDto,
   SetupModeDto,
@@ -11,8 +12,8 @@ export const fixtureState: GameStateDto = {
   gameId: 'ABCD',
   phase: GamePhaseDto.Lobby,
   players: [
-    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
-    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+    { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+    { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
   ],
   availableColorIds: ['green'],
   turnOrder: ['alice', 'bob'],
@@ -34,6 +35,7 @@ export const fixtureState: GameStateDto = {
     roleAssignment: RoleAssignmentModeDto.Random,
     eventsEnabled: false,
     missionWinTiming: MissionWinTimingDto.EndOfTurn,
+    defenseDiceRule: DefenseDiceRuleDto.HouseRule,
   },
   orderRollState: null,
   setupState: null,

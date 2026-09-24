@@ -16,7 +16,10 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        attackerArmyCount={5}
         awaitingRerollDecision={true}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
         onChooseDefenseDice={vi.fn()}
         onDismiss={vi.fn()}
       />,
@@ -28,6 +31,64 @@ describe('DefendStep', () => {
     expect(screen.getByText('2').closest('button')).toBeDisabled()
   })
 
+  it('toont de legerstand van verdediger en aanvaller onder de kleurblokken', () => {
+    render(
+      <DefendStep
+        attackerName="Alice"
+        attackerColor={attackerColor}
+        myColor={myColor}
+        fromTerritoryId="alaska"
+        toTerritoryId="kamchatka"
+        defenderArmyCount={3}
+        attackerArmyCount={5}
+        awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
+        onChooseDefenseDice={vi.fn()}
+        onDismiss={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Jouw legers op Kamtsjatka: 3', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText('Aanvaller vanuit Alaska: 5', { exact: false })).toBeInTheDocument()
+  })
+
+  it('verbergt de legerstand-regel zodra het resultaat verschijnt — anders toont hij een verouderd aantal naast de uitkomst', async () => {
+    const user = userEvent.setup()
+    const onChooseDefenseDice = vi.fn().mockResolvedValue({
+      attackerRolls: [4],
+      defenderRolls: [6],
+      attackerLosses: 1,
+      defenderLosses: 0,
+      conquered: false,
+      state: {},
+    })
+
+    render(
+      <DefendStep
+        attackerName="Alice"
+        attackerColor={attackerColor}
+        myColor={myColor}
+        fromTerritoryId="alaska"
+        toTerritoryId="kamchatka"
+        defenderArmyCount={3}
+        attackerArmyCount={5}
+        awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
+        onChooseDefenseDice={onChooseDefenseDice}
+        onDismiss={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Jouw legers op Kamtsjatka: 3', { exact: false })).toBeInTheDocument()
+
+    await user.click(screen.getByText('2'))
+    await screen.findByText('Je verslaat 1 leger')
+
+    expect(screen.queryByText('Jouw legers op Kamtsjatka: 3', { exact: false })).not.toBeInTheDocument()
+  })
+
   it('grijst "2 dobbelstenen" uit zodra het gebied nog maar 1 leger heeft', () => {
     render(
       <DefendStep
@@ -37,7 +98,10 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={1}
+        attackerArmyCount={5}
         awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
         onChooseDefenseDice={vi.fn()}
         onDismiss={vi.fn()}
       />,
@@ -66,7 +130,10 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        attackerArmyCount={5}
         awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={vi.fn()}
       />,
@@ -74,7 +141,7 @@ describe('DefendStep', () => {
 
     await user.click(screen.getByText('2'))
 
-    expect(onChooseDefenseDice).toHaveBeenCalledWith(2)
+    expect(onChooseDefenseDice).toHaveBeenCalledWith(2, false)
     expect(await screen.findByText('Je verslaat 1 leger')).toBeInTheDocument()
   })
 
@@ -98,7 +165,10 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        attackerArmyCount={5}
         awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={onDismiss}
       />,
@@ -110,6 +180,72 @@ describe('DefendStep', () => {
     await user.click(screen.getByText('Terug naar het spel'))
 
     expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  describe('Dobbelregel Huisregel (FO §5.3 stap 4) en DefenseBoost-rol (FO §8.1)', () => {
+    const renderHouseRule = (defenseBoostRoleId: string | null, onChooseDefenseDice = vi.fn(), defenderArmyCount = 3) =>
+      render(
+        <DefendStep
+          attackerName="Alice"
+          attackerColor={attackerColor}
+          myColor={myColor}
+          fromTerritoryId="alaska"
+          toTerritoryId="kamchatka"
+          defenderArmyCount={defenderArmyCount}
+          attackerArmyCount={5}
+          awaitingRerollDecision={false}
+          houseRuleLimitsToOneDie={true}
+          defenseBoostRoleId={defenseBoostRoleId}
+          onChooseDefenseDice={onChooseDefenseDice}
+          onDismiss={vi.fn()}
+        />,
+      )
+
+    it('grijst "2 dobbelstenen" uit en legt de huisregel uit zonder beschikbare boost', () => {
+      renderHouseRule(null)
+
+      expect(screen.getByText('2').closest('button')).toBeDisabled()
+      expect(screen.getByText('1').closest('button')).not.toBeDisabled()
+      expect(screen.getByText('De aanvaller gooit met 1 dobbelsteen — volgens de huisregel verdedig je dan ook met 1.')).toBeInTheDocument()
+    })
+
+    it('houdt "2 dobbelstenen" klikbaar met de rolnaam als de boost beschikbaar is, en zet de boost in', async () => {
+      const user = userEvent.setup()
+      const onChooseDefenseDice = vi.fn().mockResolvedValue({
+        attackerRolls: [4],
+        defenderRolls: [6, 5],
+        attackerLosses: 1,
+        defenderLosses: 0,
+        conquered: false,
+        state: {},
+      })
+
+      renderHouseRule('capoeirista', onChooseDefenseDice)
+
+      expect(screen.getByText('Capoeirista: verdedig deze ronde één keer toch met 2 dobbelstenen.')).toBeInTheDocument()
+      expect(screen.getByText('2').closest('button')).not.toBeDisabled()
+
+      await user.click(screen.getByText('2'))
+
+      expect(onChooseDefenseDice).toHaveBeenCalledWith(2, true)
+    })
+
+    it('zet de boost niet in bij een keuze voor 1 dobbelsteen', async () => {
+      const user = userEvent.setup()
+      const onChooseDefenseDice = vi.fn().mockResolvedValue(undefined)
+
+      renderHouseRule('capoeirista', onChooseDefenseDice)
+      await user.click(screen.getByText('1'))
+
+      expect(onChooseDefenseDice).toHaveBeenCalledWith(1, false)
+    })
+
+    it('biedt de boost niet aan bij maar 1 leger — die harde regel gaat voor', () => {
+      renderHouseRule('capoeirista', vi.fn(), 1)
+
+      expect(screen.getByText('2').closest('button')).toBeDisabled()
+      expect(screen.queryByText('Capoeirista: verdedig deze ronde één keer toch met 2 dobbelstenen.')).not.toBeInTheDocument()
+    })
   })
 
   it.each<[string, { attackerLosses: number; defenderLosses: number; conquered: boolean }, string]>([
@@ -133,7 +269,10 @@ describe('DefendStep', () => {
         fromTerritoryId="alaska"
         toTerritoryId="kamchatka"
         defenderArmyCount={3}
+        attackerArmyCount={5}
         awaitingRerollDecision={false}
+        houseRuleLimitsToOneDie={false}
+        defenseBoostRoleId={null}
         onChooseDefenseDice={onChooseDefenseDice}
         onDismiss={vi.fn()}
       />,

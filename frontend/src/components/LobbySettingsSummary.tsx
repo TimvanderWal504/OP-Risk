@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
+  DefenseDiceRuleDto,
   MissionWinTimingDto,
   RoleAssignmentModeDto,
   SetupModeDto,
@@ -51,6 +52,11 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
     [MissionWinTimingDto.FullRoundRevealed]: t('missionWinTiming.fullRoundRevealed'),
   }
 
+  const defenseDiceRuleLabels: Record<DefenseDiceRuleDto, string> = {
+    [DefenseDiceRuleDto.HouseRule]: t('defenseDiceRule.houseRule'),
+    [DefenseDiceRuleDto.Classic]: t('defenseDiceRule.classic'),
+  }
+
   const rows: [string, string, string][] = [
     [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
     [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--color-silver-400)'],
@@ -72,6 +78,7 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
       settings.eventsEnabled ? t('settings.on') : t('settings.off'),
       settings.eventsEnabled ? 'var(--pitch-400)' : 'var(--fg1)',
     ],
+    [t('settings.defenseDiceRule'), defenseDiceRuleLabels[settings.defenseDiceRule], 'var(--fg1)'],
     [t('settings.setupMode'), setupModeLabels[settings.setupMode], 'var(--fg1)'],
     [
       t('settings.startingArmies'),

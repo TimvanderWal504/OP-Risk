@@ -17,6 +17,14 @@ namespace RiskGame.Api.Dtos;
 /// missie-inhoud: die blijft geheim tot <see cref="GamePhaseDto.Finished"/> (privacy-afdwinging
 /// op de enige daarvoor bedoelde plek, <see cref="GameStateDtoMapper"/>, src/CLAUDE.md).
 /// </param>
+/// <param name="TvDisplay">
+/// De TV-weergave van dit spel (plan-testronde-tv punt 2) — openbaar, gaat naar iedereen; de TV
+/// past 'm toe, de host-telefoon toont 'm in het "TV-weergave"-paneel.
+/// </param>
+/// <param name="TvDisplayDefault">
+/// <see cref="RiskGame.Rules.State.TvDisplaySettings.Default"/>, zodat de knop "Standaard" op de
+/// host-telefoon de server-default verstuurt i.p.v. een eigen kopie ervan bij te houden.
+/// </param>
 public sealed record GameStateDto(
     string GameId,
     GamePhaseDto Phase,
@@ -34,6 +42,8 @@ public sealed record GameStateDto(
     // toekomstige aanroeper van deze ene, hier al bekende call site (GameStateDtoMapper) om
     // 'm expliciet te vullen — een vergeten veld geeft een bouwfout, geen stille lege lijst.
     IReadOnlyList<string> Winners,
+    TvDisplaySettingsDto TvDisplay,
+    TvDisplaySettingsDto TvDisplayDefault,
     OrderRollStateDto? OrderRollState = null,
     SetupStateDto? SetupState = null,
     int StateVersion = 0,

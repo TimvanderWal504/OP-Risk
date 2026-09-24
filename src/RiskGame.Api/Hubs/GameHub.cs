@@ -44,8 +44,9 @@ public sealed record CombatResultResponse(
 /// </summary>
 /// <remarks>
 /// Transiënt audit/weergave-event (geen state) voor elke dobbelworp die op de TV zichtbaar
-/// moet zijn: order-roll (FO §2.1), de aanvals-/verdedigingsworp tijdens gevechten (FO §5.3), en
-/// een rol-herwerp (FO §8.1, plan-rollen C5). <c>Context</c> is bewust een string, geen enum —
+/// moet zijn: order-roll (FO §2.1), de aanvals-/verdedigingsworp tijdens gevechten (FO §5.3), een
+/// rol-herwerp (FO §8.1, plan-rollen C5) en een verdedigingsworp met ingezette <c>DefenseBoost</c>
+/// (<c>"defenseBoost"</c>, FO §8.1). <c>Context</c> is bewust een string, geen enum —
 /// puur een weergave-label, geen domeinbegrip. <c>CorrelationId</c> is <c>null</c> bij order-roll
 /// (geen gevecht om aan te correleren) en gelijk aan <see cref="Rules.State.PendingCombat.CorrelationId"/>
 /// bij attack/defense/reroll.
@@ -139,6 +140,7 @@ public sealed class GameHub(
     ReinforceCommandHandler reinforceCommands,
     AttackCommandHandler attackCommands,
     TurnFlowCommandHandler turnFlowCommands,
+    TvDisplayCommandHandler tvDisplayCommands,
     TimeProvider timeProvider) : Hub<IGameClient>
 {
     /// <summary>
@@ -359,14 +361,21 @@ public sealed class GameHub(
             _ => playerId);
     }
 
-    public async Task<CombatResultResponse> ChooseDefenseDice(string gameId, string playerId, int defenseDice)
+    /// <summary>Verdedigen (FO §5.3 stap 4). <paramref name="useDefenseBoost"/> zet de
+    /// <c>DefenseBoost</c>-rol in (FO §8.1); de worp gaat dan als <c>"defenseBoost"</c> over de
+    /// narratieve broadcast in plaats van <c>"defense"</c>, zodat de TV de inzet kan tonen.</summary>
+    public async Task<CombatResultResponse> ChooseDefenseDice(
+        string gameId, string playerId, int defenseDice, bool useDefenseBoost)
     {
-        var result = await attackCommands.ChooseDefenseDiceAsync(gameId, playerId, defenseDice);
+        var result = await attackCommands.ChooseDefenseDiceAsync(gameId, playerId, defenseDice, useDefenseBoost);
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GameGroups.All(gameId)).DiceRolled(
-                new DiceRolledMessage(playerId, result.Value.DefenderRolls, "defense", result.Value.CorrelationId));
+            await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
+                playerId,
+                result.Value.DefenderRolls,
+                result.Value.DefenseBoostUsed ? "defenseBoost" : "defense",
+                result.Value.CorrelationId));
 
             await using var versionSession = store.QuerySession();
 
@@ -482,6 +491,21 @@ public sealed class GameHub(
             await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
                 result.Value.Winners, await FetchStateVersionAsync(versionSession, gameId)));
         }
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
+    }
+
+    /// <summary>
+    /// Host-only, in elke fase (plan-testronde-tv punt 2): legt de TV-weergave vast. Geen eigen
+    /// broadcast-kanaal — het event hoogt de <see cref="GameStateDto.StateVersion"/> op, dus de TV
+    /// pikt de nieuwe waarden op via de gewone state-push. Losse parameters i.p.v. een DTO-argument,
+    /// zelfde stijl als de overige hub-methodes.
+    /// </summary>
+    public async Task<GameStateDto> SetTvDisplay(
+        string gameId, string playerId, int textScale, int glassOpacity, int glassBlur, TvLanguageDto language)
+    {
+        var result = await tvDisplayCommands.SetTvDisplayAsync(
+            gameId, playerId, new TvDisplaySettingsDto(textScale, glassOpacity, glassBlur, language));
 
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }

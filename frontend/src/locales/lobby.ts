@@ -27,6 +27,7 @@ export const lobby = {
     winCondition: { nl: 'Winconditie', en: 'Win condition' },
     /** Alleen getoond wanneer winCondition === SecretMissions (FO §6.2). */
     missionWinTiming: { nl: 'Missietiming', en: 'Mission timing' },
+    defenseDiceRule: { nl: 'Dobbelregel', en: 'Dice rule' },
     setupMode: { nl: 'Startopstelling', en: 'Starting setup' },
     startingArmies: { nl: 'Startlegers', en: 'Starting armies' },
     turnTimer: { nl: 'Beurttimer', en: 'Turn timer' },
@@ -47,11 +48,15 @@ export const lobby = {
     fullRoundRevealed: { nl: 'Volle ronde', en: 'Full round' },
   },
   setupMode: {
-    random: { nl: 'Random', en: 'Random' },
+    random: { nl: 'Willekeurig', en: 'Random' },
     claiming: { nl: 'Claimen', en: 'Claiming' },
   },
+  defenseDiceRule: {
+    houseRule: { nl: 'Huisregel', en: 'House rule' },
+    classic: { nl: 'Klassiek', en: 'Classic' },
+  },
   roleAssignment: {
-    random: { nl: 'Random', en: 'Random' },
+    random: { nl: 'Willekeurig', en: 'Random' },
     choose: { nl: 'Kiezen', en: 'Choose' },
   },
   placeholder: {

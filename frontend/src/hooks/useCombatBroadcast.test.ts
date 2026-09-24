@@ -59,6 +59,7 @@ describe('useCombatBroadcast', () => {
       attackerRolls: [5, 4],
       defenderRolls: null,
       reroll: null,
+      defenseBoostUsed: false,
       narrated: null,
     })
 
@@ -70,6 +71,7 @@ describe('useCombatBroadcast', () => {
       attackerRolls: [5, 4],
       defenderRolls: [3],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: narrated(),
     })
   })
@@ -106,6 +108,7 @@ describe('useCombatBroadcast', () => {
       attackerRolls: [6, 6],
       defenderRolls: null,
       reroll: null,
+      defenseBoostUsed: false,
       narrated: null,
     })
   })
@@ -129,6 +132,24 @@ describe('useCombatBroadcast', () => {
       attackerRolls: [6, 4],
       defenderRolls: null,
       reroll: { previousRolls: [4, 2], rerolledDieIndex: 1, newValue: 6, rolls: [6, 4] },
+      defenseBoostUsed: false,
+      narrated: null,
+    })
+  })
+
+  it('vult defenderRolls en zet defenseBoostUsed bij een defenseBoost-DiceRolled (FO §8.1)', () => {
+    const { connection, emit } = createFakeConnection()
+    const { result } = renderHook(() => useCombatBroadcast(connection))
+
+    act(() => emit('DiceRolled', diceRolled({ context: 'attack', dice: [4] })))
+    act(() => emit('DiceRolled', diceRolled({ context: 'defenseBoost', dice: [6, 5] })))
+
+    expect(result.current).toEqual({
+      correlationId: 'combat-1',
+      attackerRolls: [4],
+      defenderRolls: [6, 5],
+      reroll: null,
+      defenseBoostUsed: true,
       narrated: null,
     })
   })
@@ -144,6 +165,7 @@ describe('useCombatBroadcast', () => {
       attackerRolls: null,
       defenderRolls: [2],
       reroll: null,
+      defenseBoostUsed: false,
       narrated: null,
     })
   })

@@ -26,12 +26,18 @@ namespace RiskGame.Api.Dtos;
 /// (FO §8: rollen staan permanent op de TV); de rol-badge op TV/telefoon mag deze
 /// "bezit ik nog mijn herkomstland"-afleiding niet zelf nabouwen (frontend/CLAUDE.md).
 /// </param>
+/// <param name="DefenseBoostAvailable">
+/// Of deze speler zijn <c>DefenseBoost</c>-rol nu kan inzetten (FO §5.3 stap 4, §8.1,
+/// <see cref="RiskGame.Rules.Combat.AttackGuards.DefenseBoostAvailable"/>). Openbaar, net als
+/// <paramref name="IsRoleActive"/>; de telefoon leidt dit nooit zelf af.
+/// </param>
 public sealed record PlayerDto(
     string Id,
     string Name,
     string? ColorId,
     string? RoleId,
     bool IsRoleActive,
+    bool DefenseBoostAvailable,
     bool IsHost,
     bool IsEliminated,
     IReadOnlyList<CardDto> Hand,

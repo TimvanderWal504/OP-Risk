@@ -189,6 +189,147 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         return gameId;
     }
 
+    /// <summary>
+    /// "alaska" (p1, 5 legers) tegen "alberta" (p2, 3 legers), rollen aan, Bob als "capoeirista"
+    /// (DefenseBoost, herkomstland "brazil") — FO §5.3 stap 4 / §8.1.
+    /// </summary>
+    private static async Task<string> SetUpDefenseBoostStateAsync(
+        WebApplicationFactory<Program> factory, DefenseDiceRule rule, bool bobOwnsBrazil = true)
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var map = factory.Services.GetRequiredService<IMapDefinitionSource>().Load("standaard-43");
+        var timeProviderNow = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow();
+
+        var settings = new GameSettings(
+            WinCondition.SecretMissions,
+            SetupMode.Claiming,
+            SettingsDto.StartingArmiesPresetId,
+            TurnTimer: TimeSpan.FromSeconds(SettingsDto.TurnTimerSeconds),
+            FortifyTimer: TimeSpan.FromSeconds(SettingsDto.FortifyTimerSeconds),
+            RolesEnabled: true,
+            RoleAssignment: RoleAssignmentMode.Random,
+            EventsEnabled: false,
+            DefenseDiceRule: rule);
+
+        var alice = new Player("p1", "Alice", "red", Hand: [], RoleId: null, Mission: null, IsEliminated: false);
+        var bob = new Player("p2", "Bob", "blue", Hand: [], RoleId: "capoeirista", Mission: null, IsEliminated: false);
+
+        var territories = map.Territories
+            .Select(territory => territory.Id switch
+            {
+                "brazil" when bobOwnsBrazil => new TerritoryOwnership(territory.Id, "p2", ArmyCount: 1),
+                "alaska" => new TerritoryOwnership(territory.Id, "p1", 5),
+                "alberta" => new TerritoryOwnership(territory.Id, "p2", 3),
+                _ => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0),
+            })
+            .ToArray();
+
+        var state = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            settings,
+            players: [alice, bob],
+            territories,
+            turnOrder: ["p1", "p2"],
+            turnState: new TurnState(
+                "p1", TurnPhase.Attack, new PhaseTimer(settings.TurnTimer, timeProviderNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+
+        var store = factory.Services.GetRequiredService<IDocumentStore>();
+
+        await using var session = store.LightweightSession();
+        session.Store(state);
+        await session.SaveChangesAsync();
+
+        return gameId;
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_HuisregelTegenEenAanvalsdobbelsteenMetTweeZonderBoost_WordtGeweigerd()
+    {
+        await using var factory = CreateFactory(3, 5, 4);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpDefenseBoostStateAsync(factory, DefenseDiceRule.HouseRule, bobOwnsBrazil: false);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, true));
+
+        Assert.Contains("attack.mustDefendWithOneDieHouseRule", exception.Message);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_MetIngezetteBoost_VerbruiktDeBoostEnBroadcastDefenseBoost()
+    {
+        await using var factory = CreateFactory(3, 5, 4);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+        await using var spectator = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpDefenseBoostStateAsync(factory, DefenseDiceRule.HouseRule);
+        await spectator.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        var defenseRollReceived = new TaskCompletionSource<DiceRolledMessage>();
+        spectator.On<DiceRolledMessage>("DiceRolled", message =>
+        {
+            if (message.Context is "defense" or "defenseBoost")
+            {
+                defenseRollReceived.TrySetResult(message);
+            }
+        });
+
+        var declared = await connection.InvokeAsync<DeclareAttackResponse>(
+            "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        Assert.True(declared.State.Players.Single(player => player.Id == "p2").DefenseBoostAvailable);
+
+        var combat = await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, true);
+
+        Assert.Equal(2, combat.DefenderRolls.Count);
+        Assert.False(combat.State.Players.Single(player => player.Id == "p2").DefenseBoostAvailable);
+
+        var defenseRoll = await defenseRollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal("defenseBoost", defenseRoll.Context);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_MetAlVerbruikteBoost_WordtGeweigerdBijEenTweedeAanval()
+    {
+        // Worp 1: aanval 3 tegen verdediging 5/4 (afgeslagen); worp 2: aanval 3.
+        await using var factory = CreateFactory(3, 5, 4, 3);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpDefenseBoostStateAsync(factory, DefenseDiceRule.HouseRule);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, true);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+
+        var exception = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, true));
+
+        Assert.Contains("attack.mustDefendWithOneDieHouseRule", exception.Message);
+    }
+
+    [Fact]
+    public async Task ChooseDefenseDice_KlassiekTegenEenAanvalsdobbelsteen_MetTweeZonderBoostIsToegestaan()
+    {
+        await using var factory = CreateFactory(3, 5, 4);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpDefenseBoostStateAsync(factory, DefenseDiceRule.Classic);
+        await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
+
+        var combat = await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
+
+        Assert.Equal(2, combat.DefenderRolls.Count);
+        Assert.False(combat.State.Players.Single(player => player.Id == "p2").DefenseBoostAvailable);
+    }
+
     [Fact]
     public async Task DeclareAttack_MetActieveRerollRol_OpentDeHerwerpBeslissing()
     {
@@ -217,7 +358,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
 
         var exception = await Assert.ThrowsAsync<HubException>(() =>
-            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2));
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false));
 
         Assert.Contains("attack.awaitingRerollDecision", exception.Message);
     }
@@ -262,7 +403,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         // Na de herwerp-beslissing mag de verdediger weer kiezen, en ChooseDefenseDice moet de
         // nieuwe worp gebruiken (C5/C6) — niet de oorspronkelijke [4, 2] uit de DiceRolled-audittrail.
-        var combatResult = await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        var combatResult = await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
         Assert.Equal([6, 4], combatResult.AttackerRolls);
     }
 
@@ -315,7 +456,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.False(kept.TurnState!.PendingCombat!.AwaitingRerollDecision);
         Assert.Equal([4, 2], kept.TurnState.PendingCombat.AttackerRolls);
 
-        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
 
         var second = await connection.InvokeAsync<DeclareAttackResponse>(
             "DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
@@ -363,7 +504,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.True(declareResult.State.TurnState!.Timer!.IsPaused);
 
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.Equal([6, 5], combatResult.DefenderRolls);
         Assert.Equal(2, combatResult.AttackerLosses);
@@ -400,7 +541,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         Assert.True(first.State.TurnState!.Timer!.IsPaused);
 
         var afterFirstFight = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 1);
+            "ChooseDefenseDice", gameId, "p2", 1, false);
         var remainingAfterFirstFight = afterFirstFight.State.TurnState!.Timer!.RemainingMs;
         Assert.True(afterFirstFight.State.TurnState!.Timer!.IsPaused);
 
@@ -440,7 +581,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         for (var round = 0; round < 3; round++)
         {
             var afterFight = await connection.InvokeAsync<CombatResultResponse>(
-                "ChooseDefenseDice", gameId, "p2", 1);
+                "ChooseDefenseDice", gameId, "p2", 1, false);
             Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
             Assert.Equal(remainingAfterDeclare, afterFight.State.TurnState!.Timer!.RemainingMs);
 
@@ -478,7 +619,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>(
             "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
         var afterFight = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 1);
+            "ChooseDefenseDice", gameId, "p2", 1, false);
         var remainingAfterFight = afterFight.State.TurnState!.Timer!.RemainingMs;
         Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
 
@@ -507,7 +648,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>(
             "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
         var afterFirstFight = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 1);
+            "ChooseDefenseDice", gameId, "p2", 1, false);
         var remainingAfterFirstFight = afterFirstFight.State.TurnState!.Timer!.RemainingMs;
         Assert.True(afterFirstFight.State.TurnState!.Timer!.IsPaused);
 
@@ -536,7 +677,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>(
             "DeclareAttack", gameId, "p1", "alaska", "alberta", 1);
         var afterFight = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 1);
+            "ChooseDefenseDice", gameId, "p2", 1, false);
         var remainingAfterFight = afterFight.State.TurnState!.Timer!.RemainingMs;
         Assert.True(afterFight.State.TurnState!.Timer!.IsPaused);
 
@@ -569,7 +710,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.Equal(0, combatResult.AttackerLosses);
         Assert.Equal(2, combatResult.DefenderLosses);
@@ -605,7 +746,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.True(combatResult.Conquered);
 
@@ -701,7 +842,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.True(combatResult.Conquered);
 
@@ -735,7 +876,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.True(combatResult.Conquered);
 
@@ -768,7 +909,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
         var combatResult = await connection.InvokeAsync<CombatResultResponse>(
-            "ChooseDefenseDice", gameId, "p2", 2);
+            "ChooseDefenseDice", gameId, "p2", 2, false);
 
         Assert.True(combatResult.Conquered);
         Assert.Equal(GamePhaseDto.Finished, combatResult.State.Phase);
@@ -811,7 +952,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
 
         var exception = await Assert.ThrowsAsync<HubException>(() =>
-            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p1", 2));
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p1", 2, false));
 
         Assert.Contains("attack.notTheDefender", exception.Message);
     }
@@ -827,7 +968,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
 
         var exception = await Assert.ThrowsAsync<HubException>(() =>
-            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2));
+            connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false));
 
         Assert.Contains("attack.mustDefendWithOneDie", exception.Message);
     }
@@ -848,7 +989,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         spectator.On<CombatNarratedMessage>("CombatNarrated", message => received.TrySetResult(message));
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
-        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
 
         var narrated = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
@@ -876,7 +1017,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         spectator.On<CombatNarratedMessage>("CombatNarrated", message => received.TrySetResult(message));
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
-        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
 
         var narrated = await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
@@ -913,7 +1054,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         });
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 3);
-        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
 
         var narrated = await narratedReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var stateUpdated = await stateUpdatedReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -949,7 +1090,7 @@ public sealed class GameHubAttackTests(PostgresFixture postgres)
         spectator.On<CombatNarratedMessage>("CombatNarrated", message => narratedReceived.TrySetResult(message));
 
         await connection.InvokeAsync<DeclareAttackResponse>("DeclareAttack", gameId, "p1", "alaska", "alberta", 2);
-        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2);
+        await connection.InvokeAsync<CombatResultResponse>("ChooseDefenseDice", gameId, "p2", 2, false);
 
         var attackRoll = await attackRollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var defenseRoll = await defenseRollReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));

@@ -32,6 +32,16 @@ export const MissionWinTimingDto = {
 } as const
 export type MissionWinTimingDto = (typeof MissionWinTimingDto)[keyof typeof MissionWinTimingDto]
 
+/**
+ * Wat de verdediger mag kiezen (FO §5.3 stap 4, §10). Alleen voor weergave en om de
+ * boost-keuze te tonen; de server dwingt de regel af (`AttackGuards.CanChooseDefenseDice`).
+ */
+export const DefenseDiceRuleDto = {
+  HouseRule: 0,
+  Classic: 1,
+} as const
+export type DefenseDiceRuleDto = (typeof DefenseDiceRuleDto)[keyof typeof DefenseDiceRuleDto]
+
 export interface GameSettingsDto {
   winCondition: WinConditionDto
   /**
@@ -47,6 +57,7 @@ export interface GameSettingsDto {
   roleAssignment: RoleAssignmentModeDto
   eventsEnabled: boolean
   missionWinTiming: MissionWinTimingDto
+  defenseDiceRule: DefenseDiceRuleDto
 }
 
 /** Spiegelt RiskGame.Api.Dtos.StartingArmiesPresetDto (src/RiskGame.Api/Dtos/GameSettingsDto.cs). */

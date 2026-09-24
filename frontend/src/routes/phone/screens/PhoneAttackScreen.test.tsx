@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GamePhaseDto, TurnPhaseDto, type GameStateDto, type PendingCombatDto } from '../../../types/GameState'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
+import { DefenseDiceRuleDto } from '../../../types/GameSettings'
 import { fixtureState, fixtureProps } from './phoneScreenFixture'
 import { PhoneAttackScreen } from './PhoneAttackScreen'
 import { resolveAttackRole } from './resolveAttackRole'
@@ -98,10 +99,38 @@ describe('PhoneAttackScreen', () => {
     expect(screen.getByText(/Kamtsjatka veroverd!/)).toBeInTheDocument()
   })
 
+  it('geeft Huisregel + aanval met 1 dobbelsteen en de server-berekende boost door aan DefendStep', async () => {
+    const user = userEvent.setup()
+    const bob = { ...fixtureState.players[1], roleId: 'berserker', defenseBoostAvailable: true }
+    const state = {
+      ...attackState({ activePlayerId: 'alice', pendingCombat: { ...pendingCombat, attackDice: 1 }, toTerritoryOwnerId: 'bob' }),
+      players: [fixtureState.players[0], bob],
+    }
+    const chooseDefenseDice = vi.fn().mockResolvedValue(undefined)
+
+    render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'bob', me: bob, chooseDefenseDice })} />)
+
+    expect(screen.getByText('Berserker: verdedig deze ronde één keer toch met 2 dobbelstenen.')).toBeInTheDocument()
+
+    await user.click(screen.getByText('2'))
+
+    expect(chooseDefenseDice).toHaveBeenCalledWith(2, true)
+  })
+
+  it('beperkt de verdediger niet bij Klassiek, ook niet tegen een aanval met 1 dobbelsteen', () => {
+    const bob = fixtureState.players[1]
+    const base = attackState({ activePlayerId: 'alice', pendingCombat: { ...pendingCombat, attackDice: 1 }, toTerritoryOwnerId: 'bob' })
+    const state = { ...base, settings: { ...base.settings, defenseDiceRule: DefenseDiceRuleDto.Classic } }
+
+    render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'bob', me: bob })} />)
+
+    expect(screen.getByText('2').closest('button')).not.toBeDisabled()
+  })
+
   it('rendert de omstander-weergave voor een niet-betrokken speler', () => {
     // "bob" bezit hier het doelgebied (kamchatka) en is dus de verdediger, niet de omstander —
     // een echte omstander is een derde speler die noch aanvaller noch verdediger is.
-    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isRoleActive: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null }
+    const carol = { id: 'carol', name: 'Carol', colorId: null, roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null }
     const state = {
       ...attackState({ activePlayerId: 'alice', pendingCombat, toTerritoryOwnerId: 'bob' }),
       players: [...fixtureState.players, carol],
@@ -129,7 +158,7 @@ describe('PhoneAttackScreen', () => {
       conquered: false,
       state: resolvedState,
     })
-    const combatAfterChoice: CombatBroadcastState = { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, narrated: null }
+    const combatAfterChoice: CombatBroadcastState = { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, defenseBoostUsed: false, narrated: null }
 
     const { rerender } = render(
       <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: null })} />,
@@ -139,7 +168,7 @@ describe('PhoneAttackScreen', () => {
 
     await user.click(screen.getByText('2'))
 
-    expect(chooseDefenseDice).toHaveBeenCalledWith(2)
+    expect(chooseDefenseDice).toHaveBeenCalledWith(2, false)
     expect(await screen.findByText('Je verslaat 1 leger')).toBeInTheDocument()
 
     // De ouder (`useGameState` in het echt) past `resolvedState` toe en levert de nieuwe
@@ -154,7 +183,7 @@ describe('PhoneAttackScreen', () => {
     // Een nieuwe aanval van dezelfde aanvaller op hetzelfde gebied (een verse 'defending'-sessie
     // na een tussenliggende bystander-render) moet het oude resultaat automatisch wegklikken en
     // de normale keuze-UI teruggeven.
-    const secondCombat: CombatBroadcastState = { correlationId: 'combat-2', attackerRolls: null, defenderRolls: null, reroll: null, narrated: null }
+    const secondCombat: CombatBroadcastState = { correlationId: 'combat-2', attackerRolls: null, defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null }
     rerender(
       <PhoneAttackScreen {...fixtureProps({ state: defendingState, playerId: 'bob', me: bob, chooseDefenseDice, combat: secondCombat })} />,
     )
@@ -188,7 +217,7 @@ describe('PhoneAttackScreen', () => {
           playerId: 'bob',
           me: bob,
           chooseDefenseDice,
-          combat: { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, narrated: null },
+          combat: { correlationId: 'combat-1', attackerRolls: [4], defenderRolls: [6], reroll: null, defenseBoostUsed: false, narrated: null },
         })}
       />,
     )

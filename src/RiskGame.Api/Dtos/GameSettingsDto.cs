@@ -14,7 +14,15 @@ public sealed record GameSettingsDto(
     bool RolesEnabled,
     RoleAssignmentModeDto RoleAssignment,
     bool EventsEnabled,
-    MissionWinTimingDto MissionWinTiming = MissionWinTimingDto.EndOfTurn);
+    MissionWinTimingDto MissionWinTiming = MissionWinTimingDto.EndOfTurn,
+    DefenseDiceRuleDto DefenseDiceRule = DefenseDiceRuleDto.HouseRule);
+
+/// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.DefenseDiceRule"/> (FO §5.3/§10).</summary>
+public enum DefenseDiceRuleDto
+{
+    HouseRule,
+    Classic,
+}
 
 public enum WinConditionDto
 {

@@ -796,6 +796,9 @@ public static class MapDefinitionParser
             case "Reroll":
                 return new RerollEffect();
 
+            case "DefenseBoost":
+                return new DefenseBoostEffect();
+
             case "CardTradeBonus":
                 if (p?.Amount is not { } tradeBonus || tradeBonus <= 0)
                 {

@@ -26,7 +26,8 @@ export interface OrderRollResponse {
 export interface DiceRolledMessage {
   playerId: string
   dice: number[]
-  context: 'order-roll' | 'attack' | 'defense' | 'reroll'
+  /** `defenseBoost`: een verdedigingsworp waarbij de `DefenseBoost`-rol is ingezet (FO §8.1). */
+  context: 'order-roll' | 'attack' | 'defense' | 'defenseBoost' | 'reroll'
   correlationId: string | null
   previousRolls: number[] | null
   /** Positie van de herworpen dobbelsteen in `previousRolls` — vóór de hersortering, dus een

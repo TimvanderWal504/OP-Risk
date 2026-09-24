@@ -164,7 +164,7 @@ Klassiek: **Versterken → Aanvallen → Verplaatsen (Fortify)**.
 1. Aanvaller kiest herkomst- en doelgebied (hybride selectie §2.3) en het aantal dobbelstenen. **Kernregel:** aanvallen kan alleen vanuit een gebied met minimaal 2 legers, en het aantal aanvalsdobbelstenen is maximaal (legers in het brongebied − 1), met een absoluut maximum van 3.
 2. Aanvaller drukt **"Gooi"** — dit is tegelijk de bevestiging van de aanval (§5.5). De server gooit meteen de aanvalsdobbelstenen, zichtbaar op TV.
 3. Heeft de aanvaller een actieve `Reroll`-rol (§8) en is de herwerp voor dit doelgebied deze beurt nog niet gebruikt, dan krijgt hij een **expliciete herwerp-stap**: hij kiest zelf één van zijn eigen dobbelstenen om te herwerpen, óf kiest "Doorgaan" zonder herwerp. De verdediger kan pas kiezen (stap 4) nadat de aanvaller deze stap heeft afgerond; zijn telefoon toont ondertussen dat de aanvaller een herwerp overweegt. Dit is dus altijd vóór enige vergelijking met de verdediger. Is er geen actieve `Reroll`-rol of is de herwerp voor dit doelgebied al gebruikt, dan is er geen stap en gaat het direct door naar stap 4.
-4. De verdediger krijgt op zijn telefoon de keuze: verdedigen met 1 of 2 dobbelstenen. **Harde regel:** een verdediger met slechts 1 leger in het gebied kan alleen 1 dobbelsteen kiezen (de UI toont dan geen keuze). **De verdediger heeft geen timer.**
+4. De verdediger krijgt op zijn telefoon de keuze: verdedigen met 1 of 2 dobbelstenen — binnen de grenzen van de lobby-instelling **Dobbelregel** (§10). **Harde regel (beide varianten):** een verdediger met slechts 1 leger in het gebied kan alleen 1 dobbelsteen kiezen (de UI toont dan geen keuze). **Huisregel (standaard, wijkt af van de officiële Risk-regels):** gooit de aanvaller met 1 dobbelsteen, dan moet de verdediger ook met 1 verdedigen — tenzij hij een actieve `DefenseBoost`-rol heeft (§8.1) die hij deze ronde nog niet heeft ingezet; in dat geval kan hij kiezen om de boost in te zetten en alsnog met 2 te verdedigen. De boost is eenmalig per ronde per speler en wordt weer beschikbaar aan het begin van de eigen volgende beurt van de rolhouder. **Klassiek:** de verdediger mag altijd met 2 gooien vanaf 2 legers, ongeacht het aantal aanvalsdobbelstenen (officiële Risk-regel); `DefenseBoost`-rollen hebben in deze stand geen functie en zitten niet in de rolpool (§10). **De verdediger heeft geen timer.**
 5. De server gooit de verdedigingsdobbelstenen, zichtbaar op TV. Uitkomst (verliezen per kant) wordt bepaald door de (eventueel herworpen) aanvalsworp tegen de verdedigingsworp te vergelijken, en op de TV getoond en verwerkt.
 6. Bij verovering: aanvaller kiest hoeveel legers hij meeverplaatst (minimaal het aantal gebruikte aanvalsdobbelstenen).
 
@@ -285,6 +285,7 @@ Effect-types in v1:
 | `CardTradeBonus` | `amount` | Extra legers bij kaarteninleg |
 | `Reroll` | — | De aanvaller mag, na zijn eigen worp maar **vóórdat de verdediger gooit**, **één keer per doelgebied per beurt** 1 van zijn eigen dobbelstenen zelf kiezen om te herwerpen (zichtbaar op TV als "herworpen": de gekozen dobbelsteen wordt gehighlight en krijgt zijn nieuwe waarde) — niet gebaseerd op "verloren", want er is op dat moment nog niets met de verdediger vergeleken. Een herworpen dobbelsteen kan niet nogmaals herworpen worden. De herwerp geldt per doelgebied: meerdere worpen tegen hetzelfde gebied delen één herwerp, tussendoor een ander gebied aanvallen en terugkomen geeft géén nieuwe; een ander doelgebied heeft zijn eigen herwerp; een nieuwe beurt begint met een schone lei. "Doorgaan" zonder herwerp verbruikt hem niet: bij een volgende worp tegen hetzelfde gebied verschijnt de keuze opnieuw, totdat de aanvaller daadwerkelijk herwerpt. De herwerp-stap heeft **geen timer** (net als de verdediger-keuze; de beurttimer staat tijdens het gevecht toch al stil) |
 | `FortifyUpgrade` | `moves` of `throughEnemy` | `moves`: dat aantal verplaatsingen in de Verplaatsen-fase in plaats van één (§5.2); `throughEnemy`: pad door 1 vijandelijk gebied |
+| `DefenseBoost` | — | Alleen relevant bij lobby-instelling Dobbelregel = Huisregel (§5.3, §10): de verdediger mag, ook al gooide de aanvaller met 1 dobbelsteen, eenmalig per ronde toch met 2 dobbelstenen verdedigen. Wordt weer beschikbaar aan het begin van de eigen volgende beurt van de rolhouder. Bij Dobbelregel = Klassiek heeft de rol geen functie en zit ze niet in de toewijzingspool |
 
 Bewuste keuze: **geen verborgen kansmanipulatie** (gewogen dobbelstenen). Alle voordelen zijn zichtbaar en telbaar op het bord, zodat uitkomsten aan tafel niet als oneerlijk voelen.
 
@@ -352,6 +353,7 @@ moeten maken voordat het spel verdergaat:
 | Winconditie | Werelddominantie / Geheime missies | Missies |
 | Startopstelling | Random / Claimen | Random |
 | Startlegers | Preset: Klassiek / Modern / Klassiek-49 | Klassiek (40/35/30/25/20/18) |
+| Dobbelregel | Huisregel / Klassiek | Huisregel |
 | Beurttimer (Versterken + Aanvallen) | Aanpasbaar | 3 min |
 | Verplaatsen-timer | Aanpasbaar | 1 min |
 | Rollen | Aan / uit | Uit |
@@ -359,6 +361,14 @@ moeten maken voordat het spel verdergaat:
 | Gebeurtenisronde | Aan / uit + eventset | Uit |
 | Kaartenset-waardering | Klassiek escalerend | Klassiek |
 | Kaartweergavethema | Klassiek / Modern (`cards.json themes`) | Klassiek — **nog niet geïmplementeerd**, staat vandaag vast op Klassiek |
+
+**Dobbelregel.** Bepaalt wat de verdediger in §5.3 stap 4 mag kiezen. **Huisregel** (bewuste
+huisregel, wijkt af van de officiële Risk-regels en van wat hierboven in §5.3 ooit als vaste
+regel stond): gooit de aanvaller met 1 dobbelsteen, dan moet de verdediger ook met 1
+verdedigen, tenzij hij een actieve `DefenseBoost`-rol inzet (§8.1). **Klassiek:** de verdediger
+mag altijd met 2 gooien vanaf 2 legers, ongeacht het aantal aanvalsdobbelstenen — de officiële
+regel. Bij Klassiek vallen de drie `DefenseBoost`-rollen uit de roltoewijzingspool (niet
+uitgedeeld, niet kiesbaar); alleen relevant als Rollen = Aan.
 
 ---
 
@@ -387,7 +397,7 @@ De server valideert elke actie (juiste speler, juiste fase, geldige gebieden, vo
 
 Deze content was oorspronkelijk als "later in te vullen" gemarkeerd; inmiddels staat ze in `data/maps/standaard-43/` en is ze onderdeel van de gevalideerde speeldata:
 
-1. **Rollenset** (`roles.json`) — 15 rollen ingevuld, ruim boven het maximum van 7 spelers, elk met een uniek herkomstland (validatie-eis §8) en een effect-type uit de vaste set (§8.1). Let op één kaart-specifieke restrictie: de rol `maori` heeft `new-zealand` als herkomstland, een gebied dat alleen bestaat op kaartvarianten die Nieuw-Zeeland bevatten (de huidige 43-gebieden-set). Op een kaartvariant zonder Nieuw-Zeeland moet `maori` uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie.
+1. **Rollenset** (`roles.json`) — 18 rollen ingevuld (waarvan 3 `DefenseBoost`-rollen die bij Dobbelregel = Klassiek uit de pool vallen, §10), ruim boven het maximum van 7 spelers, elk met een uniek herkomstland (validatie-eis §8) en een effect-type uit de vaste set (§8.1). Let op één kaart-specifieke restrictie: de rol `maori` heeft `new-zealand` als herkomstland, een gebied dat alleen bestaat op kaartvarianten die Nieuw-Zeeland bevatten (de huidige 43-gebieden-set). Op een kaartvariant zonder Nieuw-Zeeland moet `maori` uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie.
 2. **Missieset** (`missions.json`) — dekkend voor 7 kleuren: per kleur een `EliminatePlayer`-missie, aangevuld met `ConquerContinents`- en `TerritoryCount(MinArmies)`-missies die tevens als `fallbackMissionId` dienen (§6.1).
 3. **Gebeurteniskaarten** (`events.json`) — gebeurtenisronde-content conform §9.2. Ten opzichte van de oorspronkelijke v1-effectlijst is `RevoltOnSingleArmy` geschrapt (niet gewenst); `TerritoryLocked` en `ArmyAttrition` zijn de effect-types die daarvoor in de plaats staan (al opgenomen in §9.2).
 

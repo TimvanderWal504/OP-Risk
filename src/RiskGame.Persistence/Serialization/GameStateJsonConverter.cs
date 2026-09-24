@@ -45,6 +45,11 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
             // venster) precies het juiste, geen fout.
             root.TryGetProperty("pendingWin", out var pendingWinElement)
                 ? pendingWinElement.Deserialize<PendingWin?>(scoped)
+                : null,
+            // Zelfde reden: documenten van vóór plan-testronde-tv punt 2 kennen dit veld niet —
+            // null valt in de GameState-constructor terug op TvDisplaySettings.Default.
+            root.TryGetProperty("tvDisplay", out var tvDisplayElement)
+                ? tvDisplayElement.Deserialize<TvDisplaySettings?>(scoped)
                 : null);
     }
 
@@ -77,6 +82,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
         JsonSerializer.Serialize(writer, value.Winners, scoped);
         writer.WritePropertyName("pendingWin");
         JsonSerializer.Serialize(writer, value.PendingWin, scoped);
+        writer.WritePropertyName("tvDisplay");
+        JsonSerializer.Serialize(writer, value.TvDisplay, scoped);
 
         writer.WriteEndObject();
     }

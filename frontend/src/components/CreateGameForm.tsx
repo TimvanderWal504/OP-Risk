@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  DefenseDiceRuleDto,
   MissionWinTimingDto,
   RoleAssignmentModeDto,
   SetupModeDto,
@@ -36,6 +37,7 @@ const DEFAULT_SETTINGS: GameSettingsDto = {
   roleAssignment: RoleAssignmentModeDto.Random,
   eventsEnabled: true,
   missionWinTiming: MissionWinTimingDto.EndOfTurn,
+  defenseDiceRule: DefenseDiceRuleDto.HouseRule,
 }
 
 const MIN_TIMER_SECONDS = 30
@@ -117,6 +119,11 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     [MissionWinTimingDto.FullRoundRevealed]: t('missionWinTiming.fullRoundRevealed.description'),
   }
   const missionWinTimingDescription = missionWinTimingDescriptions[settings.missionWinTiming]
+
+  const defenseDiceRuleDescription =
+    settings.defenseDiceRule === DefenseDiceRuleDto.HouseRule
+      ? t('defenseDiceRule.houseRule.description')
+      : t('defenseDiceRule.classic.description')
 
   return (
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
@@ -211,6 +218,19 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
                   </SelectableOption>
                 ))}
               </div>
+            </GlassPanel>
+
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
+              <div className="mb-2 font-display text-base font-extrabold">{t('defenseDiceRule.title')}</div>
+              <SegmentedControl
+                value={settings.defenseDiceRule}
+                onChange={(defenseDiceRule) => setSettings((s) => ({ ...s, defenseDiceRule }))}
+                options={[
+                  { value: DefenseDiceRuleDto.HouseRule, label: t('defenseDiceRule.houseRule.title') },
+                  { value: DefenseDiceRuleDto.Classic, label: t('defenseDiceRule.classic.title') },
+                ]}
+              />
+              <p className="mt-2 text-xs text-fg-muted">{defenseDiceRuleDescription}</p>
             </GlassPanel>
 
             <Stepper

@@ -10,9 +10,11 @@ import type { LocaleTree } from '../i18n/types'
  */
 export const attackTv = {
   kicker: { nl: 'Gevecht', en: 'Combat' },
-  vs: { nl: 'vs', en: 'vs' },
+  vs: { nl: 'VS', en: 'VS' },
   attackerLabel: { nl: 'Aanvaller', en: 'Attacker' },
   defenderLabel: { nl: 'Verdediger', en: 'Defender' },
+  // DefenseBoost ingezet (FO §8.1): rolnaam naast het label, zelfde middle-dot-idioom als elders.
+  defenderLabelBoost: { nl: 'Verdediger · {{role}}', en: 'Defender · {{role}}' },
   captured: { nl: 'VEROVERD', en: 'CAPTURED' },
   // Verhalend, altijd vanuit de aanvaller (2026-08-13, op verzoek): de TV heeft geen "jij" — meerdere
   // spelers kijken mee — dus staan hier kleurnamen i.p.v. spelersrollen, en begint elke zin met de

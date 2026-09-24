@@ -1,5 +1,5 @@
 {
-  "_comment": "Rollensysteem (FO §8). 15 rollen totaal, ruim boven het max. van 7 spelers. Elke rol heeft een uniek herkomstland (validatie-eis FO §8: 'geen dubbele herkomstlanden'). LET OP: 'maori' heeft 'new-zealand' als herkomstland -- dat gebied bestaat alleen op kaartvarianten die Nieuw-Zeeland bevatten (de 43-gebieden-set, niet de klassieke 42). Op een kaartvariant zonder new-zealand moet 'maori' uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie ('herkomstlanden bestaan op de geladen kaart'). 'generaal' is verplaatst van scandinavia naar china omdat 'viking' scandinavia nu logischer claimt.",
+  "_comment": "Rollensysteem (FO §8). 18 rollen totaal (waarvan 3 DefenseBoost-rollen die bij Dobbelregel = Klassiek uit de pool vallen, FO §10), ruim boven het max. van 7 spelers. Elke rol heeft een uniek herkomstland (validatie-eis FO §8: 'geen dubbele herkomstlanden'). LET OP: 'maori' heeft 'new-zealand' als herkomstland -- dat gebied bestaat alleen op kaartvarianten die Nieuw-Zeeland bevatten (de 43-gebieden-set, niet de klassieke 42). Op een kaartvariant zonder new-zealand moet 'maori' uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie ('herkomstlanden bestaan op de geladen kaart'). 'generaal' is verplaatst van scandinavia naar china omdat 'viking' scandinavia nu logischer claimt.",
   "roles": [
     {
       "id": "president",
@@ -162,6 +162,33 @@
         "type": "Reroll"
       },
       "description": "Ervaren navigators en krijgers herwerpen 1 eigen dobbelsteen per gebied dat ze aanvallen, vóórdat de verdediger gooit, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland."
+    },
+    {
+      "id": "capoeirista",
+      "name": "Capoeirista",
+      "originTerritory": "brazil",
+      "effect": {
+        "type": "DefenseBoost"
+      },
+      "description": "Ginga in de verdediging: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Brazilië bezit."
+    },
+    {
+      "id": "pendekar",
+      "name": "Pendekar",
+      "originTerritory": "indonesia",
+      "effect": {
+        "type": "DefenseBoost"
+      },
+      "description": "Een silat-meester wijkt niet voor een enkele aanvaller: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Indonesië bezit."
+    },
+    {
+      "id": "berserker",
+      "name": "Berserker",
+      "originTerritory": "iceland",
+      "effect": {
+        "type": "DefenseBoost"
+      },
+      "description": "Woede kent geen dobbelsteenlimiet: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je IJsland bezit."
     }
   ]
 }

@@ -487,6 +487,130 @@ public class AttackGuardsTests
         Assert.True(AttackGuards.RerollAvailable(state, "p1", "alberta"));
     }
 
+    /// <summary>
+    /// FO §5.3 stap 4 / §8.1: "alaska" (p1) valt met <paramref name="attackDice"/> aan op "alberta"
+    /// (p2, 3 legers). p2 is "capoeirista" (DefenseBoost, herkomstland "brazil").
+    /// </summary>
+    private static GameState DefenseBoostScenario(
+        int attackDice = 1,
+        DefenseDiceRule rule = DefenseDiceRule.HouseRule,
+        string brazilOwner = "p2",
+        bool boostUsed = false)
+    {
+        var settings = TestGame.Settings() with { RolesEnabled = true, DefenseDiceRule = rule };
+        var players = new[]
+        {
+            TestGame.Player("p1", "red"),
+            TestGame.Player("p2", "blue", roleId: "capoeirista") with { DefenseBoostUsed = boostUsed },
+        };
+        var rolls = Enumerable.Repeat(4, attackDice).ToArray();
+
+        return TestGame.InProgress(
+                players: players,
+                turnPhase: TurnPhase.Attack,
+                settings: settings,
+                pendingCombat: new PendingCombat("alaska", "alberta", attackDice, rolls, AwaitingRerollDecision: false, CorrelationId: Guid.NewGuid()))
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 4))
+            .WithTerritory(new TerritoryOwnership("alberta", "p2", 3))
+            .WithTerritory(new TerritoryOwnership("brazil", brazilOwner, 1));
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelTegenEenAanvalsdobbelsteen_MetTweeZonderBoost_IsOngeldig()
+    {
+        var state = DefenseBoostScenario(brazilOwner: "p1");
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("attack.mustDefendWithOneDieHouseRule", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelTegenEenAanvalsdobbelsteen_MetEen_IsGeldig()
+    {
+        var state = DefenseBoostScenario(brazilOwner: "p1");
+
+        Assert.True(AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 1).IsSuccess);
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelTegenTweeAanvalsdobbelstenen_MetTwee_IsGeldigZonderBoost()
+    {
+        var state = DefenseBoostScenario(attackDice: 2, brazilOwner: "p1");
+
+        Assert.True(AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2).IsSuccess);
+        Assert.False(AttackGuards.DefenseBoostRequired(state, defenseDice: 2));
+    }
+
+    [Fact]
+    public void Verdedigen_KlassiekTegenEenAanvalsdobbelsteen_MetTwee_IsGeldig()
+    {
+        var state = DefenseBoostScenario(rule: DefenseDiceRule.Classic, brazilOwner: "p1");
+
+        Assert.True(AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2).IsSuccess);
+        Assert.False(AttackGuards.DefenseBoostRequired(state, defenseDice: 2));
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelMetBeschikbareBoostIngezet_MetTwee_IsGeldig()
+    {
+        var state = DefenseBoostScenario();
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2, useDefenseBoost: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(AttackGuards.DefenseBoostRequired(state, defenseDice: 2));
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelMetBeschikbareBoostNietIngezet_MetTwee_IsOngeldig()
+    {
+        var state = DefenseBoostScenario();
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2, useDefenseBoost: false);
+
+        Assert.Equal("attack.mustDefendWithOneDieHouseRule", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelMetAlGebruikteBoost_MetTwee_IsOngeldig()
+    {
+        var state = DefenseBoostScenario(boostUsed: true);
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2, useDefenseBoost: true);
+
+        Assert.Equal("attack.mustDefendWithOneDieHouseRule", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void Verdedigen_HuisregelMetInactieveBoost_MetTwee_IsOngeldig()
+    {
+        // Herkomstland Brazilië is niet (meer) in bezit van de verdediger.
+        var state = DefenseBoostScenario(brazilOwner: "p1");
+
+        var result = AttackGuards.CanChooseDefenseDice(state, "p2", defenseDice: 2, useDefenseBoost: true);
+
+        Assert.Equal("attack.mustDefendWithOneDieHouseRule", result.Errors.Single().Code);
+    }
+
+    [Fact]
+    public void BoostBeschikbaar_BijKlassiek_IsOnwaar()
+    {
+        var state = DefenseBoostScenario(rule: DefenseDiceRule.Classic);
+
+        Assert.False(AttackGuards.DefenseBoostAvailable(state, "p2"));
+    }
+
+    [Fact]
+    public void BoostBeschikbaar_BijHuisregelMetActieveOngebruikteRol_IsWaar()
+    {
+        var state = DefenseBoostScenario();
+
+        Assert.True(AttackGuards.DefenseBoostAvailable(state, "p2"));
+        Assert.False(AttackGuards.DefenseBoostAvailable(state, "p1"));
+    }
+
     /// <summary>FO §7 (taak 4): eerst de ≥6-inleg na een eliminatie afhandelen, vóór verder vechten.</summary>
     [Fact]
     public void Aanval_MetZesOfMeerKaartenInHand_IsOngeldig()

@@ -9,10 +9,10 @@ van §1. Vink een punt pas af als code, tests en (waar genoemd) FO/`DESIGN.md` b
 ## 1. Volgorde en afvinklijst
 
 - [x] **5** — Missie "18 gebieden met ≥ 2 legers" alleen bij 4+ spelers
-- [ ] **6** — Streep in de "V" van "VS" op het TV-gevechtsoverlay
-- [ ] **1** — Legerstand van de verdediger tonen op de telefoon
-- [ ] **8** — Engelse teksten tussen de Nederlandse
-- [ ] **7** — Lobby-instelling dobbelregel + nieuwe verdedigingsrol (Brazilië)
+- [ ] **6** — Streep in de "V" van "VS" op het TV-gevechtsoverlay (TV-verificatie nog open)
+- [x] **1** — Legerstand van de verdediger tonen op de telefoon
+- [ ] **8** — Engelse teksten tussen de Nederlandse (open bevinding: Engels onbereikbaar zonder taalknop)
+- [x] **7** — Lobby-instelling dobbelregel + nieuwe verdedigingsrollen (Brazilië/Indonesië/IJsland)
 - [ ] **2** — TV-weergave-instellingen (tekstschaal, glas) vanaf de host-telefoon
 - [ ] **4** — Nieuwsbanner met de laatste 10 acties op de TV
 - [ ] **3** — Spelinfo op de telefoon
@@ -56,10 +56,18 @@ toont die als hoofdletters maar gebruikt de tekening van de kleine `v`, met die 
 Er zit geen rand of scheidingslijn in de layout van [TvCombatOverlay.tsx](../frontend/src/routes/tv/screens/TvCombatOverlay.tsx).
 
 **Aanpak.**
-- [ ] Locale `vs` → `'VS'` (nl en en).
+- [x] Locale `vs` → `'VS'` (nl en en).
 - [ ] Controleren op TV of screenshot. Blijft de streep: glyph in `brand-font.ttf` controleren of
       "VS" een lichter gewicht geven.
-- [ ] Andere kleine-letterteksten in `font-display` zoeken en ook in hoofdletters zetten.
+- [x] Andere kleine-letterteksten in `font-display` zoeken en ook in hoofdletters zetten. Eén
+      gevonden: `common.badges.comingSoon` ("binnenkort"/"coming soon", `ToggleRow.tsx`'s
+      `soon`-badge, erft `font-display` van de omringende rij) — nu `'BINNENKORT'`/`'COMING SOON'`,
+      conform DESIGN.md's Label-regel (badges altijd uppercase). Prop `soon` heeft momenteel geen
+      enkele aanroeper (dode functionaliteit, niet door deze taak geïntroduceerd). Overige
+      korte kleine-letterteksten (`armiesWord`, `targetsWord`, `diceWord*`, `colTerr`, `you`,
+      `roleActive`/`roleInactive`) staan op `font-body`/`text-sm` e.d., niet op `font-display` —
+      `roleActive`/`roleInactive` zijn bovendien expliciet als bewuste uitzondering gedocumenteerd
+      (DESIGN.md, "Player Header / Stat rows").
 
 ### 1. Legerstand van de verdediger op de telefoon
 
@@ -67,10 +75,28 @@ Er zit geen rand of scheidingslijn in de layout van [TvCombatOverlay.tsx](../fro
 binnen, maar gebruikt het alleen voor de 1-dobbelsteenregel.
 
 **Aanpak.**
-- [ ] Regel onder de kleurblokken: "Jouw legers op {gebied}: N", eventueel ook het aantal legers
+- [x] Regel onder de kleurblokken: "Jouw legers op {gebied}: N", eventueel ook het aantal legers
       van de aanvaller in het brongebied (staat al in de state).
-- [ ] Nieuwe keys in `locales/attack.ts` (nl + en).
-- [ ] Test in `DefendStep.test.tsx`.
+- [x] Nieuwe keys in `locales/attack.ts` (nl + en).
+- [x] Test in `DefendStep.test.tsx`.
+
+**Uitvoering.** Nieuwe regel (`font-body text-sm text-fg-muted`) direct onder de kleurblokken,
+vóór de bestaande `defend.line`-narratief: `"Jouw legers op {gebied}: N · Aanvaller vanuit
+{brongebied}: M"` — zelfde middle-dot-idioom als DESIGN.md's "Player Header / Stat rows"
+(gedocumenteerd voor een vergelijkbare tweede-stat-inline-situatie). Nieuwe verplichte prop
+`attackerArmyCount` op `DefendStep`/`HeldDefend`, afgeleid in `PhoneAttackScreen.tsx` uit
+`state.territories` op `fromTerritoryId` — geen nieuwe DTO nodig, stond al in de state (frontend/
+CLAUDE.md: geen client-side spelregelafleiding, dit is alleen weergave van een bestaand getal).
+Nieuwe keys `defend.myArmies`/`defend.attackerArmies` in `locales/attack.ts`. Test toegevoegd in
+`DefendStep.test.tsx`; bestaande renders kregen de nieuwe verplichte prop erbij.
+
+**Bugfix (elite-code-review, 2026-09-24).** De legerstand-regel stond buiten de
+`result === null`-conditional en bleef dus ook zichtbaar ná het gevechtsresultaat — met
+`defenderArmyCount`/`attackerArmyCount` bevroren op de stand van vóór de worp, terwijl de
+dobbelstenen/uitkomst eronder al de nieuwe werkelijkheid toonden (bv. "Jouw legers op
+Kamtsjatka: 3" naast "Je verliest 2 legers"). Verplaatst in de `result === null`-tak, samen
+met de `choose`/`awaitingReroll`-regel; nieuwe test bewaakt dat de regel verdwijnt zodra het
+resultaat verschijnt.
 
 ### 8. Engelse teksten tussen de Nederlandse
 
@@ -85,13 +111,60 @@ binnen, maar gebruikt het alleen voor de 1-dobbelsteenregel.
 "the 3th" wordt "the 3rd".
 
 **Aanpak.**
-- [ ] Taal standaard op `nl` vastzetten; browsertaal niet meer gebruiken (`en` blijft beschikbaar).
-- [ ] Inventaris van alle Engelse UI-teksten met voorgestelde vertaling → ter goedkeuring aan de gebruiker.
-- [ ] Na akkoord in één keer vervangen.
-- [ ] Test in `locales/index.test.ts` die veelvoorkomende Engelse woorden in `nl`-leaves opspoort
+- [x] Taal standaard op `nl` vastzetten; browsertaal niet meer gebruiken (`en` blijft beschikbaar).
+- [x] Inventaris van alle Engelse UI-teksten met voorgestelde vertaling → ter goedkeuring aan de gebruiker.
+- [x] Na akkoord in één keer vervangen.
+- [x] Test in `locales/index.test.ts` die veelvoorkomende Engelse woorden in `nl`-leaves opspoort
       (met uitzonderingslijst voor de grappen).
 
-### 7. Dobbelregel als lobby-instelling + verdedigingsrol
+**Uitvoering.**
+- `i18n/index.ts`: detectie-`order` teruggebracht tot `['localStorage']` — zonder opgeslagen
+  keuze valt het altijd terug op `fallbackLng: 'nl'`, nooit meer op `navigator`. `en` blijft
+  bereikbaar via `useLocale().setLang` (bestond al, alleen nog nergens aan een knop gekoppeld —
+  buiten scope van deze bevinding, geen UI gevraagd in de aanpak-bullets).
+- `docs/i18n-inventory.md` (waar de Aanpak oorspronkelijk naar verwees) bestaat niet meer in de
+  repo — inventaris opnieuw vanaf de code opgebouwd i.p.v. dat bestand te volgen.
+- Inventaris + akkoord van de gebruiker (2026-09-24):
+  - **"Host"/"HOST"** (common.ts, join.ts) — laten staan: geaccepteerd Nederlands leenwoord,
+    consistent met bestaand gebruik elders (errors.ts "De host kan niet verwijderd worden.",
+    CLAUDE.md "host-telefoon"). Geen wijziging.
+  - **"Random"** (3×: createGame.ts, lobby.ts ×2) → **"Willekeurig"**.
+  - **5 onvertaalde gebiedsnamen** in `territories.ts` (inconsistent met de overige 38, en met
+    quotes.ts dat al "West-Australië"/"Oost-Australië" gebruikte) → Northwest Territory
+    **Noordwest-Territorium**, Western/Eastern United States **West-VS/Oost-VS** (matcht de
+    afkorting die `roles.president` al gebruikte), Western/Eastern Australia
+    **West-Australië/Oost-Australië**.
+  - Bijvangst tijdens het doorvoeren: `roles.ts` had 5 rolomschrijvingen die deze (en de al wél
+    vertaalde "Ukraine"/"New Zealand") namen onvertaald in de nl-tekst lieten staan
+    (`kolonist`, `aboriginal`, `cowboy`, `tsaar`, `maori` — `maori` noemde zelfs "New Zealand" én
+    "Nieuw-Zeeland" in dezelfde zin). Mee opgelost, zelfde categorie fout, geen aparte
+    goedkeuring gevraagd (ondubbelzinnig, matcht een al bestaande vertaling elders).
+  - **`errors.ts` `useEndTurnInFortify`** noemde de rauwe hub-methode "EndTurn" i.p.v. de
+    knoptekst → geherformuleerd naar `"Beurt beëindigen"` (nl) / `"End turn"` (en), match met
+    `fortify.ts`'s `endTurn`/`skipTurn`.
+  - **"the 3th" → "the 3rd"** (quotes.ts, `quote-279`, Koning Henry-grap) — al gefixt vóór de
+    inventarisatie, onderdeel van dezelfde bevinding.
+- Nieuwe test `locales/index.test.ts`: klein, hoog-precisie Engels-woordenlijstje (alleen woorden
+  die geen geldig Nederlands woord zijn, dus geen false positives op cognaten als "in"/"is"/"of"),
+  met `{{variabele}}`-interpolatie eerst gestript. Eén uitzondering: `quotes:quote-279.author`
+  (de "Henry the 3rd"-grap, bevat "the"). "Host"/"random" bewust in/uit de lijst gehouden zoals
+  hierboven besloten.
+- `ToggleRow.test.tsx` bijgewerkt op de eerder in deze sessie (punt 6) al doorgevoerde
+  `'binnenkort'` → `'BINNENKORT'`-wijziging (was nog niet in de test verwerkt).
+- `pnpm run build` en de volledige testsuite (3799 tests) zijn groen.
+
+**Bevinding (elite-code-review, 2026-09-24) — Engels in de praktijk onbereikbaar, opgelost
+via punt 2.** `useLocale().setLang` bestaat, maar heeft nul aanroepers in de hele frontend:
+er is nergens een taalknop. Vóór deze sessie kon een speler met een Engelse browser/TV via
+`navigator`-detectie tenminste Engels krijgen; ná het verwijderen van `'navigator'` uit de
+detectie-`order` is de enige weg naar `en` handmatig `localStorage` zetten via devtools. De
+aanpak-bullet "`en` blijft beschikbaar" klopt dus alleen technisch (de resource/vertaling
+bestaat), niet functioneel. **Besluit (2026-09-24):** geen aparte taalknop hier — een kleine
+NL/EN-toggle voor de TV verhuist naar punt 2 se "TV-weergave-instellingen vanaf de
+host-telefoon", die toch al een host-only bedienpaneel + server→TV-doorgifte bouwt. Zie
+punt 2 voor de uitwerking.
+
+### 7. Dobbelregel als lobby-instelling + verdedigingsrollen (Brazilië/Indonesië/IJsland)
 
 **Let op.** Wijkt af van FO §5.3 (verdediger kiest altijd 1–2) en van de officiële Risk-regels
 (verdediger mag 2 gooien vanaf 2 legers, ongeacht de aanvaller). Bewuste huisregel.
@@ -99,22 +172,111 @@ binnen, maar gebruikt het alleen voor de 1-dobbelsteenregel.
 **Beslissingen.**
 - Nieuwe lobby-instelling: **Huisregel** (aanvaller gooit 1 → verdediger ook 1) of **Klassiek**.
   Standaard: **Huisregel**.
-- Nieuwe rol met herkomstland **Brazilië**: één keer per ronde toch met 2 dobbelstenen
-  verdedigen tegen 1; weer beschikbaar **aan het begin van de eigen beurt** van de verdediger.
-- Bij **Klassiek** valt deze rol uit de pool (niet uitgedeeld, niet kiesbaar).
+- **Drie** nieuwe rollen — geen rol met 3 herkomstlanden, dat past niet in het bestaande
+  `roles.json`-schema (één `originTerritory` per rol) — met herkomstland **Brazilië**,
+  **Indonesië** resp. **IJsland**, zelfde effect (bevestigd 2026-09-24, zie voorstel
+  hieronder): één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1;
+  weer beschikbaar **aan het begin van de eigen beurt** van de verdediger. Alle drie
+  herkomstlanden zijn vrij (geen bestaande rol gebruikt ze).
+- Bij **Klassiek** vallen deze rollen uit de pool (niet uitgedeeld, niet kiesbaar) — zelfde
+  soort pool-filtering als punt 5 al deed voor `territory-18-min2`.
 - Naam en flavourtekst: voorstel door Claude, goedkeuring door de gebruiker.
 
+**Voorstel rolnamen/flavourtekst (ter goedkeuring).** Zelfde effect-type (`DefenseBoost`),
+naar het patroon van de bestaande `Reroll`-rollen die ook zonder parameters, meerdere keren,
+hetzelfde effect delen (Generaal/Admiraal/Aboriginal/Samurai/Cowboy/Maori):
+
+| Rol | Herkomstland | Naam (NL/EN) | Flavourtekst (NL) |
+|---|---|---|---|
+| Brazilië | `brazil` | Capoeirista / Capoeirista | "Ginga in de verdediging: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Brazilië bezit." |
+| Indonesië | `indonesia` | Pendekar / Pencak Silat Master | "Een silat-meester wijkt niet voor een enkele aanvaller: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Indonesië bezit." |
+| IJsland | `iceland` | Berserker / Berserker | "Woede kent geen dobbelsteenlimiet: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je IJsland bezit." |
+
 **Aanpak.**
-- [ ] FO §5.3, §8 en §10 bijwerken (eerst, conform CLAUDE.md).
-- [ ] `GameSettings` + DTO + `CreateGameForm` + `LobbySettingsSummary`: nieuwe instelling.
-- [ ] `AttackGuards.CanChooseDefenseDice`: bij 1 aanvalsdobbelsteen en Huisregel alleen 1 toegestaan
-      (nieuwe foutcode), tenzij de boost wordt ingezet.
-- [ ] Nieuw effecttype (bijv. `DefenseBoost`) in Rules + parser; `roles.json` uitbreiden.
-- [ ] State: "boost gebruikt" per speler, reset bij begin eigen beurt (Rules + event + projectie).
-- [ ] Rolpool filteren op de instelling (Random én Kiezen).
-- [ ] `DefendStep`: bij gedwongen 1 geen keuze tonen, behalve de boost-knop als die beschikbaar is.
-- [ ] TV: boost-inzet zichtbaar in het gevechtsoverlay.
-- [ ] Tests: guards, reset, rolpool, hub.
+- [x] FO §5.3 (stap 4, dobbelregel-instelling), §8.1 (nieuw effect-type `DefenseBoost`) en §10
+      (nieuwe instellingsrij) bijwerken — eerst, conform CLAUDE.md.
+- [x] **Rules** (`src/RiskGame.Rules`): enum `DefenseDiceRule` (`HouseRule`/`Classic`, stijl
+      `RoleAssignmentMode.cs`) + veld op `GameSettings` (default `HouseRule`, stijl
+      `MissionWinTiming`). Nieuw `DefenseBoostEffect : RoleEffect` (geen parameters, stijl
+      `RerollEffect`) + `case "DefenseBoost"` in `MapDefinitionParser.ReadRoleEffect`.
+      `roles.json` uitbreiden met de 3 rollen.
+- [x] **`Player.cs`**: nieuw veld `bool DefenseBoostUsed = false`. Op `Player`, niet op
+      `TurnState`: `TurnState` wordt bij elke `PhaseChanged` volledig herbouwd en bestaat
+      alleen voor de actieve speler, terwijl de boost moet overleven tot de *verdediger*
+      (een andere speler) zelf weer aan de beurt komt.
+- [x] **Gedeelde rolpool-helper** (bv. `Roles/RolePool.EffectiveRoles(GameState)`) die
+      `state.Map.Roles` filtert op `DefenseDiceRule`; vervangt de ongefilterde catalogus op
+      de 3 plekken die 'm vandaag gebruiken: `LobbyGuards.RolePoolIsLargeEnough`,
+      `LobbyCommandHandler`'s `RoleAssignmentCalculator.Assign`-aanroep, en
+      `GameStateDtoMapper`'s rollen→DTO-mapping (dekt zowel TV-roster als de
+      "Kiezen"-stap — server filtert, client filtert nooit zelf, zelfde patroon als de
+      bestaande Maori-uitsluiting "alleen op kaartvarianten met Nieuw-Zeeland").
+- [x] **`AttackGuards.CanChooseDefenseDice`**: nieuwe parameter `bool useDefenseBoost`. Bij
+      `defenseDice == 2`, `DefenseDiceRule.HouseRule` én `pendingCombat.AttackDice == 1` moet
+      `useDefenseBoost` waar zijn, `RoleEffects.Active<DefenseBoostEffect>` actief, én
+      `Player.DefenseBoostUsed` nog `false` — anders faalt de guard met één nieuwe foutcode
+      `attack.mustDefendWithOneDieHouseRule` (bewust één code: een client die de boost
+      aanbiedt terwijl hij niet beschikbaar is, is sowieso verouderd/fout).
+- [x] **Nieuw event** `DefenseBoostUsed(gameId, playerId)` — apart feit naast de bestaande
+      combat-events, niet erop geplakt. Projectie zet `Player.DefenseBoostUsed = true`.
+      **Reset**: in het bestaande `Apply(GameState, PhaseChanged)`, wanneer
+      `@event.TurnPhase == TurnPhase.Reinforce`, ook `Player.DefenseBoostUsed` van díe
+      speler terugzetten — zelfde "alleen bij intrede in Versterken reset ik" als
+      `HasConqueredThisTurn` ernaast, maar op `Player` i.p.v. `TurnState`.
+- [x] **Api**: `GameSettingsDto`/`DefenseDiceRuleDto` + mapper (stijl `RoleAssignmentModeDto`).
+      `PlayerDto.DefenseBoostAvailable` (server-berekend, nooit client-side herleiden — zelfde
+      rol als het bestaande `IsRoleActive`). `AttackCommandHandler.ChooseDefenseDiceAsync` +
+      `GameHub.ChooseDefenseDice`: extra parameter, boost-event bij geslaagd gebruik. De
+      bestaande `DiceRolledMessage`-broadcast voor de verdedigingsworp krijgt
+      `context: "defenseBoost"` i.p.v. `"defense"` zodra ingezet — zelfde mechanisme als
+      `"reroll"` vandaag, geen nieuw broadcast-type nodig.
+      `locales/errors.ts`: nieuwe key `attack.mustDefendWithOneDieHouseRule`.
+- [x] **Frontend**: `CreateGameForm`/`locales/createGame.ts` — nieuwe instelling, 2-opties-
+      `SegmentedControl` naar het patroon van `winCondition`. `LobbySettingsSummary`/
+      `locales/lobby.ts` — samenvattingsregel. `locales/roles.ts` — 3 nieuwe entries.
+- [x] **`DefendStep`**: bij gedwongen 1 (nu alleen `defenderArmyCount===1`) geldt voortaan ook
+      `defenseDiceRule==='houseRule' && attackDice===1 && !defenseBoostAvailable`. Is de boost
+      wél beschikbaar, dan blijft het "2"-kaartje klikbaar met een boost-indicator (rolnaam +
+      icoon, zelfde soort als het reroll-aanbod in `AttackFlowStep.tsx`'s
+      `AttackRolledResult`, DESIGN.md § Role Reroll) i.p.v. de normale styling; kiezen roept
+      `onChooseDefenseDice(2, true)` aan (signatuur krijgt optionele tweede parameter).
+      `PhoneAttackScreen`/hub-hook geven `attackDice`/`defenseBoostAvailable` door, zelfde plek
+      als de bestaande `defenderArmyCount`/`attackerArmyCount`-afleiding (punt 1 hierboven).
+- [x] **TV**: boost-inzet zichtbaar in `TvCombatOverlay`. `useCombatBroadcast.ts` krijgt een
+      vierde toegestane `context` (`'defenseBoost'`) en zet een `defenseBoostUsed: boolean`
+      op de combat-state (net als `reroll`, maar zonder extra payload — een vlag volstaat).
+      Nieuw UI-element zonder DESIGN.md-precedent → korte `/impeccable document`-toevoeging
+      achteraf (zelfde aanpak als de al gedocumenteerde § Role Reroll-sectie).
+- [x] **Tests**: `AttackGuardsTests` (Huisregel-forceert-1, met/zonder actieve/gebruikte
+      boost, Klassiek ongewijzigd), rolpool-filtering + `RolePoolIsLargeEnough` op de
+      gefilterde pool, projectie (`DefenseBoostUsed`-apply + reset bij de juiste speler, niet
+      bij een andere speler wiens beurt eerder begint), hub/command-handlertest inclusief de
+      foutcode-respons, `DefendStep.test.tsx`/`PhoneAttackScreen.test.tsx`/
+      `CreateGameForm.test.tsx`/`LobbySettingsSummary.test.tsx`/`TvCombatOverlay.test.tsx`.
+
+**Aanbevolen sessie-opdeling** (CLAUDE.md: "één taak per sessie, klein houden" — dit punt is
+te groot voor één sessie), elk met eigen build/tests-groen als afrondingscriterium: (1) FO,
+(2) Rules-engine + tests, (3) Api (DTO/event/projectie/hub) + tests, (4) Frontend
+(instelling + DefendStep/PhoneAttackScreen) + tests, (5) TV + DESIGN.md + test.
+
+**Uitvoering (2026-09-24).** Op verzoek van de gebruiker ("doe alles maar gelijk") sessies 2–5 in
+één keer, na sessie 1 (FO). Afwijkingen/aanvullingen t.o.v. de bullets hierboven:
+- De rolpool-helper heet `RolePool.EffectiveRoles` en wordt op **vier** plekken gebruikt, niet
+  drie: ook `LobbyGuards.RoleIsKnown` (anders was een DefenseBoost-rol bij Klassiek via
+  `ChooseRole` alsnog kiesbaar).
+- `CanChooseDefenseDice` kreeg naast `useDefenseBoost` twee publieke helpers:
+  `DefenseBoostAvailable` (ook voor `PlayerDto.DefenseBoostAvailable`) en
+  `DefenseBoostRequired` (de handler verbruikt de boost alleen als die echt nodig was — een
+  `useDefenseBoost: true` bij Klassiek of tegen 2+ aanvalsdobbelstenen is zonder effect).
+- `GameHub.ChooseDefenseDice` heeft de parameter **verplicht** (SignalR kent geen optionele
+  hub-parameters); de bestaande hub-tests sturen expliciet `false` mee.
+- `DefendStep` krijgt `houseRuleLimitsToOneDie` + `defenseBoostRoleId` i.p.v. losse
+  `defenseDiceRule`/`attackDice`/`defenseBoostAvailable`-props; de afleiding zit in
+  `PhoneAttackScreen`, zelfde plek als de legerstanden.
+- `DESIGN.md` § Role Defense Boost is met de hand toegevoegd; `/impeccable document` (sidecar
+  `.impeccable/design.json`) is nog niet gedraaid.
+- `data/maps/standaard-43/roles.json` (18 rollen) en FO §13 bijgewerkt; `Standaard43Tests`
+  telt nu 18 rollen.
 
 ### 2. TV-weergave-instellingen vanaf de host-telefoon
 
@@ -122,16 +284,44 @@ binnen, maar gebruikt het alleen voor de 1-dobbelsteenregel.
 `--glass-bg` / `--glass-filter` in [GlassPanel.tsx](../frontend/src/components/ui/GlassPanel.tsx).
 
 **Beslissing.** Bediening op de **telefoon van de host**; de server stuurt de waarden naar de TV,
-zodat ze blijven staan na herladen van de TV.
+zodat ze blijven staan na herladen van de TV. **Toegevoegd (2026-09-24, elite-code-review
+punt 8):** hetzelfde paneel krijgt ook een kleine **NL/EN-taaltoggle voor de TV** — lost de
+"TV staat stilzwijgend in het Engels"-bevinding (punt 8) definitief op via een expliciete,
+host-bediende knop i.p.v. (afwezige) browserdetectie. Alleen de TV, niet de losse
+telefoonschermen — die blijven op hun eigen `useLocale`/`localStorage`-mechanisme, dat
+verandert hier niet.
 
 **Aanpak.**
-- [ ] Backend: hub-methode (alleen host) + opslag in de state + meesturen in `GameStateDto`.
+- [x] Backend: hub-methode (alleen host) + opslag in de state + meesturen in `GameStateDto`.
+      Taal hoort in dezelfde payload/hub-methode als tekstschaal/glas (één "TV-weergave"-
+      instellingenset), niet als los mechanisme.
 - [ ] `TvShell`: `--tv-text-scale`, `--tv-glass-opacity`, `--tv-glass-blur`; `--text-*` alleen
       binnen de TV-shell overschrijven, telefoon ongemoeid.
 - [ ] `GlassPanel` (`context="tv"`): tint en blur vermenigvuldigen met de variabelen.
-- [ ] Host-telefoon: menu "TV-weergave" met schuifregelaars en reset.
+- [ ] **Taal:** de TV-route roept bij het laden/bij state-updates `i18next.changeLanguage`
+      aan op basis van het server-veld i.p.v. de gebruikelijke `localStorage`/`fallbackLng`-
+      detectie (`i18n/index.ts`) — de TV is de ene plek waar de servertoestand de taal
+      bepaalt, niet de browser. **Bijgesteld (elite-code-review 2026-09-24, bevinding 6):**
+      alleen `i18n.changeLanguage`, níet `useLocale().setLang` — die schrijft ook naar dezelfde
+      `localStorage`-key als de telefoonroute, terwijl de server hier de bron is.
+- [ ] Host-telefoon: menu "TV-weergave" met schuifregelaars, NL/EN-toggle, en reset.
 - [ ] `DESIGN.md` bijwerken via `/impeccable document`.
-- [ ] Tests.
+- [ ] Tests (incl. taaltoggle: hub-methode, DTO-veld, TV past de taal toe). Backend-deel af,
+      frontend-deel volgt.
+
+**Beslissingen (2026-09-24, bij het bouwplan).** Nieuw `ui/Slider`-component; slider 0–100 in
+stappen van 5, 50 = het huidige design, 0 = 25% van het huidige effect, 100 = 2×; knop in de
+host-header én op `JoinHostWaitStep`; opslag als event op de spelstream; de host-telefoon
+onthoudt de laatste waarden en stuurt ze mee bij "Nieuw spel"; standaardwaarden komen uit het
+DTO (`TvDisplayDefault`). Echte-TV-check op slider 0/50/100 hoort bij de afronding.
+
+**Uitvoering backend (2026-09-24).** `TvDisplaySettings` (Rules, sliderposities als int) op
+`GameState`; event `TvDisplaySettingsChanged`; optioneel `TvDisplay` op `GameCreated`/
+`CreateGameRequest`; hub-methode `SetTvDisplay` (host, elke fase, `TvDisplayGuards`, foutcode
+`tvDisplay.invalidValue`); `GameStateDto.TvDisplay` + `TvDisplayDefault`. `TvDisplayCommandHandler`
+probeert een botsende gelijktijdige append tot 3× opnieuw — zonder die retry faalt de
+gelijktijdigheidstest 5 van de 5 keer. **Bevinding, buiten scope:** de overige command
+handlers hebben diezelfde botsingskans zonder retry. TO §4.1 bijgewerkt.
 
 ### 4. Nieuwsbanner met de laatste 10 acties
 

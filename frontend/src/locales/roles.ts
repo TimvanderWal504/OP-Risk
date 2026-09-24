@@ -53,14 +53,14 @@ export const roles = {
   kolonist: {
     name: { nl: 'Kolonist', en: 'Colonist' },
     description: {
-      nl: 'Dit lijkt ons een goede plek om ons te vestigen: +1 leger per beurt zolang je Western Australia bezit.',
+      nl: 'Dit lijkt ons een goede plek om ons te vestigen: +1 leger per beurt zolang je West-Australië bezit.',
       en: 'This looks like a good place to settle: +1 army per turn as long as you hold Western Australia.',
     },
   },
   aboriginal: {
     name: { nl: 'Aboriginal', en: 'Aboriginal' },
     description: {
-      nl: 'Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Eastern Australia bezit.',
+      nl: 'Generaties kennis van het land verkleinen de kans op een slechte worp: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Oost-Australië bezit.',
       en: 'Generations of knowledge of the land reduce the odds of a bad roll: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Eastern Australia.',
     },
   },
@@ -81,7 +81,7 @@ export const roles = {
   cowboy: {
     name: { nl: 'Cowboy', en: 'Cowboy' },
     description: {
-      nl: 'Snelle trekker: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je Western United States bezit.',
+      nl: 'Snelle trekker: herwerp 1 eigen dobbelsteen per gebied dat je aanvalt, vóórdat de verdediger gooit, zolang je West-VS bezit.',
       en: 'Quick on the draw: reroll 1 of your own dice per territory you attack, before the defender rolls, as long as you hold Western United States.',
     },
   },
@@ -102,15 +102,36 @@ export const roles = {
   tsaar: {
     name: { nl: 'Tsaar', en: 'Tsar' },
     description: {
-      nl: 'Heerschappij over een immens rijk levert +1 leger per beurt op, zolang je Ukraine bezit.',
+      nl: 'Heerschappij over een immens rijk levert +1 leger per beurt op, zolang je Oekraïne bezit.',
       en: 'Rule over an immense empire yields +1 army per turn, as long as you hold Ukraine.',
     },
   },
   maori: {
     name: { nl: 'Maori', en: 'Maori' },
     description: {
-      nl: 'Ervaren navigators en krijgers herwerpen 1 eigen dobbelsteen per gebied dat ze aanvallen, vóórdat de verdediger gooit, zolang je New Zealand bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland.',
+      nl: 'Ervaren navigators en krijgers herwerpen 1 eigen dobbelsteen per gebied dat ze aanvallen, vóórdat de verdediger gooit, zolang je Nieuw-Zeeland bezit. Alleen beschikbaar op kaartvarianten met Nieuw-Zeeland.',
       en: 'Experienced navigators and warriors reroll 1 of their own dice per territory they attack, before the defender rolls, as long as you hold New Zealand. Only available on map variants that include New Zealand.',
+    },
+  },
+  capoeirista: {
+    name: { nl: 'Capoeirista', en: 'Capoeirista' },
+    description: {
+      nl: 'Ginga in de verdediging: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Brazilië bezit.',
+      en: 'Ginga on defense: once per round, defend with 2 dice against an attack with 1 die anyway, as long as you hold Brazil.',
+    },
+  },
+  pendekar: {
+    name: { nl: 'Pendekar', en: 'Pencak Silat Master' },
+    description: {
+      nl: 'Een silat-meester wijkt niet voor een enkele aanvaller: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je Indonesië bezit.',
+      en: 'A silat master does not yield to a lone attacker: once per round, defend with 2 dice against an attack with 1 die anyway, as long as you hold Indonesia.',
+    },
+  },
+  berserker: {
+    name: { nl: 'Berserker', en: 'Berserker' },
+    description: {
+      nl: 'Woede kent geen dobbelsteenlimiet: één keer per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 dobbelsteen, zolang je IJsland bezit.',
+      en: 'Rage knows no dice limit: once per round, defend with 2 dice against an attack with 1 die anyway, as long as you hold Iceland.',
     },
   },
 } satisfies LocaleTree

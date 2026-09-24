@@ -1,3 +1,4 @@
+using RiskGame.Rules.Combat;
 using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Reinforcement;
@@ -38,6 +39,7 @@ public static class GameStateDtoMapper
                 player.ColorId,
                 player.RoleId,
                 RoleEffects.IsActive(state, player.Id),
+                AttackGuards.DefenseBoostAvailable(state, player.Id),
                 player.IsHost,
                 player.IsEliminated,
                 player.Hand.Select(ToDto).ToArray(),
@@ -76,7 +78,7 @@ public static class GameStateDtoMapper
             .Select(color => new PlayerColorDto(color.Id, color.Name, color.Hex, color.OnHex, color.Symbol))
             .ToArray();
 
-        var roles = state.Map.Roles
+        var roles = RolePool.EffectiveRoles(state)
             .Select(role => new RoleSummaryDto(role.Id, role.Name, role.Description, role.OriginTerritory))
             .ToArray();
 
@@ -103,6 +105,7 @@ public static class GameStateDtoMapper
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
             colors, roles, ToDto(state.Settings), state.Winners,
+            ToDto(state.TvDisplay), ToDto(TvDisplaySettings.Default),
             state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
             setupState, StateVersion: 0, pendingWinnerPlayerId);
     }
@@ -175,7 +178,25 @@ public static class GameStateDtoMapper
         settings.RolesEnabled,
         ToDto(settings.RoleAssignment),
         settings.EventsEnabled,
-        ToDto(settings.MissionWinTiming));
+        ToDto(settings.MissionWinTiming),
+        ToDto(settings.DefenseDiceRule));
+
+    private static TvDisplaySettingsDto ToDto(TvDisplaySettings tvDisplay) => new(
+        tvDisplay.TextScale, tvDisplay.GlassOpacity, tvDisplay.GlassBlur, ToDto(tvDisplay.Language));
+
+    private static TvLanguageDto ToDto(TvLanguage language) => language switch
+    {
+        TvLanguage.Nl => TvLanguageDto.Nl,
+        TvLanguage.En => TvLanguageDto.En,
+        _ => throw new ArgumentOutOfRangeException(nameof(language), language, "Onbekende TV-taal."),
+    };
+
+    private static DefenseDiceRuleDto ToDto(DefenseDiceRule defenseDiceRule) => defenseDiceRule switch
+    {
+        DefenseDiceRule.HouseRule => DefenseDiceRuleDto.HouseRule,
+        DefenseDiceRule.Classic => DefenseDiceRuleDto.Classic,
+        _ => throw new ArgumentOutOfRangeException(nameof(defenseDiceRule), defenseDiceRule, "Onbekende dobbelregel."),
+    };
 
     private static WinConditionDto ToDto(WinCondition winCondition) => winCondition switch
     {
@@ -268,7 +289,31 @@ public static class GameStateDtoMapper
         dto.RolesEnabled,
         ToDomain(dto.RoleAssignment),
         dto.EventsEnabled,
-        ToDomain(dto.MissionWinTiming));
+        ToDomain(dto.MissionWinTiming),
+        ToDomain(dto.DefenseDiceRule));
+
+    /// <summary>
+    /// Een onbekende taalwaarde (bv. een getal buiten de enum, vanaf de draad) wordt bewust niet
+    /// hier afgevangen maar doorgegeven: <see cref="TvDisplayGuards.ValuesAreValid"/> weigert 'm
+    /// dan als gewone regelfout (<c>tvDisplay.invalidValue</c>) i.p.v. een exception.
+    /// </summary>
+    public static TvDisplaySettings ToDomain(TvDisplaySettingsDto dto) => new(
+        dto.TextScale, dto.GlassOpacity, dto.GlassBlur, ToDomain(dto.Language));
+
+    private static TvLanguage ToDomain(TvLanguageDto dto) => dto switch
+    {
+        TvLanguageDto.Nl => TvLanguage.Nl,
+        TvLanguageDto.En => TvLanguage.En,
+        // Ongedefinieerd doorgeven (zie doc-comment hierboven): de guard weigert het.
+        _ => (TvLanguage)(int)dto,
+    };
+
+    private static DefenseDiceRule ToDomain(DefenseDiceRuleDto dto) => dto switch
+    {
+        DefenseDiceRuleDto.HouseRule => DefenseDiceRule.HouseRule,
+        DefenseDiceRuleDto.Classic => DefenseDiceRule.Classic,
+        _ => throw new ArgumentOutOfRangeException(nameof(dto), dto, "Onbekende dobbelregel."),
+    };
 
     private static WinCondition ToDomain(WinConditionDto dto) => dto switch
     {

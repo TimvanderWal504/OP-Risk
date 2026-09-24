@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { AttackFlowStep } from './AttackFlowStep'
 
 const players = [
-  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
-  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
 ]
 
 const colors = [
@@ -125,7 +125,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={{ fromTerritoryId: 'alaska', toTerritoryId: 'kamchatka', attackDice: 2, attackerRolls: [5, 3], awaitingRerollDecision: false }}
-        combat={{ correlationId: 'c1', attackerRolls: [5, 3], defenderRolls: null, reroll: null, narrated: null }}
+        combat={{ correlationId: 'c1', attackerRolls: [5, 3], defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
         onRerollAttackDie={vi.fn()}
@@ -149,7 +149,7 @@ describe('AttackFlowStep', () => {
       attackerRolls: [4, 2],
       awaitingRerollDecision: true,
     }
-    const rerollCombat = { correlationId: 'c1', attackerRolls: [4, 2], defenderRolls: null, reroll: null, narrated: null }
+    const rerollCombat = { correlationId: 'c1', attackerRolls: [4, 2], defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null }
 
     it('toont het herwerp-aanbod i.p.v. de kale wachtstip zolang de beslissing openstaat, en roept onRerollAttackDie aan met de gekozen dobbelsteen', async () => {
       const user = userEvent.setup()
@@ -289,6 +289,7 @@ describe('AttackFlowStep', () => {
           attackerRolls: [5, 3],
           defenderRolls: [4],
           reroll: null,
+          defenseBoostUsed: false,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -341,6 +342,7 @@ describe('AttackFlowStep', () => {
           attackerRolls: [5, 3],
           defenderRolls: [4],
           reroll: null,
+          defenseBoostUsed: false,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -385,6 +387,7 @@ describe('AttackFlowStep', () => {
           attackerRolls: [5, 3],
           defenderRolls: [4],
           reroll: null,
+          defenseBoostUsed: false,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -432,6 +435,7 @@ describe('AttackFlowStep', () => {
           attackerRolls: [6, 3],
           defenderRolls: [1],
           reroll: null,
+          defenseBoostUsed: false,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',
@@ -476,6 +480,7 @@ describe('AttackFlowStep', () => {
           attackerRolls: [2, 1],
           defenderRolls: [4],
           reroll: null,
+          defenseBoostUsed: false,
           narrated: {
             correlationId: 'c1',
             attackerId: 'alice',

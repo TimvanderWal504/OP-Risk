@@ -44,7 +44,7 @@ export interface PhoneScreenProps {
   combat: CombatBroadcastState | null
   declareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<void>
   /** Géén fire-and-forget: `DefendStep` toont het resultaat rechtstreeks uit deze respons. */
-  chooseDefenseDice: (defenseDice: number) => Promise<CombatResultResponse | undefined>
+  chooseDefenseDice: (defenseDice: number, useDefenseBoost?: boolean) => Promise<CombatResultResponse | undefined>
   moveAfterConquest: (armiesToMove: number) => Promise<void>
   /** "Ander gevecht" (FO §5.4): stopt de huidige belegering handmatig, hervat de beurttimer. */
   abandonAttack: () => Promise<void>

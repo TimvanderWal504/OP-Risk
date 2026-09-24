@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
 import type { PlayerColorDto } from '../../../types/GameState'
+import { DefenseDiceRuleDto } from '../../../types/GameSettings'
 import { NotYourTurnStep } from '../../../components/NotYourTurnStep'
 import { AttackFlowStep } from '../../../components/AttackFlowStep'
 import { ConquestMoveStep } from '../../../components/ConquestMoveStep'
@@ -27,7 +28,10 @@ interface HeldDefend {
   fromTerritoryId: string
   toTerritoryId: string
   defenderArmyCount: number
+  attackerArmyCount: number
   awaitingRerollDecision: boolean
+  houseRuleLimitsToOneDie: boolean
+  defenseBoostRoleId: string | null
 }
 
 /**
@@ -109,7 +113,11 @@ export function PhoneAttackScreen({
     fromTerritoryId: livePendingCombat.fromTerritoryId,
     toTerritoryId: livePendingCombat.toTerritoryId,
     defenderArmyCount: state.territories.find((t) => t.territoryId === livePendingCombat.toTerritoryId)?.armyCount ?? 1,
+    attackerArmyCount: state.territories.find((t) => t.territoryId === livePendingCombat.fromTerritoryId)?.armyCount ?? 1,
     awaitingRerollDecision: livePendingCombat.awaitingRerollDecision,
+    houseRuleLimitsToOneDie:
+      state.settings.defenseDiceRule === DefenseDiceRuleDto.HouseRule && livePendingCombat.attackDice === 1,
+    defenseBoostRoleId: me.defenseBoostAvailable ? me.roleId : null,
   }
 
   // Aanpassen tijdens render (niet in een effect, zelfde adjusting-state-patroon als
@@ -153,7 +161,10 @@ export function PhoneAttackScreen({
         fromTerritoryId={defendToShow.fromTerritoryId}
         toTerritoryId={defendToShow.toTerritoryId}
         defenderArmyCount={defendToShow.defenderArmyCount}
+        attackerArmyCount={defendToShow.attackerArmyCount}
         awaitingRerollDecision={defendToShow.awaitingRerollDecision}
+        houseRuleLimitsToOneDie={defendToShow.houseRuleLimitsToOneDie}
+        defenseBoostRoleId={defendToShow.defenseBoostRoleId}
         onChooseDefenseDice={chooseDefenseDice}
         onDismiss={() => setHeldDefend(null)}
       />

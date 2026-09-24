@@ -23,6 +23,11 @@ namespace RiskGame.Rules.State;
 /// De eerste speler die join'de (FO §2.1: "spel opzetten, spel starten"). Bepaalt wie
 /// <c>StartGame</c> en de host-only commando's (auto-pass, herstart) mag uitvoeren.
 /// </param>
+/// <param name="DefenseBoostUsed">
+/// Of de <c>DefenseBoost</c>-rol (FO §8.1) deze ronde al is ingezet. Staat hier en niet op
+/// <see cref="TurnState"/>: die hoort bij de actieve speler en wordt bij elke fase-overgang
+/// herbouwd, terwijl de boost van de verdediger moet blijven staan tot diens eigen volgende beurt.
+/// </param>
 public sealed record Player(
     string Id,
     string Name,
@@ -32,4 +37,5 @@ public sealed record Player(
     IMission? Mission,
     bool IsEliminated,
     string? EliminatedByPlayerId = null,
-    bool IsHost = false);
+    bool IsHost = false,
+    bool DefenseBoostUsed = false);

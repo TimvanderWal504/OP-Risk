@@ -1,3 +1,4 @@
+using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Rules.Validation;
@@ -94,8 +95,9 @@ public static class LobbyGuards
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.roleSelectionClosed");
 
+    /// <summary>Alleen rollen uit de effectieve pool van dit spel (<see cref="RolePool"/>) zijn kiesbaar.</summary>
     public static ValidationResult RoleIsKnown(GameState state, string roleId) =>
-        state.Map.Roles.Any(role => role.Id == roleId)
+        RolePool.EffectiveRoles(state).Any(role => role.Id == roleId)
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.unknownRole", new Dictionary<string, string> { ["roleId"] = roleId });
 
@@ -113,10 +115,11 @@ public static class LobbyGuards
 
     /// <summary>
     /// Validatie bij spelstart (FO §8): "aantal rollen ≥ aantal spelers". De kaartdata
-    /// garandeert dit ruimschoots voor het maximum van 7, maar dit geldt per speleraantal.
+    /// garandeert dit ruimschoots voor het maximum van 7, maar dit geldt per speleraantal. Telt
+    /// de effectieve pool van dit spel (<see cref="RolePool"/>), niet de volledige catalogus.
     /// </summary>
     public static ValidationResult RolePoolIsLargeEnough(GameState state) =>
-        state.Map.Roles.Count >= state.Players.Count
+        RolePool.EffectiveRoles(state).Count >= state.Players.Count
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.insufficientRoles");
 

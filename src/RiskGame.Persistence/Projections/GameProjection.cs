@@ -60,7 +60,8 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             turnState: null,
             deck: new DeckState(
                 DrawPile: [], DiscardPile: [], NextTradeValue: CardTradeCalculator.InitialTradeValue),
-            activeEffects: []);
+            activeEffects: [],
+            tvDisplay: @event.TvDisplay);
     }
 
     /// <summary>
@@ -171,6 +172,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var hasConqueredThisTurn = @event.TurnPhase == TurnPhase.Reinforce
             ? false
             : state.TurnState?.HasConqueredThisTurn ?? false;
+
+        // FO §8.1: de DefenseBoost is weer beschikbaar aan het begin van de eigen beurt — zelfde
+        // "alleen bij intrede in Versterken"-moment als HasConqueredThisTurn, maar op de speler.
+        if (@event.TurnPhase == TurnPhase.Reinforce && state.Player(@event.PlayerId).DefenseBoostUsed)
+        {
+            state = state.WithPlayer(state.Player(@event.PlayerId) with { DefenseBoostUsed = false });
+        }
 
         return state
             .WithPhase(GamePhase.InProgress)
@@ -391,6 +399,9 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return state;
     }
 
+    public GameState Apply(GameState state, DefenseBoostUsed @event) =>
+        state.WithPlayer(state.Player(@event.PlayerId) with { DefenseBoostUsed = true });
+
     /// <summary>
     /// Alleen het eigendom gaat over — het legeraantal staat door het voorafgaande
     /// <see cref="CombatResolved"/> al op 0 (zie doc-comment op dit event). Zet ook
@@ -559,6 +570,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// <summary>Laat het laatste-kans-venster vervallen (FO §6.2) — zie doc-comment op <see cref="PendingWinBroken"/>.</summary>
     public GameState Apply(GameState state, PendingWinBroken @event) =>
         state.WithPendingWin(null);
+
+    /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>
+    public GameState Apply(GameState state, TvDisplaySettingsChanged @event) =>
+        state.WithTvDisplay(new TvDisplaySettings(
+            @event.TextScale, @event.GlassOpacity, @event.GlassBlur, @event.Language));
 
     /// <summary>
     /// Gedeelde leger-verplaatsing tussen twee gebieden (bron −<paramref name="amount"/>,

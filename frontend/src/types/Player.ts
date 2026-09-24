@@ -11,6 +11,9 @@ export interface PlayerDto {
    *  (FO §8: rollen staan permanent op de TV); niet zelf herafleiden uit territoriumbezit
    *  (frontend/CLAUDE.md: geen spelregels client-side). */
   isRoleActive: boolean
+  /** Of deze speler zijn `DefenseBoost`-rol nu kan inzetten (FO §5.3 stap 4, §8.1) —
+   *  server-berekend (Huisregel, rol actief, deze ronde nog niet gebruikt). */
+  defenseBoostAvailable: boolean
   isHost: boolean
   isEliminated: boolean
   /** Alleen gevuld voor de ontvangende speler zelf (TO §6.1); voor elke andere speler/de TV

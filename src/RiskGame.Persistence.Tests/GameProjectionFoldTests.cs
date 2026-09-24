@@ -152,4 +152,49 @@ public sealed class GameProjectionFoldTests
 
         Assert.Equal(["alberta", "ontario"], folded.TurnState!.RerolledTargetTerritoryIds);
     }
+
+    [Fact]
+    public void DefenseBoostUsed_ZetDeVlagOpDeVerdediger()
+    {
+        var state = BuildState(AttackTurnState());
+
+        var folded = Projection.Apply(state, new DefenseBoostUsed("game-1", "p2"));
+
+        Assert.True(folded.Player("p2").DefenseBoostUsed);
+        Assert.False(folded.Player("p1").DefenseBoostUsed);
+    }
+
+    [Fact]
+    public void PhaseChangedNaarVersterken_ZetDeBoostTerugVoorDieSpeler()
+    {
+        var state = Projection.Apply(BuildState(AttackTurnState()), new DefenseBoostUsed("game-1", "p2"));
+
+        var folded = Projection.Apply(
+            state, new PhaseChanged("game-1", "p2", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), DateTimeOffset.UtcNow, ArmiesGranted: 3));
+
+        Assert.False(folded.Player("p2").DefenseBoostUsed);
+    }
+
+    [Fact]
+    public void PhaseChangedNaarVersterkenVanEenAndereSpeler_LaatDeBoostGebruikt()
+    {
+        var state = Projection.Apply(BuildState(AttackTurnState()), new DefenseBoostUsed("game-1", "p2"));
+
+        var folded = Projection.Apply(
+            state, new PhaseChanged("game-1", "p1", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), DateTimeOffset.UtcNow, ArmiesGranted: 3));
+
+        Assert.True(folded.Player("p2").DefenseBoostUsed);
+    }
+
+    [Fact]
+    public void PhaseChangedBinnenDeBeurtVanDeRolhouder_LaatDeBoostGebruikt()
+    {
+        // Alleen de intrede in Versterken (= begin van de eigen beurt) zet de boost terug.
+        var state = Projection.Apply(BuildState(AttackTurnState()), new DefenseBoostUsed("game-1", "p2"));
+
+        var folded = Projection.Apply(
+            state, new PhaseChanged("game-1", "p2", TurnPhase.Fortify, TimeSpan.FromMinutes(1), DateTimeOffset.UtcNow, ArmiesGranted: null));
+
+        Assert.True(folded.Player("p2").DefenseBoostUsed);
+    }
 }

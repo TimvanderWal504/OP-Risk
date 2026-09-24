@@ -70,6 +70,38 @@ public sealed class GameHubLobbyTests(PostgresFixture postgres) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateGame_MetDobbelregelKlassiek_BewaartDeInstellingEnLaatDefenseBoostRollenWeg()
+    {
+        // FO §10: bij Klassiek vallen de DefenseBoost-rollen uit de pool — ook uit de DTO.
+        var settings = Settings with { RolesEnabled = true, DefenseDiceRule = DefenseDiceRuleDto.Classic };
+        var response = await _client.PostAsJsonAsync("/games", new CreateGameRequest("standaard-43", settings));
+        response.EnsureSuccessStatusCode();
+        var gameId = (await response.Content.ReadFromJsonAsync<CreateGameResponse>())!.GameId;
+        await using var connection = await ConnectAsync();
+
+        var joined = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+
+        Assert.Equal(DefenseDiceRuleDto.Classic, joined.State.Settings.DefenseDiceRule);
+        Assert.DoesNotContain(joined.State.Roles, role => role.Id is "capoeirista" or "pendekar" or "berserker");
+        Assert.Contains(joined.State.Roles, role => role.Id == "generaal");
+    }
+
+    [Fact]
+    public async Task CreateGame_MetStandaardDobbelregel_IsHuisregelMetDefenseBoostRollen()
+    {
+        var settings = Settings with { RolesEnabled = true };
+        var response = await _client.PostAsJsonAsync("/games", new CreateGameRequest("standaard-43", settings));
+        response.EnsureSuccessStatusCode();
+        var gameId = (await response.Content.ReadFromJsonAsync<CreateGameResponse>())!.GameId;
+        await using var connection = await ConnectAsync();
+
+        var joined = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+
+        Assert.Equal(DefenseDiceRuleDto.HouseRule, joined.State.Settings.DefenseDiceRule);
+        Assert.Contains(joined.State.Roles, role => role.Id == "capoeirista");
+    }
+
+    [Fact]
     public async Task JoinGameEnChooseColor_MetGeldigeInvoer_LevertBijgewerkteStateOp()
     {
         var gameId = await CreateGameAsync();

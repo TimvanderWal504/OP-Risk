@@ -25,6 +25,7 @@ const combat = (overrides: Partial<CombatBroadcastState> = {}): CombatBroadcastS
   attackerRolls: [5],
   defenderRolls: [3],
   reroll: null,
+  defenseBoostUsed: false,
   narrated: null,
   ...overrides,
 })

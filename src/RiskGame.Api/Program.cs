@@ -34,6 +34,7 @@ builder.Services.AddScoped<SetupCommandHandler>();
 builder.Services.AddScoped<ReinforceCommandHandler>();
 builder.Services.AddScoped<AttackCommandHandler>();
 builder.Services.AddScoped<TurnFlowCommandHandler>();
+builder.Services.AddScoped<TvDisplayCommandHandler>();
 builder.Services.AddHostedService<TurnTimerBackgroundService>();
 // JoinGameRateLimitFilter houdt per-IP-tellerstate bij (TO §8) die tussen hub-aanroepen moet
 // overleven — expliciet als singleton, anders zou SignalR er mogelijk telkens een verse,

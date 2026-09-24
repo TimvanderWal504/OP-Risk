@@ -27,6 +27,13 @@ public sealed record ExtraReinforcementEffect(int Amount) : RoleEffect;
 public sealed record RerollEffect : RoleEffect;
 
 /// <summary>
+/// Eenmaal per ronde toch met 2 dobbelstenen verdedigen tegen een aanval met 1 (FO §5.3 stap 4,
+/// §8.1) — alleen betekenisvol bij <see cref="State.DefenseDiceRule.HouseRule"/>. Weer beschikbaar
+/// aan het begin van de eigen beurt van de rolhouder (<see cref="State.Player.DefenseBoostUsed"/>).
+/// </summary>
+public sealed record DefenseBoostEffect : RoleEffect;
+
+/// <summary>
 /// Sterkere Verplaatsen: een pad door één vijandelijk gebied heen (<paramref name="ThroughEnemy"/>),
 /// of <paramref name="Moves"/> verplaatsingen in plaats van één.
 /// </summary>

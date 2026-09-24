@@ -325,10 +325,16 @@ export function useGameState(gameId: string) {
   // volledige gevechtsresultaat rechtstreeks uit deze respons (geen `CombatNarrated`-broadcast
   // nodig voor de verdediger zelf — zie het Attack-bouwplan).
   const chooseDefenseDice = useCallback(
-    async (defenseDice: number): Promise<CombatResultResponse | undefined> => {
+    async (defenseDice: number, useDefenseBoost = false): Promise<CombatResultResponse | undefined> => {
       if (!playerId) return undefined
 
-      const response = await invoke<CombatResultResponse>('ChooseDefenseDice', gameId, playerId, defenseDice)
+      const response = await invoke<CombatResultResponse>(
+        'ChooseDefenseDice',
+        gameId,
+        playerId,
+        defenseDice,
+        useDefenseBoost,
+      )
 
       if (response) applyState(response.state)
 

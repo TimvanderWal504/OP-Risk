@@ -17,7 +17,7 @@ describe('ToggleRow', () => {
     const onToggle = vi.fn()
     render(<ToggleRow label="Teamspel" sub="Bondgenoten" on={false} disabled soon onToggle={onToggle} />)
 
-    expect(screen.getByText('binnenkort')).toBeInTheDocument()
+    expect(screen.getByText('BINNENKORT')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Teamspel' }))
     expect(onToggle).not.toHaveBeenCalled()
   })

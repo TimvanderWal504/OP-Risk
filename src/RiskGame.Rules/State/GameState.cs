@@ -31,7 +31,8 @@ public sealed class GameState
         DeckState deck,
         IReadOnlyList<ActiveEffect> activeEffects,
         IReadOnlyList<string>? winners = null,
-        PendingWin? pendingWin = null)
+        PendingWin? pendingWin = null,
+        TvDisplaySettings? tvDisplay = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
         ArgumentNullException.ThrowIfNull(map);
@@ -54,6 +55,7 @@ public sealed class GameState
         ActiveEffects = activeEffects;
         Winners = winners ?? [];
         PendingWin = pendingWin;
+        TvDisplay = tvDisplay ?? TvDisplaySettings.Default;
 
         _playersById = players.ToFrozenDictionary(player => player.Id, StringComparer.Ordinal);
         _territoriesById = territories.ToFrozenDictionary(
@@ -104,6 +106,12 @@ public sealed class GameState
     /// zelfde "null is betekenisvol"-behandeling als <see cref="TurnState"/>.
     /// </summary>
     public PendingWin? PendingWin { get; }
+
+    /// <summary>
+    /// Hoe het TV-scherm het spel toont (plan-testronde-tv punt 2) — geen spelregel, maar wel
+    /// per spel vastgelegd. Nooit null: zonder instelling geldt <see cref="TvDisplaySettings.Default"/>.
+    /// </summary>
+    public TvDisplaySettings TvDisplay { get; }
 
     public bool HasPlayer(string playerId) => _playersById.ContainsKey(playerId);
 
@@ -161,7 +169,8 @@ public sealed class GameState
             Deck,
             ActiveEffects,
             Winners,
-            PendingWin);
+            PendingWin,
+            TvDisplay);
 
     public GameState WithDeck(DeckState deck) => With(deck: deck);
 
@@ -189,7 +198,27 @@ public sealed class GameState
             Deck,
             ActiveEffects,
             Winners,
-            pendingWin);
+            pendingWin,
+            TvDisplay);
+
+    public GameState WithTvDisplay(TvDisplaySettings tvDisplay)
+    {
+        ArgumentNullException.ThrowIfNull(tvDisplay);
+
+        return new(GameId,
+            Map,
+            Phase,
+            Settings,
+            Players,
+            Territories,
+            TurnOrder,
+            TurnState,
+            Deck,
+            ActiveEffects,
+            Winners,
+            PendingWin,
+            tvDisplay);
+    }
 
     /// <summary>
     /// Voegt een nieuwe speler toe, of vervangt een bestaande speler met hetzelfde
@@ -238,7 +267,8 @@ public sealed class GameState
             deck ?? Deck,
             activeEffects ?? ActiveEffects,
             winners ?? Winners,
-            PendingWin);
+            PendingWin,
+            TvDisplay);
 
     /// <summary>
     /// Vervangt het enige element dat aan <paramref name="matches"/> voldoet, op zijn

@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { ClaimTerritoryStep } from './ClaimTerritoryStep'
 
 const players = [
-  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
-  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
 ]
 
 const colors = [

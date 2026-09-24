@@ -3,7 +3,8 @@ import type { HubConnection } from '@microsoft/signalr'
 import type { CombatNarratedMessage, DiceRolledMessage } from '../types/HubResponses'
 
 /**
- * Accumuleert de narratieve gevechts-broadcasts ("DiceRolled" met context `attack`/`defense`,
+ * Accumuleert de narratieve gevechts-broadcasts ("DiceRolled" met context `attack`/`defense`/
+ * `defenseBoost`/`reroll`,
  * en "CombatNarrated") tot één object per gevecht, gegroepeerd op `correlationId`. Gedeeld
  * tussen `useGameState` (telefoon) en `useTvGame` (TV) zodat de reset-/contextfilter-regels
  * precies één keer bestaan — zie het Attack-bouwplan (rolmodel-sectie) voor de motivatie.
@@ -28,8 +29,13 @@ export interface CombatBroadcastState {
   attackerRolls: number[] | null
   defenderRolls: number[] | null
   reroll: CombatRerollState | null
+  /** De verdediger heeft zijn `DefenseBoost`-rol ingezet (FO §8.1, "defenseBoost"-broadcast) —
+   *  een vlag volstaat, de worp zelf staat gewoon in `defenderRolls`. */
+  defenseBoostUsed: boolean
   narrated: CombatNarratedMessage | null
 }
+
+const COMBAT_CONTEXTS: readonly DiceRolledMessage['context'][] = ['attack', 'defense', 'defenseBoost', 'reroll']
 
 export function useCombatBroadcast(connection: HubConnection | undefined): CombatBroadcastState | null {
   const [combat, setCombat] = useState<CombatBroadcastState | null>(null)
@@ -46,19 +52,20 @@ export function useCombatBroadcast(connection: HubConnection | undefined): Comba
         apply(
           current && current.correlationId === correlationId
             ? current
-            : { correlationId, attackerRolls: null, defenderRolls: null, reroll: null, narrated: null },
+            : { correlationId, attackerRolls: null, defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null },
         ),
       )
     }
 
     const onDiceRolled = (message: DiceRolledMessage) => {
-      if (message.context !== 'attack' && message.context !== 'defense' && message.context !== 'reroll') return
+      if (!COMBAT_CONTEXTS.includes(message.context)) return
       if (message.correlationId === null) return
 
       const correlationId = message.correlationId
 
       withCombat(correlationId, (current) => {
         if (message.context === 'defense') return { ...current, defenderRolls: message.dice }
+        if (message.context === 'defenseBoost') return { ...current, defenderRolls: message.dice, defenseBoostUsed: true }
 
         // `attack` én `reroll` dragen allebei de (op dat moment) actuele aanvalsworp in `dice`
         // (C5: bij een herwerp is dat de nieuwe, gesorteerde worp) — reroll vult daarnaast de

@@ -58,7 +58,7 @@ export const createGame = {
   setupMode: {
     title: { nl: 'Startopstelling', en: 'Starting setup' },
     description: { nl: 'Hoe worden gebieden verdeeld?', en: 'How are territories distributed?' },
-    random: { nl: 'Random', en: 'Random' },
+    random: { nl: 'Willekeurig', en: 'Random' },
     claiming: { nl: 'Claimen', en: 'Claiming' },
   },
   startingArmies: {
@@ -79,6 +79,24 @@ export const createGame = {
       'classic-49': {
         title: { nl: 'Klassiek-49', en: 'Classic-49' },
         description: { nl: '50 t/m 27 legers (2–7 spelers).', en: '50 to 27 armies (2–7 players).' },
+      },
+    },
+  },
+  /** FO §5.3 stap 4 / §10. */
+  defenseDiceRule: {
+    title: { nl: 'Dobbelregel', en: 'Dice rule' },
+    houseRule: {
+      title: { nl: 'Huisregel', en: 'House rule' },
+      description: {
+        nl: 'Gooit de aanvaller met 1 dobbelsteen, dan verdedig je ook met 1.',
+        en: 'If the attacker rolls 1 die, you defend with 1 as well.',
+      },
+    },
+    classic: {
+      title: { nl: 'Klassiek', en: 'Classic' },
+      description: {
+        nl: 'Vanaf 2 legers mag je altijd met 2 dobbelstenen verdedigen. Verdedigingsrollen doen niet mee.',
+        en: 'From 2 armies you may always defend with 2 dice. Defense roles are left out.',
       },
     },
   },

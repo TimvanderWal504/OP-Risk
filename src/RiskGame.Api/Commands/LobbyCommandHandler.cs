@@ -57,8 +57,20 @@ public sealed class LobbyCommandHandler(
                 new Dictionary<string, string> { ["presetId"] = settings.StartingArmiesPresetId });
         }
 
+        var tvDisplay = request.TvDisplay is null ? null : GameStateDtoMapper.ToDomain(request.TvDisplay);
+
+        if (tvDisplay is not null)
+        {
+            var tvDisplayValidation = TvDisplayGuards.ValuesAreValid(tvDisplay);
+
+            if (!tvDisplayValidation.IsSuccess)
+            {
+                return Result<CreateGameResponse>.Failure(tvDisplayValidation.Errors);
+            }
+        }
+
         await using var session = store.LightweightSession();
-        session.Events.StartStream<GameState>(gameId, new GameCreated(gameId, request.MapId, settings));
+        session.Events.StartStream<GameState>(gameId, new GameCreated(gameId, request.MapId, settings, tvDisplay));
         await session.SaveChangesAsync();
 
         return Result<CreateGameResponse>.Success(new CreateGameResponse(gameId));
@@ -169,7 +181,7 @@ public sealed class LobbyCommandHandler(
         if (state.Settings.RolesEnabled && state.Settings.RoleAssignment == RoleAssignmentMode.Random)
         {
             var roleAssignments = RoleAssignmentCalculator.Assign(
-                state.Players.Select(player => player.Id).ToArray(), state.Map.Roles, random);
+                state.Players.Select(player => player.Id).ToArray(), RolePool.EffectiveRoles(state), random);
 
             foreach (var (assignedPlayerId, roleId) in roleAssignments)
             {

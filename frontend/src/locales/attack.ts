@@ -83,6 +83,10 @@ export const attack = {
   defend: {
     underAttack: { nl: 'Je wordt aangevallen', en: 'You are under attack' },
     line: { nl: '{{attacker}} valt {{territory}} aan vanuit {{from}}', en: '{{attacker}} attacks {{territory}} from {{from}}' },
+    // Legerstand-regel (TV-testronde bevinding 1, 2026-09-23): `defenderArmyCount` kwam al
+    // binnen maar werd alleen voor de 1-dobbelsteenregel gebruikt, nergens getoond.
+    myArmies: { nl: 'Jouw legers op {{territory}}: {{count}}', en: 'Your armies on {{territory}}: {{count}}' },
+    attackerArmies: { nl: 'Aanvaller vanuit {{territory}}: {{count}}', en: 'Attacker from {{territory}}: {{count}}' },
     choose: { nl: 'Verdedig dit gebied.', en: 'Defend this territory.' },
     // B6: zichtbaar i.p.v. `choose` zolang de aanvaller nog "Herwerp"/"Doorgaan" moet kiezen —
     // de keuzeknoppen blijven gemount maar uitgeschakeld (geen apart scherm).
@@ -93,6 +97,17 @@ export const attack = {
     tip: {
       nl: '2 dobbelstenen = meer verdediging, maar je zet 2 legers op het spel.',
       en: '2 dice = stronger defence, but 2 armies at risk.',
+    },
+    // Dobbelregel = Huisregel (FO §5.3 stap 4, §10): vervangt `tip` wanneer de aanvaller met 1
+    // gooit — zonder uitleg zou het uitgeschakelde "2"-kaartje onverklaard blijven.
+    houseRuleOneDie: {
+      nl: 'De aanvaller gooit met 1 dobbelsteen — volgens de huisregel verdedig je dan ook met 1.',
+      en: 'The attacker rolls 1 die — under the house rule you defend with 1 as well.',
+    },
+    // DefenseBoost-rol (FO §8.1): zelfde instructieregel-idioom als `reroll.instruction`.
+    boost: {
+      nl: '{{role}}: verdedig deze ronde één keer toch met 2 dobbelstenen.',
+      en: '{{role}}: once this round, defend with 2 dice anyway.',
     },
     // Verhalend, dezelfde behandeling als attack.resultLine hierboven (2026-08-13, op verzoek) —
     // i.p.v. de aanvaller centraal te zetten ("aanvaller −N") vertelt dit vanuit de verdediger

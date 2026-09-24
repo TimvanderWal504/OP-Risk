@@ -8,7 +8,7 @@ export const common = {
     removePlayer: { nl: 'Verwijder speler', en: 'Remove player' },
   },
   badges: {
-    comingSoon: { nl: 'binnenkort', en: 'coming soon' },
+    comingSoon: { nl: 'BINNENKORT', en: 'COMING SOON' },
   },
   tv: {
     brand: { nl: 'OPERATIE ATLAS', en: 'OPERATION ATLAS' },

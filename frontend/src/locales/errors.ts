@@ -161,6 +161,10 @@ export const errors = {
       nl: "Gebied '{{territoryId}}' heeft nog maar 1 leger; verdedigen kan dan alleen met 1 dobbelsteen.",
       en: "Territory '{{territoryId}}' has only 1 army left; defending is only possible with 1 die.",
     },
+    mustDefendWithOneDieHouseRule: {
+      nl: 'De aanvaller gooit met 1 dobbelsteen; volgens de huisregel verdedig je dan ook met 1, tenzij je verdedigingsrol nog beschikbaar is.',
+      en: 'The attacker rolls 1 die; under the house rule you defend with 1 as well, unless your defense role is still available.',
+    },
     invalidDefenseDiceCount: {
       nl: 'Aantal verdedigingsdobbelstenen moet {{min}} of {{max}} zijn.',
       en: 'Number of defense dice must be {{min}} or {{max}}.',
@@ -244,8 +248,8 @@ export const errors = {
       en: 'A combat is still in progress; wait until it is resolved.',
     },
     useEndTurnInFortify: {
-      nl: 'Verplaatsen is de laatste fase van de beurt; gebruik EndTurn om de beurt te beëindigen.',
-      en: 'Fortify is the last phase of the turn; use EndTurn to end the turn.',
+      nl: 'Verplaatsen is de laatste fase van de beurt; gebruik "Beurt beëindigen" om de beurt te beëindigen.',
+      en: 'Fortify is the last phase of the turn; use "End turn" to end the turn.',
     },
     unknownPhase: { nl: 'Onbekende fase.', en: 'Unknown phase.' },
     noNextPlayer: {

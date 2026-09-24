@@ -31,6 +31,7 @@ public sealed record ChooseDefenseDiceResult(
     string FromTerritoryId,
     string ToTerritoryId,
     string? EliminatedPlayerId,
+    bool DefenseBoostUsed,
     Guid CorrelationId,
     GameStateDto State);
 
@@ -175,8 +176,13 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         return Result<GameStateDto>.Success(updatedDto);
     }
 
+    /// <param name="useDefenseBoost">
+    /// De verdediger zet zijn <c>DefenseBoost</c>-rol in (FO §5.3 stap 4, §8.1). Wordt alleen
+    /// verbruikt (<see cref="DefenseBoostUsed"/>-event) als de Huisregel de 2 dobbelstenen anders
+    /// niet had toegestaan — in elke andere situatie is de vlag zonder effect.
+    /// </param>
     public async Task<Result<ChooseDefenseDiceResult>> ChooseDefenseDiceAsync(
-        string gameId, string playerId, int defenseDice)
+        string gameId, string playerId, int defenseDice, bool useDefenseBoost)
     {
         await using var session = store.LightweightSession();
         var state = await session.LoadAsync<GameState>(gameId);
@@ -186,11 +192,18 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             return Result<ChooseDefenseDiceResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
-        var validation = AttackGuards.CanChooseDefenseDice(state, playerId, defenseDice);
+        var validation = AttackGuards.CanChooseDefenseDice(state, playerId, defenseDice, useDefenseBoost);
 
         if (!validation.IsSuccess)
         {
             return Result<ChooseDefenseDiceResult>.Failure(validation.Errors);
+        }
+
+        var defenseBoostUsed = AttackGuards.DefenseBoostRequired(state, defenseDice);
+
+        if (defenseBoostUsed)
+        {
+            session.Events.Append(gameId, new DefenseBoostUsed(gameId, playerId));
         }
 
         var pendingCombat = state.TurnState!.PendingCombat!;
@@ -278,6 +291,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             pendingCombat.FromTerritoryId,
             pendingCombat.ToTerritoryId,
             eliminatedPlayerId,
+            defenseBoostUsed,
             pendingCombat.CorrelationId,
             updatedDto));
     }

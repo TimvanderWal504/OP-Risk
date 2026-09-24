@@ -26,7 +26,7 @@ describe('tvScreens', () => {
   // dus altijd `null` zolang er geen gevecht loopt.
   it('levert de combat-overlay zodra er gehouden combat-data is', () => {
     expect(
-      resolveTvOverlay({ correlationId: 'c1', attackerRolls: [5], defenderRolls: null, reroll: null, narrated: null }),
+      resolveTvOverlay({ correlationId: 'c1', attackerRolls: [5], defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null }),
     ).toBe(TvCombatOverlay)
   })
 
