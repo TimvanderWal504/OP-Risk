@@ -225,6 +225,34 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
         Assert.Equal(7, rejoined.TurnState.ReinforcementBreakdown!.BaseArmies);
     }
 
+    /// <summary>
+    /// Plan-testronde-tv punt 4, end-to-end via Marten: de beurtstart en twee plaatsingen op
+    /// hetzelfde gebied staan als twee regels in het verloop — de plaatsingen samengevoegd, met
+    /// het totaal erna.
+    /// </summary>
+    [Fact]
+    public async Task PlaceReinforcements_TweeKeerHetzelfdeGebied_IsEenRegelInHetVerloop()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var (gameId, aliceId, _, aliceTerritoryId, _, state) = await SetUpToReinforceAsync(connection, client);
+        var armyCountBefore = state.Territories.Single(t => t.TerritoryId == aliceTerritoryId).ArmyCount;
+
+        await connection.InvokeAsync<GameStateDto>("PlaceReinforcements", gameId, aliceId, aliceTerritoryId, 3);
+        var updated = await connection.InvokeAsync<GameStateDto>(
+            "PlaceReinforcements", gameId, aliceId, aliceTerritoryId, 4);
+
+        var placed = updated.RecentActions[0];
+        Assert.Equal(RecentActionKindDto.ArmiesPlaced, placed.Kind);
+        Assert.Equal((aliceId, aliceTerritoryId, 7, armyCountBefore + 7), (placed.PlayerId, placed.TerritoryId, placed.Amount, placed.Total));
+
+        var granted = updated.RecentActions[1];
+        Assert.Equal((RecentActionKindDto.ReinforcementsGranted, aliceId, 7), (granted.Kind, granted.PlayerId, granted.Amount));
+        Assert.True(updated.RecentActions.Count <= 10);
+    }
+
     [Fact]
     public async Task PlaceReinforcements_BinnenBudget_TeltLegersOpEnVerlaagtPool()
     {

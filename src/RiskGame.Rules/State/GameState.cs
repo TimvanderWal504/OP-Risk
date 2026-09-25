@@ -32,7 +32,8 @@ public sealed class GameState
         IReadOnlyList<ActiveEffect> activeEffects,
         IReadOnlyList<string>? winners = null,
         PendingWin? pendingWin = null,
-        TvDisplaySettings? tvDisplay = null)
+        TvDisplaySettings? tvDisplay = null,
+        IReadOnlyList<RecentAction>? recentActions = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
         ArgumentNullException.ThrowIfNull(map);
@@ -56,6 +57,7 @@ public sealed class GameState
         Winners = winners ?? [];
         PendingWin = pendingWin;
         TvDisplay = tvDisplay ?? TvDisplaySettings.Default;
+        RecentActions = recentActions ?? [];
 
         _playersById = players.ToFrozenDictionary(player => player.Id, StringComparer.Ordinal);
         _territoriesById = territories.ToFrozenDictionary(
@@ -112,6 +114,13 @@ public sealed class GameState
     /// per spel vastgelegd. Nooit null: zonder instelling geldt <see cref="TvDisplaySettings.Default"/>.
     /// </summary>
     public TvDisplaySettings TvDisplay { get; }
+
+    /// <summary>
+    /// Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst, bijgehouden via
+    /// <see cref="RecentActionLog"/>. Geen spelregel — zelfde status als <see cref="TvDisplay"/>.
+    /// Nooit null: een spel van vóór dit veld begint met een leeg verloop.
+    /// </summary>
+    public IReadOnlyList<RecentAction> RecentActions { get; }
 
     public bool HasPlayer(string playerId) => _playersById.ContainsKey(playerId);
 
@@ -170,7 +179,8 @@ public sealed class GameState
             ActiveEffects,
             Winners,
             PendingWin,
-            TvDisplay);
+            TvDisplay,
+            RecentActions);
 
     public GameState WithDeck(DeckState deck) => With(deck: deck);
 
@@ -199,7 +209,8 @@ public sealed class GameState
             ActiveEffects,
             Winners,
             pendingWin,
-            TvDisplay);
+            TvDisplay,
+            RecentActions);
 
     public GameState WithTvDisplay(TvDisplaySettings tvDisplay)
     {
@@ -217,7 +228,28 @@ public sealed class GameState
             ActiveEffects,
             Winners,
             PendingWin,
-            tvDisplay);
+            tvDisplay,
+            RecentActions);
+    }
+
+    public GameState WithRecentActions(IReadOnlyList<RecentAction> recentActions)
+    {
+        ArgumentNullException.ThrowIfNull(recentActions);
+
+        return new(GameId,
+            Map,
+            Phase,
+            Settings,
+            Players,
+            Territories,
+            TurnOrder,
+            TurnState,
+            Deck,
+            ActiveEffects,
+            Winners,
+            PendingWin,
+            TvDisplay,
+            recentActions);
     }
 
     /// <summary>
@@ -268,7 +300,8 @@ public sealed class GameState
             activeEffects ?? ActiveEffects,
             winners ?? Winners,
             PendingWin,
-            TvDisplay);
+            TvDisplay,
+            RecentActions);
 
     /// <summary>
     /// Vervangt het enige element dat aan <paramref name="matches"/> voldoet, op zijn

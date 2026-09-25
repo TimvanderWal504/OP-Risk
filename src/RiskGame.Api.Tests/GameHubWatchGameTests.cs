@@ -85,6 +85,10 @@ public sealed class GameHubWatchGameTests(PostgresFixture postgres) : IAsyncLife
         Assert.NotEmpty(state.Events);
         Assert.True(state.NextCardTradeValue > 0);
         Assert.Null(state.StartingArmies);
+
+        // Plan-testronde-tv punt 4: het verloop gaat mee, maar begint pas bij de startopstelling.
+        Assert.NotNull(state.RecentActions);
+        Assert.Empty(state.RecentActions);
     }
 
     [Fact]

@@ -50,6 +50,11 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
             // null valt in de GameState-constructor terug op TvDisplaySettings.Default.
             root.TryGetProperty("tvDisplay", out var tvDisplayElement)
                 ? tvDisplayElement.Deserialize<TvDisplaySettings?>(scoped)
+                : null,
+            // Zelfde reden: documenten van vóór plan-testronde-tv punt 4 kennen het verloop niet —
+            // null valt in de GameState-constructor terug op een leeg verloop.
+            root.TryGetProperty("recentActions", out var recentActionsElement)
+                ? recentActionsElement.Deserialize<IReadOnlyList<RecentAction>>(scoped)
                 : null);
     }
 
@@ -84,6 +89,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
         JsonSerializer.Serialize(writer, value.PendingWin, scoped);
         writer.WritePropertyName("tvDisplay");
         JsonSerializer.Serialize(writer, value.TvDisplay, scoped);
+        writer.WritePropertyName("recentActions");
+        JsonSerializer.Serialize(writer, value.RecentActions, scoped);
 
         writer.WriteEndObject();
     }

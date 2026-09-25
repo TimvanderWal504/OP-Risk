@@ -56,6 +56,9 @@ export const tvKeyframes = {
   atlasOverlayIn: `0%{opacity:0;}100%{opacity:1;}`,
   atlasOverlayOut: `0%{opacity:1;}100%{opacity:0;}`,
   atlasStageIn: `0%{opacity:0;transform:translateY(30px) scale(.965);}100%{opacity:1;transform:translateY(0) scale(1);}`,
+  /** Verloop-ticker (plan-testronde-tv punt 4, besluit gebruiker 2026-09-25 — geen export-waarde): de
+   *  band staat er twee keer in, dus -50% is precies één kopie verder en de lus sluit naadloos. */
+  atlasTicker: `0%{transform:translateX(0);}100%{transform:translateX(-50%);}`,
   /** C12 — framing (paneel/feed) komt in terwijl het bord blijft staan; het bord-svg zelf animeert nooit (L59). */
   atlasFrameIn: `0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}`,
 } as const;
@@ -158,6 +161,15 @@ export const tvAnimations = {
   /** C12 — rechterspelerspaneel en feed-strip framen in terwijl het bord blijft staan; feed start .06s later (L371/L407). */
   panelFrameIn: 'atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both',
   feedFrameIn: 'atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both',
+  /** Verloop-ticker (plan-testronde-tv punt 4, besluit gebruiker 2026-09-25): doorlopend van rechts
+   *  naar links, lineair, met een duur die volgt uit de breedte van één kopie van de band
+   *  (`tickerSpeedPxPerS`), zodat de leessnelheid gelijk blijft hoe lang het verloop ook is. Geen
+   *  `both`: onder reduced-motion eindigt de (dan eenmalige, 0.001ms-)animatie en valt de band terug
+   *  op het begin — het nieuwste item links in beeld. */
+  ticker: (durationS: number) => `atlasTicker ${durationS.toFixed(2)}s linear infinite`,
+  /** Leessnelheid van de ticker op de TV, in CSS-pixels per seconde (niet uit de export; te
+   *  verifiëren op een echte TV; 70 bleek op de TV te traag, besluit gebruiker 2026-09-25). */
+  tickerSpeedPxPerS: 85,
 } as const;
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GamePhaseDto } from '../../../types/GameState'
+import { GamePhaseDto, RecentActionKindDto } from '../../../types/GameState'
 import { TvInitialPlacementScreen } from './TvInitialPlacementScreen'
 import { fixtureState } from './tvScreenFixture'
 
@@ -49,6 +49,17 @@ describe('TvInitialPlacementScreen', () => {
     render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText(/Aan de beurt: Alice/)).toBeInTheDocument()
+  })
+
+  it('toont het verloop onder de kaart zodra er acties zijn (plan-testronde-tv punt 4)', () => {
+    const state = {
+      ...baseState,
+      setupState: { activePlayerId: 'alice', remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
+      recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null }],
+    }
+    render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Verloop')).toBeInTheDocument()
   })
 
   it('toont een neutrale kop zonder crash als niemand actief is (SetupMode.Random, iedereen plaatst tegelijk)', () => {

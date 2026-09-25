@@ -13,6 +13,7 @@ import { Badge } from '../../../components/ui/Badge'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import type { TvScreenProps } from './tvScreens'
+import { ActionTicker } from '../../../components/ActionTicker'
 
 /**
  * TV-hoofdbord tijdens `GamePhaseDto.InProgress`. Read-only weergave (FO §7.3/§2.3: de telefoon
@@ -214,6 +215,8 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
           })}
         </div>
       </GlassPanel>
+
+      <ActionTicker state={state} className="col-start-1 row-start-3" />
     </div>
   )
 }

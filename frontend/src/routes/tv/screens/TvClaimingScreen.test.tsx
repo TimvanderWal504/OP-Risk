@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GamePhaseDto } from '../../../types/GameState'
+import { GamePhaseDto, RecentActionKindDto } from '../../../types/GameState'
 import { claimMarker } from '../../../map/boardVisualTokens'
 import { TvClaimingScreen } from './TvClaimingScreen'
 import { fixtureState } from './tvScreenFixture'
@@ -49,6 +49,12 @@ describe('TvClaimingScreen', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('toont het verloop onder de kaart zodra er acties zijn (plan-testronde-tv punt 4)', () => {
+    render(<TvClaimingScreen state={{ ...claimingState, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Verloop')).toBeInTheDocument()
   })
 
   it('toont de teller als "geclaimd / totaal", niet een hardcoded totaal', () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-24T20:18:57.879Z",
+  "generatedAt": "2026-09-25T08:46:24.242Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -56,7 +56,8 @@
       { "name": "atlas-ease-brisk", "value": "cubic-bezier(.2,.8,.3,1)", "purpose": "Slightly snappier variant used for dice-roll/tumble animations." },
       { "name": "atlas-duration-reveal", "value": "300ms-500ms", "purpose": "Typical duration band for state-driven reveals (chip-in, panel-in, stage-in)." },
       { "name": "atlas-overlay-in", "value": "atlasOverlayIn .3s ease-out both", "purpose": "Stage-scrim crossfade-in when the persistent illustration background changes phase level." },
-      { "name": "atlas-overlay-out", "value": "atlasOverlayOut .32s ease-out both", "purpose": "Stage-scrim crossfade-out counterpart to atlas-overlay-in." }
+      { "name": "atlas-overlay-out", "value": "atlasOverlayOut .32s ease-out both", "purpose": "Stage-scrim crossfade-out counterpart to atlas-overlay-in." },
+      { "name": "ticker-crawl", "value": "atlasTicker, linear, infinite, 85px/s", "purpose": "The TV \"Verloop\" ticker: a doubled band moved translateX(0 → -50%) at a constant 85px/s, so the duration follows the band width. The only continuous linear motion in the system; still under reduced motion." }
     ]
   },
   "components": [
@@ -144,6 +145,13 @@
       "description": "One section of the host-only \"TV-weergave\" panel: an uppercase kicker over a raised glass block holding Sliders (Scherm, Dobbelstenen) or the NL/EN segmented control (Taal op de TV).",
       "html": "<section class=\"ds-tv-section\"><span class=\"ds-tv-kicker\">DOBBELSTENEN</span><label class=\"ds-tv-row\"><span>Grootte van de dobbelstenen</span><strong>50%</strong></label><input class=\"ds-tv-range\" type=\"range\" min=\"0\" max=\"100\" step=\"5\" value=\"50\"></section>",
       "css": ".ds-tv-section { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(36, 50, 70, 0.62); border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 16px 40px -12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.16); backdrop-filter: blur(16px) saturate(1); -webkit-backdrop-filter: blur(16px) saturate(1); font-family: 'Gilroy', sans-serif; } .ds-tv-kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, #eef2f8 75%, transparent); text-shadow: 0 2px 6px rgba(4,6,11,0.85); } .ds-tv-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; color: #eef2f8; text-shadow: 0 2px 6px rgba(4,6,11,0.85); } .ds-tv-row strong { font-family: 'Lexend', sans-serif; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; } .ds-tv-range { width: 100%; min-height: 52px; accent-color: #84ad28; }"
+    },
+    {
+      "name": "Action Ticker",
+      "kind": "card",
+      "description": "TV \"Verloop\": the last actions (up to 10, newest first) as one right-to-left news ticker in the bottom row of the board grid. Base glass frame with a Label kicker; items are --atlas-row pills with the seat avatar, the actor name in extrabold on-glass text and one H3-size sentence; only the newest carries a silver-outline \"Laatste\" badge. The band is rendered twice and moved with atlasTicker (translateX 0 → -50%, linear, infinite) at 85px/s; it stands still under reduced motion.",
+      "html": "<section class=\"ds-ticker\"><span class=\"ds-ticker-kicker\">VERLOOP</span><div class=\"ds-ticker-band\"><div class=\"ds-ticker-item\"><span class=\"ds-ticker-badge\">LAATSTE</span><span class=\"ds-ticker-avatar\"></span><span class=\"ds-ticker-text\"><b>Alice</b> plaatst 3 legers op Brazilië. Totaal nu 8.</span></div><div class=\"ds-ticker-item\"><span class=\"ds-ticker-avatar\"></span><span class=\"ds-ticker-text\"><b>Bob</b> claimt Peru</span></div></div></section>",
+      "css": ".ds-ticker { display: flex; flex-direction: column; padding: 12px 18px; border-radius: 16px; background: rgba(20, 29, 44, 0.72); border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 8px 24px -10px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.16); backdrop-filter: blur(32px) saturate(1); -webkit-backdrop-filter: blur(32px) saturate(1); overflow: hidden; font-family: 'Gilroy', sans-serif; } .ds-ticker-kicker { margin-bottom: 8px; font-size: 16px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, #eef2f8 75%, transparent); text-shadow: 0 2px 6px rgba(4,6,11,0.85); } .ds-ticker-band { display: flex; gap: 12px; width: max-content; animation: atlasTicker 20s linear infinite; } .ds-ticker-item { display: flex; flex: none; align-items: center; gap: 11px; padding: 11px 13px; border-radius: 12px; background: rgba(255,255,255,.035); border: 1px solid #243044; } .ds-ticker-badge { padding: 6px 16px; border-radius: 999px; border: 1px solid #627798; color: #c2cddd; font-size: 11px; font-weight: 800; letter-spacing: 0.025em; } .ds-ticker-avatar { width: 34px; height: 34px; border-radius: 9px; background: #ca3c25; } .ds-ticker-text { white-space: nowrap; font-size: 17px; line-height: 1.25; color: #eef2f8; text-shadow: 0 2px 6px rgba(4,6,11,0.85); } @keyframes atlasTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } } @media (prefers-reduced-motion: reduce) { .ds-ticker-band { animation: none; } }"
     }
   ],
   "narrative": {

@@ -32,6 +32,11 @@ namespace RiskGame.Api.Dtos;
 /// het voorbeeld bij de inlegregel in spelinfo, zodat de reeks uit <c>cards.json</c> nergens in tekst
 /// herhaald hoeft te worden.
 /// </param>
+/// <param name="RecentActions">
+/// Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst — openbaar, gaat naar iedereen.
+/// Laatste-kans-regels staan er alleen in bij <see cref="MissionWinTimingDto.FullRoundRevealed"/>,
+/// om dezelfde reden als <paramref name="PendingWinnerPlayerId"/> (FO §6.2).
+/// </param>
 /// <param name="StartingArmies">
 /// Startlegers per speler in dit spel (<see cref="RiskGame.Rules.TurnFlow.StartingArmiesResolver"/>) —
 /// <c>null</c> in de lobby, waar het spelersaantal nog niet vaststaat.
@@ -58,6 +63,7 @@ public sealed record GameStateDto(
     IReadOnlyList<ContinentDto> Continents,
     IReadOnlyList<EventSummaryDto> Events,
     int NextCardTradeValue,
+    IReadOnlyList<RecentActionDto> RecentActions,
     OrderRollStateDto? OrderRollState = null,
     SetupStateDto? SetupState = null,
     int StateVersion = 0,
@@ -80,6 +86,39 @@ public sealed record ContinentDto(string Id, int Bonus, string? OwnerPlayerId);
 /// staan.
 /// </summary>
 public sealed record EventSummaryDto(string Id, EventDurationDto Duration);
+
+/// <summary>
+/// Eén regel in het verloop (<see cref="RiskGame.Rules.State.RecentAction"/>). Welke velden gevuld
+/// zijn hangt af van <see cref="Kind"/>; de tekst bouwt de TV via i18n. Nooit kaart- of missie-id's.
+/// </summary>
+public sealed record RecentActionDto(
+    int Sequence,
+    RecentActionKindDto Kind,
+    string? PlayerId,
+    string? OtherPlayerId,
+    string? TerritoryId,
+    string? FromTerritoryId,
+    int? Amount,
+    int? Total,
+    int? AttackerLosses,
+    int? DefenderLosses);
+
+/// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.RecentActionKind"/>.</summary>
+public enum RecentActionKindDto
+{
+    TerritoriesDealt,
+    TerritoryClaimed,
+    ReinforcementsGranted,
+    ArmiesPlaced,
+    CardsTraded,
+    CardTradeReverted,
+    Attack,
+    Conquered,
+    Fortified,
+    PlayerEliminated,
+    LastChanceOpened,
+    LastChanceBroken,
+}
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>
 public enum EventDurationDto

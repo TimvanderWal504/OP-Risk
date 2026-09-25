@@ -166,6 +166,8 @@ export interface GameStateDto {
   events: EventSummaryDto[]
   /** Wat de volgende kaarteninleg oplevert — het voorbeeld bij de inlegregel in spelinfo. */
   nextCardTradeValue: number
+  /** Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst; hoogstens 10 regels. */
+  recentActions: RecentActionDto[]
   /** Startlegers per speler in dit spel; `null` in de lobby. */
   startingArmies: number | null
 }
@@ -183,6 +185,40 @@ export const EventDurationDto = {
   OneRound: 1,
 } as const
 export type EventDurationDto = (typeof EventDurationDto)[keyof typeof EventDurationDto]
+
+/** Spiegelt RiskGame.Api.Dtos.RecentActionKindDto (int-serialisatie, zelfde volgorde). */
+export const RecentActionKindDto = {
+  TerritoriesDealt: 0,
+  TerritoryClaimed: 1,
+  ReinforcementsGranted: 2,
+  ArmiesPlaced: 3,
+  CardsTraded: 4,
+  CardTradeReverted: 5,
+  Attack: 6,
+  Conquered: 7,
+  Fortified: 8,
+  PlayerEliminated: 9,
+  LastChanceOpened: 10,
+  LastChanceBroken: 11,
+} as const
+export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
+
+/**
+ * Spiegelt RiskGame.Api.Dtos.RecentActionDto: één regel in het verloop. Welke velden gevuld zijn,
+ * hangt af van `kind`; `sequence` blijft gelijk wanneer een regel samenvoegt (bijwerkt).
+ */
+export interface RecentActionDto {
+  sequence: number
+  kind: RecentActionKindDto
+  playerId: string | null
+  otherPlayerId: string | null
+  territoryId: string | null
+  fromTerritoryId: string | null
+  amount: number | null
+  total: number | null
+  attackerLosses: number | null
+  defenderLosses: number | null
+}
 
 /** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */
 export interface EventSummaryDto {

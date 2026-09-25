@@ -12,6 +12,7 @@ import { InstructionKicker } from '../../../components/ui/InstructionKicker'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import type { TvScreenProps } from './tvScreens'
+import { ActionTicker } from '../../../components/ActionTicker'
 
 /**
  * TV tijdens `GamePhaseDto.InitialPlacement` (FO §5.1). Hergebruikt het Hoofdscherm-grid-patroon
@@ -166,6 +167,8 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
           )
         }}
       />
+
+      <ActionTicker state={state} className="col-start-1 row-start-3" />
     </div>
   )
 }

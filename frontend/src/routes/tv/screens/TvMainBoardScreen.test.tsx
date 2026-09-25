@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { GamePhaseDto, TurnPhaseDto } from '../../../types/GameState'
+import { GamePhaseDto, TurnPhaseDto, RecentActionKindDto } from '../../../types/GameState'
 import { atlasRoughTok } from '../../../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from '../../../map/boardScale'
 import { marker } from '../../../map/boardVisualTokens'
@@ -108,6 +108,19 @@ describe('TvMainBoardScreen', () => {
     expect(within(svg).getByText('3').getAttribute('font-size')).toBe(String(marker.armyFontSize * 2))
     expect(within(svg).getByText('3').previousElementSibling?.getAttribute('r')).toBe(String(marker.discR * 2))
     expect(within(svg).getByText('Alaska').getAttribute('font-size')).toBe(String(marker.nameFontSize * 2))
+  })
+
+  it('toont het verloop onder de kaart zodra er acties zijn (plan-testronde-tv punt 4)', () => {
+    render(<TvMainBoardScreen state={{ ...stateInProgress, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Verloop')).toBeInTheDocument()
+    expect(screen.getAllByText('claimt Alaska').length).toBeGreaterThan(0)
+  })
+
+  it('toont geen verloop zonder acties', () => {
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.queryByText('Verloop')).not.toBeInTheDocument()
   })
 
   it('toont het spelerspaneel met gebieds- en legertotalen per speler', () => {

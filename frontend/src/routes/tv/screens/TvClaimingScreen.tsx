@@ -12,6 +12,7 @@ import { GlassPanel } from '../../../components/ui/GlassPanel'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
 import { tDynamic } from '../../../i18n/useT'
 import type { TvScreenProps } from './tvScreens'
+import { ActionTicker } from '../../../components/ActionTicker'
 
 /**
  * TV tijdens `GamePhaseDto.Claiming`. `state.setupState.activePlayerId` is tijdens Claiming per
@@ -213,6 +214,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
           })}
         </div>
       </GlassPanel>
+
+      <ActionTicker state={state} className="col-start-1 row-start-3" />
     </div>
   )
 }

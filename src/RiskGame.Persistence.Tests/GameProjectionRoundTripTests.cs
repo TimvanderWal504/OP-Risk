@@ -99,7 +99,73 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Empty(live.Deck.DiscardPile);
         Assert.Equal(new TvDisplaySettings(70, 30, 55, TvLanguage.En, 65), live.TvDisplay);
 
+        // Plan-testronde-tv punt 4: het verloop, nieuwste eerst. De twee plaatsingen op alaska
+        // staan los van elkaar — de beurtstart van p1 zit ertussen.
+        Assert.Equal(
+            new RecentAction[]
+            {
+                new(RecentActionKind.ReinforcementsGranted, 8, PlayerId: "p2", Amount: 3),
+                new(RecentActionKind.Fortified, 7, PlayerId: "p1", TerritoryId: "alaska",
+                    FromTerritoryId: "northwest-territory", Amount: 1, Total: 4),
+                new(RecentActionKind.Conquered, 6, PlayerId: "p1", OtherPlayerId: "p2",
+                    TerritoryId: "northwest-territory", FromTerritoryId: "alaska", Amount: 2, Total: 2,
+                    AttackerLosses: 0, DefenderLosses: 1),
+                new(RecentActionKind.ArmiesPlaced, 5, PlayerId: "p1", TerritoryId: "alaska", Amount: 3, Total: 5),
+                new(RecentActionKind.ReinforcementsGranted, 4, PlayerId: "p1", Amount: 3),
+                new(RecentActionKind.ArmiesPlaced, 3, PlayerId: "p1", TerritoryId: "alaska", Amount: 1, Total: 2),
+                new(RecentActionKind.TerritoryClaimed, 2, PlayerId: "p2", TerritoryId: "northwest-territory"),
+                new(RecentActionKind.TerritoryClaimed, 1, PlayerId: "p1", TerritoryId: "alaska"),
+            },
+            live.RecentActions);
+
         AssertIdenticalGameState(live, replayed!);
+    }
+
+    /// <summary>
+    /// Een opgeslagen <see cref="GameState"/>-document van vóór plan-testronde-tv punt 4 heeft geen
+    /// <c>recentActions</c>-property; dat laadt als een leeg verloop, en het volgende event bouwt
+    /// daar gewoon op voort.
+    /// </summary>
+    [Fact]
+    public async Task OudDocumentZonderVerloop_LaadtLeeg_EnBouwtDaarnaVerder()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using (var session = store.LightweightSession())
+        {
+            session.Events.StartStream<GameState>(
+                gameId,
+                new GameCreated(gameId, "standaard-43", Settings),
+                new TerritoryClaimed(gameId, "p1", "alaska"));
+            await session.SaveChangesAsync();
+        }
+
+        var table = $"{store.Options.DatabaseSchemaName}.mt_doc_gamestate";
+
+        await using (var session = store.LightweightSession())
+        {
+            session.QueueSqlCommand($"update {table} set data = data - 'recentActions' where id = ?", gameId);
+            await session.SaveChangesAsync();
+        }
+
+        await using (var querySession = store.QuerySession())
+        {
+            var reloaded = await querySession.LoadAsync<GameState>(gameId);
+            Assert.NotNull(reloaded);
+            Assert.Empty(reloaded!.RecentActions);
+        }
+
+        await using (var session = store.LightweightSession())
+        {
+            session.Events.Append(gameId, new TerritoryClaimed(gameId, "p1", "alberta"));
+            await session.SaveChangesAsync();
+
+            var continued = await session.LoadAsync<GameState>(gameId);
+            var claimed = Assert.Single(continued!.RecentActions);
+            Assert.Equal(("alberta", 1), (claimed.TerritoryId, claimed.Sequence));
+        }
     }
 
     /// <summary>
@@ -1250,6 +1316,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal(expected.Winners, actual.Winners);
         AssertPendingWinEqual(expected.PendingWin, actual.PendingWin);
         Assert.Equal(expected.TvDisplay, actual.TvDisplay);
+        Assert.Equal(expected.RecentActions, actual.RecentActions);
 
         Assert.Equal(expected.Deck.NextTradeValue, actual.Deck.NextTradeValue);
         Assert.Equal(expected.Deck.DrawPile, actual.Deck.DrawPile);

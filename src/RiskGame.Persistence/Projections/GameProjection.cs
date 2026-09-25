@@ -115,12 +115,12 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// een startleger (zie doc-comment op <see cref="TerritoryClaimed"/>).
     /// </summary>
     public GameState Apply(GameState state, TerritoryClaimed @event) =>
-        state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
+        Record(state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1)), @event);
 
     /// <summary>Zelfde vouwregel als <see cref="TerritoryClaimed"/>; <c>CorrelationId</c> is
     /// alleen betekenisvol voor narratie-consumenten, niet voor de projectie.</summary>
     public GameState Apply(GameState state, TerritoryAssigned @event) =>
-        state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1));
+        Record(state.WithTerritory(new TerritoryOwnership(@event.TerritoryId, @event.PlayerId, ArmyCount: 1)), @event);
 
     /// <summary>Maakt plaats voor het bijplaatsen van resterende startlegers (FO §5.1).</summary>
     public GameState Apply(GameState state, ClaimingCompleted @event) =>
@@ -130,7 +130,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     {
         var territory = state.Territory(@event.TerritoryId);
 
-        return state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + 1 });
+        return Record(state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + 1 }), @event);
     }
 
     public GameState Apply(GameState state, RoleAssigned @event) =>
@@ -180,11 +180,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithPlayer(state.Player(@event.PlayerId) with { DefenseBoostUsed = false });
         }
 
-        return state
-            .WithPhase(GamePhase.InProgress)
-            .WithTurnState(new TurnState(
-                @event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, ArmiesRemaining: armiesRemaining,
-                HasConqueredThisTurn: hasConqueredThisTurn));
+        return Record(
+            state
+                .WithPhase(GamePhase.InProgress)
+                .WithTurnState(new TurnState(
+                    @event.PlayerId, @event.TurnPhase, timer, PendingCombat: null, ArmiesRemaining: armiesRemaining,
+                    HasConqueredThisTurn: hasConqueredThisTurn)),
+            @event);
     }
 
     /// <summary>
@@ -199,10 +201,12 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
         state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + @event.Amount });
 
-        return state.WithTurnState(state.TurnState! with
-        {
-            ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.Amount,
-        });
+        return Record(
+            state.WithTurnState(state.TurnState! with
+            {
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.Amount,
+            }),
+            @event);
     }
 
     /// <summary>
@@ -245,11 +249,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         var unsettledTrade = new UnsettledTrade(
             @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue);
 
-        return state.WithTurnState(state.TurnState! with
-        {
-            ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
-            UnsettledTrades = [.. state.TurnState.UnsettledTrades, unsettledTrade],
-        });
+        return Record(
+            state.WithTurnState(state.TurnState! with
+            {
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
+                UnsettledTrades = [.. state.TurnState.UnsettledTrades, unsettledTrade],
+            }),
+            @event);
     }
 
     /// <summary>
@@ -291,11 +297,13 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTerritory(territory with { ArmyCount = newArmyCount });
         }
 
-        return state.WithTurnState(state.TurnState! with
-        {
-            ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue,
-            UnsettledTrades = [.. state.TurnState.UnsettledTrades.Where(trade => !trade.CardIds.SequenceEqual(@event.CardIds))],
-        });
+        return Record(
+            state.WithTurnState(state.TurnState! with
+            {
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue,
+                UnsettledTrades = [.. state.TurnState.UnsettledTrades.Where(trade => !trade.CardIds.SequenceEqual(@event.CardIds))],
+            }),
+            @event);
     }
 
     /// <summary>
@@ -396,7 +404,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTurnState(state.TurnState! with { PendingCombat = null });
         }
 
-        return state;
+        return Record(state, @event);
     }
 
     public GameState Apply(GameState state, DefenseBoostUsed @event) =>
@@ -409,8 +417,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// (FO §5.2), ongeacht hoeveel gebieden er in totaal veroverd worden.
     /// </summary>
     public GameState Apply(GameState state, TerritoryConquered @event) =>
-        state.WithTerritory(state.Territory(@event.TerritoryId) with { OwnerPlayerId = @event.PlayerId })
-            .WithTurnState(state.TurnState! with { HasConqueredThisTurn = true });
+        Record(
+            state.WithTerritory(state.Territory(@event.TerritoryId) with { OwnerPlayerId = @event.PlayerId })
+                .WithTurnState(state.TurnState! with { HasConqueredThisTurn = true }),
+            @event);
 
     /// <summary>
     /// Sluit het gevecht af (FO §5.4: inclusief eventuele meeverplaatsing na verovering) —
@@ -422,12 +432,14 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     {
         state = MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
 
-        return state.WithTurnState(state.TurnState! with
-        {
-            PendingCombat = null,
-            PausedAttackTarget = null,
-            Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc),
-        });
+        return Record(
+            state.WithTurnState(state.TurnState! with
+            {
+                PendingCombat = null,
+                PausedAttackTarget = null,
+                Timer = state.TurnState!.Timer!.Resume(@event.OccurredAtUtc),
+            }),
+            @event);
     }
 
     /// <summary>
@@ -460,7 +472,9 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     {
         state = MoveArmies(state, @event.FromTerritoryId, @event.ToTerritoryId, @event.Amount);
 
-        return state.WithTurnState(state.TurnState! with { FortifiesUsed = state.TurnState!.FortifiesUsed + 1 });
+        return Record(
+            state.WithTurnState(state.TurnState! with { FortifiesUsed = state.TurnState!.FortifiesUsed + 1 }),
+            @event);
     }
 
     /// <summary>Haalt de genoemde kaart uit de trekstapel naar de hand van de speler (FO §5.2).</summary>
@@ -508,7 +522,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             EliminatedByPlayerId = @event.EliminatedByPlayerId,
         });
 
-        return state.WithPlayer(eliminator with { Hand = [.. eliminator.Hand, .. transferredHand] });
+        return Record(state.WithPlayer(eliminator with { Hand = [.. eliminator.Hand, .. transferredHand] }), @event);
     }
 
     /// <summary>
@@ -561,7 +575,9 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>Opent het laatste-kans-venster (FO §6.2) — zie doc-comment op <see cref="PendingWinOpened"/>.</summary>
     public GameState Apply(GameState state, PendingWinOpened @event) =>
-        state.WithPendingWin(new PendingWin(@event.AchieverPlayerId, @event.MissionId, @event.RemainingPlayerIds));
+        Record(
+            state.WithPendingWin(new PendingWin(@event.AchieverPlayerId, @event.MissionId, @event.RemainingPlayerIds)),
+            @event);
 
     /// <summary>Versmalt het laatste-kans-venster (FO §6.2) — zie doc-comment op <see cref="PendingWinNarrowed"/>.</summary>
     public GameState Apply(GameState state, PendingWinNarrowed @event) =>
@@ -569,7 +585,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>Laat het laatste-kans-venster vervallen (FO §6.2) — zie doc-comment op <see cref="PendingWinBroken"/>.</summary>
     public GameState Apply(GameState state, PendingWinBroken @event) =>
-        state.WithPendingWin(null);
+        Record(state.WithPendingWin(null), @event);
 
     /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>
     public GameState Apply(GameState state, TvDisplaySettingsChanged @event) =>

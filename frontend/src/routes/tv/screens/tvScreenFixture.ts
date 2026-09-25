@@ -48,5 +48,6 @@ export const fixtureState: GameStateDto = {
   continents: [],
   events: [],
   nextCardTradeValue: 4,
+  recentActions: [],
   startingArmies: null,
 }

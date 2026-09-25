@@ -119,14 +119,52 @@ public static class GameStateDtoMapper
         // dus een spelersaantal buiten het preset levert geen fout maar geen getal.
         int? startingArmiesPerPlayer = state.Phase == GamePhase.Lobby ? null : StartingArmiesResolver.TryResolve(state);
 
+        // FO §6.2: het laatste-kans-venster is alleen openbaar bij "Volle ronde met onthulling" —
+        // dezelfde grens als pendingWinnerPlayerId hierboven.
+        var revealsLastChance = state.Settings.MissionWinTiming == MissionWinTiming.FullRoundRevealed;
+        var recentActions = state.RecentActions
+            .Where(action => revealsLastChance
+                || action.Kind is not (RecentActionKind.LastChanceOpened or RecentActionKind.LastChanceBroken))
+            .Select(ToDto)
+            .ToArray();
+
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
             colors, roles, ToDto(state.Settings), state.Winners,
             ToDto(state.TvDisplay), ToDto(TvDisplaySettings.Default),
-            continents, events, state.Deck.NextTradeValue,
+            continents, events, state.Deck.NextTradeValue, recentActions,
             state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
             setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer);
     }
+
+    private static RecentActionDto ToDto(RecentAction action) =>
+        new(action.Sequence,
+            ToDto(action.Kind),
+            action.PlayerId,
+            action.OtherPlayerId,
+            action.TerritoryId,
+            action.FromTerritoryId,
+            action.Amount,
+            action.Total,
+            action.AttackerLosses,
+            action.DefenderLosses);
+
+    private static RecentActionKindDto ToDto(RecentActionKind kind) => kind switch
+    {
+        RecentActionKind.TerritoriesDealt => RecentActionKindDto.TerritoriesDealt,
+        RecentActionKind.TerritoryClaimed => RecentActionKindDto.TerritoryClaimed,
+        RecentActionKind.ReinforcementsGranted => RecentActionKindDto.ReinforcementsGranted,
+        RecentActionKind.ArmiesPlaced => RecentActionKindDto.ArmiesPlaced,
+        RecentActionKind.CardsTraded => RecentActionKindDto.CardsTraded,
+        RecentActionKind.CardTradeReverted => RecentActionKindDto.CardTradeReverted,
+        RecentActionKind.Attack => RecentActionKindDto.Attack,
+        RecentActionKind.Conquered => RecentActionKindDto.Conquered,
+        RecentActionKind.Fortified => RecentActionKindDto.Fortified,
+        RecentActionKind.PlayerEliminated => RecentActionKindDto.PlayerEliminated,
+        RecentActionKind.LastChanceOpened => RecentActionKindDto.LastChanceOpened,
+        RecentActionKind.LastChanceBroken => RecentActionKindDto.LastChanceBroken,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
+    };
 
     private static EventDurationDto ToDto(EffectDuration duration) => duration switch
     {

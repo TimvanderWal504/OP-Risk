@@ -14,7 +14,7 @@ van §1. Vink een punt pas af als code, tests en (waar genoemd) FO/`DESIGN.md` b
 - [x] **8** — Engelse teksten tussen de Nederlandse (de open bevinding "Engels onbereikbaar zonder taalknop" is opgelost via de NL/EN-toggle van punt 2)
 - [x] **7** — Lobby-instelling dobbelregel + nieuwe verdedigingsrollen (Brazilië/Indonesië/IJsland)
 - [ ] **2** — TV-weergave-instellingen (tekstschaal, glas) vanaf de host-telefoon (code, tests en `DESIGN.md` af; echte-TV-check op slider 0/50/100 nog open)
-- [ ] **4** — Nieuwsbanner met de laatste 10 acties op de TV
+- [ ] **4** — Nieuwsbanner met de laatste 10 acties op de TV (code, tests en `DESIGN.md` af; echte-TV-check op leessnelheid en tekstschaal nog open)
 - [x] **3** — Spelinfo op de telefoon
 
 Kleine, afgebakende fixes eerst; 4 is het grootste werk en 3 leunt deels op dezelfde
@@ -411,15 +411,59 @@ Claiming/InitialPlacement/InProgress. Daarbuiten krijgt de host dezelfde toegang
 - De **laatste actie is duidelijk herkenbaar** (bijv. label "Laatste" of accentkleur).
 
 **Aanpak.**
-- [ ] Backend: `GameProjection` houdt `RecentActions` bij (max. 10), gestructureerd
+- [x] Backend: `GameProjection` houdt `RecentActions` bij (max. 10), gestructureerd
       (type, speler, gebied(en), aantallen) zodat de tekst via i18n loopt. Bronnen:
       `TerritoryClaimed`, `InitialArmyPlaced`, `ArmiesReinforced`, `CardsTraded`,
       `CombatResolved`/`TerritoryConquered`, `Fortified`, `PlayerEliminated`, `EventCardDrawn`.
-- [ ] Samenvoegen van opeenvolgende plaatsingen door dezelfde speler.
-- [ ] DTO + TypeScript-types.
-- [ ] Frontend: `ActionTicker` onderaan `TvShell`, scrolt rechts → links, nieuwste vooraan en gemarkeerd.
-- [ ] Animatie in `motion.ts`, variant voor `prefers-reduced-motion`; `DESIGN.md` bijwerken.
-- [ ] Tests op projectie en ticker.
+      *Bijgesteld, zie hieronder.*
+- [x] Samenvoegen van opeenvolgende plaatsingen door dezelfde speler.
+- [x] DTO + TypeScript-types.
+- [x] Frontend: `ActionTicker` onderaan `TvShell`, scrolt rechts → links, nieuwste vooraan en gemarkeerd.
+- [x] Animatie in `motion.ts`, variant voor `prefers-reduced-motion`; `DESIGN.md` bijwerken.
+- [x] Tests op projectie en ticker.
+
+**Beslissingen (2026-09-25, inclusief de elite-code-review van het bouwplan).**
+- **Vorm:** een doorlopende ticker van rechts naar links in de lege 146px-onderrij van de drie
+  bordschermen. Het oorspronkelijke design had daar een stilstaande feed-strip.
+- **Titel "Verloop"** (en: "Feed"). Het nieuwste item krijgt een `LAATSTE`-badge.
+- **Plaatsen:** opeenvolgende plaatsingen van dezelfde speler op hetzelfde gebied worden één
+  regel met het totaal na afloop ("Tim plaatst 3 legers op Brazilië. Totaal nu 8."). Ook
+  verplaatsen en de verovering tonen dat totaal.
+- **Aanvallen:** één regel per belegering, met de verliezen opgeteld. Valt het gebied, dan
+  wordt diezelfde regel de verovering.
+- **Random opstelling:** één neutrale regel, "De gebieden zijn willekeurig verdeeld".
+- **Extra:**
+  - "Tim krijgt 7 legers om te plaatsen" bij elke beurtstart. Die regel is ook de beurtgrens
+    waarover niet wordt samengevoegd.
+  - De onthulling van het laatste-kans-venster, alleen bij "Volle ronde met onthulling" (FO §6.2).
+- **Bewust niet:**
+  - `EventCardDrawn`: de gebeurtenisronde bestaat nog niet (wire-contract).
+  - Getrokken kaarten, rolvaardigheden, missies, `PendingWinNarrowed` en `GameWon`.
+
+**Uitvoering (2026-09-25).**
+- **Rules:** `RecentAction` en `RecentActionLog` (puur) doen het samenvoegen, het afkappen op 10
+  en het oplopende `Sequence`. `Update` zoekt een eerdere regel op; dat is nodig voor de
+  meeverplaatsing na een uitschakelende verovering. `GameState.RecentActions` is optioneel, dus
+  oude documenten laden met een leeg verloop, en de `GameStateJsonConverter` leest en schrijft
+  het veld.
+- **Persistence:** alle koppelingen per event staan in `GameProjection.RecentActions.cs`.
+- **Api:**
+  - `GameStateDto.RecentActions` bevat `RecentActionDto` en `RecentActionKindDto`.
+  - De mapper laat de laatste-kans-regels alleen door bij `FullRoundRevealed`, met dezelfde
+    voorwaarde als `PendingWinnerPlayerId`.
+- **Frontend:**
+  - `ActionTicker` staat in rij 3 van `TvClaimingScreen`, `TvInitialPlacementScreen` en
+    `TvMainBoardScreen`.
+  - Nieuwe keyframe `atlasTicker`, plus `tvAnimations.ticker` en `tickerSpeedPxPerS` (85px/s, bijgesteld van 70 na TV-check gebruiker) in
+    `motion.ts`.
+  - `atlasFrameIn` stond wel in `motion.ts` maar niet in `index.css`, en is daar toegevoegd.
+  - Nieuwe locale `actionTicker.ts`.
+- **Design:** `DESIGN.md` heeft een nieuwe sectie "Action Ticker" en de sidecar is
+  gesynchroniseerd. De afwijkingsrijen in frontend/CLAUDE.md zijn bijgewerkt.
+- **Nog open, op een echte TV:**
+  - de leessnelheid (85px/s);
+  - de hoogte van de onderrij bij tekstschaal 100. De rij is vast 146px en de ticker wordt
+    afgesneden als hij er niet in past.
 
 ### 3. Spelinfo op de telefoon
 
