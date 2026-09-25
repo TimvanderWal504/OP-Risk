@@ -1,10 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Operatie Atlas</title>
+    <meta
+      name="description"
+      content="Operatie Atlas — Risk voor de hele kamer: het speelbord op de tv, je eigen legers op je telefoon."
+    />
+
+    <!-- Browser-chrome (adresbalk, statusbalk, taakwisselaar) in field-ink-950 (--bg),
+         zodat er op telefoon en tv geen lichte rand om het donkere canvas valt. -->
+    <meta name="theme-color" content="#080c14" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Toevoegen aan beginscherm: openen zonder browserbalken -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Operatie Atlas" />
+    <!-- Getallen (legers, spelcodes) niet als telefoonnummer auto-linken -->
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Linkvoorbeeld wanneer de speel-link gedeeld wordt (WhatsApp, Signal, ...) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Operatie Atlas" />
+    <meta property="og:title" content="Operatie Atlas" />
+    <meta
+      property="og:description"
+      content="Risk voor de hele kamer: het speelbord op de tv, je eigen legers op je telefoon."
+    />
+    <meta property="og:locale" content="nl_NL" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- colors_and_type.css laadt de webfonts via @import; vroeg verbinden scheelt
+         een round-trip voordat de tekst in het juiste font staat. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>
