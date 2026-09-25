@@ -42,7 +42,7 @@ De host is functioneel gewoon een speler met een telefoon, met als enige extra b
 
 **Host-opzetflow (vóór de lobby):** de host opent dezelfde app als elke speler, maar kiest bij het openen "Nieuw spel starten" in plaats van "Deelnemen aan spel". Dit leidt naar het instellingenscherm (§10); pas na bevestiging daarvan wordt de lobby aangemaakt en verschijnt de QR-code op de TV. Dit en de koppelstap hieronder zijn de enige plekken waar de host een ander scherm ziet dan een reguliere speler vóór de lobby.
 
-**TV opzetten (koppelen):** op het openingsscherm staat naast "Nieuw spel starten" en "Deelnemen aan spel" een derde keuze, **"TV opzetten"**, bedoeld voor het apparaat dat als TV gaat dienen. Dat apparaat toont dan een koppel-QR-code (met de bijbehorende koppelcode). De host scant die met zijn telefoon en komt op een koppelstap met twee keuzes:
+**TV opzetten (koppelen):** op het openingsscherm staat naast "Nieuw spel starten" en "Deelnemen aan spel" de keuze **"TV opzetten"**, bedoeld voor het apparaat dat als TV gaat dienen. Dat apparaat toont dan een koppel-QR-code met de bijbehorende koppelcode. De host scant die met zijn telefoon, of kiest op het openingsscherm **"TV koppelen"** en typt de koppelcode over. Beide leiden naar een koppelstap met twee keuzes:
 
 - **Nieuw spel starten** — de gewone host-opzetflow hierboven; zodra de lobby is aangemaakt, gaat de spelcode automatisch naar de gekoppelde TV en komt de host in zijn lobby. Lukt het versturen niet, dan blijft de lobby bereikbaar en kan de host het opnieuw proberen.
 - **Spelcode naar TV sturen** — voor een lobby die al bestaat: de host voert de spelcode in en die gaat naar de TV.
