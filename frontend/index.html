@@ -32,8 +32,16 @@
       content="Risk voor de hele kamer: het speelbord op de tv, je eigen legers op je telefoon."
     />
     <meta property="og:locale" content="nl_NL" />
+    <!-- og:image moet een absolute URL zijn; bron: docs/brand/og-image.html -->
+    <meta property="og:image" content="https://op-risk-kappa.vercel.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Operatie Atlas — het speelbord op de tv, je legers op je telefoon" />
+    <meta name="twitter:card" content="summary_large_image" />
 
+    <!-- Bron van de iconen: docs/brand/*.svg -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- colors_and_type.css laadt de webfonts via @import; vroeg verbinden scheelt
          een round-trip voordat de tekst in het juiste font staat. -->

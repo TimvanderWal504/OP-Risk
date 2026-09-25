@@ -1,0 +1,23 @@
+<!doctype html><html><head><style>
+@font-face{font-family:Brand;src:url("../../frontend/src/styles/assets/fonts/brand-font.ttf")}
+@font-face{font-family:Body;src:url("../../frontend/src/styles/assets/fonts/body-font.otf")}
+html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#080c14}
+.bg{position:absolute;inset:0;background:url("../../frontend/src/styles/assets/lobby-battlefield.webp") center/cover}
+.scrim{position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,12,20,.97) 0%,rgba(8,12,20,.93) 38%,rgba(8,12,20,.55) 62%,rgba(8,12,20,.25) 100%)}
+.text{position:absolute;left:110px;top:50%;transform:translateY(-50%);color:#eef2f8;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.kicker{font:700 22px Body;letter-spacing:.08em;color:#c2cddd;text-transform:uppercase}
+h1{font:800 104px/1.0 Brand;letter-spacing:-.02em;margin:14px 0 26px}
+.bar{width:128px;height:10px;background:#a1c23a;border-radius:2px}
+p{font:400 32px/1.35 Body;color:color-mix(in srgb,#eef2f8 90%,transparent);margin:28px 0 0}
+.phone{position:absolute;right:130px;top:110px;width:210px;height:410px;border-radius:36px;
+ background:rgba(8,12,20,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+ border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 18px 40px rgba(0,0,0,.45);
+ display:flex;align-items:center;justify-content:center}
+.notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:70px;height:8px;border-radius:4px;background:rgba(255,255,255,.14)}
+.num{font:800 120px Brand;color:#eef2f8;font-variant-numeric:tabular-nums;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+</style></head><body>
+<div class="bg"></div><div class="scrim"></div>
+<div class="text"><div class="kicker">Campagne-terminal</div><h1>OPERATIE<br>ATLAS</h1><div class="bar"></div>
+<p>Het speelbord op de tv,<br>je legers op je telefoon.</p></div>
+<div class="phone"><div class="notch"></div><div class="num">12</div></div>
+</body></html>
