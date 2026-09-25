@@ -28,6 +28,7 @@ De host-TV heeft **geen** bedieningsfunctie. Het toont:
 - Openbare rolinformatie van alle spelers (§8)
 - Gebeurteniskaarten bij een gebeurtenisronde (§9.2)
 - QR-code om te joinen (in de lobby)
+- Vóór er een spel aan hangt: een koppel-QR-code om de TV aan een spel te koppelen (zie **TV opzetten** in §2.2)
 
 ### 2.2 Spelerstelefoon
 
@@ -39,7 +40,14 @@ De telefoon van de speler toont drie soorten informatie:
 
 De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), en na afloop direct een nieuw spel opzetten (§7).
 
-**Host-opzetflow (vóór de lobby):** de host opent dezelfde app als elke speler, maar kiest bij het openen "Nieuw spel starten" in plaats van "Deelnemen aan spel". Dit leidt naar het instellingenscherm (§10); pas na bevestiging daarvan wordt de lobby aangemaakt en verschijnt de QR-code op de TV. Dit is de enige plek waar de host een ander scherm ziet dan een reguliere speler vóór de lobby.
+**Host-opzetflow (vóór de lobby):** de host opent dezelfde app als elke speler, maar kiest bij het openen "Nieuw spel starten" in plaats van "Deelnemen aan spel". Dit leidt naar het instellingenscherm (§10); pas na bevestiging daarvan wordt de lobby aangemaakt en verschijnt de QR-code op de TV. Dit en de koppelstap hieronder zijn de enige plekken waar de host een ander scherm ziet dan een reguliere speler vóór de lobby.
+
+**TV opzetten (koppelen):** op het openingsscherm staat naast "Nieuw spel starten" en "Deelnemen aan spel" een derde keuze, **"TV opzetten"**, bedoeld voor het apparaat dat als TV gaat dienen. Dat apparaat toont dan een koppel-QR-code (met de bijbehorende koppelcode). De host scant die met zijn telefoon en komt op een koppelstap met twee keuzes:
+
+- **Nieuw spel starten** — de gewone host-opzetflow hierboven; zodra de lobby is aangemaakt, gaat de spelcode automatisch naar de gekoppelde TV en komt de host in zijn lobby. Lukt het versturen niet, dan blijft de lobby bereikbaar en kan de host het opnieuw proberen.
+- **Spelcode naar TV sturen** — voor een lobby die al bestaat: de host voert de spelcode in en die gaat naar de TV.
+
+Zodra de TV een spelcode ontvangt, toont hij dat spel (de lobby met join-QR, of het lopende spel). Een koppelcode is eenmalig bruikbaar en vervalt zodra de TV de verbinding verliest; de TV vraagt dan zelf een nieuwe aan. Koppelen is geen spelregel en verandert niets aan de spelstate — het bepaalt alleen welk spel de TV toont. Handmatig naar het TV-adres van een spel navigeren blijft mogelijk.
 
 ### 2.3 Gebiedsselectie (hybride)
 
