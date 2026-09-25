@@ -123,7 +123,8 @@ Deze laag staat volledig los van de geometrie in §4.1: welke twee gebieden aan 
 Met echte polygonen (§4.1) in plaats van simpele punten wordt de TV-weergave nog steeds volledig **gegenereerd**, alleen nu op basis van échte kustlijn-vormen in plaats van abstracte nodes:
 
 - Elk territorium wordt een `<path>` uit `territories.geo.json`, gekleurd naar de huidige eigenaar.
-- Elke `border`-entry (§4.2) wordt een verbindingslijn tussen de centroids van de twee betrokken gebieden; het `type`-veld bepaalt de stijl: **land = doorgetrokken lijn, sea = gestippelde lijn**.
+- Elke `border`-entry (§4.2) met `type: "sea"` wordt een **gestippelde** verbindingslijn tussen de centroids van de twee betrokken gebieden; de lijn stopt aan de rand van de legerschijf in plaats van erdoorheen te lopen. **Landgrenzen krijgen geen lijn** (besloten 2026-09-25): aangrenzende gebieden raken elkaar op de kaart al zichtbaar, en 60 extra lijnen voegen alleen ruis toe. Het `type`-veld bepaalt dus of er een lijn komt, niet welke stijl.
+- **Zeeroutes over de datumgrens** (Alaska–Kamchatka, Nieuw-Zeeland–Argentinië) worden twee stompjes: vanaf elk van beide gebieden een lijn naar de kaartrand waar de partner "achter" ligt, zoals op een klassiek Risk-bord. Dit wordt afgeleid uit de geometrie, niet uit de data: een zeeroute waarvan de twee centroids meer dan een halve wereldomtrek (180°) uit elkaar liggen, geldt als route over de datumgrens. Een bewust lange route die juist *over* de kaart getekend moet worden, is met deze regel niet uit te drukken — bij een toekomstige kaartvariant die dat nodig heeft, hoort daar een expliciet veld in `adjacency_validated.json` bij.
 - Een nieuw gebied toevoegen (zoals hierboven aangetoond met Nieuw-Zeeland/Chili) vereist geen nieuwe illustratie — alleen een configuratiewijziging plus het herdraaien van het generatiescript.
 
 ### 4.4 Overige speldata (continenten, kleuren, kaartendeck)

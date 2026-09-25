@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
+import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
@@ -33,6 +34,7 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
   // 'board' erbij voor `turnOf`, zelfde hergebruik als TvClaimingScreen.
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
+  const seaRoutes = useSeaRoutes(geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
   const marker = scaledMarker(useTvDisplayScale().text)
@@ -85,6 +87,10 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
 
       <TvBoardMap
         geometry={geometry}
+        seaRoutes={seaRoutes}
+        // Dikste ring (eigen gebied) voor elke schijf: één vaste inzet, en het verschil met de
+        // vijand-ring (0,125 design-eenheid) is niet zichtbaar.
+        markerRadius={marker.discR + marker.ringSwOwn / 2}
         filterId="atlasRough"
         getTerritoryVisual={(territory) => {
           const entry = ownership.get(territory.id)

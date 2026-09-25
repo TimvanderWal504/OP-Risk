@@ -1,6 +1,6 @@
 import { render, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { atlasRoughTok } from '../../styles/design-tokens'
+import { atlasRoughTok, seaRouteTok } from '../../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from '../../map/boardScale'
 import type { TerritoryGeometry } from '../../map/loadTerritoryGeometry'
 import { TvBoardMap } from './TvBoardMap'
@@ -15,6 +15,7 @@ describe('TvBoardMap', () => {
     const { container } = render(
       <TvBoardMap
         geometry={geometry}
+        markerRadius={0}
         filterId="atlasRoughTest"
         getTerritoryVisual={() => ({
           fillHex: '#123456',
@@ -48,6 +49,7 @@ describe('TvBoardMap', () => {
     const { container, getByText } = render(
       <TvBoardMap
         geometry={geometry}
+        markerRadius={0}
         filterId="atlasRoughTest2"
         getTerritoryVisual={() => ({ fillHex: '#000', fillOpacity: 0, strokeHex: '#000', strokeOpacity: 0, strokeWidth: 0 })}
         renderMarker={(territory) => <text key={territory.id}>{territory.id}</text>}
@@ -66,6 +68,7 @@ describe('TvBoardMap', () => {
     const { container } = render(
       <TvBoardMap
         geometry={[geometry[0]]}
+        markerRadius={0}
         filterId="atlasRoughTest3"
         getTerritoryVisual={() => ({
           fillHex: '#111111',
@@ -82,5 +85,43 @@ describe('TvBoardMap', () => {
 
     const path = container.querySelector('path')
     expect(path?.getAttribute('style')).toContain('drop-shadow(0 0 3px #abcdef)')
+  })
+
+  it('tekent zeeroutes als gestippelde lijnen buiten de ruwe-rand-filter en onder de markers', () => {
+    const { container } = render(
+      <TvBoardMap
+        geometry={geometry}
+        markerRadius={10}
+        filterId="atlasRoughTest4"
+        getTerritoryVisual={() => ({
+          fillHex: '#111111',
+          fillOpacity: 1,
+          strokeHex: '#ffffff',
+          strokeOpacity: 1,
+          strokeWidth: 1,
+        })}
+        renderMarker={(territory) => <circle key={territory.id} data-testid="marker" />}
+        seaRoutes={[{ key: 'alaska--ukraine', from: { x: 0, y: 0 }, to: { x: 100, y: 0 }, toIsEdge: false }]}
+      />,
+    )
+
+    const layer = container.querySelector('[data-testid="sea-routes"]')!
+    expect(layer.closest('[filter]')).toBeNull()
+    expect(layer.getAttribute('stroke')).toBe(seaRouteTok.color)
+    expect(layer.getAttribute('stroke-opacity')).toBe(String(seaRouteTok.opacity))
+    expect(layer.getAttribute('stroke-width')).toBe(String(designToMap(seaRouteTok.sw)))
+    expect(layer.getAttribute('stroke-dasharray')).toBe(`0 ${designToMap(seaRouteTok.dotGap)}`)
+    expect(layer.getAttribute('stroke-linecap')).toBe('round')
+
+    // Beide centroïde-uiteinden stoppen op schijfstraal + stipstraal, niet in het midden.
+    const inset = 10 + designToMap(seaRouteTok.sw) / 2
+    const line = layer.querySelector('line')!
+    expect(Number(line.getAttribute('x1'))).toBeCloseTo(inset)
+    expect(Number(line.getAttribute('x2'))).toBeCloseTo(100 - inset)
+    expect(line.getAttribute('y1')).toBe('0')
+    expect(line.getAttribute('y2')).toBe('0')
+
+    const marker = container.querySelector('[data-testid="marker"]')!
+    expect(layer.compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

@@ -38,16 +38,13 @@ public static class GameEndpoints
         // 2026-08-07 verwijderd: de kaart gebruikt sindsdien de gedeelde TV-stage-illustratie +
         // een eigen scrim i.p.v. een per-kaart achtergrondasset (zie TO §7.2).
         app.MapGet("/maps/{mapId}/territories.geo.json", (string mapId, HttpContext context) =>
-        {
-            if (!TryResolveMapFilePath(mapsRoot, mapId, "territories.geo.json", out var filePath))
-            {
-                return Results.NotFound();
-            }
+            ServeMapFile(mapsRoot, mapId, "territories.geo.json", context));
 
-            context.Response.Headers.CacheControl = "public, max-age=3600";
-
-            return Results.File(filePath, contentType: "application/json");
-        });
+        // Grenzen (FO §4.2/§4.3) voor de gestippelde zeeverbindingen op het TV-bord — zelfde
+        // verbatim, naam-specifieke kaartlaag-route als hierboven. Geen geheime informatie: de
+        // aangrenzing is openbaar speelbord (en staat al in TerritoryCatalogDto.NeighborTerritoryIds).
+        app.MapGet("/maps/{mapId}/adjacency_validated.json", (string mapId, HttpContext context) =>
+            ServeMapFile(mapsRoot, mapId, "adjacency_validated.json", context));
 
         var games = app.MapGroup("/games");
 
@@ -84,6 +81,19 @@ public static class GameEndpoints
         });
 
         return app;
+    }
+
+    /// <summary>Eén bevroren kaartlaag-bestand verbatim als JSON, met de gedeelde Cache-Control.</summary>
+    private static IResult ServeMapFile(string mapsRoot, string mapId, string fileName, HttpContext context)
+    {
+        if (!TryResolveMapFilePath(mapsRoot, mapId, fileName, out var filePath))
+        {
+            return Results.NotFound();
+        }
+
+        context.Response.Headers.CacheControl = "public, max-age=3600";
+
+        return Results.File(filePath, contentType: "application/json");
     }
 
     /// <summary>

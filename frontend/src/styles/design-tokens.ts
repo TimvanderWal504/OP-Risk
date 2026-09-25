@@ -223,6 +223,25 @@ export const boardTok = {
 export const boardViewBox = { w: 1500, h: 790 } as const;
 
 /**
+ * Zeeverbindingen op het TV-bord (FO §4.3: "sea = gestippelde lijn") — 2026-09-25, bewuste,
+ * expliciet opgedragen visuele toevoeging; het oorspronkelijke TV-design tekende geen
+ * verbindingslijnen. Ronde stippen (`dash 0` + `round`-cap) i.p.v. streepjes: geen enkele
+ * gebiedsrand is gestippeld, dus een zeeroute is nooit met een grens te verwarren. Neutraal
+ * zilver, geen stoelkleur (die leest als bezit) en geen Territory Green (alleen CTA's).
+ * Opacity tussen `enStroke` (0.75) en `neuStroke` (0.4): secundaire informatie, nooit luider
+ * dan een gebiedsrand of marker. Stipdikte 4 i.p.v. een randdikte (2–2.5): een onderbroken
+ * lijn weegt lichter dan een doorgetrokken, en bij 2.5 bleven de stippen op een 1920px-
+ * weergave ~2px — te fijn voor 3m kijkafstand (voorbeeldrender 2026-09-25). `sw` en `dotGap`
+ * in `boardViewBox`-eenheden.
+ */
+export const seaRouteTok = {
+  color: palette.silver[300],
+  opacity: 0.6,
+  sw: 4,
+  dotGap: 12,
+} as const;
+
+/**
  * Legerteller-marker op de kaart — `armyEl` in het oorspronkelijke TV-design.
  * Waarden in `boardViewBox`-eenheden. `ringSwHl` (1.75) hoort bij de
  * selectie-/gevechtsstaat, die nog niet gebouwd is.

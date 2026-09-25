@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
+import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledClaimMarker, territoryGlow } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
@@ -43,6 +44,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
   // in twee namespaces (bouwplan Belangrijk 7).
   const { t } = useTranslation(['setupTv', 'board'])
   const { data: geometry } = useTerritoryGeometry()
+  const seaRoutes = useSeaRoutes(geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Claim-markers (schijf, symbool, flare) schalen mee met de TV-tekstschaal (plan-testronde-tv punt 2).
   const claimMarker = scaledClaimMarker(useTvDisplayScale().text)
@@ -91,6 +93,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
 
       <TvBoardMap
         geometry={geometry}
+        seaRoutes={seaRoutes}
+        markerRadius={claimMarker.discR + claimMarker.ringSw / 2}
         filterId="atlasRoughC"
         getTerritoryVisual={(territory) => {
           const entry = ownership.get(territory.id)

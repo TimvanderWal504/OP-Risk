@@ -48,9 +48,28 @@ public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsy
     }
 
     /// <summary>
+    /// De grenzen voeden de gestippelde zeeverbindingen op het TV-bord (FO §4.3): verbatim het
+    /// bevroren bestand, 84 grenzen waarvan 24 zee (FO §4.2).
+    /// </summary>
+    [Fact]
+    public async Task AdjacencyJson_IsOpvraagbaar_MetCacheControlEnAlleGrenzen()
+    {
+        var response = await _client.GetAsync("/maps/standaard-43/adjacency_validated.json");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("public, max-age=3600", response.Headers.CacheControl?.ToString());
+
+        var body = await response.Content.ReadFromJsonAsync<AdjacencyEnvelope>();
+
+        Assert.NotNull(body);
+        Assert.Equal(84, body!.Borders.Count);
+        Assert.Equal(24, body.Borders.Count(border => border.Type == "sea"));
+    }
+
+    /// <summary>
     /// Geen generieke static-file-route: een ander bestand uit dezelfde map (bevat o.a.
     /// <c>missions.json</c>/<c>events.json</c>, FO §6.1/§9) mag niet via een analoog pad
-    /// opvraagbaar zijn — alleen de twee expliciet gedefinieerde routes bestaan.
+    /// opvraagbaar zijn — alleen de expliciet gedefinieerde routes bestaan.
     /// </summary>
     [Fact]
     public async Task AndereBestandenUitDeMapsMap_ZijnNietOpvraagbaar()
@@ -75,4 +94,8 @@ public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsy
     }
 
     private sealed record GeoJsonEnvelope(List<object> Features);
+
+    private sealed record AdjacencyEnvelope(List<BorderEntry> Borders);
+
+    private sealed record BorderEntry(string From, string To, string Type);
 }

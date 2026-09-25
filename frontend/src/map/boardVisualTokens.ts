@@ -1,4 +1,4 @@
-import { atlasRoughTok, boardMarkerTok, boardTok } from '../styles/design-tokens'
+import { atlasRoughTok, boardMarkerTok, boardTok, seaRouteTok } from '../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from './boardScale'
 
 /**
@@ -83,6 +83,18 @@ export const territoryGlow = {
   own: designToMap(3),
   enemy: designToMap(2),
   claimed: designToMap(2.5),
+} as const
+
+/**
+ * `seaRouteTok` omgerekend naar onze viewBox. Hoort bij de kaart zelf (zoals de gebiedsranden),
+ * niet bij de markers, en schaalt dus niet mee met de TV-tekstschaal.
+ */
+export const seaRoute = {
+  color: seaRouteTok.color,
+  /** Opacity, geen lengte-eenheid — gaat niet door `designToMap`. */
+  opacity: seaRouteTok.opacity,
+  strokeWidth: designToMap(seaRouteTok.sw),
+  dotGap: designToMap(seaRouteTok.dotGap),
 } as const
 
 /**
