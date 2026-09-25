@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useTvGame } from '../../hooks/useTvGame'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { useTvLanguage } from '../../hooks/useTvLanguage'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { TvShell } from '../../components/ui/TvShell'
 import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
 
@@ -17,6 +18,7 @@ export function TvPage() {
   const { state, error, orderRollThrows, lastClaimedTerritoryId, combat } = useTvGame(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
   useTvLanguage(state?.tvDisplay.language)
+  useDocumentTitle('tv')
 
   if (error) {
     return (

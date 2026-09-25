@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGameState } from '../../hooks/useGameState'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { PhonePlayerHeader } from '../../components/PhonePlayerHeader'
@@ -47,6 +48,7 @@ export function PhonePage() {
     setTvDisplay,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
+  useDocumentTitle('player')
 
   const me = state?.players.find((player) => player.id === playerId)
   const scrimLevel = resolveStageScrimLevel(displayPhase)

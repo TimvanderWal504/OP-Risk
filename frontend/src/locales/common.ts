@@ -14,6 +14,11 @@ export const common = {
     brand: { nl: 'OPERATIE ATLAS', en: 'OPERATION ATLAS' },
     subtitle: { nl: 'CAMPAGNE-TERMINAL', en: 'CAMPAIGN TERMINAL' },
   },
+  // Tabbladtitel per route (`useDocumentTitle`); de startpagina houdt de <title> uit index.html.
+  documentTitle: {
+    tv: { nl: 'Operatie Atlas — TV', en: 'Operation Atlas — TV' },
+    player: { nl: 'Operatie Atlas — Speler', en: 'Operation Atlas — Player' },
+  },
   stepper: {
     decrement: { nl: '{{label}} verlagen', en: 'Decrease {{label}}' },
     increment: { nl: '{{label}} verhogen', en: 'Increase {{label}}' },
