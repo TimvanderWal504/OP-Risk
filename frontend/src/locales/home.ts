@@ -18,6 +18,13 @@ export const home = {
     title: { nl: 'Deelnemen aan een spel', en: 'Join a game' },
     description: { nl: 'Scan de QR-code op de TV.', en: 'Scan the QR code on the TV.' },
   },
+  tvCard: {
+    title: { nl: 'TV opzetten', en: 'Set up the TV' },
+    description: {
+      nl: 'Gebruik dit scherm als speelbord.',
+      en: 'Use this screen as the game board.',
+    },
+  },
   footer: {
     playerCount: { nl: '2 t/m 7 spelers · lokaal netwerk', en: '2 to 7 players · local network' },
   },

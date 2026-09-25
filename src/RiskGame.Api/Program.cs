@@ -27,6 +27,7 @@ builder.Services.AddSingleton<IDocumentStore>(sp =>
     return GameStoreFactory.Create(connectionString, sp.GetRequiredService<IMapDefinitionSource>());
 });
 builder.Services.AddSingleton<IRandomSource, SystemRandomSource>();
+builder.Services.AddSingleton<TvPairingRegistry>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<LobbyCommandHandler>();
 builder.Services.AddScoped<OrderRollCommandHandler>();

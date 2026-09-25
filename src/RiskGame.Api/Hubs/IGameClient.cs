@@ -17,4 +17,7 @@ public interface IGameClient
     Task GameWon(GameWonMessage message);
 
     Task GameStateUpdated(GameStateDto state);
+
+    /// <summary>Alleen naar de ene TV-connectie die de koppelcode aanvroeg (<see cref="GameHub.RegisterTv"/>).</summary>
+    Task TvPaired(TvPairedMessage message);
 }

@@ -13,6 +13,12 @@ export const errors = {
     nl: 'Er is iets misgegaan.',
     en: 'Something went wrong.',
   },
+  tvPairing: {
+    unknownCode: {
+      nl: 'Deze TV is niet meer beschikbaar. Scan de QR-code op de TV opnieuw.',
+      en: 'This TV is no longer available. Scan the QR code on the TV again.',
+    },
+  },
   common: {
     unknownGame: { nl: "Onbekend spel '{{gameId}}'.", en: "Unknown game '{{gameId}}'." },
     unknownPlayer: { nl: "Onbekende speler '{{playerId}}'.", en: "Unknown player '{{playerId}}'." },

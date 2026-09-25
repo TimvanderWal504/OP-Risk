@@ -4,6 +4,7 @@ using Marten;
 using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Dtos;
+using RiskGame.Api.Services;
 using RiskGame.Persistence.Sessions;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
@@ -116,6 +117,13 @@ public sealed record TerritoryClaimedMessage(string TerritoryId, string PlayerId
 public sealed record GameWonMessage(IReadOnlyList<string> WinnerPlayerIds, int StateVersion);
 
 /// <summary>
+/// De host heeft een spel naar deze TV gestuurd ("TV opzetten"): de TV navigeert naar
+/// <c>/tv/{GameId}</c> en roept daar zelf <see cref="GameHub.WatchGame"/> aan. Geen state, alleen
+/// het adres — naar precies één connectie, niet naar een spelgroep.
+/// </summary>
+public sealed record TvPairedMessage(string GameId);
+
+/// <summary>
 /// SignalR-hub voor alle spelcommando's (TO §4.1): lobby, order-roll, startopstelling,
 /// rol-/missietoewijzing, versterken, aanvallen en de generieke beurtoverstap (Fortify/
 /// EndPhase/EndTurn). Dun: elke methode delegeert de TO §4-pijplijn naar de bijbehorende
@@ -141,8 +149,47 @@ public sealed class GameHub(
     AttackCommandHandler attackCommands,
     TurnFlowCommandHandler turnFlowCommands,
     TvDisplayCommandHandler tvDisplayCommands,
+    TvPairingRegistry tvPairings,
     TimeProvider timeProvider) : Hub<IGameClient>
 {
+    /// <summary>
+    /// "TV opzetten": geeft deze connectie een koppelcode die de TV als QR toont. De host-telefoon
+    /// levert daarmee via <see cref="SendGameToTv"/> een spelcode af. Opnieuw aanroepen (bv. na een
+    /// reconnect) vervangt de vorige code van deze connectie.
+    /// </summary>
+    public string RegisterTv() => tvPairings.Register(Context.ConnectionId);
+
+    /// <summary>
+    /// Stuurt een bestaand spel naar de TV die <paramref name="pairingCode"/> toont. Eerst het spel
+    /// controleren, dan pas de code innemen: een typefout in de spelcode mag de QR op de TV niet
+    /// onbruikbaar maken.
+    /// </summary>
+    public async Task SendGameToTv(string pairingCode, string gameId)
+    {
+        await using (var session = store.QuerySession())
+        {
+            if (await session.LoadAsync<GameState>(gameId) is null)
+            {
+                throw new HubException(HubErrorSerializer.Serialize(
+                    new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
+            }
+        }
+
+        if (!tvPairings.TryClaim(pairingCode, out var tvConnectionId))
+        {
+            throw new HubException(HubErrorSerializer.Serialize(new ValidationError("tvPairing.unknownCode")));
+        }
+
+        await Clients.Client(tvConnectionId).TvPaired(new TvPairedMessage(gameId));
+    }
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        tvPairings.Remove(Context.ConnectionId);
+
+        return base.OnDisconnectedAsync(exception);
+    }
+
     /// <summary>
     /// Voegt de aanroepende connectie toe aan de spelgroep en levert de huidige state —
     /// de enige aanroep die de TV doet na het (handmatig) navigeren naar <c>/tv/:gameId</c>.

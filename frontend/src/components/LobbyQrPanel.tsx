@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
-import QRCode from 'qrcode'
 import { useTranslation } from 'react-i18next'
-import { GlassPanel } from './ui/GlassPanel'
+import { QrCodePanel } from './ui/QrCodePanel'
 
 export interface LobbyQrPanelProps {
   gameId: string
@@ -16,39 +14,13 @@ export interface LobbyQrPanelProps {
 export function LobbyQrPanel({ gameId, origin = window.location.origin }: LobbyQrPanelProps) {
   const { t } = useTranslation('lobby')
   const joinUrl = `${origin}/play/${gameId}`
-  const [svg, setSvg] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    QRCode.toString(joinUrl, { type: 'svg', margin: 1 })
-      .then((result) => {
-        if (!cancelled) setSvg(result)
-      })
-      .catch(() => {
-        if (!cancelled) setSvg(null)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [joinUrl])
 
   return (
-    <GlassPanel elevation="base" context="tv" className="flex items-center gap-[22px]">
-      <div
-        role="img"
-        aria-label={t('qr.ariaLabel', { url: joinUrl })}
-        className="h-[175px] w-[175px] flex-none rounded-[14px] bg-white p-3 shadow-[0_6px_18px_rgba(0,0,0,.3)] [&_svg]:h-full [&_svg]:w-full"
-        dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
-      />
-      <div className="min-w-0">
-        <div className="font-display text-size6 leading-[1.1] font-extrabold text-fg">{t('qr.scanToJoin')}</div>
-        <div className="mt-[10px] truncate font-body text-label text-fg-muted">{joinUrl}</div>
-        <span className="mt-3 inline-block rounded-[10px] bg-pitch-500 px-4 py-1.5 font-body text-size5 font-semibold tracking-[.18em] text-[var(--on-pitch)]">
-          {gameId}
-        </span>
-      </div>
-    </GlassPanel>
+    <QrCodePanel
+      url={joinUrl}
+      code={gameId}
+      title={t('qr.scanToJoin')}
+      ariaLabel={t('qr.ariaLabel', { url: joinUrl })}
+    />
   )
 }
