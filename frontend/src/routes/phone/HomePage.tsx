@@ -13,24 +13,42 @@ import { useSendGameToTv } from '../../hooks/useSendGameToTv'
 
 const MAP_ID = 'standaard-43'
 
-type Mode = 'choose' | 'create' | 'join' | 'send' | 'sent'
+type Mode = 'choose' | 'create' | 'join' | 'pairTv' | 'send' | 'sent'
+
+interface CodeFormOptions {
+  title: string
+  placeholder: string
+  onSubmit: () => void
+  actions: ReactNode
+  error?: string | null
+}
 
 /**
  * Openingsscherm van de telefoon-app (FO §2.2): host vs speler, plus "TV opzetten" (dit toestel
- * wordt de TV, `/tv`). Via `/pair/:pairingCode` — de QR op zo'n TV — is dit de koppelstap van de
- * host: een nieuw spel starten of een bestaande spelcode sturen, en de TV krijgt die spelcode.
+ * wordt de TV, `/tv`) en "TV koppelen" (de code van zo'n TV intypen i.p.v. scannen). Via
+ * `/pair/:pairingCode` — de QR op zo'n TV — is dit de koppelstap van de host: een nieuw spel
+ * starten of een bestaande spelcode sturen, en de TV krijgt die spelcode.
  */
 export function HomePage() {
   const { pairingCode } = useParams<{ pairingCode?: string }>()
   const [mode, setMode] = useState<Mode>('choose')
-  const [joinCode, setJoinCode] = useState('')
+  const [codeInput, setCodeInput] = useState('')
   // Het spel dat deze telefoon in de koppelstap zelf aanmaakte: lukt het sturen daarvan niet
   // meteen, dan blijft de lobby bereikbaar en kan de host het opnieuw proberen.
   const [createdGameId, setCreatedGameId] = useState<string | null>(null)
   const navigate = useNavigate()
   const { t } = useTranslation(['home', 'common', 'tvPairing'])
   const sendToTv = useSendGameToTv()
-  const code = joinCode.trim().toUpperCase()
+  const code = codeInput.trim().toUpperCase()
+
+  // `/` en `/pair/:pairingCode` renderen dezelfde HomePage op dezelfde plek in de boom: React Router
+  // hermount 'm bij die wissel niet, dus de lokale staat moet hier expliciet terug naar het begin.
+  const navigateToStart = (path: string) => {
+    setMode('choose')
+    setCodeInput('')
+    setCreatedGameId(null)
+    navigate(path)
+  }
 
   const handleCreated = async (gameId: string) => {
     if (!pairingCode) {
@@ -46,20 +64,20 @@ export function HomePage() {
     }
 
     setCreatedGameId(gameId)
-    setJoinCode(gameId)
+    setCodeInput(gameId)
     setMode('send')
   }
 
   if (mode === 'create') {
     return (
       <PhoneShell>
-        <CreateGameForm mapId={MAP_ID} onCreated={(gameId) => void handleCreated(gameId)} />
+        <CreateGameForm mapId={MAP_ID} onCreated={handleCreated} />
       </PhoneShell>
     )
   }
 
-  /** Het spelcode-invoerscherm, gedeeld door "Deelnemen" en "Spelcode naar TV sturen". */
-  const codeForm = (onSubmit: () => void, actions: ReactNode, error: string | null = null) => {
+  /** Het code-invoerscherm, gedeeld door "Deelnemen", "TV koppelen" en "Spelcode naar TV sturen". */
+  const codeForm = ({ title, placeholder, onSubmit, actions, error = null }: CodeFormOptions) => {
     const handleSubmit = (event: FormEvent) => {
       event.preventDefault()
 
@@ -75,14 +93,14 @@ export function HomePage() {
                 blijft genest: de nesting-guard zet zijn eigen blur uit, zijn `--silver-600`-rand
                 blijft zichtbaar. */}
             <GlassPanel elevation="base" context="phone" className="rounded-2xl">
-              <h1 className="mb-3 font-display text-h1 font-bold">{t('home:joinCode.title')}</h1>
+              <h1 className="mb-3 font-display text-h1 font-bold">{title}</h1>
               <TextField
                 autoFocus
                 uppercase
-                value={joinCode}
-                onChange={setJoinCode}
-                placeholder={t('home:joinCode.placeholder')}
-                ariaLabel={t('home:joinCode.title')}
+                value={codeInput}
+                onChange={setCodeInput}
+                placeholder={placeholder}
+                ariaLabel={title}
               />
             </GlassPanel>
             <Footer error={error}>{actions}</Footer>
@@ -92,13 +110,36 @@ export function HomePage() {
     )
   }
 
+  const continueToLobby = createdGameId && (
+    <Button type="button" variant="secondary" onClick={() => navigate(`/play/${createdGameId}`)}>
+      {t('tvPairing:phone.continueToLobby')}
+    </Button>
+  )
+
   if (mode === 'join') {
-    return codeForm(
-      () => navigate(`/play/${code}`),
-      <Button type="submit" disabled={!code}>
-        {t('common:actions.join')}
-      </Button>,
-    )
+    return codeForm({
+      title: t('home:joinCode.title'),
+      placeholder: t('home:joinCode.placeholder'),
+      onSubmit: () => navigate(`/play/${code}`),
+      actions: (
+        <Button type="submit" disabled={!code}>
+          {t('common:actions.join')}
+        </Button>
+      ),
+    })
+  }
+
+  if (mode === 'pairTv') {
+    return codeForm({
+      title: t('tvPairing:phone.pairingCode.title'),
+      placeholder: t('tvPairing:phone.pairingCode.placeholder'),
+      onSubmit: () => navigateToStart(`/pair/${code}`),
+      actions: (
+        <Button type="submit" disabled={!code}>
+          {t('tvPairing:phone.pairingCode.submit')}
+        </Button>
+      ),
+    })
   }
 
   if (mode === 'send' && pairingCode) {
@@ -112,20 +153,20 @@ export function HomePage() {
       }
     }
 
-    return codeForm(
-      () => void handleSend(),
-      <>
-        {createdGameId && (
-          <Button type="button" variant="secondary" onClick={() => navigate(`/play/${createdGameId}`)}>
-            {t('tvPairing:phone.continueToLobby')}
+    return codeForm({
+      title: t('home:joinCode.title'),
+      placeholder: t('home:joinCode.placeholder'),
+      onSubmit: () => void handleSend(),
+      actions: (
+        <>
+          {continueToLobby}
+          <Button type="submit" disabled={!code || sendToTv.sending}>
+            {t('tvPairing:phone.send')}
           </Button>
-        )}
-        <Button type="submit" disabled={!code || sendToTv.sending}>
-          {t('tvPairing:phone.send')}
-        </Button>
-      </>,
-      sendToTv.error,
-    )
+        </>
+      ),
+      error: sendToTv.error,
+    })
   }
 
   if (mode === 'sent') {
@@ -140,6 +181,12 @@ export function HomePage() {
               </p>
             </GlassPanel>
           </div>
+          <Footer>
+            {continueToLobby}
+            <Button type="button" variant="secondary" onClick={() => navigateToStart('/')}>
+              {t('tvPairing:phone.backHome')}
+            </Button>
+          </Footer>
         </PhoneScreen>
       </PhoneShell>
     )
@@ -158,6 +205,7 @@ export function HomePage() {
         { mode: 'create', title: t('home:createCard.title'), description: t('home:createCard.description') },
         { mode: 'join', title: t('home:joinCard.title'), description: t('home:joinCard.description') },
         { mode: 'tv', title: t('home:tvCard.title'), description: t('home:tvCard.description') },
+        { mode: 'pairTv', title: t('home:pairTvCard.title'), description: t('home:pairTvCard.description') },
       ]
 
   return (

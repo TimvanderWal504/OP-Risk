@@ -38,6 +38,24 @@ describe('CreateGameForm', () => {
     )
   })
 
+  it('blijft bezig zolang de aanroeper na het aanmaken nog bezig is (geen tweede spel)', async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
+    fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
+    let finish: () => void = () => {}
+    const onCreated = vi.fn(() => new Promise<void>((resolve) => { finish = resolve }))
+
+    render(<CreateGameForm mapId="standaard-43" onCreated={onCreated} />)
+    await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
+
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith('ABC123'))
+    expect(screen.getByRole('button', { name: 'Bezig…' })).toBeDisabled()
+
+    finish()
+    await waitFor(() => expect(screen.getByRole('button', { name: /spel aanmaken/i })).toBeEnabled())
+  })
+
   it('stuurt standaard de Huisregel mee, en Klassiek na die keuze (FO §10)', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)

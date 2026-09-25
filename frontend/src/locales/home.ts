@@ -25,6 +25,13 @@ export const home = {
       en: 'Use this screen as the game board.',
     },
   },
+  pairTvCard: {
+    title: { nl: 'TV koppelen', en: 'Pair a TV' },
+    description: {
+      nl: 'Voer de code in die op de TV staat.',
+      en: 'Enter the code shown on the TV.',
+    },
+  },
   footer: {
     playerCount: { nl: '2 t/m 7 spelers · lokaal netwerk', en: '2 to 7 players · local network' },
   },

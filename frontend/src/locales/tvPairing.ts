@@ -9,9 +9,12 @@ export const tvPairing = {
     badge: { nl: 'TV koppelen', en: 'Pair TV' },
     scanTitle: { nl: 'Scan met de telefoon van de host', en: "Scan with the host's phone" },
     ariaLabel: { nl: 'QR-code om deze TV te koppelen via {{url}}', en: 'QR code to pair this TV via {{url}}' },
-    waiting: { nl: 'Wachten tot de host een spel koppelt…', en: 'Waiting for the host to pair a game…' },
+    waiting: {
+      nl: "Wachten op de host — of voer de code in bij 'TV koppelen'",
+      en: "Waiting for the host — or enter the code under 'Pair a TV'",
+    },
     connecting: { nl: 'Verbinden…', en: 'Connecting…' },
-    failed: { nl: 'Kon geen koppelcode ophalen.', en: 'Could not get a pairing code.' },
+    failed: { nl: 'Kon geen koppelcode ophalen — opnieuw proberen…', en: 'Could not get a pairing code — retrying…' },
   },
   phone: {
     title: { nl: 'TV gevonden', en: 'TV found' },
@@ -27,6 +30,12 @@ export const tvPairing = {
       },
     },
     send: { nl: 'Naar TV sturen', en: 'Send to TV' },
+    pairingCode: {
+      title: { nl: 'Koppelcode', en: 'Pairing code' },
+      placeholder: { nl: 'bv. K7M2PQ', en: 'e.g. K7M2PQ' },
+      submit: { nl: 'Koppelen', en: 'Pair' },
+    },
+    backHome: { nl: 'Naar de startpagina', en: 'Back to the start' },
     continueToLobby: { nl: 'Naar de lobby', en: 'Go to the lobby' },
     sent: {
       title: { nl: 'Verstuurd naar de TV', en: 'Sent to the TV' },

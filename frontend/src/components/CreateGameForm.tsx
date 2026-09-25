@@ -57,7 +57,7 @@ function formatTimer(seconds: number): string {
 
 export interface CreateGameFormProps {
   mapId: string
-  onCreated: (gameId: string) => void
+  onCreated: (gameId: string) => void | Promise<void>
 }
 
 export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
@@ -108,7 +108,9 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
       }
 
       const body = (await response.json()) as CreateGameResponse
-      onCreated(body.gameId)
+      // Afwachten: de aanroeper kan na het aanmaken nog iets doen (in de koppelflow: de spelcode
+      // naar de TV sturen), en zolang dat loopt mag de knop geen tweede spel aanmaken.
+      await onCreated(body.gameId)
     } catch {
       setError(t('errors.connection'))
     } finally {
