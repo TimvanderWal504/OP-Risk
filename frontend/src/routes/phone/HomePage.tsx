@@ -10,16 +10,20 @@ import { Button } from '../../components/ui/Button'
 import { GlassPanel } from '../../components/ui/GlassPanel'
 import { PhoneScreen } from '../../components/ui/PhoneScreen'
 import { useSendGameToTv } from '../../hooks/useSendGameToTv'
+import { canScanQr } from '../../hooks/useQrScanner'
+import { JoinQrScanner } from './JoinQrScanner'
 
 const MAP_ID = 'standaard-43'
 
-type Mode = 'choose' | 'create' | 'join' | 'pairTv' | 'retry'
+type Mode = 'choose' | 'create' | 'join' | 'scan' | 'pairTv' | 'retry'
 
 interface CodeFormOptions {
   title: string
   placeholder: string
   submitLabel: string
   onSubmit: () => void
+  /** Optionele tweede weg, als secondary-knop boven de submit (secondary boven primary). */
+  secondaryAction?: { label: string; onClick: () => void }
 }
 
 /**
@@ -84,8 +88,12 @@ export function HomePage() {
     )
   }
 
+  if (mode === 'scan') {
+    return <JoinQrScanner onGameId={(gameId) => navigate(`/play/${gameId}`)} onCancel={() => setMode('join')} />
+  }
+
   /** Het code-invoerscherm, gedeeld door "Deelnemen" en het invoeren van de koppelcode. */
-  const codeForm = ({ title, placeholder, submitLabel, onSubmit }: CodeFormOptions): ReactNode => {
+  const codeForm = ({ title, placeholder, submitLabel, onSubmit, secondaryAction }: CodeFormOptions): ReactNode => {
     const handleSubmit = (event: FormEvent) => {
       event.preventDefault()
 
@@ -112,6 +120,11 @@ export function HomePage() {
               />
             </GlassPanel>
             <Footer>
+              {secondaryAction && (
+                <Button type="button" variant="secondary" onClick={secondaryAction.onClick}>
+                  {secondaryAction.label}
+                </Button>
+              )}
               <Button type="submit" disabled={!code}>
                 {submitLabel}
               </Button>
@@ -128,6 +141,7 @@ export function HomePage() {
       placeholder: t('home:joinCode.placeholder'),
       submitLabel: t('common:actions.join'),
       onSubmit: () => navigate(`/play/${code}`),
+      secondaryAction: canScanQr() ? { label: t('home:scan.button'), onClick: () => setMode('scan') } : undefined,
     })
   }
 

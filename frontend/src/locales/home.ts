@@ -32,6 +32,29 @@ export const home = {
       en: "Can't scan? The code is shown under the QR code on the TV.",
     },
   },
+  scan: {
+    button: { nl: 'QR-code scannen', en: 'Scan QR code' },
+    title: { nl: 'QR-code scannen', en: 'Scan QR code' },
+    description: {
+      nl: 'Richt de camera op de QR-code op de TV.',
+      en: 'Point the camera at the QR code on the TV.',
+    },
+    typeCode: { nl: 'Code typen', en: 'Type the code' },
+    notAGameQr: {
+      nl: 'Dit is geen QR-code van een spel. Scan de code in de lobby op de TV.',
+      en: "This isn't a game QR code. Scan the code in the lobby on the TV.",
+    },
+    errors: {
+      denied: {
+        nl: 'Geen toegang tot de camera. Sta het toe in je browser, of typ de code.',
+        en: 'No access to the camera. Allow it in your browser, or type the code.',
+      },
+      unavailable: {
+        nl: 'De camera kon niet worden geopend. Typ de code.',
+        en: "The camera couldn't be opened. Type the code.",
+      },
+    },
+  },
   footer: {
     playerCount: { nl: '2 t/m 7 spelers · lokaal netwerk', en: '2 to 7 players · local network' },
   },

@@ -534,6 +534,11 @@ Added 2026-09-25, flow simplified 2026-09-26 (FO §2.2, **TV koppelen**). Writte
 - **Phone — after scanning (`/pair/:pairingCode`):** no screen of its own — the phone lands directly on the regular game-settings form (`CreateGameForm`), unchanged. Typing the TV code reuses the join screen unchanged (one base panel with the H1 title and the `TextField`, then the `Footer` with one primary button, "Verder naar instellingen") and leads to the same form.
 - **Phone — send failed:** one centred base panel ("De TV heeft het spel nog niet" plus a secondary-color line naming the created game), the error above the footer, then a secondary "Naar de lobby" above the primary "Opnieuw naar de TV sturen" — secondary over primary, as in every footer.
 
+### Join by camera (`JoinQrScanner`, "QR-code scannen")
+Added 2026-09-26. Written by hand, pending a `/impeccable document` regeneration — it introduces no new values, only reuses existing ones.
+- **Entry:** the join screen ("Spelcode") gets a secondary "QR-code scannen" above its primary "Deelnemen" — secondary over primary, as in every footer. Only rendered when the browser offers a camera (`getUserMedia`, HTTPS only); without one the screen is unchanged (**The Invisible Design Rule**).
+- **Scanning screen:** the join screen's shape with the camera in place of the input — one base panel with the H1 "QR-code scannen", a secondary-color line ("Richt de camera op de QR-code op de TV."), then the live rear-camera image as a square, `10px`-radius (`rounded-input`) tile on the `--bg` canvas color while it starts. The footer holds a single secondary "Code typen" back to the input; no primary button, since a recognised join QR continues on its own to that game's `/play/:gameId`. A scanned QR that isn't a join QR (e.g. the TV's pairing QR) keeps scanning and shows a muted footer hint; a refused or missing camera shows its reason as the footer error (Alert Red), same as every other footer error. No scan-frame overlay, corner brackets or scan-line animation.
+
 ## Do's and Don'ts
 
 ### Do:
