@@ -18,7 +18,7 @@ export interface TvTitleColumnProps {
 }
 
 /**
- * Linkerkolom van de TV-wachtschermen (lobby en "TV opzetten"): kicker, OPERATIE ATLAS-titel bij
+ * Linkerkolom van de TV-wachtschermen (lobby en "TV koppelen"): kicker, OPERATIE ATLAS-titel bij
  * het kasteel en een wachtregel onderaan. Vult de ruimte naast de rechter glas-rail.
  */
 export function TvTitleColumn({ badge, status }: TvTitleColumnProps) {

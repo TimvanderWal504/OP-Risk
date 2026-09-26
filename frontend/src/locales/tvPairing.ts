@@ -1,8 +1,8 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * "TV opzetten": het koppelscherm op de TV (`routes/tv/TvPairPage.tsx`) en de koppelstap op de
- * host-telefoon (`routes/phone/HomePage.tsx`, route `/pair/:pairingCode`).
+ * TV koppelen: het koppelscherm op de TV (`routes/tv/TvPairPage.tsx`) en de host-telefoon die de
+ * QR scant (`routes/phone/HomePage.tsx`, route `/pair/:pairingCode`).
  */
 export const tvPairing = {
   tv: {
@@ -10,39 +10,26 @@ export const tvPairing = {
     scanTitle: { nl: 'Scan met de telefoon van de host', en: "Scan with the host's phone" },
     ariaLabel: { nl: 'QR-code om deze TV te koppelen via {{url}}', en: 'QR code to pair this TV via {{url}}' },
     waiting: {
-      nl: "Wachten op de host — of voer de code in bij 'TV koppelen'",
-      en: "Waiting for the host — or enter the code under 'Pair a TV'",
+      nl: 'Wachten tot de host scant en een spel aanmaakt…',
+      en: 'Waiting for the host to scan and create a game…',
     },
     connecting: { nl: 'Verbinden…', en: 'Connecting…' },
     failed: { nl: 'Kon geen koppelcode ophalen — opnieuw proberen…', en: 'Could not get a pairing code — retrying…' },
   },
   phone: {
-    title: { nl: 'TV gevonden', en: 'TV found' },
-    description: {
-      nl: 'Start een nieuw spel of stuur een bestaande spelcode naar de TV.',
-      en: 'Start a new game or send an existing game code to the TV.',
-    },
-    sendCard: {
-      title: { nl: 'Spelcode naar TV sturen', en: 'Send game code to TV' },
-      description: {
-        nl: 'Voor een lobby die al bestaat.',
-        en: 'For a lobby that already exists.',
-      },
-    },
-    send: { nl: 'Naar TV sturen', en: 'Send to TV' },
     pairingCode: {
-      title: { nl: 'Koppelcode', en: 'Pairing code' },
+      title: { nl: 'Code van de TV', en: 'TV code' },
       placeholder: { nl: 'bv. K7M2PQ', en: 'e.g. K7M2PQ' },
-      submit: { nl: 'Koppelen', en: 'Pair' },
+      submit: { nl: 'Verder naar instellingen', en: 'Continue to settings' },
     },
-    backHome: { nl: 'Naar de startpagina', en: 'Back to the start' },
     continueToLobby: { nl: 'Naar de lobby', en: 'Go to the lobby' },
-    sent: {
-      title: { nl: 'Verstuurd naar de TV', en: 'Sent to the TV' },
+    retry: {
+      title: { nl: 'De TV heeft het spel nog niet', en: "The TV doesn't have the game yet" },
       description: {
-        nl: 'De TV toont nu spel {{gameId}}.',
-        en: 'The TV now shows game {{gameId}}.',
+        nl: 'Spel {{gameId}} is aangemaakt, maar kon niet naar de TV worden gestuurd.',
+        en: 'Game {{gameId}} was created, but could not be sent to the TV.',
       },
+      resend: { nl: 'Opnieuw naar de TV sturen', en: 'Send to the TV again' },
     },
   },
 } satisfies LocaleTree

@@ -117,7 +117,7 @@ public sealed record TerritoryClaimedMessage(string TerritoryId, string PlayerId
 public sealed record GameWonMessage(IReadOnlyList<string> WinnerPlayerIds, int StateVersion);
 
 /// <summary>
-/// De host heeft een spel naar deze TV gestuurd ("TV opzetten"): de TV navigeert naar
+/// De host heeft een spel naar deze TV gestuurd ("TV koppelen"): de TV navigeert naar
 /// <c>/tv/{GameId}</c> en roept daar zelf <see cref="GameHub.WatchGame"/> aan. Geen state, alleen
 /// het adres — naar precies één connectie, niet naar een spelgroep.
 /// </summary>
@@ -153,7 +153,7 @@ public sealed class GameHub(
     TimeProvider timeProvider) : Hub<IGameClient>
 {
     /// <summary>
-    /// "TV opzetten": geeft deze connectie een koppelcode die de TV als QR toont. De host-telefoon
+    /// "TV koppelen": geeft deze connectie een koppelcode die de TV als QR toont. De host-telefoon
     /// levert daarmee via <see cref="SendGameToTv"/> een spelcode af. Opnieuw aanroepen (bv. na een
     /// reconnect) vervangt de vorige code van deze connectie.
     /// </summary>

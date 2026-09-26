@@ -19,17 +19,17 @@ export const home = {
     description: { nl: 'Scan de QR-code op de TV.', en: 'Scan the QR code on the TV.' },
   },
   tvCard: {
-    title: { nl: 'TV opzetten', en: 'Set up the TV' },
+    title: { nl: 'TV koppelen', en: 'Pair the TV' },
     description: {
-      nl: 'Gebruik dit scherm als speelbord.',
-      en: 'Use this screen as the game board.',
+      nl: 'Dit scherm wordt het speelbord en toont een QR-code voor de host.',
+      en: 'This screen becomes the game board and shows a QR code for the host.',
     },
   },
   pairTvCard: {
-    title: { nl: 'TV koppelen', en: 'Pair a TV' },
+    title: { nl: 'Code van de TV invoeren', en: 'Enter the TV code' },
     description: {
-      nl: 'Voer de code in die op de TV staat.',
-      en: 'Enter the code shown on the TV.',
+      nl: 'Lukt scannen niet? De code staat onder de QR-code op de TV.',
+      en: "Can't scan? The code is shown under the QR code on the TV.",
     },
   },
   footer: {

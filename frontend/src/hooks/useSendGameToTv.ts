@@ -3,7 +3,7 @@ import { useSignalR } from './useSignalR'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 /**
- * Telefoon-kant van "TV opzetten": stuurt een spelcode naar de TV achter een gescande koppelcode.
+ * Telefoon-kant van "TV koppelen": stuurt een spelcode naar de TV achter een gescande koppelcode.
  * `true` = de TV heeft 'm; bij `false` staat de vertaalde reden in `error`.
  */
 export function useSendGameToTv() {

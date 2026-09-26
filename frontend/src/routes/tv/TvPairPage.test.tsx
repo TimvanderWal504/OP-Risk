@@ -25,7 +25,7 @@ describe('TvPairPage', () => {
 
     expect(screen.getByText('K7M2PQ')).toBeInTheDocument()
     expect(screen.getByText(`${window.location.origin}/pair/K7M2PQ`)).toBeInTheDocument()
-    expect(screen.getByText("Wachten op de host — of voer de code in bij 'TV koppelen'")).toBeInTheDocument()
+    expect(screen.getByText('Wachten tot de host scant en een spel aanmaakt…')).toBeInTheDocument()
     expect(await screen.findByRole('img', { name: /\/pair\/K7M2PQ/ })).toBeInTheDocument()
   })
 

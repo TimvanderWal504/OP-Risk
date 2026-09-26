@@ -13,71 +13,79 @@ import { useSendGameToTv } from '../../hooks/useSendGameToTv'
 
 const MAP_ID = 'standaard-43'
 
-type Mode = 'choose' | 'create' | 'join' | 'pairTv' | 'send' | 'sent'
+type Mode = 'choose' | 'create' | 'join' | 'pairTv' | 'retry'
 
 interface CodeFormOptions {
   title: string
   placeholder: string
+  submitLabel: string
   onSubmit: () => void
-  actions: ReactNode
-  error?: string | null
 }
 
 /**
- * Openingsscherm van de telefoon-app (FO §2.2): host vs speler, plus "TV opzetten" (dit toestel
- * wordt de TV, `/tv`) en "TV koppelen" (de code van zo'n TV intypen i.p.v. scannen). Via
- * `/pair/:pairingCode` — de QR op zo'n TV — is dit de koppelstap van de host: een nieuw spel
- * starten of een bestaande spelcode sturen, en de TV krijgt die spelcode.
+ * Openingsscherm van de telefoon-app (FO §2.2): host vs speler, plus "TV koppelen" (dit toestel
+ * wordt de TV en toont een koppel-QR, `/tv`) en de koppelcode van zo'n TV met de hand invoeren.
+ *
+ * Via `/pair/:pairingCode` — de QR op zo'n TV — wordt deze telefoon de host: hij gaat meteen naar
+ * de spelinstellingen, en na het aanmaken krijgt de TV de spelcode.
  */
 export function HomePage() {
   const { pairingCode } = useParams<{ pairingCode?: string }>()
-  const [mode, setMode] = useState<Mode>('choose')
+  const [mode, setMode] = useState<Mode>(pairingCode ? 'create' : 'choose')
   const [codeInput, setCodeInput] = useState('')
-  // Het spel dat deze telefoon in de koppelstap zelf aanmaakte: lukt het sturen daarvan niet
-  // meteen, dan blijft de lobby bereikbaar en kan de host het opnieuw proberen.
+  // Het spel dat in de koppelflow is aangemaakt maar (nog) niet bij de TV aankwam.
   const [createdGameId, setCreatedGameId] = useState<string | null>(null)
   const navigate = useNavigate()
   const { t } = useTranslation(['home', 'common', 'tvPairing'])
   const sendToTv = useSendGameToTv()
   const code = codeInput.trim().toUpperCase()
 
-  // `/` en `/pair/:pairingCode` renderen dezelfde HomePage op dezelfde plek in de boom: React Router
-  // hermount 'm bij die wissel niet, dus de lokale staat moet hier expliciet terug naar het begin.
-  const navigateToStart = (path: string) => {
-    setMode('choose')
-    setCodeInput('')
-    setCreatedGameId(null)
-    navigate(path)
-  }
-
-  const handleCreated = async (gameId: string) => {
-    if (!pairingCode) {
-      navigate(`/play/${gameId}`)
+  const sendAndContinue = async (gameId: string) => {
+    if (pairingCode && !(await sendToTv.send(pairingCode, gameId))) {
+      setCreatedGameId(gameId)
+      setMode('retry')
 
       return
     }
 
-    if (await sendToTv.send(pairingCode, gameId)) {
-      navigate(`/play/${gameId}`)
-
-      return
-    }
-
-    setCreatedGameId(gameId)
-    setCodeInput(gameId)
-    setMode('send')
+    navigate(`/play/${gameId}`)
   }
 
   if (mode === 'create') {
     return (
       <PhoneShell>
-        <CreateGameForm mapId={MAP_ID} onCreated={handleCreated} />
+        <CreateGameForm mapId={MAP_ID} onCreated={sendAndContinue} />
       </PhoneShell>
     )
   }
 
-  /** Het code-invoerscherm, gedeeld door "Deelnemen", "TV koppelen" en "Spelcode naar TV sturen". */
-  const codeForm = ({ title, placeholder, onSubmit, actions, error = null }: CodeFormOptions) => {
+  if (mode === 'retry' && createdGameId) {
+    return (
+      <PhoneShell>
+        <PhoneScreen>
+          <div className="flex flex-1 flex-col justify-center">
+            <GlassPanel elevation="base" context="phone" className="rounded-2xl">
+              <h1 className="font-display text-h1 font-bold">{t('tvPairing:phone.retry.title')}</h1>
+              <p className="mt-2 text-sm text-fg-secondary">
+                {t('tvPairing:phone.retry.description', { gameId: createdGameId })}
+              </p>
+            </GlassPanel>
+          </div>
+          <Footer error={sendToTv.error}>
+            <Button type="button" variant="secondary" onClick={() => navigate(`/play/${createdGameId}`)}>
+              {t('tvPairing:phone.continueToLobby')}
+            </Button>
+            <Button type="button" disabled={sendToTv.sending} onClick={() => void sendAndContinue(createdGameId)}>
+              {t('tvPairing:phone.retry.resend')}
+            </Button>
+          </Footer>
+        </PhoneScreen>
+      </PhoneShell>
+    )
+  }
+
+  /** Het code-invoerscherm, gedeeld door "Deelnemen" en het invoeren van de koppelcode. */
+  const codeForm = ({ title, placeholder, submitLabel, onSubmit }: CodeFormOptions): ReactNode => {
     const handleSubmit = (event: FormEvent) => {
       event.preventDefault()
 
@@ -103,29 +111,23 @@ export function HomePage() {
                 ariaLabel={title}
               />
             </GlassPanel>
-            <Footer error={error}>{actions}</Footer>
+            <Footer>
+              <Button type="submit" disabled={!code}>
+                {submitLabel}
+              </Button>
+            </Footer>
           </PhoneScreen>
         </form>
       </PhoneShell>
     )
   }
 
-  const continueToLobby = createdGameId && (
-    <Button type="button" variant="secondary" onClick={() => navigate(`/play/${createdGameId}`)}>
-      {t('tvPairing:phone.continueToLobby')}
-    </Button>
-  )
-
   if (mode === 'join') {
     return codeForm({
       title: t('home:joinCode.title'),
       placeholder: t('home:joinCode.placeholder'),
+      submitLabel: t('common:actions.join'),
       onSubmit: () => navigate(`/play/${code}`),
-      actions: (
-        <Button type="submit" disabled={!code}>
-          {t('common:actions.join')}
-        </Button>
-      ),
     })
   }
 
@@ -133,80 +135,22 @@ export function HomePage() {
     return codeForm({
       title: t('tvPairing:phone.pairingCode.title'),
       placeholder: t('tvPairing:phone.pairingCode.placeholder'),
-      onSubmit: () => navigateToStart(`/pair/${code}`),
-      actions: (
-        <Button type="submit" disabled={!code}>
-          {t('tvPairing:phone.pairingCode.submit')}
-        </Button>
-      ),
+      submitLabel: t('tvPairing:phone.pairingCode.submit'),
+      // `/` en `/pair/:pairingCode` renderen dezelfde HomePage op dezelfde plek in de boom; React
+      // Router hermount 'm bij die wissel niet, dus de modus gaat hier zelf naar de instellingen.
+      onSubmit: () => {
+        setMode('create')
+        navigate(`/pair/${code}`)
+      },
     })
   }
 
-  if (mode === 'send' && pairingCode) {
-    const handleSend = async () => {
-      if (!(await sendToTv.send(pairingCode, code))) return
-
-      if (code === createdGameId) {
-        navigate(`/play/${code}`)
-      } else {
-        setMode('sent')
-      }
-    }
-
-    return codeForm({
-      title: t('home:joinCode.title'),
-      placeholder: t('home:joinCode.placeholder'),
-      onSubmit: () => void handleSend(),
-      actions: (
-        <>
-          {continueToLobby}
-          <Button type="submit" disabled={!code || sendToTv.sending}>
-            {t('tvPairing:phone.send')}
-          </Button>
-        </>
-      ),
-      error: sendToTv.error,
-    })
-  }
-
-  if (mode === 'sent') {
-    return (
-      <PhoneShell>
-        <PhoneScreen>
-          <div className="flex flex-1 flex-col justify-center">
-            <GlassPanel elevation="base" context="phone" className="rounded-2xl text-center">
-              <h1 className="font-display text-h1 font-bold">{t('tvPairing:phone.sent.title')}</h1>
-              <p className="mt-2 text-sm text-fg-secondary">
-                {t('tvPairing:phone.sent.description', { gameId: code })}
-              </p>
-            </GlassPanel>
-          </div>
-          <Footer>
-            {continueToLobby}
-            <Button type="button" variant="secondary" onClick={() => navigateToStart('/')}>
-              {t('tvPairing:phone.backHome')}
-            </Button>
-          </Footer>
-        </PhoneScreen>
-      </PhoneShell>
-    )
-  }
-
-  const entries: { mode: Mode | 'tv'; title: string; description: string }[] = pairingCode
-    ? [
-        { mode: 'create', title: t('home:createCard.title'), description: t('home:createCard.description') },
-        {
-          mode: 'send',
-          title: t('tvPairing:phone.sendCard.title'),
-          description: t('tvPairing:phone.sendCard.description'),
-        },
-      ]
-    : [
-        { mode: 'create', title: t('home:createCard.title'), description: t('home:createCard.description') },
-        { mode: 'join', title: t('home:joinCard.title'), description: t('home:joinCard.description') },
-        { mode: 'tv', title: t('home:tvCard.title'), description: t('home:tvCard.description') },
-        { mode: 'pairTv', title: t('home:pairTvCard.title'), description: t('home:pairTvCard.description') },
-      ]
+  const entries: { mode: Mode | 'tv'; title: string; description: string }[] = [
+    { mode: 'create', title: t('home:createCard.title'), description: t('home:createCard.description') },
+    { mode: 'join', title: t('home:joinCard.title'), description: t('home:joinCard.description') },
+    { mode: 'tv', title: t('home:tvCard.title'), description: t('home:tvCard.description') },
+    { mode: 'pairTv', title: t('home:pairTvCard.title'), description: t('home:pairTvCard.description') },
+  ]
 
   return (
     <PhoneShell>
@@ -216,13 +160,6 @@ export function HomePage() {
         </GlassPanel>
 
         <div className="flex flex-1 flex-col justify-center gap-3">
-          {pairingCode && (
-            <GlassPanel elevation="base" context="phone" className="rounded-2xl">
-              <p className="font-display text-h2 font-black">{t('tvPairing:phone.title')}</p>
-              <p className="mt-1 text-sm text-fg-secondary">{t('tvPairing:phone.description')}</p>
-            </GlassPanel>
-          )}
-
           {entries.map((entry) => (
             <GlassPanel
               key={entry.mode}

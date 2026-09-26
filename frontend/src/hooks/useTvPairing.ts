@@ -9,7 +9,7 @@ export const PAIRING_RETRY_BASE_MS = 1000
 export const PAIRING_RETRY_MAX_MS = 30_000
 
 /**
- * TV-kant van "TV opzetten": vraagt een koppelcode aan zodra de verbinding open is, en opnieuw na
+ * TV-kant van "TV koppelen": vraagt een koppelcode aan zodra de verbinding open is, en opnieuw na
  * elke reconnect — de code hoort bij één connectie, een nieuwe connectie heeft een nieuwe nodig.
  * Tijdens het (her)verbinden is er dus geen geldige code (`null`). Mislukt de aanvraag, dan
  * probeert de hook het zelf opnieuw met oplopende wachttijd — de TV heeft geen bediening (FO §2.1),

@@ -7,8 +7,8 @@ import { TvWaitingLayout } from '../../components/TvWaitingLayout'
 import { QrCodePanel } from '../../components/ui/QrCodePanel'
 
 /**
- * "TV opzetten" (route `/tv`): dit scherm wordt de TV. Toont een QR naar `/pair/:pairingCode`;
- * de host scant die, kiest of maakt een spel, en de TV gaat door naar `/tv/:gameId`.
+ * "TV koppelen" (route `/tv`): dit scherm wordt de TV. Toont een QR naar `/pair/:pairingCode`;
+ * de host scant die, maakt een spel aan, en de TV gaat door naar `/tv/:gameId`.
  */
 export function TvPairPage() {
   const { t } = useTranslation('tvPairing')

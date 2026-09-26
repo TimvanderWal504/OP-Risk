@@ -12,7 +12,7 @@ export interface TvWaitingLayoutProps {
 /**
  * Titel links en een compacte glas-rail rechts, met de bijbehorende links/rechts-wash
  * (`lobbyPanelScrim`) over de stage-achtergrond. Gedeeld door de TV-lobby en het koppelscherm van
- * "TV opzetten" (`TvPairPage`) — de enige twee TV-schermen met deze split.
+ * "TV koppelen" (`TvPairPage`) — de enige twee TV-schermen met deze split.
  */
 export function TvWaitingLayout({ badge, status, children }: TvWaitingLayoutProps) {
   return (

@@ -10,7 +10,7 @@ import type { TvScreenProps } from './tvScreens'
  * binnen is, de gekozen instellingen), over de persistente stage-achtergrond uit `TvShell`
  * (cinematische veldslag-illustratie + gedeelde verticale scrim, zie `TvStageBackground`).
  * De links/rechts-wash die bij deze paneelindeling hoort zit in `TvWaitingLayout` — geen andere
- * fase heeft deze split (alleen het koppelscherm van "TV opzetten", vóór er een spel is), dus die
+ * fase heeft deze split (alleen het koppelscherm van "TV koppelen", vóór er een spel is), dus die
  * laag blijft daar i.p.v. in de gedeelde achtergrond (zie `lobbyPanelScrim` in glass-tokens.ts).
  */
 export function TvLobbyScreen({ state }: TvScreenProps) {

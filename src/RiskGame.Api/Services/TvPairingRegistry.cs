@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace RiskGame.Api.Services;
 
 /// <summary>
-/// Koppelcodes van TV's die nog op een spel wachten ("TV opzetten" op de startpagina): de TV
+/// Koppelcodes van TV's die nog op een spel wachten ("TV koppelen" op de startpagina): de TV
 /// vraagt een code aan, toont die als QR, en de host-telefoon stuurt via die code een spelcode
 /// terug. Bewust in-memory en per connectie: een koppeling is transiënt, geen spel-state — ze
 /// hoort niet in de event store. Na een server-herstart of reconnect vraagt de TV gewoon een

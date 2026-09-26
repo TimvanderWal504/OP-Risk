@@ -12,7 +12,7 @@ vi.mock('../../hooks/useSendGameToTv', () => ({ useSendGameToTv: vi.fn() }))
 vi.mock('../../components/CreateGameForm', () => ({
   CreateGameForm: ({ onCreated }: CreateGameFormProps) => (
     <button type="button" onClick={() => void onCreated('NEW123')}>
-      aanmaken
+      spel aanmaken
     </button>
   ),
 }))
@@ -48,86 +48,70 @@ describe('HomePage', () => {
     vi.mocked(useSendGameToTv).mockReset()
   })
 
-  it('"TV opzetten" maakt van dit toestel de TV', async () => {
+  it('"TV koppelen" maakt van dit toestel de TV met de koppel-QR', async () => {
     mockSend([])
     renderAt('/')
 
-    await userEvent.click(card(/TV opzetten/))
+    await userEvent.click(card(/^TV koppelen/))
 
     expect(screen.getByText('tv-koppelscherm')).toBeInTheDocument()
   })
 
-  it('"TV koppelen" leidt met de ingetypte code naar de koppelstap', async () => {
+  it('een gescande QR brengt de telefoon meteen naar de spelinstellingen', () => {
     mockSend([])
-    renderAt('/')
+    renderAt('/pair/K7M2PQ')
 
-    await userEvent.click(card(/TV koppelen/))
-    await userEvent.type(screen.getByRole('textbox', { name: 'Koppelcode' }), 'k7m2pq')
-    await userEvent.click(screen.getByRole('button', { name: 'Koppelen' }))
-
-    expect(screen.getByText('TV gevonden')).toBeInTheDocument()
-    expect(card(/Spelcode naar TV sturen/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'spel aanmaken' })).toBeInTheDocument()
   })
 
-  it('stuurt een nieuw aangemaakt spel naar de TV en gaat door naar de lobby', async () => {
+  it('stuurt na het aanmaken de spelcode naar de TV en gaat door naar de lobby', async () => {
     const send = mockSend([true])
     renderAt('/pair/K7M2PQ')
 
-    await userEvent.click(card(/Nieuw spel starten/))
-    await userEvent.click(screen.getByRole('button', { name: 'aanmaken' }))
+    await userEvent.click(screen.getByRole('button', { name: 'spel aanmaken' }))
 
     await waitFor(() => expect(screen.getByText('lobby NEW123')).toBeInTheDocument())
     expect(send).toHaveBeenCalledWith('K7M2PQ', 'NEW123')
   })
 
-  it('houdt de nieuwe lobby bereikbaar als het sturen mislukt, en probeert opnieuw', async () => {
+  it('zonder koppelcode stuurt aanmaken niets naar een TV', async () => {
+    const send = mockSend([])
+    renderAt('/')
+
+    await userEvent.click(card(/Nieuw spel starten/))
+    await userEvent.click(screen.getByRole('button', { name: 'spel aanmaken' }))
+
+    expect(screen.getByText('lobby NEW123')).toBeInTheDocument()
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('laat bij een mislukte verzending opnieuw proberen, of door naar de lobby', async () => {
     const send = mockSend([false, true], 'Deze TV is niet meer beschikbaar.')
     renderAt('/pair/K7M2PQ')
 
-    await userEvent.click(card(/Nieuw spel starten/))
-    await userEvent.click(screen.getByRole('button', { name: 'aanmaken' }))
+    await userEvent.click(screen.getByRole('button', { name: 'spel aanmaken' }))
 
-    expect(await screen.findByText('Deze TV is niet meer beschikbaar.')).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Spelcode' })).toHaveValue('NEW123')
+    expect(await screen.findByText('De TV heeft het spel nog niet')).toBeInTheDocument()
+    expect(screen.getByText('Deze TV is niet meer beschikbaar.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Naar de lobby' })).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Naar TV sturen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Opnieuw naar de TV sturen' }))
 
     await waitFor(() => expect(screen.getByText('lobby NEW123')).toBeInTheDocument())
+    expect(send).toHaveBeenCalledTimes(2)
     expect(send).toHaveBeenLastCalledWith('K7M2PQ', 'NEW123')
   })
 
-  it('bevestigt een bestaande spelcode en biedt de weg terug naar de start', async () => {
+  it('met de hand ingevoerde TV-code leidt ook naar de instellingen en koppelt die TV', async () => {
     const send = mockSend([true])
-    renderAt('/pair/K7M2PQ')
+    renderAt('/')
 
-    await userEvent.click(card(/Spelcode naar TV sturen/))
-    await userEvent.type(screen.getByRole('textbox', { name: 'Spelcode' }), 'atlas7')
-    await userEvent.click(screen.getByRole('button', { name: 'Naar TV sturen' }))
+    await userEvent.click(card(/Code van de TV invoeren/))
+    await userEvent.type(screen.getByRole('textbox', { name: 'Code van de TV' }), 'k7m2pq')
+    await userEvent.click(screen.getByRole('button', { name: 'Verder naar instellingen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'spel aanmaken' }))
 
-    expect(await screen.findByText('Verstuurd naar de TV')).toBeInTheDocument()
-    expect(send).toHaveBeenCalledWith('K7M2PQ', 'ATLAS7')
-    expect(screen.queryByRole('button', { name: 'Naar de lobby' })).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Naar de startpagina' }))
-
-    expect(card(/TV opzetten/)).toBeInTheDocument()
-  })
-
-  it('biedt na versturen van een andere code nog steeds de eigen, net aangemaakte lobby', async () => {
-    mockSend([false, true])
-    renderAt('/pair/K7M2PQ')
-
-    await userEvent.click(card(/Nieuw spel starten/))
-    await userEvent.click(screen.getByRole('button', { name: 'aanmaken' }))
-    const input = await screen.findByRole('textbox', { name: 'Spelcode' })
-    await userEvent.clear(input)
-    await userEvent.type(input, 'ATLAS7')
-    await userEvent.click(screen.getByRole('button', { name: 'Naar TV sturen' }))
-
-    expect(await screen.findByText('Verstuurd naar de TV')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Naar de lobby' }))
-
-    expect(screen.getByText('lobby NEW123')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('lobby NEW123')).toBeInTheDocument())
+    expect(send).toHaveBeenCalledWith('K7M2PQ', 'NEW123')
   })
 })

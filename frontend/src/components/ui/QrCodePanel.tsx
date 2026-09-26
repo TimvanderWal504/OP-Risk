@@ -13,7 +13,7 @@ export interface QrCodePanelProps {
 
 /**
  * QR-code + titel + uitgeschreven url + code-chip op de TV. Gedeeld door de lobby (joinen,
- * `LobbyQrPanel`) en het koppelscherm ("TV opzetten", `TvPairPage`) — één vorm, twee adressen.
+ * `LobbyQrPanel`) en het koppelscherm ("TV koppelen", `TvPairPage`) — één vorm, twee adressen.
  */
 export function QrCodePanel({ url, code, title, ariaLabel }: QrCodePanelProps) {
   const [svg, setSvg] = useState<string | null>(null)

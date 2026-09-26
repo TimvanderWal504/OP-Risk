@@ -98,7 +98,7 @@ export interface TerritoryClaimedMessage {
 
 /**
  * Spiegelt RiskGame.Api.Hubs.TvPairedMessage — "TvPaired", alleen naar de TV-connectie die de
- * koppelcode aanvroeg: de host heeft dit spel naar deze TV gestuurd ("TV opzetten").
+ * koppelcode aanvroeg: de host heeft dit spel naar deze TV gestuurd ("TV koppelen").
  */
 export interface TvPairedMessage {
   gameId: string

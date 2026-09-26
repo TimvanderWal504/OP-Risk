@@ -8,7 +8,7 @@ using RiskGame.Api.Hubs;
 namespace RiskGame.Api.Tests;
 
 /// <summary>
-/// "TV opzetten": de TV vraagt een koppelcode aan (<c>RegisterTv</c>) en de host-telefoon stuurt
+/// "TV koppelen": de TV vraagt een koppelcode aan (<c>RegisterTv</c>) en de host-telefoon stuurt
 /// daarmee een spelcode naar precies die TV (<c>SendGameToTv</c> → <c>TvPaired</c>).
 /// </summary>
 [Collection(PostgresCollection.Name)]
