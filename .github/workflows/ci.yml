@@ -27,3 +27,51 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
       - run: pnpm run build
+  # Zet de backend live op Azure App Service (docs/azure-hosting-deployment.md §3a), alleen na een
+  # groene backend-job en alleen bij een push naar main — nooit vanuit een PR. De frontend heeft
+  # geen eigen stap: Vercel deployt main zelf.
+  deploy-backend:
+    needs: backend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net
+    # Twee snelle pushes na elkaar mogen niet tegelijk deployen; de tweede wacht op de eerste.
+    concurrency:
+      group: deploy-backend
+      cancel-in-progress: false
+    permissions:
+      id-token: write # OIDC-login bij Azure, geen opgeslagen wachtwoord
+      contents: read
+    env:
+      # Repository-variabele (Settings → Secrets and variables → Actions → Variables), geen secret:
+      # de app-naam staat toch al in de publieke *.azurewebsites.net-URL.
+      AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+    steps:
+      - name: Controleer de deploy-configuratie
+        run: |
+          if [ -z "$AZURE_WEBAPP_NAME" ]; then
+            echo "::error::Repository-variabele AZURE_WEBAPP_NAME ontbreekt — zie docs/azure-hosting-deployment.md §3a."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - run: dotnet publish src/RiskGame.Api -c Release -o ./publish
+      # Zelf zippen: Linux-`zip` schrijft forward slashes, wat Kudu's rsync nodig heeft (runbook §3).
+      - run: cd publish && zip -r ../publish.zip .
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # clean: zelfde reden als `--clean true` in het runbook — resten van een eerdere deploy weg.
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: publish.zip
+          type: zip
+          clean: true
+      # De app herstart na de deploy; pas groen als /health weer 200 geeft.
+      - run: curl --fail --silent --show-error --retry 12 --retry-delay 10 --retry-all-errors "https://${AZURE_WEBAPP_NAME}.azurewebsites.net/health"

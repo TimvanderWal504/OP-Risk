@@ -137,8 +137,73 @@ eerdere mislukte deploy met kapotte backslash-paden laat resten achter in
 `/home/site/wwwroot` die een volgende, wél correcte deploy alsnog laten
 struikelen als je niet expliciet opschoont.
 
-Een geautomatiseerde deploy-stap in `.github/workflows/ci.yml` bestaat nog niet
-— dat is bewust buiten scope van deze taak gehouden, geen vergeten stap.
+Na de eenmalige inrichting hieronder (§3a) is handmatig deployen alleen nog nodig
+als noodgreep of rollback (§7).
+
+---
+
+## 3a. Automatische deploy vanuit GitHub Actions
+
+De job `deploy-backend` in `.github/workflows/ci.yml` zet de backend live bij elke
+**push naar `main`**, maar alleen als de job `backend` (build + alle tests) groen is.
+Pull requests en andere branches deployen nooit. Hij doet hetzelfde als de handmatige
+stappen in §3 (`dotnet publish`, zip met forward slashes, zip-deploy met clean) en
+wacht daarna tot `/health` weer 200 geeft. De frontend heeft geen eigen stap: Vercel
+deployt `main` zelf.
+
+Inloggen bij Azure gaat via **OIDC** (federated credential): GitHub krijgt per run een
+kortlevend token, er staat geen wachtwoord of publish profile als secret in GitHub. Dat
+werkt ook als "Basic auth publishing credentials" op de App Service uit staat (de
+standaard voor nieuwe App Services).
+
+Eenmalig inrichten (Azure CLI, ingelogd met `az login`; `<app-naam>` = de App Service
+uit §3):
+
+```
+az ad app create --display-name riskop-github-deploy --query appId -o tsv
+# → noteer de appId als <client-id>
+az ad sp create --id <client-id>
+```
+
+Maak `credential.json` met precies deze inhoud (het `subject` bindt het token aan de
+GitHub-environment `production` van deze repo — de job draait in die environment):
+
+```json
+{
+  "name": "github-production",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:TimvanderWal504/OP-Risk:environment:production",
+  "audiences": ["api://AzureADTokenExchange"]
+}
+```
+
+```
+az ad app federated-credential create --id <client-id> --parameters credential.json
+az role assignment create --assignee <client-id> --role "Website Contributor" --scope $(az webapp show --name <app-naam> --resource-group riskop-rg --query id -o tsv)
+az account show --query "{tenant:tenantId, subscription:id}" -o json
+```
+
+In PowerShell werkt de `$( … )`-substitutie ook; anders eerst de `az webapp show`-uitvoer
+in een variabele zetten. De rol staat bewust op de ene App Service, niet op de resource
+group of subscription.
+
+Daarna in GitHub (**Settings → Secrets and variables → Actions**):
+
+| Soort | Naam | Waarde |
+| --- | --- | --- |
+| Secret | `AZURE_CLIENT_ID` | `<client-id>` |
+| Secret | `AZURE_TENANT_ID` | `tenant` uit de laatste opdracht |
+| Secret | `AZURE_SUBSCRIPTION_ID` | `subscription` uit de laatste opdracht |
+| Variable | `AZURE_WEBAPP_NAME` | `<app-naam>` (zonder `.azurewebsites.net`) |
+
+De environment `production` maakt GitHub bij de eerste run zelf aan. Wil je dat een
+deploy eerst goedgekeurd moet worden: **Settings → Environments → production →
+Required reviewers**.
+
+Controle: kijk na de eerstvolgende push naar `main` in het tabblad
+**Actions** of `deploy-backend` groen wordt; de environment-link in die run opent de API.
+Faalt de login met `AADSTS70021` (geen passende federated credential), dan klopt het
+`subject` niet — let op de exacte hoofdletters van de repo-naam.
 
 ---
 
