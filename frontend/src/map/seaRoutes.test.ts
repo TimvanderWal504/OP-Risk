@@ -139,7 +139,7 @@ describe('zeeroutes op de echte kaartdata (standaard-43)', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(body) }))
   }
 
-  it('levert 26 lijnstukken (22 routes + 2×2 stompjes), allemaal eindig en binnen de kaart', async () => {
+  it('levert 27 lijnstukken (23 routes + 2×2 stompjes), allemaal eindig en binnen de kaart', async () => {
     stubFetchWith(readMapFile('territories.geo.json'))
     const geometry = await loadTerritoryGeometry()
     stubFetchWith(readMapFile('adjacency_validated.json'))
@@ -147,8 +147,8 @@ describe('zeeroutes op de echte kaartdata (standaard-43)', () => {
 
     const segments = toSeaRouteSegments(routes, geometry)
 
-    expect(routes).toHaveLength(24)
-    expect(segments).toHaveLength(26)
+    expect(routes).toHaveLength(25)
+    expect(segments).toHaveLength(27)
     expect(segments.filter((segment) => segment.toIsEdge)).toHaveLength(4)
     for (const { from, to } of segments) {
       for (const { x, y } of [from, to]) {

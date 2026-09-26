@@ -63,7 +63,7 @@ public class AdjacencyGraphTests
 
     [Theory]
     [InlineData("alaska", "kamchatka")]
-    [InlineData("new-zealand", "argentina")]
+    [InlineData("new-zealand", "peru")]
     [InlineData("new-zealand", "eastern-australia")]
     public void BekendeZeeroutes_BestaanEnZijnVanTypeSea(string from, string to)
     {

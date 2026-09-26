@@ -87,7 +87,7 @@ De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules
 | `data/colors.json` | De 7 spelerskleuren, gedeeld over alle kaartvarianten |
 | `data/maps/standaard-43/territories.json` | 43 gebieden → atomaire regio's (groeperingsconfiguratie) |
 | `data/maps/standaard-43/territories.geo.json` | Diezelfde 43 gebieden met echte polygon-geometrie |
-| `data/maps/standaard-43/adjacency_validated.json` | Gevalideerde land/zee-grenzen (84), consistent met de geometrie |
+| `data/maps/standaard-43/adjacency_validated.json` | Gevalideerde land/zee-grenzen (86), consistent met de geometrie |
 | `data/maps/standaard-43/continents.json` | Continentbonussen (klassiek, AU 3) |
 | `data/maps/standaard-43/cards.json` | Territoriumkaarten-deckregels, twee thema's |
 | `data/maps/standaard-43/roles.json` | 15 ingevulde rollen (FO §8) |

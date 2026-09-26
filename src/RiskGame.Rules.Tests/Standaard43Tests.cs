@@ -26,13 +26,13 @@ public class Standaard43Tests
     }
 
     [Fact]
-    public void Kaart_Bevat_VierentachtigGrenzen_ZestigLandEnVierentwintigZee()
+    public void Kaart_Bevat_ZesentachtigGrenzen_EenenzestigLandEnVijfentwintigZee()
     {
         var borders = Standaard43Data.Load().Borders;
 
-        Assert.Equal(84, borders.Count);
-        Assert.Equal(60, borders.Count(border => border.Type == BorderType.Land));
-        Assert.Equal(24, borders.Count(border => border.Type == BorderType.Sea));
+        Assert.Equal(86, borders.Count);
+        Assert.Equal(61, borders.Count(border => border.Type == BorderType.Land));
+        Assert.Equal(25, borders.Count(border => border.Type == BorderType.Sea));
     }
 
     [Fact]

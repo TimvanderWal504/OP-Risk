@@ -78,7 +78,7 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 |---|---|
 | `territories.json` | 43 gebieden: id, naam, continent, centroid |
 | `territories.geo.json` | Polygon-geometrie per gebied (frontend-render + klik-detectie) — niet door de engine geladen |
-| `adjacency_validated.json` | 84 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
+| `adjacency_validated.json` | 86 grenzen (`from`, `to`, `type: land\|sea`) — de aangrenzingsgraaf |
 | `continents.json` | Continentbonussen |
 | `colors.json` (gedeeld, `data/colors.json`) | 7 spelerskleuren: `hex` (fill) + `onHex` (contrastkleur voor tekst/symbool erop) + kleurenblind-symbolen |
 | `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
@@ -300,7 +300,7 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 1. ~~**Marten-projectie: inline vs. async.**~~ **Besloten: inline** (`ProjectionLifecycle.Inline` in `GameStoreFactory`). Past bij één-huiskamer-schaal; async is hier niet nodig gebleken.
 2. ~~**Delta- vs. full-state-push.**~~ **Besloten: full-state.** `IGameClient.GameStateUpdated(GameStateDto state)` pusht de volledige projectie na elk commando; `DiceRolled`/`CombatNarrated` zijn losse, gerichte pushes voor animatie-timing (TV-narratie). Nog geen delta's — voor 43 gebieden + ≤7 spelers blijkt dit in de praktijk klein genoeg.
 3. ~~**Rollen/missies/events-content**~~ **Ingevuld**, zie FO §13: `roles.json` (15 rollen), `missions.json` (dekkend voor 7 kleuren), `events.json` (incl. `TerritoryLocked`/`ArmyAttrition`).
-4. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
+4. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2; sinds de herziening van 2026-09-26 86), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
 
 ### 10.2 Nog open
 

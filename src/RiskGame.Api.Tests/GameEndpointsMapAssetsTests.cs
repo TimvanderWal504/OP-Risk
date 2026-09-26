@@ -49,7 +49,7 @@ public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsy
 
     /// <summary>
     /// De grenzen voeden de gestippelde zeeverbindingen op het TV-bord (FO §4.3): verbatim het
-    /// bevroren bestand, 84 grenzen waarvan 24 zee (FO §4.2).
+    /// bevroren bestand, 86 grenzen waarvan 25 zee.
     /// </summary>
     [Fact]
     public async Task AdjacencyJson_IsOpvraagbaar_MetCacheControlEnAlleGrenzen()
@@ -62,8 +62,8 @@ public sealed class GameEndpointsMapAssetsTests(PostgresFixture postgres) : IAsy
         var body = await response.Content.ReadFromJsonAsync<AdjacencyEnvelope>();
 
         Assert.NotNull(body);
-        Assert.Equal(84, body!.Borders.Count);
-        Assert.Equal(24, body.Borders.Count(border => border.Type == "sea"));
+        Assert.Equal(86, body!.Borders.Count);
+        Assert.Equal(25, body.Borders.Count(border => border.Type == "sea"));
     }
 
     /// <summary>
