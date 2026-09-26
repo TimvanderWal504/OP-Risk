@@ -73,13 +73,29 @@ export function ClaimTerritoryStep({
           statLabel={t('claim.left')}
           paddingY={11}
         />
-        <div className="mt-[11px] mb-2 font-body text-sm text-fg-muted">{t('claim.sub')}</div>
-        <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
+        {/* Subtekst en continent-kickers op glas, zodat de on-glass tekstbehandeling ze leesbaar
+            houdt op de stage-illustratie — zelfde chipvorm als de "niet jouw beurt"-substaat hieronder. */}
+        <GlassPanel
+          elevation="base"
+          context="phone"
+          padding="none"
+          className="mt-[11px] mb-2 rounded-2xl px-4 py-1.5 font-body text-sm text-fg-muted"
+        >
+          {t('claim.sub')}
+        </GlassPanel>
+        <div className="mb-[11px] flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto">
           {groups.map((group) => (
-            <div key={group.continent}>
-              <div className="mx-0.5 mb-[7px] font-body text-xs font-extrabold tracking-[.1em] text-fg-muted uppercase">
-                {tDynamic(group.continent, 'continents')}
-              </div>
+            <div key={group.continent} className="flex flex-col">
+              <GlassPanel
+                elevation="base"
+                context="phone"
+                padding="none"
+                className="mb-[7px] inline-block self-start rounded-2xl px-3.5 py-1.5"
+              >
+                <span className="font-body text-xs font-extrabold tracking-[.1em] text-fg-muted uppercase">
+                  {tDynamic(group.continent, 'continents')}
+                </span>
+              </GlassPanel>
               <div className="flex flex-col gap-2">
                 {group.territoryIds.map((territoryId) => {
                   const selected = pendingTerritoryId === territoryId
