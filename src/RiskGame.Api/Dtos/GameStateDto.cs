@@ -177,11 +177,12 @@ public sealed record SetupStateDto(
 public sealed record TerritoryCatalogDto(string Id, string Continent, IReadOnlyList<string> NeighborTerritoryIds);
 
 /// <summary>
-/// Wie er nu nog mag gooien voor de spelersvolgorde (FO §2.1). Alleen gevuld door
-/// <c>StartGame</c> (bij binnenkomst in de fase: iedereen) en <c>RollForOrder</c> (de
-/// tie-break-voortgang uit <see cref="RiskGame.Rules.TurnFlow.OrderRollCalculator"/> — al
-/// berekend, dus geen event-stream-toegang nodig in de mapper). <c>WatchGame</c> levert dit
-/// veld niet: reconnect midden in een order-roll is bouwstap 6.
+/// Wie er nu nog mag gooien voor de spelersvolgorde (FO §2.1). Gevuld door <c>StartGame</c>
+/// (bij binnenkomst in de fase: iedereen), <c>RollForOrder</c> (de tie-break-voortgang uit
+/// <see cref="RiskGame.Rules.TurnFlow.OrderRollCalculator"/>) en elk ander pad dat tijdens de
+/// order-roll een state levert (<c>SetTvDisplay</c>, <c>WatchGame</c>, <c>RejoinGame</c>) via
+/// <see cref="RiskGame.Api.Services.OrderRollProgressReader"/>. De mapper zelf kan het niet:
+/// de worpen staan alleen in de event-stream.
 /// </summary>
 public sealed record OrderRollStateDto(IReadOnlyList<string> PlayersStillToRoll);
 

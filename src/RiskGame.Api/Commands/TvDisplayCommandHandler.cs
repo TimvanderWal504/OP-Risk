@@ -2,6 +2,7 @@ using JasperFx;
 using JasperFx.Events;
 using Marten;
 using RiskGame.Api.Dtos;
+using RiskGame.Api.Services;
 using RiskGame.Persistence.Events;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
@@ -66,8 +67,14 @@ public sealed class TvDisplayCommandHandler(IDocumentStore store, TimeProvider t
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
+        var dto = GameStateDtoMapper.ToDto(updated!, timeProvider) with
+        {
+            // Deze push kan midden in de order-roll vallen: zonder de voortgang verdwijnt de
+            // Gooien-knop op elke telefoon.
+            OrderRollState = await OrderRollProgressReader.ReadStateAsync(session, updated!),
+        };
 
-        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
+        return Result<GameStateDto>.Success(dto);
     }
 
     private static bool IsConcurrencyConflict(Exception ex) =>

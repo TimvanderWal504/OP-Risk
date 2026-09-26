@@ -133,7 +133,9 @@ public static class GameStateDtoMapper
             colors, roles, ToDto(state.Settings), state.Winners,
             ToDto(state.TvDisplay), ToDto(TvDisplaySettings.Default),
             continents, events, state.Deck.NextTradeValue, recentActions,
-            state.Phase == GamePhase.OrderRoll ? new OrderRollStateDto(state.TurnOrder) : null,
+            // Niet af te leiden uit GameState (TurnOrder is tijdens de order-roll nog leeg):
+            // de aanroeper vult 'm via OrderRollProgressReader.
+            OrderRollState: null,
             setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer);
     }
 

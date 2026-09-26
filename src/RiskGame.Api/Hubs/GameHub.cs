@@ -208,7 +208,11 @@ public sealed class GameHub(
                 new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
         }
 
-        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with
+        {
+            StateVersion = await FetchStateVersionAsync(session, gameId),
+            OrderRollState = await OrderRollProgressReader.ReadStateAsync(session, state),
+        };
 
         return GameStateDtoMapper.RedactForTv(dto);
     }
@@ -277,7 +281,11 @@ public sealed class GameHub(
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
-        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with
+        {
+            StateVersion = await FetchStateVersionAsync(session, gameId),
+            OrderRollState = await OrderRollProgressReader.ReadStateAsync(session, state),
+        };
 
         var stored = await session.LoadAsync<PlayerSessionToken>(playerId);
 

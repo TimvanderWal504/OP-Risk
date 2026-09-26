@@ -1,5 +1,6 @@
 using Marten;
 using RiskGame.Api.Dtos;
+using RiskGame.Api.Services;
 using RiskGame.Persistence.Events;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Results;
@@ -15,8 +16,8 @@ public sealed record OrderRollResult(int Die1, int Die2, GameStateDto State);
 /// <summary>
 /// Voert de TO §4-pijplijn uit voor <c>RollForOrder</c> (FO §2.1). Omdat
 /// <c>OrderRolled</c>-events bewust geen vouwregel hebben (zie de doc-comment op dat
-/// event), leest deze handler de ruwe stream terug om te bepalen wie er nu nog mag/moet
-/// gooien — <see cref="OrderRollCalculator"/> repliceert de rondes daaruit.
+/// event), leest deze handler de ruwe stream terug (<see cref="OrderRollProgressReader"/>) om
+/// te bepalen wie er nu nog mag/moet gooien — <see cref="OrderRollCalculator"/> repliceert de rondes daaruit.
 /// </summary>
 public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
 {
@@ -40,12 +41,7 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
         }
 
         var allPlayerIds = state.Players.Select(player => player.Id).ToArray();
-        var rawEvents = await session.Events.FetchStreamAsync(gameId);
-        var throwsSoFar = rawEvents
-            .Select(rawEvent => rawEvent.Data)
-            .OfType<OrderRolled>()
-            .Select(orderRolled => new OrderRollThrow(orderRolled.PlayerId, orderRolled.Die1, orderRolled.Die2))
-            .ToArray();
+        var throwsSoFar = await OrderRollProgressReader.ReadThrowsAsync(session, gameId);
 
         var progress = OrderRollCalculator.Evaluate(allPlayerIds, throwsSoFar);
         var canRoll = OrderRollGuards.PlayerMayRoll(state, playerId, progress);

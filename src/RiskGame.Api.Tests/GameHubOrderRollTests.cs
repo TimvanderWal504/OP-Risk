@@ -138,6 +138,49 @@ public sealed class GameHubOrderRollTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SetTvDisplay_TijdensOrderRoll_BehoudtWieNogMoetGooien()
+    {
+        // Regressie: de TV-weergave aanpassen midden in de order-roll pushte een lege
+        // "nog te gooien"-lijst, waardoor niemand meer kon gooien. Zelfde worpen als
+        // RollForOrder_MetUniekeWinnaarInDeEersteRonde_... hierboven.
+        var random = new SequenceRandomSource([0, 1, .. DeckShuffleFiller.Values, 6, 4, 3, 2]);
+        await using var factory = CreateFactory(random);
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
+
+        var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
+        var bobId = await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
+        await connection.InvokeAsync<GameStateDto>("StartGame", gameId, aliceId);
+        await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, aliceId);
+
+        var state = await connection.InvokeAsync<GameStateDto>(
+            "SetTvDisplay", gameId, aliceId, 60, 50, 50, TvLanguageDto.Nl, 50);
+
+        Assert.Equal([bobId], state.OrderRollState?.PlayersStillToRoll);
+    }
+
+    [Fact]
+    public async Task WatchGame_TijdensOrderRoll_LevertWieNogMoetGooien()
+    {
+        var random = new SequenceRandomSource([0, 1, .. DeckShuffleFiller.Values, 6, 4, 3, 2]);
+        await using var factory = CreateFactory(random);
+        using var client = factory.CreateClient();
+        var gameId = await CreateGameAsync(client);
+        await using var connection = await ConnectAsync(factory, client);
+        await using var tv = await ConnectAsync(factory, client);
+
+        var aliceId = await JoinAndChooseColorAsync(connection, gameId, "Alice", "red");
+        var bobId = await JoinAndChooseColorAsync(connection, gameId, "Bob", "blue");
+        await connection.InvokeAsync<GameStateDto>("StartGame", gameId, aliceId);
+        await connection.InvokeAsync<OrderRollResponse>("RollForOrder", gameId, aliceId);
+
+        var state = await tv.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.Equal([bobId], state.OrderRollState?.PlayersStillToRoll);
+    }
+
+    [Fact]
     public async Task RollForOrder_BroadcastDiceRolledNaarToeschouwerDieNietZelfGooit()
     {
         // Zelfde volgorde als RollForOrder_MetUniekeWinnaarInDeEersteRonde_... hierboven.
