@@ -3,6 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { GamePhaseDto, RecentActionKindDto } from '../../../types/GameState'
 import { TvInitialPlacementScreen } from './TvInitialPlacementScreen'
 import { fixtureState } from './tvScreenFixture'
+import { TvShell } from '../../../components/ui/TvShell'
+import { tvTextScaleMax } from '../../../styles/design-tokens'
+import { textScaleVars } from '../../../styles/tvDisplay'
+
+const textVar = (element: HTMLElement | null, step: string) => element?.style.getPropertyValue(`--text-${step}`)
+const expectedVar = (factor: number, step: string) => (textScaleVars(factor) as Record<string, string>)[`--text-${step}`]
 
 const geoFeatureCollection = {
   type: 'FeatureCollection',
@@ -96,5 +102,20 @@ describe('TvInitialPlacementScreen', () => {
 
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
+  })
+
+  it('begrenst de tekstschaal in de kop: de kaart houdt zijn formaat (besluit 2026-09-26)', () => {
+    const state = {
+      ...baseState,
+      setupState: { activePlayerId: 'alice', remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
+    }
+    render(
+      <TvShell display={{ ...state.tvDisplay, textScale: 100 }}>
+        <TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />
+      </TvShell>,
+    )
+
+    const header = screen.getByText(/Aan de beurt/).closest<HTMLElement>('.glass-panel')
+    expect(textVar(header, 'size8')).toBe(expectedVar(tvTextScaleMax.initialPlacementHeader, 'size8'))
   })
 })

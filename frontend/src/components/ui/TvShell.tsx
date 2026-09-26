@@ -1,9 +1,8 @@
-import { useMemo, type CSSProperties, type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { TvStageBackground } from './TvStageBackground'
 import { TvDisplayScaleContext, type TvDisplayScale } from '../../hooks/TvDisplayScaleContext'
 import type { StageScrimLevel } from '../../styles/glass-tokens'
-import { fontSize } from '../../styles/design-tokens'
-import { sliderToMultiplier } from '../../styles/tvDisplay'
+import { sliderToMultiplier, textScaleVars } from '../../styles/tvDisplay'
 import type { TvDisplaySettingsDto } from '../../types/TvDisplay'
 
 export interface TvShellProps {
@@ -15,23 +14,6 @@ export interface TvShellProps {
    * foutmelding) betekent: het design ongewijzigd.
    */
   display?: TvDisplaySettingsDto
-}
-
-/** `rem`-basis van de typeschaal: `--text-*` in `twc-theme.css` = `fontSize`-px / 16. */
-const REM_PX = 16
-
-/**
- * Overschrijft elke `--text-<stap>` uit de typeschaal (`fontSize` in `design-tokens.ts`, dezelfde
- * namen als in `twc-theme.css`) binnen de TV-shell, geschaald met de tekstschaal-factor. Alleen
- * hier, niet op `:root`: een `:root`-variabele die naar een andere variabele verwijst, wordt al op
- * `:root` opgelost en zou een factor op de shell nooit zien. Letterlijke `rem`-waarden, geen
- * `calc()` — zie `scaleGlassSurfaceAlpha` voor dezelfde overweging. De telefoon rendert nooit een
- * `TvShell`, dus blijft ongemoeid.
- */
-function textScaleVars(factor: number): CSSProperties {
-  return Object.fromEntries(
-    Object.entries(fontSize).map(([step, px]) => [`--text-${step}`, `${(px / REM_PX) * factor}rem`]),
-  ) as CSSProperties
 }
 
 /**

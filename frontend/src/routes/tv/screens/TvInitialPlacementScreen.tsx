@@ -6,7 +6,8 @@ import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
-import { boardTok } from '../../../styles/design-tokens'
+import { boardTok, tvTextScaleMax } from '../../../styles/design-tokens'
+import { cappedTextScaleVars } from '../../../styles/tvDisplay'
 import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { InstructionKicker } from '../../../components/ui/InstructionKicker'
@@ -37,7 +38,8 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
   const seaRoutes = useSeaRoutes(geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
-  const marker = scaledMarker(useTvDisplayScale().text)
+  const textScale = useTvDisplayScale().text
+  const marker = scaledMarker(textScale)
 
   // Zelfde "vergelijk en pas aan tijdens render"-patroon als TvMainBoardScreen, voor de
   // telrichting van de A1-teldemo-animatie — een lokaal presentatiedetail over een getal dat
@@ -63,7 +65,13 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <GlassPanel elevation="base" context="tv" padding="none" className="col-span-full flex items-center justify-between px-3.5 py-3">
+      <GlassPanel
+        elevation="base"
+        context="tv"
+        padding="none"
+        className="col-span-full flex items-center justify-between px-3.5 py-3"
+        style={cappedTextScaleVars(textScale, tvTextScaleMax.initialPlacementHeader)}
+      >
         {activePlayer && activeColor ? (
           <div className="flex items-center gap-4.5">
             <div

@@ -277,3 +277,23 @@ export const atlasRoughTok = {
   seed: 7,
   scale: 16,
 } as const;
+
+/**
+ * Maximale tekstfactor per vak met een vaste maat rond de kaart (TV-weergave, besluit gebruiker
+ * 2026-09-26): de kaart houdt zijn formaat, dus de tekst in de kop en de zijkolom groeit met de
+ * tekstschaal mee tot het vak vol is en niet verder. Gemeten op 1920×1080 met 6 spelers en lange
+ * namen: de hoogste factor waarbij niets buiten het vak valt. 1 = dit vak groeit niet mee (de kop
+ * zit op het design al vol). De ticker past tot het maximum van de slider (2×) en heeft geen grens.
+ * Ook de wachtschermen (lobby, koppelscherm) hebben vakken van vaste breedte.
+ */
+export const tvTextScaleMax = {
+  mainBoardHeader: 1,
+  mainBoardSidebar: 1.3,
+  claimingHeader: 1,
+  claimingSidebar: 1.3,
+  initialPlacementHeader: 1.4,
+  /** Lobby en koppelscherm: de OPERATIE ATLAS-titel links, tot hij de rail raakt. */
+  waitingTitle: 1.7,
+  /** Lobby en koppelscherm: de rechter glas-rail (QR, spelers, instellingen) van vaste breedte. */
+  waitingRail: 1.1,
+} as const;

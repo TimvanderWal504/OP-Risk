@@ -7,6 +7,11 @@ import { marker } from '../../../map/boardVisualTokens'
 import { TvShell } from '../../../components/ui/TvShell'
 import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { fixtureState } from './tvScreenFixture'
+import { tvTextScaleMax } from '../../../styles/design-tokens'
+import { textScaleVars } from '../../../styles/tvDisplay'
+
+const textVar = (element: HTMLElement | null, step: string) => element?.style.getPropertyValue(`--text-${step}`)
+const expectedVar = (factor: number, step: string) => (textScaleVars(factor) as Record<string, string>)[`--text-${step}`]
 
 const geoFeatureCollection = {
   type: 'FeatureCollection',
@@ -202,5 +207,24 @@ describe('TvMainBoardScreen', () => {
 
     const bobRow = screen.getByText('Bob').closest('div[style*="opacity"]')
     expect(bobRow).toHaveStyle({ opacity: '0.5' })
+  })
+
+  it('begrenst de tekstschaal in de kop en de zijkolom: de kaart houdt zijn formaat (besluit 2026-09-26)', () => {
+    render(
+      <TvShell display={{ ...stateInProgress.tvDisplay, textScale: 100 }}>
+        <TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />
+      </TvShell>,
+    )
+
+    const header = screen.getByText(/Aan de beurt/).closest<HTMLElement>('.glass-panel')
+    const sidebar = screen.getByText('Spelers').closest<HTMLElement>('.glass-panel')
+    expect(textVar(header, 'size11')).toBe(expectedVar(tvTextScaleMax.mainBoardHeader, 'size11'))
+    expect(textVar(sidebar, 'size8')).toBe(expectedVar(tvTextScaleMax.mainBoardSidebar, 'size8'))
+  })
+
+  it('kapt een lange naam in de zijkolom af i.p.v. hem over het legeraantal te laten lopen', () => {
+    render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Bob', { selector: 'span.truncate' })).toBeInTheDocument()
   })
 })

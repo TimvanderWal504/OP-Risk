@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
+import { useTvDisplayScale } from '../hooks/useTvDisplayScale'
+import { tvTextScaleMax } from '../styles/design-tokens'
 import { lobbyPanelScrim } from '../styles/glass-tokens'
+import { cappedTextScaleVars } from '../styles/tvDisplay'
 import { TvTitleColumn } from './TvTitleColumn'
 
 export interface TvWaitingLayoutProps {
@@ -15,6 +18,8 @@ export interface TvWaitingLayoutProps {
  * "TV koppelen" (`TvPairPage`) — de enige twee TV-schermen met deze split.
  */
 export function TvWaitingLayout({ badge, status, children }: TvWaitingLayoutProps) {
+  const textScale = useTvDisplayScale().text
+
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       <div className="absolute inset-0" style={{ background: lobbyPanelScrim }} />
@@ -24,7 +29,12 @@ export function TvWaitingLayout({ badge, status, children }: TvWaitingLayoutProp
         <TvTitleColumn badge={badge} status={status} />
 
         {/* Rechts: compacte glas-rail, altijd zichtbaar */}
-        <div className="flex w-[620px] flex-none flex-col gap-5">{children}</div>
+        <div
+          className="flex w-[620px] flex-none flex-col gap-5"
+          style={cappedTextScaleVars(textScale, tvTextScaleMax.waitingRail)}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

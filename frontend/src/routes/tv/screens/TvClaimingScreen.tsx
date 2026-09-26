@@ -4,7 +4,8 @@ import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledClaimMarker, territoryGlow } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
-import { boardTok, symbolGlyph } from '../../../styles/design-tokens'
+import { boardTok, symbolGlyph, tvTextScaleMax } from '../../../styles/design-tokens'
+import { cappedTextScaleVars } from '../../../styles/tvDisplay'
 import { tvAnimations } from '../../../styles/motion'
 import { Badge } from '../../../components/ui/Badge'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
@@ -47,7 +48,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
   const seaRoutes = useSeaRoutes(geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Claim-markers (schijf, symbool, flare) schalen mee met de TV-tekstschaal (plan-testronde-tv punt 2).
-  const claimMarker = scaledClaimMarker(useTvDisplayScale().text)
+  const textScale = useTvDisplayScale().text
+  const claimMarker = scaledClaimMarker(textScale)
 
   const activePlayerId = state.setupState?.activePlayerId
   const activePlayer = state.players.find((p) => p.id === activePlayerId)
@@ -62,7 +64,13 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <GlassPanel elevation="base" context="tv" padding="none" className="col-span-full flex items-center justify-between px-3.5 py-3">
+      <GlassPanel
+        elevation="base"
+        context="tv"
+        padding="none"
+        className="col-span-full flex items-center justify-between px-3.5 py-3"
+        style={cappedTextScaleVars(textScale, tvTextScaleMax.claimingHeader)}
+      >
         <div className="flex items-center gap-4.5">
           {activeColor && (
             <div
@@ -169,7 +177,12 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
         }
       />
 
-      <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
+      <GlassPanel
+        elevation="base"
+        context="tv"
+        className="col-start-2 row-start-2 flex min-h-0 flex-col"
+        style={cappedTextScaleVars(textScale, tvTextScaleMax.claimingSidebar)}
+      >
         <div className="mb-3 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('claimPanelTitle')}
         </div>
@@ -199,11 +212,11 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 font-display text-size5 font-extrabold leading-none">
-                    {player.name}
-                    {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge) — zelfde behandeling,
-                        inclusief de "geen span om de naam"-reden, als de tegenhanger op
+                  <div className="flex min-w-0 items-center gap-2 font-display text-size5 font-extrabold leading-none">
+                    {/* Afgekapt met "…": een naam heeft geen maximale lengte, en de zijkolom heeft
+                        een vaste breedte naast het getal. Rol-badge: zie de tegenhanger op
                         TvMainBoardScreen. */}
+                    <span className="truncate">{player.name}</span>
                     {player.roleId && (
                       <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
                         {tDynamic(`${player.roleId}.name`, 'roles')}

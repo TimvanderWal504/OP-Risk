@@ -5,6 +5,9 @@ import { TurnPhaseDto as TurnPhase } from '../../types/GameState'
 import { ColorSymbol } from '../ui/ColorSymbol'
 import { GlassPanel } from '../ui/GlassPanel'
 import { useCountdown } from '../../hooks/useCountdown'
+import { useTvDisplayScale } from '../../hooks/useTvDisplayScale'
+import { tvTextScaleMax } from '../../styles/design-tokens'
+import { cappedTextScaleVars } from '../../styles/tvDisplay'
 import { tvAnimations } from '../../styles/motion'
 
 export interface TurnStatusHeaderProps {
@@ -43,6 +46,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
   const remainingMs = useCountdown(timer)
   const isPaused = timer?.isPaused ?? false
   const isLow = !isPaused && remainingMs < TIMER_LOW_THRESHOLD_MS
+  const textScale = useTvDisplayScale().text
 
   return (
     <GlassPanel
@@ -50,6 +54,7 @@ export function TurnStatusHeader({ activePlayer, activeColor, turnPhase, timer }
       context="tv"
       padding="none"
       className="col-span-full flex items-center justify-between px-3.5 py-3"
+      style={cappedTextScaleVars(textScale, tvTextScaleMax.mainBoardHeader)}
     >
       <div key={activePlayer.id} className="flex items-center gap-4.5" style={{ animation: tvAnimations.turnChipSwap }}>
         {activeColor && (

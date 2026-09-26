@@ -4,6 +4,12 @@ import { GamePhaseDto, RecentActionKindDto } from '../../../types/GameState'
 import { claimMarker } from '../../../map/boardVisualTokens'
 import { TvClaimingScreen } from './TvClaimingScreen'
 import { fixtureState } from './tvScreenFixture'
+import { TvShell } from '../../../components/ui/TvShell'
+import { tvTextScaleMax } from '../../../styles/design-tokens'
+import { textScaleVars } from '../../../styles/tvDisplay'
+
+const textVar = (element: HTMLElement | null, step: string) => element?.style.getPropertyValue(`--text-${step}`)
+const expectedVar = (factor: number, step: string) => (textScaleVars(factor) as Record<string, string>)[`--text-${step}`]
 
 const geoFeatureCollection = {
   type: 'FeatureCollection',
@@ -65,7 +71,7 @@ describe('TvClaimingScreen', () => {
     // én los in het rechterpaneel — beide horen er te zijn (uit het oorspronkelijke design),
     // niet dubbel geteld als bug.
     expect(screen.getByText(/Aan de beurt: Bob/)).toBeInTheDocument()
-    expect(screen.getByText('Bob', { selector: 'div.font-display.text-size5.font-extrabold' })).toBeInTheDocument()
+    expect(screen.getByText('Bob', { selector: 'span.truncate' })).toBeInTheDocument()
   })
 
   it('toont de rolnaam als badge naast de naam zodra de speler een rol heeft (plan-rollen B3/C4)', () => {
@@ -104,5 +110,18 @@ describe('TvClaimingScreen', () => {
     // Klikken op een gebiedsvorm/marker mag niets veranderen — er is geen `onClaim`-achtige
     // prop op dit scherm; de telefoon is de enige invoerbron (FO §7.3/§2.3).
     expect(screen.getByText('1 / 2')).toBeInTheDocument()
+  })
+
+  it('begrenst de tekstschaal in de kop en de zijkolom: de kaart houdt zijn formaat (besluit 2026-09-26)', () => {
+    render(
+      <TvShell display={{ ...claimingState.tvDisplay, textScale: 100 }}>
+        <TvClaimingScreen state={claimingState} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />
+      </TvShell>,
+    )
+
+    const header = screen.getByText('1 / 2').closest<HTMLElement>('.glass-panel')
+    const sidebar = screen.getByText('Geclaimd').closest<HTMLElement>('.glass-panel')
+    expect(textVar(header, 'size11')).toBe(expectedVar(tvTextScaleMax.claimingHeader, 'size11'))
+    expect(textVar(sidebar, 'size8')).toBe(expectedVar(tvTextScaleMax.claimingSidebar, 'size8'))
   })
 })

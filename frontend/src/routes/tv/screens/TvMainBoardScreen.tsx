@@ -8,7 +8,8 @@ import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
-import { boardTok } from '../../../styles/design-tokens'
+import { boardTok, tvTextScaleMax } from '../../../styles/design-tokens'
+import { cappedTextScaleVars } from '../../../styles/tvDisplay'
 import { tvAnimations } from '../../../styles/motion'
 import { Badge } from '../../../components/ui/Badge'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
@@ -31,7 +32,8 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
   const seaRoutes = useSeaRoutes(geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
-  const marker = scaledMarker(useTvDisplayScale().text)
+  const textScale = useTvDisplayScale().text
+  const marker = scaledMarker(textScale)
 
   // Legeraantal van de vórige render, om per gebied de telrichting (op/neer) te bepalen voor de
   // A1-teldemo-animatie. Bijgewerkt tijdens render (niet via een ref of effect,
@@ -157,7 +159,12 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
         }}
       />
 
-      <GlassPanel elevation="base" context="tv" className="col-start-2 row-start-2 flex min-h-0 flex-col">
+      <GlassPanel
+        elevation="base"
+        context="tv"
+        className="col-start-2 row-start-2 flex min-h-0 flex-col"
+        style={cappedTextScaleVars(textScale, tvTextScaleMax.mainBoardSidebar)}
+      >
         <div className="mb-3 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
           {t('playersTitle')}
         </div>
@@ -187,14 +194,13 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   <ColorSymbol symbol={color.symbol} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 font-display text-size5 font-extrabold leading-none">
-                    {player.name}
+                  <div className="flex min-w-0 items-center gap-2 font-display text-size5 font-extrabold leading-none">
+                    {/* Afgekapt met "…" (besluit gebruiker 2026-09-26): een naam heeft geen maximale
+                        lengte, en de zijkolom heeft een vaste breedte naast het legeraantal. */}
+                    <span className="truncate">{player.name}</span>
                     {/* Rol-badge (plan-rollen B3/C4, DESIGN.md § Role Badge): alleen zichtbaar
                         met rollen aan (roleId !== null, The Invisible Design Rule) — de toon
-                        draagt actief/inactief, dus geen extra "(in)actief"-woord. Geen `<span>`
-                        om de naam heen: die zou `player.name` uit de directe tekst-kinderen van
-                        deze `div` halen (`getNodeText` leest niet-recursief), en zo bestaande
-                        `getByText(name, { selector: 'div...' })`-tests laten falen. */}
+                        draagt actief/inactief, dus geen extra "(in)actief"-woord. */}
                     {player.roleId && (
                       <Badge tone={player.isRoleActive ? 'pitch-solid' : 'silver-outline'}>
                         {tDynamic(`${player.roleId}.name`, 'roles')}
@@ -209,10 +215,13 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="font-display text-size8 font-black tabular-nums text-fg">
+                  {/* `leading-none` zoals de andere grote cijfers op de TV (kopteller, timer): de rij
+                      is zo laag genoeg om de tekstschaal tot `tvTextScaleMax.mainBoardSidebar` te
+                      laten meegroeien bij 6 spelers (besluit gebruiker 2026-09-26). */}
+                  <div className="font-display text-size8 leading-none font-black tabular-nums text-fg">
                     {armyTotalByPlayer[playerId] ?? 0}
                   </div>
-                  <div className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
+                  <div className="mt-1 font-body text-label leading-none font-extrabold uppercase tracking-[.1em] text-fg-muted">
                     {t('armiesLabel')}
                   </div>
                 </div>

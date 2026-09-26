@@ -9,6 +9,8 @@ import {
   scaleGlassSurfaceAlpha,
 } from '../styles/glass-tokens'
 import { useTvDisplayScale } from '../hooks/useTvDisplayScale'
+import { tvTextScaleMax } from '../styles/design-tokens'
+import { cappedTextScaleVars } from '../styles/tvDisplay'
 
 export interface TvTitleColumnProps {
   /** Glas-kicker boven de titel, bv. "Wachtkamer". */
@@ -26,7 +28,7 @@ export function TvTitleColumn({ badge, status }: TvTitleColumnProps) {
   const scale = useTvDisplayScale()
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex min-w-0 flex-1 flex-col" style={cappedTextScaleVars(scale.text, tvTextScaleMax.waitingTitle)}>
       <span
         className="glass-panel self-start rounded-chip px-[18px] py-[9px] font-body text-h3 font-extrabold tracking-[.16em] text-[#c2cddd] uppercase"
         data-glass-filter="on"
