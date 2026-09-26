@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionTicker } from './ActionTicker'
 import { fixtureState } from '../routes/tv/screens/tvScreenFixture'
 import { RecentActionKindDto, type GameStateDto, type RecentActionDto } from '../types/GameState'
@@ -58,6 +58,36 @@ describe('ActionTicker', () => {
     render(<ActionTicker state={state(action({ kind: RecentActionKindDto.TerritoryClaimed, territoryId: 'peru' }))} />)
 
     expect(screen.getByTestId('action-ticker-band').style.animation).toBe('none')
+  })
+
+  describe('met gemeten breedtes', () => {
+    const lane = 1000
+    let content = 0
+
+    beforeEach(() => {
+      vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(() => lane)
+      vi.spyOn(Element.prototype, 'scrollWidth', 'get').mockImplementation(() => content)
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('staat stil zolang het verloop op de baan past', () => {
+      content = lane
+      render(<ActionTicker state={state(action({ kind: RecentActionKindDto.TerritoryClaimed, territoryId: 'peru' }))} />)
+
+      const band = screen.getByTestId('action-ticker-band')
+      expect(band.style.animation).toBe('none')
+      expect(band.style.getPropertyValue('--ticker-lane')).toBe(`${lane}px`)
+    })
+
+    it('loopt van rechts binnen en daarna door zodra het verloop breder is dan de baan', () => {
+      content = lane + 1
+      render(<ActionTicker state={state(action({ kind: RecentActionKindDto.TerritoryClaimed, territoryId: 'peru' }))} />)
+
+      expect(screen.getByTestId('action-ticker-band').style.animation).toContain('atlasTickerIn')
+    })
   })
 
   it.each<[string, RecentActionDto, string]>([

@@ -19,13 +19,19 @@ export interface ActionTickerProps {
  * Het verloop op de TV (plan-testronde-tv punt 4, DESIGN.md § Action Ticker): de laatste acties
  * als één doorlopende band van rechts naar links, nieuwste vooraan met een "Laatste"-kicker.
  *
- * De band staat er twee keer in; de animatie schuift precies één kopie op (`atlasTicker`, -50%),
- * zodat de lus naadloos sluit. De duur volgt uit de gemeten breedte van één kopie
- * (`tickerSpeedPxPerS`), dus een langer verloop of een grotere tekstschaal loopt niet sneller.
- * Komt er een nieuwe regel bovenaan (ander `sequence`) of wordt de bovenste een verovering, dan
- * begint de band opnieuw, met die regel links in beeld; een regel die alleen bijwerkt (een
- * volgende plaatsing op hetzelfde gebied) laat de band doorlopen. Onder `prefers-reduced-motion`
- * staat de band stil (globale regel in `twc-theme.css`/`index.css`).
+ * De band beweegt alleen als het verloop niet op de baan past (besluit gebruiker 2026-09-26); past
+ * het wel, dan staat het stil met de nieuwste regel links. Anders staat de band er twee keer in en
+ * schuift de animatie precies één kopie op (`atlasTicker`, -50%), zodat de lus naadloos sluit. Elke
+ * kopie neemt minstens de baanbreedte in (`--ticker-lane`); stilstaand houdt dat de tweede kopie
+ * buiten beeld. De items houden hun eigen breedte.
+ * De duur volgt uit de gemeten breedtes (`tickerSpeedPxPerS`), dus een langer verloop of een
+ * grotere tekstschaal loopt niet sneller. Komt er een nieuwe regel bovenaan (ander `sequence`) of
+ * wordt de bovenste een verovering, dan begint de band opnieuw: beweegt hij, dan loopt hij van de
+ * rechterrand binnen
+ * (`atlasTickerIn`), zoals hij links uitloopt, en gaat daarna zonder naad over in de lus. Een regel
+ * die alleen bijwerkt (een volgende plaatsing op hetzelfde gebied) laat de band doorlopen. Onder
+ * `prefers-reduced-motion` staat de band stil met de nieuwste regel links in beeld (globale regel
+ * in `twc-theme.css`/`index.css`).
  *
  * Zonder acties rendert er niets (The Invisible Design Rule); de rij in het bordgrid blijft wel
  * staan, zodat de kaart niet verspringt.
@@ -47,11 +53,23 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
   // lopende animatie laat de band verspringen — de lus blijft naadloos want -50% volgt de echte
   // breedte, alleen de snelheid wijkt dan tot de volgende herstart een fractie af. In een omgeving
   // zonder layout (breedte 0) blijft de band stil staan.
+  // Eerst de eigen breedte van het verloop meten, zonder `--ticker-lane`: past het op de baan, dan
+  // staat de band stil. Daarna gaat de baanbreedte als `--ticker-lane` op de band — minimumbreedte
+  // van de kopieën (stilstaand valt de tweede kopie zo buiten beeld) en startpunt van de inloop.
   useLayoutEffect(() => {
     const band = bandRef.current
-    const width = copyRef.current?.scrollWidth ?? 0
-    if (!band) return
-    band.style.animation = width > 0 ? tvAnimations.ticker(width / tvAnimations.tickerSpeedPxPerS) : 'none'
+    const copy = copyRef.current
+    if (!band || !copy) return
+    band.style.removeProperty('--ticker-lane')
+    const lane = band.parentElement?.clientWidth ?? 0
+    const content = copy.scrollWidth
+    band.style.setProperty('--ticker-lane', `${lane}px`)
+    if (lane === 0 || content <= lane) {
+      band.style.animation = 'none'
+      return
+    }
+    const speed = tvAnimations.tickerSpeedPxPerS
+    band.style.animation = tvAnimations.ticker(lane / speed, copy.scrollWidth / speed)
   }, [restartKey, textScale])
 
   if (!head) return null
@@ -60,7 +78,7 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
     <div
       ref={copy === 'first' ? copyRef : undefined}
       aria-hidden={copy === 'second' ? true : undefined}
-      className="flex flex-none gap-3 pr-3"
+      className="flex min-w-[var(--ticker-lane)] flex-none gap-3 pr-3"
     >
       {actions.map((action, index) => {
         const actor = action.playerId ? state.players.find((player) => player.id === action.playerId) : undefined
