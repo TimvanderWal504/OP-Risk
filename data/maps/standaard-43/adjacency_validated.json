@@ -191,7 +191,12 @@
       "type": "land"
     },
     {
-      "from": "mongolia",
+      "from": "irkutsk",
+      "to": "japan",
+      "type": "sea"
+    },
+    {
+      "from": "china",
       "to": "japan",
       "type": "sea"
     },
@@ -407,6 +412,11 @@
     },
     {
       "from": "western-united-states",
+      "to": "central-america",
+      "type": "land"
+    }, 
+    {
+      "from": "eastern-united-states",
       "to": "central-america",
       "type": "land"
     },
