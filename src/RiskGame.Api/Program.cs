@@ -44,6 +44,7 @@ builder.Services.AddSingleton<JoinGameRateLimitFilter>();
 builder.Services.AddSignalR(options =>
 {
     options.AddFilter<HubExceptionLoggingFilter>();
+    options.AddFilter<NullArgumentFilter>();
     options.AddFilter<JoinGameRateLimitFilter>();
 });
 

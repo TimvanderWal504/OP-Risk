@@ -44,6 +44,10 @@ export const errors = {
     },
     gameFinished: { nl: 'Dit spel is al afgelopen.', en: 'This game has already ended.' },
     unknownTerritory: { nl: "Onbekend gebied '{{territoryId}}'.", en: "Unknown territory '{{territoryId}}'." },
+    missingArgument: {
+      nl: "Er ontbreekt een waarde ('{{argument}}'). Probeer het opnieuw.",
+      en: "A value is missing ('{{argument}}'). Please try again.",
+    },
     territoryNotOwned: {
       nl: "Gebied '{{territoryId}}' is niet van speler '{{playerId}}'.",
       en: "Territory '{{territoryId}}' does not belong to player '{{playerId}}'.",
