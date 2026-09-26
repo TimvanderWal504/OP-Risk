@@ -172,10 +172,17 @@ GitHub-environment `production` van deze repo — de job draait in die environme
 {
   "name": "github-production",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:TimvanderWal504/OP-Risk:environment:production",
+  "subject": "repo:TimvanderWal504@21218731/OP-Risk@1307955318:environment:production",
   "audiences": ["api://AzureADTokenExchange"]
 }
 ```
+
+**Let op — subject-vorm (geconstateerd bij de eerste automatische deploy, 2026-09-26):**
+GitHub zet de owner- en repo-ID in het `subject` (`<owner>@<owner-id>/<repo>@<repo-id>`),
+niet alleen de namen. Het kortere `repo:TimvanderWal504/OP-Risk:…` matcht dan niet en de
+login faalt met `AADSTS700213`. Het exacte subject staat in de log van de stap
+`azure/login` ("subject claim - …"); de ID's zijn op te vragen met
+`gh api repos/TimvanderWal504/OP-Risk --jq '"\(.owner.id) \(.id)"'`.
 
 ```
 az ad app federated-credential create --id <client-id> --parameters credential.json
@@ -202,8 +209,9 @@ Required reviewers**.
 
 Controle: kijk na de eerstvolgende push naar `main` in het tabblad
 **Actions** of `deploy-backend` groen wordt; de environment-link in die run opent de API.
-Faalt de login met `AADSTS70021` (geen passende federated credential), dan klopt het
-`subject` niet — let op de exacte hoofdletters van de repo-naam.
+Faalt de login met `AADSTS70021`/`AADSTS700213` (geen passende federated credential),
+dan klopt het `subject` niet — vergelijk het letterlijk (inclusief hoofdletters en de
+`@<id>`-delen) met de "subject claim" in de log van de stap `azure/login`.
 
 ---
 
