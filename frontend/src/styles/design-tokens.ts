@@ -15,11 +15,14 @@
  */
 
 // ---------------------------------------------------------------------------
-// Font families — colors_and_type.css :root
+// Font families — colors_and_type.css :root (`--font-brand`/`--font-body`).
+// "Brand Font" en "Body Font" zijn de uitwisselbare @font-face-aliassen voor
+// assets/fonts/brand-font.ttf (Lexend) en body-font.otf (Gilroy); Archivo en
+// Hanken Grotesk zijn alleen de terugval als dat bestand ontbreekt.
 // ---------------------------------------------------------------------------
 export const fontFamily = {
-  display: '"Archivo", ui-sans-serif, system-ui, sans-serif',
-  body: '"Hanken Grotesk", ui-sans-serif, system-ui, sans-serif',
+  display: '"Brand Font", "Archivo", ui-sans-serif, system-ui, sans-serif',
+  body: '"Body Font", "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif',
   mono: '"Geist Mono", ui-monospace, monospace',
 } as const;
 
@@ -112,6 +115,12 @@ export const layout = {
    * Vandaar losgetrokken op de waarde die die panelen altijd al hadden.
    */
   panelPadding: 16, // 1rem
+  /**
+   * Breedte van de vervagende rand aan een horizontaal scrollende rij (`SegmentedControl` die
+   * niet past, besluit gebruiker 2026-09-26): aan de kant waar nog meer staat, loopt de rij over
+   * deze afstand uit naar transparant, zodat meteen zichtbaar is dat je kunt scrollen.
+   */
+  scrollFade: 32, // 2rem
 } as const;
 
 // ---------------------------------------------------------------------------
