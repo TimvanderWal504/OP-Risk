@@ -49,9 +49,9 @@ typography:
     lineHeight: 1.55
   label:
     fontFamily: "Gilroy, Hanken Grotesk, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.6875rem"
-    fontWeight: 700
-    letterSpacing: "0.08em"
+    fontSize: "1rem"
+    fontWeight: 800
+    letterSpacing: "0.1em"
   mono:
     fontFamily: "Geist Mono, ui-monospace, monospace"
     fontSize: "0.875em"
