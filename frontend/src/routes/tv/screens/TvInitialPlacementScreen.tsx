@@ -6,7 +6,7 @@ import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledMarker, territoryGlow, territoryStroke } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
-import { boardTok, tvTextScaleMax } from '../../../styles/design-tokens'
+import { boardTok, fontFamily, tvTextScaleMax } from '../../../styles/design-tokens'
 import { cappedTextScaleVars } from '../../../styles/tvDisplay'
 import { tvAnimations } from '../../../styles/motion'
 import { ColorSymbol } from '../../../components/ui/ColorSymbol'
@@ -147,7 +147,7 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
                 y={territory.centroidPx.y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fontFamily="Archivo, sans-serif"
+                fontFamily={fontFamily.display}
                 fontWeight={700}
                 fontSize={marker.armyFontSize}
                 fill={boardTok.numFg}
@@ -165,7 +165,7 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
                 y={territory.centroidPx.y + marker.nameOffsetY}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontFamily="Archivo, sans-serif"
+                fontFamily={fontFamily.display}
                 fontWeight={700}
                 fontSize={marker.nameFontSize}
                 fill={boardTok.numFg}

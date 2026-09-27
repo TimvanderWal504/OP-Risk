@@ -4,7 +4,7 @@ import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
 import { scaledClaimMarker, territoryGlow } from '../../../map/boardVisualTokens'
 import { useTvDisplayScale } from '../../../hooks/useTvDisplayScale'
-import { boardTok, symbolGlyph, tvTextScaleMax } from '../../../styles/design-tokens'
+import { boardTok, fontFamily, symbolGlyph, tvTextScaleMax } from '../../../styles/design-tokens'
 import { cappedTextScaleVars } from '../../../styles/tvDisplay'
 import { tvAnimations } from '../../../styles/motion'
 import { Badge } from '../../../components/ui/Badge'
@@ -148,7 +148,7 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
                 y={territory.centroidPx.y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fontFamily="Archivo, sans-serif"
+                fontFamily={fontFamily.display}
                 fontWeight={700}
                 fontSize={claimMarker.symFontSize}
                 fill={color.onHex}
