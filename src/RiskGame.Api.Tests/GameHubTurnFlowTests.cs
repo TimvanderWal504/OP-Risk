@@ -261,8 +261,8 @@ public sealed class GameHubTurnFlowTests(PostgresFixture postgres)
 
     /// <summary>
     /// De versterkingen op de nieuwe beurt horen bij de speler die aan zet kómt, niet bij die
-    /// vertrekt. Dat onderscheid is stil te verprutsen: <c>TurnEnded</c> heeft bewust geen
-    /// vouwregel, dus op het moment van berekenen staat de uitgaande speler nog als actief in
+    /// vertrekt. Dat onderscheid is stil te verprutsen: <c>TurnEnded</c> verandert de actieve
+    /// speler niet, dus op het moment van berekenen staat de uitgaande speler nog als actief in
     /// de state. Daarom bezitten de twee spelers hier bewust een óngelijk aantal gebieden —
     /// p2 heeft heel Australië (5 gebieden + continentbonus 3 = 6), p1 twee losse gebieden
     /// (minimum 3). Bij een gelijke verdeling zouden beide 3 opleveren en zou de verkeerde

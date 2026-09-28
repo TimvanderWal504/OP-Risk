@@ -27,8 +27,8 @@ namespace RiskGame.Persistence.Projections;
 /// verplaatsen, kaart trekken, een speler uitschakelen, een gebeurteniseffect toepassen/
 /// laten verlopen, een dreigende missie-overwinning openen/versmallen/laten vervallen, het
 /// spel winnen) — een achtste plak.
-/// <see cref="OrderRolled"/>, <see cref="TurnEnded"/>, <see cref="DiceRolled"/>,
-/// <see cref="EventCardDrawn"/> en <see cref="MissionCompleted"/> horen daar bewust niet
+/// <see cref="OrderRolled"/>, <see cref="DiceRolled"/> en
+/// <see cref="MissionCompleted"/> horen daar bewust niet
 /// bij: het zijn audit/weergave-feiten zonder eigen vouwregel, zie de doc-comments op die
 /// events.
 /// </remarks>
@@ -526,29 +526,104 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     }
 
     /// <summary>
-    /// Past de al door de rules engine berekende leger-mutaties toe (zie doc-comment op
-    /// <see cref="EffectApplied"/>) en voegt, bij een <see cref="EffectDuration.OneRound"/>-
-    /// effect, een nieuwe <see cref="ActiveEffect"/> toe zodat de TV het permanent kan
-    /// tonen zolang het geldt (FO §9.2). Instant-effecten komen niet in
-    /// <see cref="GameState.ActiveEffects"/> terecht — ze zijn na deze vouwregel al voltrokken.
+    /// De beurt is voorbij: een openstaande gebeurtenisbonus (FO §9.2) is nu geïnd — hij zat in de
+    /// <c>ArmiesGranted</c> van deze beurt. Pas hier en niet al bij de start van Versterken, omdat
+    /// het opbouwpaneel (<c>ReinforcementBreakdown</c>) tijdens Versterken live wordt berekend en de
+    /// bonus dan nog moet tonen. Verder verandert het einde van een beurt niets: de overgang naar de
+    /// volgende speler is de <see cref="PhaseChanged"/> die erop volgt.
+    /// </summary>
+    public GameState Apply(GameState state, TurnEnded @event)
+    {
+        var player = state.Player(@event.PlayerId);
+
+        return player.PendingEventBonus == 0
+            ? state
+            : state.WithPlayer(player with { PendingEventBonus = 0 });
+    }
+
+    /// <summary>De gebeurtenisstapel krijgt de al geschudde volgorde (FO §9.2).</summary>
+    public GameState Apply(GameState state, EventDeckShuffled @event) =>
+        state.WithEventRound(state.EventRound with { DrawPile = @event.EventIds });
+
+    /// <summary>
+    /// De bovenste kaart verlaat de stapel en wordt de laatst getrokken kaart (FO §9.2, §2.2). Een
+    /// andere kaart dan de bovenste is een bug in de producent, geen regeluitkomst.
+    /// </summary>
+    public GameState Apply(GameState state, EventCardDrawn @event)
+    {
+        var drawPile = state.EventRound.DrawPile;
+
+        if (drawPile.Count == 0 || drawPile[0] != @event.EventId)
+        {
+            throw new InvalidOperationException(
+                $"Gebeurteniskaart '{@event.EventId}' is niet de bovenste van de stapel in spel '{@event.GameId}'.");
+        }
+
+        return state.WithEventRound(state.EventRound with { CurrentEventId = @event.EventId, DrawPile = [.. drawPile.Skip(1)] });
+    }
+
+    /// <summary>
+    /// Zet de bij de trekking vastgestelde bonus op de spelers (FO §9.2) — die telt pas bij hun
+    /// eigen volgende versterking mee en is geïnd zodra die beurt eindigt
+    /// (<see cref="Apply(GameState, TurnEnded)"/>). Een
+    /// <see cref="EffectDuration.OneRound"/>-effect wordt bovendien actief, zodat guards en TV het
+    /// zien tot het op de volgende rondegrens verloopt; instant-effecten zijn na deze regel klaar.
     /// </summary>
     public GameState Apply(GameState state, EffectApplied @event)
     {
         var eventDefinition = state.Map.Events.First(definition => definition.Id == @event.EventId);
 
-        foreach (var (territoryId, delta) in @event.ArmyDeltasByTerritory)
+        foreach (var (playerId, bonus) in @event.BonusByPlayer)
         {
-            var territory = state.Territory(territoryId);
-            state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount + delta });
+            var player = state.Player(playerId);
+            state = state.WithPlayer(player with { PendingEventBonus = player.PendingEventBonus + bonus });
         }
 
         if (eventDefinition.Effect.Duration == EffectDuration.OneRound)
         {
-            state = state.WithActiveEffects(
-                [.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect)]);
+            state = state.WithActiveEffects([.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect)]);
         }
 
         return state;
+    }
+
+    /// <summary>
+    /// Een attrition-kaart wacht op keuzes (FO §9.2): er loopt geen beurt meer, zodat beurtguards
+    /// en de timer-service vanzelf weigeren tot de laatste keuze de volgende beurt start.
+    /// </summary>
+    public GameState Apply(GameState state, AttritionStarted @event) =>
+        state
+            .WithTurnState(null)
+            .WithEventRound(state.EventRound with
+            {
+                PendingAttrition = new PendingAttrition(
+                    @event.EventId, @event.Amount, @event.AwaitingPlayerIds, @event.NextPlayerId),
+            });
+
+    /// <summary>
+    /// Haalt de afgestane legers weg en streept de speler af bij de lopende attrition-keuzes. Een
+    /// speler zonder keuzevrijheid (automatisch maximum) stond er niet op; wie als laatste kiest,
+    /// sluit de keuzes af.
+    /// </summary>
+    public GameState Apply(GameState state, ArmiesRemoved @event)
+    {
+        foreach (var (territoryId, removed) in @event.RemovedByTerritory)
+        {
+            var territory = state.Territory(territoryId);
+            state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount - removed });
+        }
+
+        if (state.EventRound.PendingAttrition is not { } pending)
+        {
+            return state;
+        }
+
+        var awaiting = pending.AwaitingPlayerIds.Where(playerId => playerId != @event.PlayerId).ToArray();
+
+        return state.WithEventRound(state.EventRound with
+        {
+            PendingAttrition = awaiting.Length == 0 ? null : pending with { AwaitingPlayerIds = awaiting },
+        });
     }
 
     /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>

@@ -1,9 +1,8 @@
 namespace RiskGame.Persistence.Events;
 
 /// <summary>
-/// Na een volledige ronde trekt de server een gebeurteniskaart (FO §9.2). Puur
-/// audit/weergave-feit voor de TV, net als <see cref="DiceRolled"/>: het daadwerkelijke
-/// effect van de kaart komt via een los <see cref="EffectApplied"/>-event, dus dit event
-/// heeft bewust geen eigen vouwregel in <see cref="Projections.GameProjection"/>.
+/// Na een volledige ronde is een gebeurteniskaart getrokken (FO §9.2): de bovenste van de
+/// stapel. Wordt de laatst getrokken kaart (<see cref="Rules.State.EventRoundState.CurrentEventId"/>).
+/// Wat de kaart dóét, komt via een los <see cref="EffectApplied"/>-event.
 /// </summary>
 public sealed record EventCardDrawn(string GameId, string EventId);

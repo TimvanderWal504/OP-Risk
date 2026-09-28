@@ -2,15 +2,15 @@ namespace RiskGame.Persistence.Events;
 
 /// <summary>
 /// Het effect van een getrokken gebeurteniskaart is toegepast (FO §9.2). Net als bij
-/// <see cref="CombatResolved"/>/<see cref="Rules.Reinforcement.CardTradeCalculator"/> is de
-/// uitkomst al door de rules engine bepaald vóórdat dit event ontstaat:
-/// <paramref name="ArmyDeltasByTerritory"/> draagt de al berekende leger-mutaties voor
-/// instant, niet-interactieve numerieke effecten (<c>ContinentOwnerBonus</c>,
-/// <c>FreeReinforcement</c>). Interactieve effecten (<c>ArmyAttrition</c>, waarbij de
-/// getroffen spelers zelf kiezen) en pure duur-effecten zonder legermutatie
-/// (<c>TerritoryLocked</c>, <c>SeaRoutesBlocked</c>) dragen hier een lege dictionary; hun
-/// verdere afhandeling is command-orchestratie van een latere bouwstap, net als
-/// <see cref="Rules.Effects.ArmyAttritionCalculator"/>'s eigen doc-comment al aangeeft.
+/// <see cref="PhaseChanged"/> draagt het event zijn eigen uitkomst: <paramref name="BonusByPlayer"/>
+/// is de bij de trekking vastgestelde bonus per speler (<c>ContinentOwnerBonus</c>,
+/// <c>FreeReinforcement</c>, via <see cref="Rules.Effects.EventBonusCalculator"/>) en is leeg
+/// voor elk ander effect. Legers afstaan (<c>ArmyAttrition</c>) loopt via
+/// <see cref="AttritionStarted"/>/<see cref="ArmiesRemoved"/>.
 /// </summary>
-public sealed record EffectApplied(
-    string GameId, string EventId, IReadOnlyDictionary<string, int> ArmyDeltasByTerritory);
+/// <remarks>
+/// Opgeslagen als <c>effect_applied_v2</c> (<c>GameStoreFactory</c>): de eerste vorm droeg
+/// legerdelta's per gebied. Een stream met die vorm is bij een replay een harde fout, geen stil
+/// verkeerd gevouwen bonus.
+/// </remarks>
+public sealed record EffectApplied(string GameId, string EventId, IReadOnlyDictionary<string, int> BonusByPlayer);

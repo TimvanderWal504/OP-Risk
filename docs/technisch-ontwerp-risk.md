@@ -59,15 +59,15 @@ GameState
 ├─ GameId
 ├─ Phase            (Lobby | OrderRoll | Claiming | InitialPlacement | InProgress | Finished)
 ├─ Settings         (winconditie, startopstelling, startlegers, timer, feature-toggles)
-├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isAutoPass)
+├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isAutoPass, pendingEventBonus)
 ├─ Territories[]    (territoryId → ownerPlayerId, armyCount)
 ├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat? {from, to, attackDice,
 │                    attackerRolls, awaitingRerollDecision}, rerolledTargetTerritoryIds[], fortifiesUsed, ...)
 ├─ Deck             (trekstapel, aflegstapel, volgende inleg-waarde)
 ├─ ActiveEffects[]  (lopende oneRound-gebeurteniseffecten; verlopen op de volgende rondegrens)
-├─ CurrentEvent?    (laatst getrokken gebeurteniskaart, tot de volgende trekking)
-├─ EventDeck        (trekvolgorde van de gebeurteniskaarten, zonder teruglegging)
-├─ PendingAttrition? (lopende ArmyAttrition-keuzes tussen twee beurten: amount, wachtende spelers, volgende speler)
+├─ EventRound       (CurrentEventId? = laatst getrokken kaart tot de volgende trekking,
+│                    DrawPile = trekvolgorde zonder teruglegging,
+│                    PendingAttrition? = lopende ArmyAttrition-keuzes: amount, wachtende spelers, volgende speler)
 └─ TurnOrder[]      (spelersvolgorde, bepaald door de order-roll)
 ```
 
@@ -178,10 +178,10 @@ TerritoryClaimed, InitialArmyPlaced, RoleAssigned, MissionAssigned,
 CardsTraded, ArmiesReinforced, AttackDeclared, DiceRolled, AttackDieRerolled, AttackDiceKept, CombatResolved,
 TerritoryConquered, ArmiesMovedAfterConquest, Fortified,
 CardDrawn, PlayerEliminated, EventDeckShuffled, EventCardDrawn, EffectApplied, EffectExpired,
-ArmiesRemoved, PhaseChanged, TurnEnded, MissionCompleted, GameWon
+AttritionStarted, ArmiesRemoved, PhaseChanged, TurnEnded, MissionCompleted, GameWon
 ```
 
-**Gebeurtenisronde tussen twee beurten (FO §9.2).** Op de rondegrens appendt `EndTurn` — ná de missie-/laatste-kans-afhandeling en alleen zonder `GameWon` — `EffectExpired` voor de lopende effecten, zo nodig `EventDeckShuffled`, dan `EventCardDrawn` en `EffectApplied`. Bonuslegers liggen per speler vast in het event (peilmoment = trekking) en worden bij de volgende `PhaseChanged` naar Versterken van die speler in `ArmiesGranted` meegenomen. Een `ArmyAttrition`-kaart met minstens één speler met keuzevrijheid opent `PendingAttrition` en **sluit `TurnState`** (`null`): zo weigeren alle beurtguards en de timer-service vanzelf, en kan een late timer-tick of een dubbele `EndTurn` geen tweede trekking veroorzaken. `PendingAttrition` bewaart de volgende speler, omdat die zonder `TurnState` niet meer af te leiden is. Elke keuze wordt een `ArmiesRemoved`; de laatste start de beurt van de volgende speler, met versterkingen berekend op de state ná de attrition.
+**Gebeurtenisronde tussen twee beurten (FO §9.2).** Op de rondegrens appendt `EndTurn` — ná de missie-/laatste-kans-afhandeling en alleen zonder `GameWon` — `EffectExpired` voor de lopende effecten, zo nodig `EventDeckShuffled`, dan `EventCardDrawn` en `EffectApplied`. Bonuslegers liggen per speler vast in het event (peilmoment = trekking; `EffectApplied` is daarvoor `effect_applied_v2`, zelfde wipe-afspraak als hierboven), staan tot dan op `Player.PendingEventBonus` en worden bij de volgende `PhaseChanged` naar Versterken van die speler in `ArmiesGranted` meegenomen. Een `ArmyAttrition`-kaart met minstens één speler met keuzevrijheid opent met `AttritionStarted` de `PendingAttrition` (in `GameState.EventRound`, samen met de laatst getrokken kaart en de trekstapel) en **sluit `TurnState`** (`null`): zo weigeren alle beurtguards en de timer-service vanzelf, en kan een late timer-tick of een dubbele `EndTurn` geen tweede trekking veroorzaken. `PendingAttrition` bewaart de volgende speler, omdat die zonder `TurnState` niet meer af te leiden is. Elke keuze wordt een `ArmiesRemoved`; de laatste start de beurt van de volgende speler, met versterkingen berekend op de state ná de attrition.
 
 Dit is de eerste plek waar meerdere spelers tegelijk naar dezelfde stream schrijven. Marten weigert een gelijktijdige append al zelf op het stream-versienummer (`EventStreamUnexpectedMaxEventIdException`); `EndTurn` en `RemoveArmies` vangen dat op met dezelfde retry als `SetTvDisplay` (verse sessie, state herladen, opnieuw beoordelen, hooguit 3 pogingen).
 

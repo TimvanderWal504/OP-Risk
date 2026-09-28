@@ -163,8 +163,9 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
         }
 
         // FO §6.1/§6.2: de server controleert de missievoorwaarden na elke beurt. TurnEnded
-        // heeft bewust geen vouwregel (zie GameProjection), dus de hier al geladen `state` is
-        // exact de state "na afloop van deze beurt" — geen reload nodig om te controleren.
+        // vouwt alleen een geïnde gebeurtenisbonus weg (zie GameProjection) — niets waar een
+        // missie naar kijkt — dus de hier al geladen `state` is voor die controle exact de state
+        // "na afloop van deze beurt"; geen reload nodig.
         //
         // Geverifieerd (elite-code-review): "GameWon op het moment dat de laatste laatste-
         // kans-beurt eindigt" is hier bewust gelijkgesteld aan "bij het begin van de volgende
@@ -279,7 +280,7 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
 
             // Voor de ínkomende speler rekenen, niet voor de uitgaande. De hier geladen state is
             // dezelfde die de projectie straks ziet: CardDrawn en TurnEnded veranderen niets aan
-            // gebieden of continenten, dus dezelfde uitkomst.
+            // gebieden, continenten of de bonus van de inkomende speler, dus dezelfde uitkomst.
             TurnStarter.StartTurn(session, state, nextPlayerId, timeProvider.GetUtcNow());
         }
 

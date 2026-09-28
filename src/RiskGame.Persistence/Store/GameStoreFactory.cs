@@ -56,6 +56,9 @@ public static class GameStoreFactory
             // (o.a. `PendingCombat.AttackerRolls` leeg, terwijl `CanChooseDefenseDice` daar nu op
             // leunt) — hernoemen laat een oude stream hard falen i.p.v. stil verkeerd vouwen.
             options.Events.MapEventType<AttackDeclared>("attack_declared_v2");
+            // EffectApplied droeg eerst legerdelta's per gebied; sinds de gebeurtenisronde de bonus
+            // per speler (FO §9.2). Zelfde reden als hierboven: een oude vorm faalt hard.
+            options.Events.MapEventType<EffectApplied>("effect_applied_v2");
 
             options.Projections.Add(new GameProjection(mapSource), ProjectionLifecycle.Inline);
             options.UseSystemTextJsonForSerialization(

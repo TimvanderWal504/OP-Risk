@@ -55,6 +55,11 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
             // null valt in de GameState-constructor terug op een leeg verloop.
             root.TryGetProperty("recentActions", out var recentActionsElement)
                 ? recentActionsElement.Deserialize<IReadOnlyList<RecentAction>>(scoped)
+                : null,
+            // Zelfde reden: documenten van vóór de gebeurtenisronde kennen dit veld niet — null
+            // valt in de GameState-constructor terug op EventRoundState.Empty.
+            root.TryGetProperty("eventRound", out var eventRoundElement)
+                ? eventRoundElement.Deserialize<EventRoundState?>(scoped)
                 : null);
     }
 
@@ -91,6 +96,8 @@ public sealed class GameStateJsonConverter : JsonConverter<GameState>
         JsonSerializer.Serialize(writer, value.TvDisplay, scoped);
         writer.WritePropertyName("recentActions");
         JsonSerializer.Serialize(writer, value.RecentActions, scoped);
+        writer.WritePropertyName("eventRound");
+        JsonSerializer.Serialize(writer, value.EventRound, scoped);
 
         writer.WriteEndObject();
     }

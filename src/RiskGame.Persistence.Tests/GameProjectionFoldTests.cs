@@ -197,4 +197,34 @@ public sealed class GameProjectionFoldTests
 
         Assert.True(folded.Player("p2").DefenseBoostUsed);
     }
+
+    /// <summary>FO §9.2: alleen de bovenste kaart kan getrokken worden; iets anders is een bug in de producent.</summary>
+    [Fact]
+    public void EventCardDrawn_DieNietBovenopLigt_IsEenHardeFout()
+    {
+        var state = BuildState(AttackTurnState())
+            .WithEventRound(EventRoundState.Empty with { DrawPile = ["babyboom", "griepgolf"] });
+
+        Assert.Throws<InvalidOperationException>(
+            () => Projection.Apply(state, new EventCardDrawn("game-1", "griepgolf")));
+    }
+
+    /// <summary>
+    /// Het automatische maximum van een speler zonder keuzevrijheid (FO §9.2) haalt wel legers weg,
+    /// maar laat de wachtlijst van wie nog moet kiezen ongemoeid.
+    /// </summary>
+    [Fact]
+    public void ArmiesRemoved_VanSpelerDieNietHoeftTeKiezen_LaatDeOpenKeuzesStaan()
+    {
+        var state = BuildState(AttackTurnState()).WithEventRound(EventRoundState.Empty with
+        {
+            PendingAttrition = new PendingAttrition("griepgolf", Amount: 2, AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"),
+        });
+
+        var folded = Projection.Apply(
+            state, new ArmiesRemoved("game-1", "p2", new Dictionary<string, int> { ["alberta"] = 2 }));
+
+        Assert.Equal(1, folded.Territory("alberta").ArmyCount);
+        Assert.Equal(["p1"], folded.EventRound.PendingAttrition!.AwaitingPlayerIds);
+    }
 }

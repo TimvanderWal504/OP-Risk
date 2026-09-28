@@ -122,6 +122,82 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// De gebeurtenisronde (FO §9.2) over twee rondegrenzen: schudden, trekken, een bonus die bij
+    /// de eigen versterking geïnd wordt, en een attrition-kaart die de beurt sluit tot de laatste
+    /// keuze. Live projectie en replay moeten identiek zijn.
+    /// </summary>
+    [Fact]
+    public async Task Gebeurtenisronde_LiveProjectieEnReplay_LeverenIdentiekeGameStateOp()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var now = DateTimeOffset.UtcNow;
+        var settings = Settings with { EventsEnabled = true };
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using var session = store.LightweightSession();
+
+        session.Events.StartStream<GameState>(
+            gameId,
+            new GameCreated(gameId, "standaard-43", settings),
+            new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
+            new ColorChosen(gameId, "p1", "red"),
+            new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
+            new ColorChosen(gameId, "p2", "blue"),
+            new TurnOrderDetermined(gameId, ["p1", "p2"]),
+            new TerritoryClaimed(gameId, "p1", "alaska"),
+            new TerritoryClaimed(gameId, "p2", "northwest-territory"),
+            new InitialArmyPlaced(gameId, "p1", "alaska"),
+            new InitialArmyPlaced(gameId, "p1", "alaska"),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, settings.TurnTimer, now, ArmiesGranted: 3),
+            new TurnEnded(gameId, "p1"),
+            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce, settings.TurnTimer, now, ArmiesGranted: 3),
+            new TurnEnded(gameId, "p2"),
+            // Eerste rondegrens: schudden, trekken, bonus vastleggen.
+            new EventDeckShuffled(gameId, ["babyboom", "epidemie-in-de-steden", "griepgolf"]),
+            new EventCardDrawn(gameId, "babyboom"),
+            new EffectApplied(gameId, "babyboom", new Dictionary<string, int> { ["p1"] = 2, ["p2"] = 2 }),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, settings.TurnTimer, now, ArmiesGranted: 5),
+            new TurnEnded(gameId, "p1"),
+            new PhaseChanged(gameId, "p2", TurnPhase.Reinforce, settings.TurnTimer, now, ArmiesGranted: 5),
+            new TurnEnded(gameId, "p2"),
+            // Tweede rondegrens: attrition; alleen p1 heeft iets af te staan.
+            new EventCardDrawn(gameId, "epidemie-in-de-steden"),
+            new EffectApplied(gameId, "epidemie-in-de-steden", new Dictionary<string, int>()),
+            new AttritionStarted(
+                gameId, "epidemie-in-de-steden", Amount: 3, AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"));
+
+        await session.SaveChangesAsync();
+
+        var waiting = await session.LoadAsync<GameState>(gameId);
+
+        Assert.NotNull(waiting);
+        Assert.Null(waiting!.TurnState);
+        Assert.Equal(["p1"], waiting.EventRound.PendingAttrition!.AwaitingPlayerIds);
+        Assert.Equal(0, waiting.Player("p1").PendingEventBonus);
+        Assert.Equal(0, waiting.Player("p2").PendingEventBonus);
+
+        session.Events.Append(
+            gameId,
+            new ArmiesRemoved(gameId, "p1", new Dictionary<string, int> { ["alaska"] = 2 }),
+            new PhaseChanged(gameId, "p1", TurnPhase.Reinforce, settings.TurnTimer, now, ArmiesGranted: 3));
+
+        await session.SaveChangesAsync();
+
+        var live = await session.LoadAsync<GameState>(gameId);
+        var replayed = await ReplayFromRawEventsAsync(session, gameId, mapSource);
+
+        Assert.NotNull(live);
+        Assert.Equal("epidemie-in-de-steden", live!.EventRound.CurrentEventId);
+        Assert.Equal(["griepgolf"], live.EventRound.DrawPile);
+        Assert.Null(live.EventRound.PendingAttrition);
+        Assert.Equal(1, live.Territory("alaska").ArmyCount);
+        Assert.Equal("p1", live.TurnState!.ActivePlayerId);
+
+        AssertIdenticalGameState(live, replayed);
+    }
+
+    /// <summary>
     /// Een opgeslagen <see cref="GameState"/>-document van vóór plan-testronde-tv punt 4 heeft geen
     /// <c>recentActions</c>-property; dat laadt als een leeg verloop, en het volgende event bouwt
     /// daar gewoon op voort.
@@ -916,20 +992,19 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// <see cref="EffectApplied"/> met een instant effect (<c>goede-oogst</c>,
-    /// <c>ContinentOwnerBonus</c>) past de al berekende legerdeltas toe en komt niet in
+    /// <see cref="EffectApplied"/> met een bonuskaart (<c>goede-oogst</c>) zet de bij de trekking
+    /// vastgestelde bonus op de spelers en komt, als instant-effect, niet in
     /// <see cref="GameState.ActiveEffects"/> terecht (FO §9.2).
     /// </summary>
     [Fact]
-    public async Task EffectApplied_MetInstantEffect_PastLegerDeltasToeZonderActiveEffectEnOverleeftEenMartenRoundTrip()
+    public async Task EffectApplied_MetBonuskaart_ZetDeBonusOpDeSpelersEnOverleeftEenMartenRoundTrip()
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = new MapDefinitionSource(MapsRoot);
         var map = mapSource.Load("standaard-43");
 
         var territories = map.Territories
-            .Select(territory => new TerritoryOwnership(
-                territory.Id, OwnerPlayerId: null, ArmyCount: territory.Id == "alaska" ? 3 : 0))
+            .Select(territory => new TerritoryOwnership(territory.Id, OwnerPlayerId: null, ArmyCount: 0))
             .ToArray();
 
         var initialState = new GameState(
@@ -937,9 +1012,13 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             map,
             GamePhase.InProgress,
             Settings,
-            players: [],
+            players:
+            [
+                new Player("p1", "Alice", "red", [], RoleId: null, Mission: null, IsEliminated: false),
+                new Player("p2", "Bob", "blue", [], RoleId: null, Mission: null, IsEliminated: false),
+            ],
             territories,
-            turnOrder: [],
+            turnOrder: ["p1", "p2"],
             turnState: null,
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
             activeEffects: []);
@@ -947,9 +1026,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         var projection = new GameProjection(mapSource);
         var result = projection.Apply(
             initialState,
-            new EffectApplied(gameId, "goede-oogst", new Dictionary<string, int> { ["alaska"] = 2 }));
+            new EffectApplied(gameId, "goede-oogst", new Dictionary<string, int> { ["p1"] = 2 }));
 
-        Assert.Equal(5, result.Territory("alaska").ArmyCount);
+        Assert.Equal(2, result.Player("p1").PendingEventBonus);
+        Assert.Equal(0, result.Player("p2").PendingEventBonus);
         Assert.Empty(result.ActiveEffects);
 
         await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
@@ -963,7 +1043,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         var reloaded = await session.LoadAsync<GameState>(gameId);
 
         Assert.NotNull(reloaded);
-        Assert.Equal(5, reloaded!.Territory("alaska").ArmyCount);
+        Assert.Equal(2, reloaded!.Player("p1").PendingEventBonus);
         Assert.Empty(reloaded.ActiveEffects);
     }
 
@@ -1265,7 +1345,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 MissionAssigned missionAssigned => projection.Apply(state!, missionAssigned),
                 PhaseChanged phaseChanged => projection.Apply(state!, phaseChanged),
                 ArmiesReinforced armiesReinforced => projection.Apply(state!, armiesReinforced),
-                TurnEnded => state!,
+                TurnEnded turnEnded => projection.Apply(state!, turnEnded),
                 AttackDeclared attackDeclared => projection.Apply(state!, attackDeclared),
                 DiceRolled => state!,
                 CombatResolved combatResolved => projection.Apply(state!, combatResolved),
@@ -1274,7 +1354,10 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                     projection.Apply(state!, armiesMovedAfterConquest),
                 Fortified fortified => projection.Apply(state!, fortified),
                 PlayerEliminated playerEliminated => projection.Apply(state!, playerEliminated),
-                EventCardDrawn => state!,
+                EventDeckShuffled eventDeckShuffled => projection.Apply(state!, eventDeckShuffled),
+                EventCardDrawn eventCardDrawn => projection.Apply(state!, eventCardDrawn),
+                AttritionStarted attritionStarted => projection.Apply(state!, attritionStarted),
+                ArmiesRemoved armiesRemoved => projection.Apply(state!, armiesRemoved),
                 EffectApplied effectApplied => projection.Apply(state!, effectApplied),
                 EffectExpired effectExpired => projection.Apply(state!, effectExpired),
                 MissionCompleted => state!,
@@ -1331,6 +1414,19 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             Assert.Equal(expectedPlayer.Mission, actualPlayer.Mission);
             Assert.Equal(expectedPlayer.IsEliminated, actualPlayer.IsEliminated);
             Assert.Equal(expectedPlayer.EliminatedByPlayerId, actualPlayer.EliminatedByPlayerId);
+            Assert.Equal(expectedPlayer.PendingEventBonus, actualPlayer.PendingEventBonus);
+        }
+
+        Assert.Equal(expected.EventRound.CurrentEventId, actual.EventRound.CurrentEventId);
+        Assert.Equal(expected.EventRound.DrawPile, actual.EventRound.DrawPile);
+        Assert.Equal(expected.EventRound.PendingAttrition is null, actual.EventRound.PendingAttrition is null);
+        if (expected.EventRound.PendingAttrition is { } expectedAttrition)
+        {
+            var actualAttrition = actual.EventRound.PendingAttrition!;
+            Assert.Equal(expectedAttrition.EventId, actualAttrition.EventId);
+            Assert.Equal(expectedAttrition.Amount, actualAttrition.Amount);
+            Assert.Equal(expectedAttrition.AwaitingPlayerIds, actualAttrition.AwaitingPlayerIds);
+            Assert.Equal(expectedAttrition.NextPlayerId, actualAttrition.NextPlayerId);
         }
 
         Assert.Equal(expected.Map.MapId, actual.Map.MapId);

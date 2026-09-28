@@ -26,8 +26,16 @@ public static class EventRoundCalculator
         }
 
         var order = state.TurnOrder.ToList();
+        var nextIndex = order.IndexOf(nextPlayerId);
+        var activeIndex = order.IndexOf(state.TurnState.ActivePlayerId);
 
-        return order.IndexOf(nextPlayerId) <= order.IndexOf(state.TurnState.ActivePlayerId);
+        if (nextIndex < 0 || activeIndex < 0)
+        {
+            throw new InvalidOperationException(
+                $"Speler '{(nextIndex < 0 ? nextPlayerId : state.TurnState.ActivePlayerId)}' staat niet in de beurtvolgorde.");
+        }
+
+        return nextIndex <= activeIndex;
     }
 
     /// <summary>Of er bij deze beurtwissel een gebeurteniskaart getrokken wordt: gebeurtenisronde aan én rondegrens.</summary>

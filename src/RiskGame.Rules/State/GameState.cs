@@ -33,7 +33,8 @@ public sealed class GameState
         IReadOnlyList<string>? winners = null,
         PendingWin? pendingWin = null,
         TvDisplaySettings? tvDisplay = null,
-        IReadOnlyList<RecentAction>? recentActions = null)
+        IReadOnlyList<RecentAction>? recentActions = null,
+        EventRoundState? eventRound = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
         ArgumentNullException.ThrowIfNull(map);
@@ -58,6 +59,7 @@ public sealed class GameState
         PendingWin = pendingWin;
         TvDisplay = tvDisplay ?? TvDisplaySettings.Default;
         RecentActions = recentActions ?? [];
+        EventRound = eventRound ?? EventRoundState.Empty;
 
         _playersById = players.ToFrozenDictionary(player => player.Id, StringComparer.Ordinal);
         _territoriesById = territories.ToFrozenDictionary(
@@ -122,6 +124,12 @@ public sealed class GameState
     /// </summary>
     public IReadOnlyList<RecentAction> RecentActions { get; }
 
+    /// <summary>
+    /// De gebeurtenisronde (FO §9.2): laatst getrokken kaart, trekstapel en lopende attrition-keuzes.
+    /// Nooit null: een spel zonder (of van vóór) de gebeurtenisronde heeft <see cref="EventRoundState.Empty"/>.
+    /// </summary>
+    public EventRoundState EventRound { get; }
+
     public bool HasPlayer(string playerId) => _playersById.ContainsKey(playerId);
 
     public Player Player(string playerId) => _playersById[playerId];
@@ -180,9 +188,31 @@ public sealed class GameState
             Winners,
             PendingWin,
             TvDisplay,
-            RecentActions);
+            RecentActions,
+            EventRound);
 
     public GameState WithDeck(DeckState deck) => With(deck: deck);
+
+    public GameState WithEventRound(EventRoundState eventRound)
+    {
+        ArgumentNullException.ThrowIfNull(eventRound);
+
+        return new(GameId,
+            Map,
+            Phase,
+            Settings,
+            Players,
+            Territories,
+            TurnOrder,
+            TurnState,
+            Deck,
+            ActiveEffects,
+            Winners,
+            PendingWin,
+            TvDisplay,
+            RecentActions,
+            eventRound);
+    }
 
     public GameState WithTurnOrder(IReadOnlyList<string> turnOrder) => With(turnOrder: turnOrder);
 
@@ -210,7 +240,8 @@ public sealed class GameState
             Winners,
             pendingWin,
             TvDisplay,
-            RecentActions);
+            RecentActions,
+            EventRound);
 
     public GameState WithTvDisplay(TvDisplaySettings tvDisplay)
     {
@@ -229,7 +260,8 @@ public sealed class GameState
             Winners,
             PendingWin,
             tvDisplay,
-            RecentActions);
+            RecentActions,
+            EventRound);
     }
 
     public GameState WithRecentActions(IReadOnlyList<RecentAction> recentActions)
@@ -249,7 +281,8 @@ public sealed class GameState
             Winners,
             PendingWin,
             TvDisplay,
-            recentActions);
+            recentActions,
+            EventRound);
     }
 
     /// <summary>
@@ -301,7 +334,8 @@ public sealed class GameState
             winners ?? Winners,
             PendingWin,
             TvDisplay,
-            RecentActions);
+            RecentActions,
+            EventRound);
 
     /// <summary>
     /// Vervangt het enige element dat aan <paramref name="matches"/> voldoet, op zijn

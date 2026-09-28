@@ -66,6 +66,13 @@ public class EventRoundCalculatorTests
     }
 
     [Fact]
+    public void OnbekendeVolgendeSpeler_IsEenBug_GeenTrekking()
+    {
+        Assert.Throws<InvalidOperationException>(
+            () => EventRoundCalculator.IsRoundBoundary(DrieSpelers("p3"), nextPlayerId: "onbekend"));
+    }
+
+    [Fact]
     public void ZonderLopendeBeurt_IsEenRondegrensEenBug()
     {
         var state = DrieSpelers("p3").WithTurnState(null);
