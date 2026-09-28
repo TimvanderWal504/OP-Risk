@@ -174,22 +174,8 @@ export function AttackFlowStep({
     setPhase('src')
   }
 
-  const stepIndex = phase === 'src' ? 0 : phase === 'tgt' ? 1 : phase === 'dice' ? 2 : 3
-  const steps = [t('pickSrc.title'), t('pickTgt.title'), t('pickDice.title'), t('roll')]
-
   return (
     <PhoneScreen>
-      <div className="mb-2.5 flex gap-1.5">
-        {steps.map((label, index) => (
-          <div key={label} className="flex flex-1 flex-col gap-1">
-            <span className={`h-[5px] rounded-[3px] ${index <= stepIndex ? 'bg-silver-400' : 'bg-border-strong'}`} />
-            <span className={`text-center font-body text-xs font-bold ${index <= stepIndex ? 'text-silver-300' : 'text-fg-muted'}`}>
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
-
       {phase === 'src' && (
         <>
           <GlassPanel elevation="base" context="phone" padding="none" className="mb-3 inline-block self-start rounded-2xl px-4 py-2">
@@ -197,8 +183,17 @@ export function AttackFlowStep({
             <div className="font-body text-sm text-fg-muted">{t('pickSrc.subtitle')}</div>
           </GlassPanel>
           <div className="flex min-h-0 flex-1 flex-col gap-[9px] overflow-y-auto">
+            {/* Op glas, zodat de on-glass tekstbehandeling de lege staat leesbaar houdt op de
+                stage-illustratie — zelfde chipvorm als de subtekst op het claim-scherm. */}
             {attackableSources.length === 0 && (
-              <div className="font-body text-sm text-fg-muted">{t('pickSrc.empty')}</div>
+              <GlassPanel
+                elevation="base"
+                context="phone"
+                padding="none"
+                className="inline-block self-start rounded-2xl px-4 py-1.5 font-body text-sm text-fg-muted"
+              >
+                {t('pickSrc.empty')}
+              </GlassPanel>
             )}
             {attackableSources.map((territory) => (
               <GlassPanel key={territory.territoryId} elevation="base" context="phone" padding="none" className="rounded-2xl">

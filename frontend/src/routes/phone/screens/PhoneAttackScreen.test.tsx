@@ -269,8 +269,7 @@ describe('PhoneAttackScreen', () => {
 
       render(<PhoneAttackScreen {...fixtureProps({ state, playerId: 'alice', me: state.players[0] })} />)
 
-      // "Aanvallen vanuit" komt dubbel voor (kop + stap-indicator) — de subtitel is uniek.
-      expect(screen.getByText('Kies een van je gebieden dat kan aanvallen.')).toBeInTheDocument()
+      expect(screen.getByText('Aanvallen vanuit')).toBeInTheDocument()
     })
   })
 })

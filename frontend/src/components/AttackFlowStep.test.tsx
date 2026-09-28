@@ -135,9 +135,7 @@ describe('AttackFlowStep', () => {
       />,
     )
 
-    // "Aanvallen vanuit" komt ook voor als staplabel in de stap-indicator (altijd zichtbaar,
-    // ongeacht fase) — de subtitel van de bron-picker is wél uniek voor die stap.
-    expect(screen.queryByText('Kies een van je gebieden dat kan aanvallen.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aanvallen vanuit')).not.toBeInTheDocument()
     expect(screen.getByText('Uitkomst')).toBeInTheDocument()
   })
 
