@@ -179,9 +179,9 @@ select:focus-visible,
   }
 }
 /* Verloop-ticker (plan-testronde-tv punt 4): `atlasFrameIn` framet het paneel in bij de eerste
-   actie (`tvAnimations.feedFrameIn`), `atlasTickerIn` laat een nieuwe band van rechts binnenkomen
-   en `atlasTicker` laat de dubbele band daarna doorlopen (`tvAnimations.ticker`).
-   Zelfde waarden als `tvKeyframes` in motion.ts. */
+   actie (`tvAnimations.feedFrameIn`). Een nieuwe regel komt binnen via de Web Animations API
+   (`tvAnimations.tickerEnter`), niet via een keyframe hier. Zelfde waarden als `tvKeyframes` in
+   motion.ts. */
 @keyframes atlasFrameIn {
   0% {
     opacity: 0;
@@ -190,22 +190,6 @@ select:focus-visible,
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-@keyframes atlasTicker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-@keyframes atlasTickerIn {
-  0% {
-    transform: translateX(var(--ticker-lane));
-  }
-  100% {
-    transform: translateX(0);
   }
 }
 @keyframes atlasOverlayIn {

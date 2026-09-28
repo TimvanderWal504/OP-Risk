@@ -166,7 +166,8 @@ export interface GameStateDto {
   events: EventSummaryDto[]
   /** Wat de volgende kaarteninleg oplevert — het voorbeeld bij de inlegregel in spelinfo. */
   nextCardTradeValue: number
-  /** Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst; hoogstens 10 regels. */
+  /** Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst; hoogstens 10 regels. Het
+   *  volledige verloop komt apart, via `GetActionLog` (`useGameState.loadActionLog`). */
   recentActions: RecentActionDto[]
   /** Startlegers per speler in dit spel; `null` in de lobby. */
   startingArmies: number | null

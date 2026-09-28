@@ -46,6 +46,7 @@ export function PhonePage() {
     fortify,
     endTurn,
     setTvDisplay,
+    loadActionLog,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase)
   useDocumentTitle('player')
@@ -104,6 +105,7 @@ export function PhonePage() {
           phase={headerPhase}
           tradeInCards={tradeInCards}
           setTvDisplay={setTvDisplay}
+          loadActionLog={loadActionLog}
           error={error}
         />
       )}

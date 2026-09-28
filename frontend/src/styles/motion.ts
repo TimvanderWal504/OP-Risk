@@ -56,12 +56,6 @@ export const tvKeyframes = {
   atlasOverlayIn: `0%{opacity:0;}100%{opacity:1;}`,
   atlasOverlayOut: `0%{opacity:1;}100%{opacity:0;}`,
   atlasStageIn: `0%{opacity:0;transform:translateY(30px) scale(.965);}100%{opacity:1;transform:translateY(0) scale(1);}`,
-  /** Verloop-ticker (plan-testronde-tv punt 4, besluit gebruiker 2026-09-25 — geen export-waarde): de
-   *  band staat er twee keer in, dus -50% is precies één kopie verder en de lus sluit naadloos. */
-  atlasTicker: `0%{transform:translateX(0);}100%{transform:translateX(-50%);}`,
-  /** Inloop van de ticker (besluit gebruiker 2026-09-26): een nieuwe band komt van de rechterrand
-   *  binnen, zoals hij links weer uitloopt. `--ticker-lane` is de gemeten breedte van de baan. */
-  atlasTickerIn: `0%{transform:translateX(var(--ticker-lane));}100%{transform:translateX(0);}`,
   /** C12 — framing (paneel/feed) komt in terwijl het bord blijft staan; het bord-svg zelf animeert nooit (L59). */
   atlasFrameIn: `0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}`,
 } as const;
@@ -164,18 +158,11 @@ export const tvAnimations = {
   /** C12 — rechterspelerspaneel en feed-strip framen in terwijl het bord blijft staan; feed start .06s later (L371/L407). */
   panelFrameIn: 'atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both',
   feedFrameIn: 'atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both',
-  /** Verloop-ticker (plan-testronde-tv punt 4, besluit gebruiker 2026-09-25): doorlopend van rechts
-   *  naar links, lineair, met een duur die volgt uit de breedte van één kopie van de band
-   *  (`tickerSpeedPxPerS`), zodat de leessnelheid gelijk blijft hoe lang het verloop ook is. Geen
-   *  `both`: onder reduced-motion eindigt de (dan eenmalige, 0.001ms-)animatie en valt de band terug
-   *  op het begin — het nieuwste item links in beeld. */
-  /** Sinds 2026-09-26 (besluit gebruiker) voorafgegaan door een inloop: eerst `atlasTickerIn` over
-   *  de baan, daarna naadloos de lus — beide op `tickerSpeedPxPerS`, dus één doorgaande beweging. */
-  ticker: (introS: number, loopS: number) =>
-    `atlasTickerIn ${introS.toFixed(2)}s linear, atlasTicker ${loopS.toFixed(2)}s linear ${introS.toFixed(2)}s infinite`,
-  /** Leessnelheid van de ticker op de TV, in CSS-pixels per seconde (niet uit de export; te
-   *  verifiëren op een echte TV; 70 bleek op de TV te traag, besluit gebruiker 2026-09-25). */
-  tickerSpeedPxPerS: 85,
+  /** Verloop-ticker (plan-testronde-tv punt 4; besluit gebruiker 2026-09-26): een stilstaande rij
+   *  waar een nieuwe regel rechts binnenkomt. De rij schuift over de breedte van die regel naar
+   *  links en de regel vervaagt in. De afstand is gemeten, dus dit is de Web Animations API-timing
+   *  in plaats van een keyframe-string; duur en easing zijn die van `panelFrameIn`/`feedFrameIn`. */
+  tickerEnter: { durationMs: 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
 } as const;
 
 // ---------------------------------------------------------------------------

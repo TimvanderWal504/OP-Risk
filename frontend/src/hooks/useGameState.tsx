@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { useCombatBroadcast } from './useCombatBroadcast'
-import { GamePhaseDto, type GameStateDto } from '../types/GameState'
+import { GamePhaseDto, type GameStateDto, type RecentActionDto } from '../types/GameState'
 import type {
   CombatResultResponse,
   DeclareAttackResponse,
@@ -446,6 +446,15 @@ export function useGameState(gameId: string) {
     [invoke, gameId, playerId],
   )
 
+  // Het volledige verloop voor het tabblad Spelverloop (besluit gebruiker 2026-09-26): los van de
+  // state, die er maar een paar meestuurt. Bewust niet via `invoke`: een mislukte leesactie toont
+  // het tabblad zelf als fout, niet als algemene foutmelding in de header.
+  const loadActionLog = useCallback(async (): Promise<RecentActionDto[]> => {
+    if (!connection) throw new Error('GetActionLog zonder verbinding')
+
+    return connection.invoke<RecentActionDto[]>('GetActionLog', gameId)
+  }, [connection, gameId])
+
   const combat = useCombatBroadcast(connection)
 
   return {
@@ -476,5 +485,6 @@ export function useGameState(gameId: string) {
     fortify,
     endTurn,
     setTvDisplay,
+    loadActionLog,
   }
 }

@@ -12,7 +12,7 @@ import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
 import { resolvePhoneHeaderStatus } from '../routes/phone/screens/resolvePhoneHeaderStatus'
 import { TurnPhaseDto } from '../types/GameState'
-import type { GameStateDto, GamePhaseDto as GamePhaseDtoType } from '../types/GameState'
+import type { GameStateDto, GamePhaseDto as GamePhaseDtoType, RecentActionDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 import type { TvDisplaySettingsDto } from '../types/TvDisplay'
 import { tDynamic } from '../i18n/useT'
@@ -28,6 +28,8 @@ export interface PhonePlayerHeaderProps {
   tradeInCards: (cardIds: string[]) => Promise<void>
   /** TV-weergave instellen (plan-testronde-tv punt 2) — de actie staat alleen bij de host. */
   setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
+  /** Het volledige verloop voor het tabblad Spelverloop in spelinfo. */
+  loadActionLog: () => Promise<RecentActionDto[]>
   error: string | null
 }
 
@@ -49,7 +51,15 @@ export interface PhonePlayerHeaderProps {
  * mount. `useMissionPanel` mag de hook daarom onvoorwaardelijk aanroepen (nooit `null`, wel
  * eventueel `''` voor WorldDomination-potjes zonder missies).
  */
-export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay, error }: PhonePlayerHeaderProps) {
+export function PhonePlayerHeader({
+  state,
+  me,
+  phase,
+  tradeInCards,
+  setTvDisplay,
+  loadActionLog,
+  error,
+}: PhonePlayerHeaderProps) {
   const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay'])
   const color = state.colors.find((c) => c.id === me.colorId)
   const mission = useMissionPanel(me.missionId ?? '')
@@ -169,7 +179,9 @@ export function PhonePlayerHeader({ state, me, phase, tradeInCards, setTvDisplay
           error={error}
         />
       )}
-      {gameInfoOpen && <GameInfoPanel state={state} me={me} onClose={() => setGameInfoOpen(false)} />}
+      {gameInfoOpen && (
+        <GameInfoPanel state={state} me={me} loadActionLog={loadActionLog} onClose={() => setGameInfoOpen(false)} />
+      )}
       {me.isHost && tvDisplayOpen && (
         <TvDisplayPanel
           settings={state.tvDisplay}

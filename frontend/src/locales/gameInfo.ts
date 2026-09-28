@@ -1,7 +1,9 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * Spelinfo op de telefoon (FO §2.2 punt 3, plan-testronde-tv punt 3): stand, spelregels en rollen.
+ * Spelinfo op de telefoon (FO §2.2 punt 3, plan-testronde-tv punt 3): stand, spelverloop,
+ * spelregels en rollen. De zinnen van het spelverloop zelf staan in `actionTicker.ts`, gedeeld met
+ * de TV.
  *
  * De regelzinnen leggen elke regel in woorden én met een voorbeeld uit (besluit gebruiker). Vaste
  * regelconstanten (minstens 3 legers, hoogstens 3 dobbelstenen, …) staan als uitleg in de tekst;
@@ -14,8 +16,14 @@ export const gameInfo = {
   close: { nl: 'Sluiten', en: 'Close' },
   tabs: {
     standings: { nl: 'Stand', en: 'Standings' },
+    history: { nl: 'Spelverloop', en: 'Game log' },
     rules: { nl: 'Regels', en: 'Rules' },
     roles: { nl: 'Rollen', en: 'Roles' },
+  },
+  history: {
+    loading: { nl: 'Verloop laden…', en: 'Loading the game log…' },
+    error: { nl: 'Het verloop kon niet worden geladen.', en: 'The game log could not be loaded.' },
+    empty: { nl: 'Nog geen acties.', en: 'No actions yet.' },
   },
   standings: {
     territories: { nl: '{{count}} gebieden', en: '{{count}} territories' },

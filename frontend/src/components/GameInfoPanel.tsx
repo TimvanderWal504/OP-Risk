@@ -7,30 +7,34 @@ import { SegmentedControl, type SegmentedOption } from './ui/SegmentedControl'
 import { GameInfoStandings } from './GameInfoStandings'
 import { GameInfoRules } from './GameInfoRules'
 import { GameInfoRoles } from './GameInfoRoles'
-import type { GameStateDto } from '../types/GameState'
+import { GameInfoHistory } from './GameInfoHistory'
+import type { GameStateDto, RecentActionDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 
 export interface GameInfoPanelProps {
   state: GameStateDto
   me: PlayerDto
+  /** Het volledige verloop voor het tabblad Spelverloop (`useGameState.loadActionLog`). */
+  loadActionLog: () => Promise<RecentActionDto[]>
   onClose: () => void
 }
 
-type GameInfoTab = 'standings' | 'rules' | 'roles'
+type GameInfoTab = 'standings' | 'history' | 'rules' | 'roles'
 
 /**
- * Spelinfo op de telefoon (FO §2.2 punt 3, plan-testronde-tv punt 3): stand, spelregels en — alleen
- * als rollen aan staan — rollen. Zelfde full-screen `ModalShell`-patroon en `z-50` als
+ * Spelinfo op de telefoon (FO §2.2 punt 3, plan-testronde-tv punt 3): stand, spelverloop (besluit
+ * gebruiker 2026-09-26), spelregels en — alleen als rollen aan staan — rollen. Zelfde full-screen `ModalShell`-patroon en `z-50` als
  * `MissionPanel`/`TvDisplayPanel`: een vrijwillige "even kijken"-actie, dus een combat-modal kan er
  * altijd boven komen. Gebeurtenissen horen bij de regels (besluit gebruiker) en staan daar als
  * sectie, niet als eigen tabblad.
  */
-export function GameInfoPanel({ state, me, onClose }: GameInfoPanelProps) {
+export function GameInfoPanel({ state, me, loadActionLog, onClose }: GameInfoPanelProps) {
   const { t } = useTranslation('gameInfo')
   const [tab, setTab] = useState<GameInfoTab>('standings')
 
   const tabs: SegmentedOption<GameInfoTab>[] = [
     { value: 'standings', label: t('tabs.standings') },
+    { value: 'history', label: t('tabs.history') },
     { value: 'rules', label: t('tabs.rules') },
     ...(state.settings.rolesEnabled ? [{ value: 'roles' as const, label: t('tabs.roles') }] : []),
   ]
@@ -47,6 +51,7 @@ export function GameInfoPanel({ state, me, onClose }: GameInfoPanelProps) {
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {tab === 'standings' && <GameInfoStandings state={state} me={me} />}
+        {tab === 'history' && <GameInfoHistory state={state} loadActionLog={loadActionLog} />}
         {tab === 'rules' && <GameInfoRules state={state} />}
         {tab === 'roles' && state.settings.rolesEnabled && <GameInfoRoles state={state} me={me} />}
       </div>
