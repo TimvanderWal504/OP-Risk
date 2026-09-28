@@ -378,7 +378,7 @@ moeten maken voordat het spel verdergaat:
 | Verplaatsen-timer | Aanpasbaar | 1 min |
 | Rollen | Aan / uit | Uit |
 | Roltoewijzing (alleen als Rollen = Aan) | Random / Kiezen | Random | 
-| Gebeurtenisronde | Aan / uit (de kaarten zijn die van de gekozen kaartvariant) | Uit |
+| Gebeurtenisronde | Aan / uit (de kaarten zijn die van de gekozen kaartvariant; heeft die variant geen gebeurteniskaarten, dan weigert de server de start zolang de gebeurtenisronde aan staat) | Uit |
 | Kaartenset-waardering | Klassiek escalerend | Klassiek |
 | Kaartweergavethema | Klassiek / Modern (`cards.json themes`) | Klassiek — **nog niet geïmplementeerd**, staat vandaag vast op Klassiek |
 

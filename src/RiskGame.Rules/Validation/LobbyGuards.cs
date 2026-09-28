@@ -133,4 +133,14 @@ public static class LobbyGuards
         state.Map.Missions.Count(mission => mission.MinPlayers <= state.Players.Count) >= state.Players.Count
             ? ValidationResult.Success()
             : ValidationResult.Failure("lobby.insufficientMissions");
+
+    /// <summary>
+    /// Met de gebeurtenisronde aan moet de kaartvariant minstens één gebeurteniskaart hebben
+    /// (FO §10, besluit 2026-09-28): events.json mag leeg zijn, maar dan kan er na de eerste
+    /// ronde niets getrokken worden. Liever een weigering bij de start dan een fout midden in het spel.
+    /// </summary>
+    public static ValidationResult HasEventCards(GameState state) =>
+        state.Map.Events.Count > 0
+            ? ValidationResult.Success()
+            : ValidationResult.Failure("lobby.noEventCards");
 }

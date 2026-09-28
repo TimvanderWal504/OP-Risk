@@ -94,6 +94,10 @@ export const errors = {
       nl: 'Onvoldoende missies beschikbaar voor het aantal spelers.',
       en: 'Not enough missions available for the number of players.',
     },
+    noEventCards: {
+      nl: 'Deze kaart heeft geen gebeurteniskaarten. Zet de gebeurtenisronde uit om te starten.',
+      en: 'This map has no event cards. Turn off the event round to start.',
+    },
     cannotRemoveHost: {
       nl: 'De host kan niet verwijderd worden.',
       en: 'The host cannot be removed.',

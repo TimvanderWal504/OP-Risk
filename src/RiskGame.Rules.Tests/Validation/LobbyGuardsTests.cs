@@ -1,3 +1,4 @@
+using RiskGame.Rules.Map;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
 
@@ -5,9 +6,10 @@ namespace RiskGame.Rules.Tests;
 
 public sealed class LobbyGuardsTests
 {
-    private static GameState LobbyState(IReadOnlyList<Player>? players = null, GamePhase phase = GamePhase.Lobby)
+    private static GameState LobbyState(
+        IReadOnlyList<Player>? players = null, GamePhase phase = GamePhase.Lobby, MapDefinition? map = null)
     {
-        var map = Standaard43Data.Load();
+        map ??= Standaard43Data.Load();
 
         return new GameState(
             gameId: "test-game",
@@ -169,5 +171,26 @@ public sealed class LobbyGuardsTests
         var state = LobbyState(players);
 
         Assert.True(LobbyGuards.MissionPoolIsLargeEnough(state).IsSuccess);
+    }
+
+    [Fact]
+    public void HasEventCards_MetDeGebeurteniskaartenVanStandaard43_IsGeldig() =>
+        Assert.True(LobbyGuards.HasEventCards(LobbyState()).IsSuccess);
+
+    /// <summary>
+    /// Een kaartvariant mag zonder gebeurteniskaarten komen (de parser keurt een lege lijst goed),
+    /// maar dan kan de gebeurtenisronde niet aan (FO §10).
+    /// </summary>
+    [Fact]
+    public void HasEventCards_KaartvariantZonderGebeurteniskaarten_IsOngeldig()
+    {
+        var parsed = MapDefinitionParser.Parse(
+            Standaard43Data.MapId, Standaard43Data.Sources() with { EventsJson = """{ "events": [] }""" });
+
+        Assert.True(parsed.IsSuccess, string.Join(" | ", parsed.Errors));
+
+        var result = LobbyGuards.HasEventCards(LobbyState(map: parsed.Value));
+
+        Assert.Equal("lobby.noEventCards", Assert.Single(result.Errors).Code);
     }
 }

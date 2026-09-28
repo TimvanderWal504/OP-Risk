@@ -171,6 +171,11 @@ public sealed class LobbyCommandHandler(
             validations.Add(LobbyGuards.MissionPoolIsLargeEnough(state));
         }
 
+        if (state.Settings.EventsEnabled)
+        {
+            validations.Add(LobbyGuards.HasEventCards(state));
+        }
+
         var validation = ValidationResult.Combine(validations.ToArray());
 
         if (!validation.IsSuccess)
