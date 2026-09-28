@@ -17,6 +17,12 @@ namespace RiskGame.Api.Dtos;
 public static class GameStateDtoMapper
 {
     /// <summary>
+    /// Zoveel regels van het verloop gaan mee in elke state-update: wat de TV-ticker toont
+    /// (plan-testronde-tv punt 4, "de laatste 10"). Weergavegrens, geen spelregel.
+    /// </summary>
+    public const int TvRecentActionCount = 10;
+
+    /// <summary>
     /// <paramref name="timeProvider"/> is verplicht (geen intern <c>DateTimeOffset.UtcNow</c>)
     /// zodat <see cref="TurnTimerDto.RemainingMs"/> deterministisch en testbaar blijft — zelfde
     /// patroon als <see cref="RiskGame.Api.Services.TurnTimerBackgroundService"/>.
@@ -119,14 +125,7 @@ public static class GameStateDtoMapper
         // dus een spelersaantal buiten het preset levert geen fout maar geen getal.
         int? startingArmiesPerPlayer = state.Phase == GamePhase.Lobby ? null : StartingArmiesResolver.TryResolve(state);
 
-        // FO §6.2: het laatste-kans-venster is alleen openbaar bij "Volle ronde met onthulling" —
-        // dezelfde grens als pendingWinnerPlayerId hierboven.
-        var revealsLastChance = state.Settings.MissionWinTiming == MissionWinTiming.FullRoundRevealed;
-        var recentActions = state.RecentActions
-            .Where(action => revealsLastChance
-                || action.Kind is not (RecentActionKind.LastChanceOpened or RecentActionKind.LastChanceBroken))
-            .Select(ToDto)
-            .ToArray();
+        var recentActions = ToActionLogDto(state).Take(TvRecentActionCount).ToArray();
 
         return new GameStateDto(
             state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
@@ -137,6 +136,25 @@ public static class GameStateDtoMapper
             // de aanroeper vult 'm via OrderRollProgressReader.
             OrderRollState: null,
             setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer);
+    }
+
+    /// <summary>
+    /// Het volledige openbare verloop, nieuwste eerst: voor het tabblad Spelverloop op de telefoon
+    /// (<c>GameHub.GetActionLog</c>) en, afgekapt, voor <see cref="GameStateDto.RecentActions"/>.
+    /// FO §6.2: het laatste-kans-venster is alleen openbaar bij "Volle ronde met onthulling" —
+    /// dezelfde grens als <see cref="GameStateDto.PendingWinnerPlayerId"/>.
+    /// </summary>
+    public static IReadOnlyList<RecentActionDto> ToActionLogDto(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var revealsLastChance = state.Settings.MissionWinTiming == MissionWinTiming.FullRoundRevealed;
+
+        return state.RecentActions
+            .Where(action => revealsLastChance
+                || action.Kind is not (RecentActionKind.LastChanceOpened or RecentActionKind.LastChanceBroken))
+            .Select(ToDto)
+            .ToArray();
     }
 
     private static RecentActionDto ToDto(RecentAction action) =>

@@ -33,7 +33,10 @@ namespace RiskGame.Api.Dtos;
 /// herhaald hoeft te worden.
 /// </param>
 /// <param name="RecentActions">
-/// Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst — openbaar, gaat naar iedereen.
+/// Het verloop op de TV (plan-testronde-tv punt 4): de laatste
+/// <see cref="GameStateDtoMapper.TvRecentActionCount"/> regels, nieuwste eerst — openbaar, gaat naar
+/// iedereen. Het volledige verloop haalt de telefoon apart op (<c>GameHub.GetActionLog</c>), zodat
+/// deze update niet meegroeit met de lengte van het spel.
 /// Laatste-kans-regels staan er alleen in bij <see cref="MissionWinTimingDto.FullRoundRevealed"/>,
 /// om dezelfde reden als <paramref name="PendingWinnerPlayerId"/> (FO §6.2).
 /// </param>

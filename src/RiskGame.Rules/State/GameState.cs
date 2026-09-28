@@ -116,8 +116,8 @@ public sealed class GameState
     public TvDisplaySettings TvDisplay { get; }
 
     /// <summary>
-    /// Het verloop op de TV (plan-testronde-tv punt 4), nieuwste eerst, bijgehouden via
-    /// <see cref="RecentActionLog"/>. Geen spelregel — zelfde status als <see cref="TvDisplay"/>.
+    /// Het volledige verloop van het spel (plan-testronde-tv punt 4), nieuwste eerst, bijgehouden
+    /// via <see cref="RecentActionLog"/>. Geen spelregel — zelfde status als <see cref="TvDisplay"/>.
     /// Nooit null: een spel van vóór dit veld begint met een leeg verloop.
     /// </summary>
     public IReadOnlyList<RecentAction> RecentActions { get; }

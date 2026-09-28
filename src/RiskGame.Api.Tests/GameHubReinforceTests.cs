@@ -250,7 +250,7 @@ public sealed class GameHubReinforceTests(PostgresFixture postgres)
 
         var granted = updated.RecentActions[1];
         Assert.Equal((RecentActionKindDto.ReinforcementsGranted, aliceId, 7), (granted.Kind, granted.PlayerId, granted.Amount));
-        Assert.True(updated.RecentActions.Count <= 10);
+        Assert.True(updated.RecentActions.Count <= GameStateDtoMapper.TvRecentActionCount);
     }
 
     [Fact]

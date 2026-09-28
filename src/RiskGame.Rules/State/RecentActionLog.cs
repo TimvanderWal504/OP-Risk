@@ -1,20 +1,18 @@
 namespace RiskGame.Rules.State;
 
 /// <summary>
-/// Houdt het verloop bij (<see cref="GameState.RecentActions"/>, nieuwste eerst): puur en
-/// deterministisch, zodat de projectie alleen nog aanroept en de samenvoegregels los te testen zijn.
+/// Houdt het volledige verloop bij (<see cref="GameState.RecentActions"/>, nieuwste eerst): puur
+/// en deterministisch, zodat de projectie alleen nog aanroept en de samenvoegregels los te testen
+/// zijn. Hoeveel regels een client krijgt, bepaalt de API (de TV de laatste paar, het tabblad
+/// Spelverloop op de telefoon alles; besluit gebruiker 2026-09-26).
 /// </summary>
 public static class RecentActionLog
 {
-    /// <summary>Zoveel regels houdt het verloop vast (plan-testronde-tv punt 4: "de laatste 10").</summary>
-    public const int MaxEntries = 10;
-
     /// <summary>
     /// Voegt <paramref name="action"/> toe. Heeft de bovenste regel dezelfde sleutel (zie
     /// <see cref="CanMerge"/>), dan werkt die regel bij en blijft zijn <see cref="RecentAction.Sequence"/>
-    /// gelijk; anders komt de actie vooraan met het volgende volgnummer en valt de oudste regel
-    /// boven <see cref="MaxEntries"/> weg. De <c>Sequence</c> van <paramref name="action"/> zelf
-    /// wordt genegeerd.
+    /// gelijk; anders komt de actie vooraan met het volgende volgnummer. De <c>Sequence</c> van
+    /// <paramref name="action"/> zelf wordt genegeerd.
     /// </summary>
     public static IReadOnlyList<RecentAction> Append(IReadOnlyList<RecentAction> log, RecentAction action)
     {
@@ -28,15 +26,16 @@ public static class RecentActionLog
 
         var next = action with { Sequence = log.Count > 0 ? log[0].Sequence + 1 : 1 };
 
-        return [next, .. log.Take(MaxEntries - 1)];
+        return [next, .. log];
     }
 
     /// <summary>
     /// Werkt de meest recente regel bij die aan <paramref name="matches"/> voldoet, op zijn eigen
     /// plek en met zijn eigen volgnummer — voor een actie die bij een eerdere regel hoort maar
     /// niet per se bij de bovenste (een meeverplaatsing na een verovering die een uitschakeling
-    /// opleverde). Geen passende regel is geen fout: het verloop kan ingekort zijn, of het spel
-    /// liep al vóór er een verloop bestond; dan blijft het log ongewijzigd.
+    /// opleverde). Geen passende regel is geen fout: het spel liep al vóór er een verloop bestond,
+    /// of vóór het verloop volledig bewaard werd (tot 2026-09-26 hoogstens 10 regels); dan blijft
+    /// het log ongewijzigd.
     /// </summary>
     public static IReadOnlyList<RecentAction> Update(
         IReadOnlyList<RecentAction> log, Func<RecentAction, bool> matches, Func<RecentAction, RecentAction> change)

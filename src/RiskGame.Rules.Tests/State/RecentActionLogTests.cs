@@ -101,18 +101,17 @@ public sealed class RecentActionLogTests
     }
 
     [Fact]
-    public void Append_KaptAfOpHetMaximum_EnHoudtDeNieuwste()
+    public void Append_HoudtHetVolledigeVerloopBij_NieuwsteEerst()
     {
-        var actions = Enumerable.Range(1, RecentActionLog.MaxEntries + 3)
+        var actions = Enumerable.Range(1, 25)
             .Select(i => new RecentAction(RecentActionKind.CardsTraded, PlayerId: "p1", Amount: i))
             .ToArray();
 
         var log = AppendAll(actions);
 
-        Assert.Equal(RecentActionLog.MaxEntries, log.Count);
-        Assert.Equal(RecentActionLog.MaxEntries + 3, log[0].Sequence);
-        Assert.Equal(RecentActionLog.MaxEntries + 3, log[0].Amount);
-        Assert.Equal(4, log[^1].Amount);
+        Assert.Equal(25, log.Count);
+        Assert.Equal(Enumerable.Range(1, 25).Reverse(), log.Select(action => action.Sequence));
+        Assert.Equal(Enumerable.Range(1, 25).Reverse(), log.Select(action => action.Amount!.Value));
     }
 
     [Fact]

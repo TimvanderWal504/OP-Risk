@@ -4,7 +4,7 @@ using RiskGame.Rules.State;
 namespace RiskGame.Persistence.Projections;
 
 /// <summary>
-/// Het verloop op de TV (plan-testronde-tv punt 4): welke events een regel in
+/// Het verloop (plan-testronde-tv punt 4; TV en het tabblad Spelverloop): welke events een regel in
 /// <see cref="GameState.RecentActions"/> opleveren, allemaal op één plek. Elke <c>Record</c>
 /// krijgt de state ná de eigen vouwregel van het event, zodat totalen en eigenaars alleen worden
 /// afgelezen — geen spellogica (src/CLAUDE.md, event sourcing-kaders). Samenvoegen doet

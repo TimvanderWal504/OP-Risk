@@ -200,13 +200,7 @@ public sealed class GameHub(
         await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Tv(gameId));
 
         await using var session = store.QuerySession();
-        var state = await session.LoadAsync<GameState>(gameId);
-
-        if (state is null)
-        {
-            throw new HubException(HubErrorSerializer.Serialize(
-                new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
-        }
+        var state = await LoadGameOrThrowAsync(session, gameId);
 
         var dto = GameStateDtoMapper.ToDto(state, timeProvider) with
         {
@@ -216,6 +210,26 @@ public sealed class GameHub(
 
         return GameStateDtoMapper.RedactForTv(dto);
     }
+
+    /// <summary>
+    /// Het volledige verloop voor het tabblad Spelverloop op de telefoon, nieuwste eerst. Los van
+    /// de state-update, die er alleen de laatste <see cref="GameStateDtoMapper.TvRecentActionCount"/>
+    /// meestuurt. Openbare informatie (de TV toont het ook), dus geen spelercontrole; wel dezelfde
+    /// laatste-kans-filter als in de state (<see cref="GameStateDtoMapper.ToActionLogDto"/>).
+    /// </summary>
+    public async Task<IReadOnlyList<RecentActionDto>> GetActionLog(string gameId)
+    {
+        await using var session = store.QuerySession();
+        var state = await LoadGameOrThrowAsync(session, gameId);
+
+        return GameStateDtoMapper.ToActionLogDto(state);
+    }
+
+    /// <summary>Laadt de state voor een leesaanroep; een onbekend spel wordt een <c>common.unknownGame</c>-fout.</summary>
+    private static async Task<GameState> LoadGameOrThrowAsync(IQuerySession session, string gameId) =>
+        await session.LoadAsync<GameState>(gameId)
+            ?? throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
 
     public async Task<JoinGameResponse> JoinGame(string gameId, string playerName)
     {
@@ -265,13 +279,7 @@ public sealed class GameHub(
     public async Task<GameStateDto> RejoinGame(string gameId, string playerId, string sessionToken = "")
     {
         await using var session = store.QuerySession();
-        var state = await session.LoadAsync<GameState>(gameId);
-
-        if (state is null)
-        {
-            throw new HubException(HubErrorSerializer.Serialize(
-                new ValidationError("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId })));
-        }
+        var state = await LoadGameOrThrowAsync(session, gameId);
 
         if (!state.HasPlayer(playerId))
         {

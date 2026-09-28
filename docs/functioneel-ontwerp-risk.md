@@ -36,7 +36,7 @@ De telefoon van de speler toont drie soorten informatie:
 
 1. **Contextuele actieknoppen** — alleen de acties die de speler op dát moment mag doen: "Val aan" (+ onderliggende stappen), "Versterk" (+ onderliggende stappen), "Verplaats", "Beëindig beurt", "Leg kaarten in", "Gooi", dobbelsteenkeuze bij verdediging.
 2. **Privé-informatie** — eigen territoriumkaarten en eigen geheime missie. Deze verschijnen nooit op de TV. Uitzondering: zie §6.2 voor de naam-onthulling tijdens een laatste-kans-venster (winconditie Geheime missies, timing-optie "Volle ronde met onthulling") — die onthult wie mogelijk wint, nooit de missie-inhoud zelf.
-3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen.
+3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen. Daarnaast het volledige spelverloop: elke openbare actie van het spel, nieuwste bovenaan (de TV toont alleen de laatste paar).
 
 De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), en na afloop direct een nieuw spel opzetten (§7).
 

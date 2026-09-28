@@ -144,6 +144,8 @@ Commando binnen (SignalR)
 | `RegisterTv` (TV) | vóór een spel | Geen — geeft de aanroepende connectie een koppelcode (zelfde alfabet/lengte als een spelcode) voor "TV koppelen" (FO §2.2). Opnieuw aanroepen vervangt de vorige code van die connectie |
 | `SendGameToTv` (host-telefoon) | elke | Spel bestaat (`common.unknownGame`), daarna pas koppelcode bestaat (`tvPairing.unknownCode`) — zo maakt een typefout in de spelcode de QR niet onbruikbaar. Neemt de code in (eenmalig) en pusht `TvPaired(gameId)` naar alleen die TV-connectie. Bewust **geen** rate limit (anders dan `JoinGame`, §8): het ergste gevolg van een geraden code is een vreemd spel op iemands TV, en codes zijn kortlevend en eenmalig |
 
+**Het volledige verloop is een leesaanroep, geen commando.** `GetActionLog(gameId)` levert elke openbare regel uit `GameState.RecentActions` (nieuwste eerst, laatste-kans-regels alleen bij "Volle ronde met onthulling"), voor het tabblad Spelverloop op de telefoon. De state-update stuurt er maar de laatste 10 mee (`GameStateDtoMapper.TvRecentActionCount`), zodat hij niet meegroeit met de lengte van het spel.
+
 **TV-koppeling is geen commando op het spel.** `RegisterTv`/`SendGameToTv` raken de event store niet: een koppeling is transiënte verbindingsinfo, geen speltoestand. De server houdt ze in-memory bij (`TvPairingRegistry`, per connectie, opgeruimd bij disconnect). Gevolgen: na een server-herstart of reconnect vraagt de TV zelf een nieuwe code aan, en bij meerdere serverinstanties moeten TV en host-telefoon op dezelfde instantie uitkomen — dezelfde beperking als de SignalR-groepen zonder backplane.
 
 ### 4.2 Server-side dobbelen

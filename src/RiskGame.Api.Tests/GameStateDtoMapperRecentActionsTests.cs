@@ -108,6 +108,40 @@ public sealed class GameStateDtoMapperRecentActionsTests
     }
 
     [Fact]
+    public void StateUpdate_NeemtAlleenDeNieuwsteRegelsMee_HetVerloopAlles()
+    {
+        var total = GameStateDtoMapper.TvRecentActionCount + 5;
+        var newestFirst = Enumerable.Range(1, total)
+            .Reverse()
+            .Select(sequence => new RecentAction(RecentActionKind.CardsTraded, sequence, PlayerId: "alice", Amount: 4))
+            .ToArray();
+        var state = State(MissionWinTiming.EndOfTurn, newestFirst);
+
+        var dto = GameStateDtoMapper.ToDto(state, TimeProvider.System);
+        var log = GameStateDtoMapper.ToActionLogDto(state);
+
+        Assert.Equal(
+            Enumerable.Range(1, total).Reverse().Take(GameStateDtoMapper.TvRecentActionCount),
+            dto.RecentActions.Select(action => action.Sequence));
+        Assert.Equal(Enumerable.Range(1, total).Reverse(), log.Select(action => action.Sequence));
+    }
+
+    [Theory]
+    [InlineData(MissionWinTiming.EndOfTurn)]
+    [InlineData(MissionWinTiming.StartOfNextTurn)]
+    public void Verloop_ZonderOnthulling_VerbergtOokDaarDeLaatsteKans(MissionWinTiming timing)
+    {
+        var state = State(
+            timing,
+            new RecentAction(RecentActionKind.LastChanceOpened, 2, PlayerId: "alice"),
+            new RecentAction(RecentActionKind.CardsTraded, 1, PlayerId: "alice", Amount: 4));
+
+        var log = GameStateDtoMapper.ToActionLogDto(state);
+
+        Assert.Equal(RecentActionKindDto.CardsTraded, Assert.Single(log).Kind);
+    }
+
+    [Fact]
     public void LaatsteKans_MetOnthulling_IsZichtbaar()
     {
         var state = State(
