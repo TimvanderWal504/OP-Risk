@@ -64,7 +64,10 @@ GameState
 ├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat? {from, to, attackDice,
 │                    attackerRolls, awaitingRerollDecision}, rerolledTargetTerritoryIds[], fortifiesUsed, ...)
 ├─ Deck             (trekstapel, aflegstapel, volgende inleg-waarde)
-├─ ActiveEffects[]  (lopende event-effecten met resterende duur)
+├─ ActiveEffects[]  (lopende oneRound-gebeurteniseffecten; verlopen op de volgende rondegrens)
+├─ CurrentEvent?    (laatst getrokken gebeurteniskaart, tot de volgende trekking)
+├─ EventDeck        (trekvolgorde van de gebeurteniskaarten, zonder teruglegging)
+├─ PendingAttrition? (lopende ArmyAttrition-keuzes tussen twee beurten: amount, wachtende spelers, volgende speler)
 └─ TurnOrder[]      (spelersvolgorde, bepaald door de order-roll)
 ```
 
@@ -95,7 +98,7 @@ De adjacency-graaf wordt bij opstart uit `adjacency_validated.json` in een `Dict
 - **`GetAttackableTargets(from)`** — buren van `from` in bezit van een ándere speler, minus geblokkeerde zeeroutes als `SeaRoutesBlocked` actief is.
 - **`GetFortifyPath(from, to)`** — bestaat er een aaneengesloten pad via **eigen** gebieden? (moderne fortify, FO §5.2). BFS over de graaf, beperkt tot gebieden van de actieve speler, met dezelfde zee-blokkade-filter.
 
-**`SeaRoutesBlocked`-afhandeling (FO §9.2):** het effect filtert `type: "sea"`-grenzen weg. Ondersteunt de optionele `routes`-parameter voor gedeeltelijke blokkade. **Kritisch (uit de review, C3):** als een speler door de blokkade nul geldige aanvallen én nul geldige verplaatsingen heeft, slaat de engine die fase automatisch over met een expliciete melding — dit is bedoeld gedrag, geen bug. Getest scenario: 6 eilandgebieden (Groenland, IJsland, Groot-Brittannië, Japan, Madagaskar, Nieuw-Guinea) raken volledig geïsoleerd bij volledige blokkade.
+**`SeaRoutesBlocked`-afhandeling (FO §9.2):** het effect filtert `type: "sea"`-grenzen weg. Ondersteunt de optionele `routes`-parameter voor gedeeltelijke blokkade. Heeft een speler door de blokkade nul geldige aanvallen of verplaatsingen, dan slaat de engine die fase **niet** over (herzien 2026-09-26, FO §9.2): een fase afsluiten blijft een speleractie (`EndPhase`/`EndTurn`) of een timer-afloop. De guards leveren dan simpelweg geen geldige doelen. Welke gebieden afgesloten en welke grenzen geblokkeerd zijn, bevragen de guards op één plek (`ActiveEffectQueries`). Getest scenario: 6 eilandgebieden (Groenland, IJsland, Groot-Brittannië, Japan, Madagaskar, Nieuw-Guinea) raken volledig geïsoleerd bij volledige blokkade.
 
 ---
 
@@ -174,9 +177,13 @@ GameCreated, PlayerJoined, ColorChosen, OrderRolled, TurnOrderDetermined,
 TerritoryClaimed, InitialArmyPlaced, RoleAssigned, MissionAssigned,
 CardsTraded, ArmiesReinforced, AttackDeclared, DiceRolled, AttackDieRerolled, AttackDiceKept, CombatResolved,
 TerritoryConquered, ArmiesMovedAfterConquest, Fortified,
-CardDrawn, PlayerEliminated, EventCardDrawn, EffectApplied, EffectExpired,
-PhaseChanged, TurnEnded, MissionCompleted, GameWon
+CardDrawn, PlayerEliminated, EventDeckShuffled, EventCardDrawn, EffectApplied, EffectExpired,
+ArmiesRemoved, PhaseChanged, TurnEnded, MissionCompleted, GameWon
 ```
+
+**Gebeurtenisronde tussen twee beurten (FO §9.2).** Op de rondegrens appendt `EndTurn` — ná de missie-/laatste-kans-afhandeling en alleen zonder `GameWon` — `EffectExpired` voor de lopende effecten, zo nodig `EventDeckShuffled`, dan `EventCardDrawn` en `EffectApplied`. Bonuslegers liggen per speler vast in het event (peilmoment = trekking) en worden bij de volgende `PhaseChanged` naar Versterken van die speler in `ArmiesGranted` meegenomen. Een `ArmyAttrition`-kaart met minstens één speler met keuzevrijheid opent `PendingAttrition` en **sluit `TurnState`** (`null`): zo weigeren alle beurtguards en de timer-service vanzelf, en kan een late timer-tick of een dubbele `EndTurn` geen tweede trekking veroorzaken. `PendingAttrition` bewaart de volgende speler, omdat die zonder `TurnState` niet meer af te leiden is. Elke keuze wordt een `ArmiesRemoved`; de laatste start de beurt van de volgende speler, met versterkingen berekend op de state ná de attrition.
+
+Dit is de eerste plek waar meerdere spelers tegelijk naar dezelfde stream schrijven. Marten weigert een gelijktijdige append al zelf op het stream-versienummer (`EventStreamUnexpectedMaxEventIdException`); `EndTurn` en `RemoveArmies` vangen dat op met dezelfde retry als `SetTvDisplay` (verse sessie, state herladen, opnieuw beoordelen, hooguit 3 pogingen).
 
 De **geprojecteerde `GameState`** (§3.1) is een Marten-projectie (inline of async) over deze events. Clients krijgen nooit de ruwe events, alleen de projectie of deltas daarvan.
 

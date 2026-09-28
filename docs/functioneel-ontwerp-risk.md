@@ -36,7 +36,7 @@ De telefoon van de speler toont drie soorten informatie:
 
 1. **Contextuele actieknoppen** — alleen de acties die de speler op dát moment mag doen: "Val aan" (+ onderliggende stappen), "Versterk" (+ onderliggende stappen), "Verplaats", "Beëindig beurt", "Leg kaarten in", "Gooi", dobbelsteenkeuze bij verdediging.
 2. **Privé-informatie** — eigen territoriumkaarten en eigen geheime missie. Deze verschijnen nooit op de TV. Uitzondering: zie §6.2 voor de naam-onthulling tijdens een laatste-kans-venster (winconditie Geheime missies, timing-optie "Volle ronde met onthulling") — die onthult wie mogelijk wint, nooit de missie-inhoud zelf.
-3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen. Daarnaast het volledige spelverloop: elke openbare actie van het spel, nieuwste bovenaan (de TV toont alleen de laatste paar).
+3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen. Staat de gebeurtenisronde aan (§9.2), dan toont de stand ook de laatst getrokken gebeurteniskaart (naam, omschrijving, duur) tot de volgende trekking — vóór de eerste trekking niets. Daarnaast het volledige spelverloop: elke openbare actie van het spel, nieuwste bovenaan (de TV toont alleen de laatste paar).
 
 De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), en na afloop direct een nieuw spel opzetten (§7).
 
@@ -243,7 +243,7 @@ Regels rond `EliminatePlayer`:
 Instelbaar in de lobby (§10), naast de winconditie zelf — alleen relevant bij winconditie Geheime missies. Drie varianten:
 
 1. **Einde van je beurt (standaard).** Zoals hierboven beschreven: vervul je de missie, dan eindigt het spel meteen.
-2. **Begin van je volgende beurt.** Elke andere, nog niet uitgeschakelde speler krijgt eerst nog exact één beurt ("laatste kans"), in de normale beurtvolgorde, voordat de overwinning definitief is. Blijft de missie na al die beurten nog steeds vervuld, dan wint de missiehouder alsnog — dit gebeurt mechanisch op het moment dat de laatste van die beurten eindigt (het bord kan tussen "beurt eindigt" en "volgende beurt begint" niet meer veranderen, dus dat is gelijk aan "bij het begin van je volgende beurt" — zolang er geen effect bestaat dat specifiek bij het *begin* van een beurt het bord muteert; op dit moment bestaat zo'n effect niet in de engine, zie de doc-comment in `TurnFlowCommandHandler`). Doorbreekt een tegenstander de voorwaarde tijdens zijn eigen laatste-kans-beurt (de missiehouder voldoet niet langer), dan vervalt de dreigende overwinning en speelt het spel gewoon door — de missiehouder is niet uitgesloten om de missie later opnieuw te vervullen, en ook niemand anders is uitgesloten van winnen. Geen enkele aankondiging op TV of telefoon: niemand weet dat dit venster loopt.
+2. **Begin van je volgende beurt.** Elke andere, nog niet uitgeschakelde speler krijgt eerst nog exact één beurt ("laatste kans"), in de normale beurtvolgorde, voordat de overwinning definitief is. Blijft de missie na al die beurten nog steeds vervuld, dan wint de missiehouder alsnog — dit gebeurt mechanisch op het moment dat de laatste van die beurten eindigt (dat is gelijk aan "bij het begin van je volgende beurt": de overwinning wordt vastgesteld bij het einde van die laatste beurt, vóór een eventuele gebeurtenisronde — een gewonnen spel trekt geen gebeurteniskaart meer, §9.2). Het enige dat het bord tússen twee beurten kan veranderen is een `ArmyAttrition`-gebeurtenis aan de rondegrens (§9.2); valt die midden in een lopend venster, dan telt dat gewoon mee bij de eerstvolgende beurteinde-controle — er is geen extra controle direct na de attrition. Doorbreekt een tegenstander de voorwaarde tijdens zijn eigen laatste-kans-beurt (de missiehouder voldoet niet langer), dan vervalt de dreigende overwinning en speelt het spel gewoon door — de missiehouder is niet uitgesloten om de missie later opnieuw te vervullen, en ook niemand anders is uitgesloten van winnen. Geen enkele aankondiging op TV of telefoon: niemand weet dat dit venster loopt.
 3. **Volle ronde met onthulling.** Mechanisch identiek aan optie 2, met één verschil: zodra het venster opent, toont TV én elke telefoon **wie** mogelijk gaat winnen (uitzondering op de privacyregel in §2) — de missie-inhoud zelf blijft geheim tot de echte afronding (§7).
 
 In alle drie de varianten geldt: ontstaat er tijdens een lopend venster een directe winconditie (werelddominantie, of een `EliminatePlayer`-missie, bij wie dan ook) → die wint meteen, ongeacht het venster. `EliminatePlayer` en werelddominantie zijn zelf nooit aan deze instelling onderhevig: ze zijn onomkeerbaar (wie de laatste tegenstander uitschakelt, heeft daarmee al werelddominantie — er is niemand meer over om iets te heroveren), dus optie 2/3 heeft daar geen functie.
@@ -322,8 +322,16 @@ Na elke volledige ronde (alle spelers één beurt gehad) trekt de server een geb
 
 Effect-types in v1 (uitbreidbaar): `ContinentOwnerBonus`, `SeaRoutesBlocked` (duur: 1 ronde), `RevoltOnSingleArmy` (gebieden met 1 leger worden neutraal tenzij versterkt), `FreeReinforcement` (iedereen +N). Events hebben een `duration`: `instant` of `oneRound`. De TV toont actieve ronde-effecten permanent zolang ze gelden.
 
+**Verloop van de gebeurtenisronde** (besluiten 2026-09-26):
+- **Rondegrens:** een ronde is om zodra de beurt van de laatste nog meespelende speler in de beurtvolgorde eindigt; de kaart wordt getrokken vóór de beurt van de volgende speler begint. De **eerste** kaart valt na de eerste volle ronde van het spel zelf — claimen en de startopstelling tellen niet mee.
+- **Volgorde bij beurteinde:** eerst de gewone beurteinde-afhandeling (missiecontrole, laatste-kans-venster, §6.1/§6.2). Is het spel daarmee gewonnen, dan wordt er geen kaart meer getrokken. Anders verlopen eerst de lopende `oneRound`-effecten, en pas dan wordt de nieuwe kaart getrokken.
+- **Stapel:** de kaarten worden geschud en zonder teruglegging getrokken; is de stapel op, dan worden alle kaarten opnieuw geschud.
+- **Duur `oneRound`:** geldt vanaf de trekking tot de volgende rondegrens. Iedere speler speelt er dus precies één beurt mee.
+- **Extra legers (`ContinentOwnerBonus`, `FreeReinforcement`):** het bedrag per speler wordt vastgesteld op het moment van trekken (bij `ContinentOwnerBonus`: wie dán een volledig continent bezit). Die legers komen bij de versterkingen van de eerstvolgende eigen beurt van die speler (zichtbaar als "Gebeurteniseffect" in de opbouw) — er is geen losse plaatsingsstap. Het zijn gewone versterkingen: niet geplaatste bonuslegers vervallen bij een verlopen timer, net als de rest van de pool (§5.4).
+- **Uitgeschakelde spelers** doen niet mee aan een gebeurtenis.
+
 **`SeaRoutesBlocked` — gedrag en varianten:** met álle zeeroutes geblokkeerd valt de kaart uiteen in meerdere componenten en raken 6 eilandgebieden (Groenland, IJsland, Groot-Brittannië, Japan, Madagaskar, Nieuw-Guinea) volledig geïsoleerd. Twee vereisten volgen daaruit:
-1. **De rules engine handelt lege fases netjes af:** heeft een speler die ronde nul geldige aanvallen of verplaatsingen (omdat al zijn gebieden geïsoleerd zijn), dan wordt de betreffende fase automatisch overgeslagen met een duidelijke melding op TV en telefoon — dit is bedoeld gedrag, geen bug.
+1. **Geen automatisch overslaan van fases:** heeft een speler die ronde nul geldige aanvallen of verplaatsingen (omdat al zijn gebieden geïsoleerd of afgesloten zijn), dan slaat de server de fase **niet** zelf over. Aanvallen en Verplaatsen eindigen dan zoals altijd: de speler beëindigt de fase of beurt zelf, of de beurttimer verloopt (§5.4). De telefoon biedt dan simpelweg geen geldige doelen aan — dit is bedoeld gedrag, geen bug.
 2. **Gedeeltelijke blokkade als variant:** het effect ondersteunt een optionele parameter `routes` (lijst van specifieke `from`/`to`-paren); alleen die zeeroutes worden dan geblokkeerd in plaats van allemaal. Zonder `routes`-parameter geldt de volledige blokkade.
 
 **Nieuwe effect-types (t.o.v. de oorspronkelijke v1-lijst):** `RevoltOnSingleArmy`
@@ -331,7 +339,7 @@ is geschrapt (niet gewenst). Daarvoor in de plaats:
 
 | Type | Parameters | Werking |
 |---|---|---|
-| `TerritoryLocked` | `territoryIds[]` | De genoemde gebieden zijn deze ronde volledig afgesloten: niet aan te vallen, niet vanuit aan te vallen, geen Verplaatsen erin of eruit. Eigenaarschap en legeraantal blijven ongewijzigd. Altijd `oneRound`. |
+| `TerritoryLocked` | `territoryIds[]` | De genoemde gebieden zijn deze ronde volledig afgesloten: niet aan te vallen, niet vanuit aan te vallen, geen Verplaatsen erin of eruit. Eigenaarschap en legeraantal blijven ongewijzigd. Versterken (legers plaatsen) op een afgesloten gebied mag gewoon — het effect geldt alleen voor aanvallen en verplaatsen. Altijd `oneRound`. |
 | `ArmyAttrition` | `amount` | Elke speler met meer dan 1 leger op minstens 1 gebied verwijdert in totaal `amount` eigen legers, en **kiest zelf** van welke gebieden — nooit onder de 1 leger per gebied. Heeft een speler minder wegneembare legers dan `amount` (som van (legers − 1) over al zijn gebieden < amount), dan wordt automatisch het maximum weggehaald: elk gebied van die speler komt op 1 leger, de rest van `amount` vervalt. Altijd `instant`. |
 
 **Nieuw interactiepatroon: gelijktijdige keuze door meerdere spelers.**
@@ -343,14 +351,19 @@ moeten maken voordat het spel verdergaat:
   het automatische maximum uitkomen) krijgt op zijn telefoon een
   **"Legers verwijderen"**-scherm: eigen gebieden met legeraantal, tik om een
   leger van een gebied te verwijderen, nooit onder de 1.
+- Een speler met **precies** zoveel wegneembare legers als `amount` krijgt het
+  scherm ook, al is er maar één uitkomst; alleen bij **minder** gaat het automatisch.
 - **Geen timer** — zelfde precedent als de verdediger-keuze en de Reroll-prompt
   (§5.3/§8): de beurttimer speelt hier sowieso geen rol, dit gebeurt tussen
-  beurten in.
+  beurten in. De beurt van de volgende speler (en de berekening van zijn
+  versterkingen) begint pas als iedereen met keuzevrijheid gekozen heeft.
 - De TV toont een wachtstaat ("nog 2 van de 4 spelers kiezen") totdat iedereen
   met keuzevrijheid heeft gekozen.
 - Een speler die niet reageert en op auto-pass staat (§11.2): de server kiest
   voor hem automatisch de grootste stapels leeg, zelfde logica als de
-  verdediger-op-auto-pass ("verdedigt automatisch met maximum").
+  verdediger-op-auto-pass ("verdedigt automatisch met maximum"). **Nog niet
+  geïmplementeerd:** auto-pass bestaat nog niet; tot dan wacht het spel op
+  een speler die niet reageert (bewust geaccepteerd, besluit 2026-09-26).
 ---
 
 ## 10. Lobby-instellingen (host)
@@ -365,7 +378,7 @@ moeten maken voordat het spel verdergaat:
 | Verplaatsen-timer | Aanpasbaar | 1 min |
 | Rollen | Aan / uit | Uit |
 | Roltoewijzing (alleen als Rollen = Aan) | Random / Kiezen | Random | 
-| Gebeurtenisronde | Aan / uit + eventset | Uit |
+| Gebeurtenisronde | Aan / uit (de kaarten zijn die van de gekozen kaartvariant) | Uit |
 | Kaartenset-waardering | Klassiek escalerend | Klassiek |
 | Kaartweergavethema | Klassiek / Modern (`cards.json themes`) | Klassiek — **nog niet geïmplementeerd**, staat vandaag vast op Klassiek |
 
