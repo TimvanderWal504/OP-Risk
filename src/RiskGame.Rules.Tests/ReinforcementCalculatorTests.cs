@@ -121,7 +121,7 @@ public class ReinforcementCalculatorTests
     public void ContinentOwnerBonusEffect_MetVolledigContinentbezit_TeltMee()
     {
         var effect = new ActiveEffect(
-            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2), RoundsRemaining: 0);
+            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2));
 
         var state = TestGame.InProgress(activeEffects: [effect]);
 
@@ -140,7 +140,7 @@ public class ReinforcementCalculatorTests
     public void ContinentOwnerBonusEffect_ZonderVolledigContinentbezit_TeltNietMee()
     {
         var effect = new ActiveEffect(
-            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2), RoundsRemaining: 0);
+            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2));
 
         var state = TestGame.InProgress(activeEffects: [effect])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
@@ -154,7 +154,7 @@ public class ReinforcementCalculatorTests
     public void FreeReinforcementEffect_TeltAltijdMee()
     {
         var effect = new ActiveEffect(
-            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4), RoundsRemaining: 0);
+            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4));
 
         var state = TestGame.InProgress(activeEffects: [effect])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
@@ -168,7 +168,7 @@ public class ReinforcementCalculatorTests
     public void CalculateBreakdown_SplitstDeVierOptellermenApart()
     {
         var effect = new ActiveEffect(
-            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4), RoundsRemaining: 0);
+            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4));
         var settings = TestGame.Settings() with { RolesEnabled = true };
         var players = new[] { TestGame.Player("p1", "red", roleId: "president"), TestGame.Player("p2", "blue") };
 

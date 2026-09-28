@@ -545,7 +545,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         if (eventDefinition.Effect.Duration == EffectDuration.OneRound)
         {
             state = state.WithActiveEffects(
-                [.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect, RoundsRemaining: 1)]);
+                [.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect)]);
         }
 
         return state;

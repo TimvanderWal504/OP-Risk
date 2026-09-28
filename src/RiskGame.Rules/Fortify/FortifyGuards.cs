@@ -61,11 +61,11 @@ public static class FortifyGuards
                         ["requested"] = armiesToMove.ToString(),
                     }),
 
-            IsTerritoryLocked(state, fromTerritoryId)
+            ActiveEffectQueries.IsTerritoryLocked(state, fromTerritoryId)
                 ? ValidationResult.Failure("fortify.territoryLocked", new Dictionary<string, string> { ["territoryId"] = fromTerritoryId })
                 : ValidationResult.Success(),
 
-            IsTerritoryLocked(state, toTerritoryId)
+            ActiveEffectQueries.IsTerritoryLocked(state, toTerritoryId)
                 ? ValidationResult.Failure("fortify.territoryLocked", new Dictionary<string, string> { ["territoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
@@ -81,7 +81,7 @@ public static class FortifyGuards
 
     private static bool HasFortifyPath(
         GameState state, string playerId, string fromTerritoryId, string toTerritoryId) =>
-        ReachableSet(state, playerId, fromTerritoryId, MaxEnemyPasses(state, playerId), BuildBlockedBorderPredicate(state))
+        ReachableSet(state, playerId, fromTerritoryId, MaxEnemyPasses(state, playerId), ActiveEffectQueries.BlockedBorderPredicate(state))
             .Contains(toTerritoryId);
 
     /// <summary>
@@ -95,10 +95,10 @@ public static class FortifyGuards
     public static IReadOnlyList<IReadOnlyList<string>> ReachableComponents(GameState state, string playerId)
     {
         var maxEnemyPasses = MaxEnemyPasses(state, playerId);
-        var isBorderBlocked = BuildBlockedBorderPredicate(state);
+        var isBorderBlocked = ActiveEffectQueries.BlockedBorderPredicate(state);
 
         var ownTerritoryIds = state.Territories
-            .Where(territory => territory.OwnerPlayerId == playerId && !IsTerritoryLocked(state, territory.TerritoryId))
+            .Where(territory => territory.OwnerPlayerId == playerId && !ActiveEffectQueries.IsTerritoryLocked(state, territory.TerritoryId))
             .Select(territory => territory.TerritoryId);
 
         var visited = new HashSet<string>();
@@ -117,7 +117,7 @@ public static class FortifyGuards
             // (CanFortify's IsTerritoryLocked-checks hierboven). Zonder dit filter zou een locked
             // gebied dat toevallig bereikbaar is wél als geldig doel getoond worden.
             var component = ReachableSet(state, playerId, territoryId, maxEnemyPasses, isBorderBlocked)
-                .Where(id => !IsTerritoryLocked(state, id))
+                .Where(id => !ActiveEffectQueries.IsTerritoryLocked(state, id))
                 .ToList();
             component.Add(territoryId);
             visited.UnionWith(component);
@@ -204,27 +204,5 @@ public static class FortifyGuards
         }
 
         return reachable;
-    }
-
-    /// <summary>
-    /// Of een actief effect (FO §9.2: <c>TerritoryLocked</c>) <paramref name="territoryId"/>
-    /// deze ronde afsluit — dus ook geen Verplaatsen erin of eruit.
-    /// </summary>
-    private static bool IsTerritoryLocked(GameState state, string territoryId) =>
-        state.ActiveEffects
-            .Select(active => active.Effect)
-            .OfType<ITerritoryLockingEffect>()
-            .Any(locking => locking.IsLocked(territoryId));
-
-    private static Func<Border, bool>? BuildBlockedBorderPredicate(GameState state)
-    {
-        var blockers = state.ActiveEffects
-            .Select(active => active.Effect)
-            .OfType<ISeaRouteBlockingEffect>()
-            .ToArray();
-
-        return blockers.Length == 0
-            ? null
-            : border => blockers.Any(blocker => blocker.IsRouteBlocked(border));
     }
 }

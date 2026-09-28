@@ -198,7 +198,7 @@ public class AttackGuardsTests
     {
         var state = TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                activeEffects: [new ActiveEffect(new FullSeaBlockadeEffect(), RoundsRemaining: 1)])
+                activeEffects: [new ActiveEffect(Standaard43Data.EventEffect("stormachtige-zeeen"))])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
             .WithTerritory(new TerritoryOwnership("kamchatka", "p2", 1));
 
@@ -212,7 +212,7 @@ public class AttackGuardsTests
     public void Aanval_VanuitAfgeslotenGebied_IsOngeldig()
     {
         var effect = new ActiveEffect(
-            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alaska"]), RoundsRemaining: 1);
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alaska"]));
 
         var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, activeEffects: [effect])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))
@@ -228,7 +228,7 @@ public class AttackGuardsTests
     public void Aanval_OpAfgeslotenGebied_IsOngeldig()
     {
         var effect = new ActiveEffect(
-            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alberta"]), RoundsRemaining: 1);
+            new TerritoryLockedEffect("aardbeving", EffectDuration.OneRound, ["alberta"]));
 
         var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, activeEffects: [effect])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3))

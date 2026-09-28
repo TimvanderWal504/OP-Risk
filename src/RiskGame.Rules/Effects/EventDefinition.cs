@@ -1,3 +1,4 @@
+using RiskGame.Rules.Map;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Rules.Effects;
@@ -50,7 +51,22 @@ public sealed record TerritoryLockedEffect(string Id, EffectDuration Duration, I
 /// zeeverbindingen; anders alleen de genoemde routeparen (die in adjacency 'sea' moeten zijn).
 /// </summary>
 public sealed record SeaRoutesBlockedEffect(string Id, EffectDuration Duration, IReadOnlyList<SeaRoute>? Routes)
-    : EventEffect(Id, Duration);
+    : EventEffect(Id, Duration), ISeaRouteBlockingEffect
+{
+    /// <summary>Landgrenzen blokkeert dit effect nooit; zeegrenzen allemaal, of alleen de genoemde paren.</summary>
+    public bool IsRouteBlocked(Border border)
+    {
+        ArgumentNullException.ThrowIfNull(border);
+
+        return border.Type == BorderType.Sea
+            && (Routes is null || Routes.Any(route => route.Connects(border)));
+    }
+}
 
 /// <summary>Eén te blokkeren zeeroute tussen twee gebieden (ongericht).</summary>
-public sealed record SeaRoute(string From, string To);
+public sealed record SeaRoute(string From, string To)
+{
+    /// <summary>Of deze route <paramref name="border"/> is, in welke richting dan ook.</summary>
+    public bool Connects(Border border) =>
+        (From == border.From && To == border.To) || (From == border.To && To == border.From);
+}

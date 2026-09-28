@@ -80,17 +80,17 @@ public static class AttackGuards
                     "attack.notAdjacent",
                     new Dictionary<string, string> { ["fromTerritoryId"] = fromTerritoryId, ["toTerritoryId"] = toTerritoryId }),
 
-            IsRouteBlocked(state, fromTerritoryId, toTerritoryId)
+            ActiveEffectQueries.IsBorderBlocked(state, fromTerritoryId, toTerritoryId)
                 ? ValidationResult.Failure(
                     "attack.routeBlocked",
                     new Dictionary<string, string> { ["fromTerritoryId"] = fromTerritoryId, ["toTerritoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
-            IsTerritoryLocked(state, fromTerritoryId)
+            ActiveEffectQueries.IsTerritoryLocked(state, fromTerritoryId)
                 ? ValidationResult.Failure("attack.territoryLocked", new Dictionary<string, string> { ["territoryId"] = fromTerritoryId })
                 : ValidationResult.Success(),
 
-            IsTerritoryLocked(state, toTerritoryId)
+            ActiveEffectQueries.IsTerritoryLocked(state, toTerritoryId)
                 ? ValidationResult.Failure("attack.territoryLocked", new Dictionary<string, string> { ["territoryId"] = toTerritoryId })
                 : ValidationResult.Success(),
 
@@ -347,38 +347,5 @@ public static class AttackGuards
         return owner is not null && owner != playerId
             ? ValidationResult.Success()
             : ValidationResult.Failure("attack.notEnemyTerritory", new Dictionary<string, string> { ["territoryId"] = territoryId });
-    }
-
-    /// <summary>
-    /// Of een actief effect (FO §9.2: <c>TerritoryLocked</c>) <paramref name="territoryId"/>
-    /// deze ronde afsluit.
-    /// </summary>
-    private static bool IsTerritoryLocked(GameState state, string territoryId) =>
-        state.ActiveEffects
-            .Select(active => active.Effect)
-            .OfType<ITerritoryLockingEffect>()
-            .Any(locking => locking.IsLocked(territoryId));
-
-    /// <summary>
-    /// Of de grens tussen <paramref name="fromTerritoryId"/> en <paramref name="toTerritoryId"/>
-    /// door een actief <see cref="ISeaRouteBlockingEffect"/> geblokkeerd is (FO §9.2:
-    /// <c>SeaRoutesBlocked</c>), zelfde patroon als <see cref="Fortify.FortifyGuards"/>.
-    /// </summary>
-    private static bool IsRouteBlocked(GameState state, string fromTerritoryId, string toTerritoryId)
-    {
-        var border = state.Map.Adjacency.Borders(fromTerritoryId)
-            .FirstOrDefault(border =>
-                (border.From == fromTerritoryId && border.To == toTerritoryId) ||
-                (border.From == toTerritoryId && border.To == fromTerritoryId));
-
-        if (border is null)
-        {
-            return false;
-        }
-
-        return state.ActiveEffects
-            .Select(active => active.Effect)
-            .OfType<ISeaRouteBlockingEffect>()
-            .Any(blocker => blocker.IsRouteBlocked(border));
     }
 }

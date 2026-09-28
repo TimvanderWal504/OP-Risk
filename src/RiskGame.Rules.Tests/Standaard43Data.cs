@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
 
 namespace RiskGame.Rules.Tests;
@@ -34,4 +35,8 @@ internal static class Standaard43Data
 
         return result.Value;
     }
+
+    /// <summary>Het effect van gebeurteniskaart <paramref name="eventId"/> uit de echte events.json.</summary>
+    public static IEffect EventEffect(string eventId) =>
+        Load().Events.Single(definition => definition.Id == eventId).Effect;
 }

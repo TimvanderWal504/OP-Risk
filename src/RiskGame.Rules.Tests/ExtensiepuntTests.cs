@@ -29,7 +29,7 @@ public class ExtensiepuntTests
     {
         var effect = new TestEffect("goede-oogst", EffectDuration.OneRound);
 
-        var state = TestGame.InProgress(activeEffects: [new ActiveEffect(effect, RoundsRemaining: 1)]);
+        var state = TestGame.InProgress(activeEffects: [new ActiveEffect(effect)]);
 
         var active = Assert.Single(state.ActiveEffects);
         Assert.Equal("goede-oogst", active.Effect.Id);
@@ -42,7 +42,7 @@ public class ExtensiepuntTests
         var state = TestGame.InProgress();
 
         var updated = state.WithActiveEffects(
-            [new ActiveEffect(new TestEffect("sea-routes-blocked", EffectDuration.OneRound), 1)]);
+            [new ActiveEffect(new TestEffect("sea-routes-blocked", EffectDuration.OneRound))]);
 
         Assert.Empty(state.ActiveEffects);
         Assert.Single(updated.ActiveEffects);
@@ -92,7 +92,7 @@ public class ExtensiepuntTests
     public void EenNieuwVersterkingseffect_TeltMeeZonderDeCalculatorTeWijzigen()
     {
         var state = TestGame.InProgress(
-            activeEffects: [new ActiveEffect(new TestBonusEffect("mobilisatie", 4), RoundsRemaining: 1)]);
+            activeEffects: [new ActiveEffect(new TestBonusEffect("mobilisatie", 4))]);
 
         // Zonder gebieden is de basis het minimum van 3 (FO §5.2); het effect komt daar bovenop.
         Assert.Equal(3 + 4, Rules.Reinforcement.ReinforcementCalculator.CalculateArmies(state, "p1"));
@@ -106,7 +106,7 @@ public class ExtensiepuntTests
     public void EenEffectDatNietsBijdraagt_LaatDeOndergrensStaan()
     {
         var state = TestGame.InProgress(
-            activeEffects: [new ActiveEffect(new TestBonusEffect("windstilte", 0), RoundsRemaining: 1)]);
+            activeEffects: [new ActiveEffect(new TestBonusEffect("windstilte", 0))]);
 
         Assert.Equal(3, Rules.Reinforcement.ReinforcementCalculator.CalculateArmies(state, "p1"));
     }
@@ -120,7 +120,7 @@ public class ExtensiepuntTests
     {
         var state = TestGame.InProgress(
                 turnPhase: TurnPhase.Attack,
-                activeEffects: [new ActiveEffect(new TestLockEffect("zandstorm", "brazil"), RoundsRemaining: 1)])
+                activeEffects: [new ActiveEffect(new TestLockEffect("zandstorm", "brazil"))])
             .WithTerritory(new TerritoryOwnership("peru", "p1", 5))
             .WithTerritory(new TerritoryOwnership("brazil", "p2", 1));
 

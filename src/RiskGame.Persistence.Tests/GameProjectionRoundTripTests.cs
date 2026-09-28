@@ -341,7 +341,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             turnOrder: [],
             turnState: null,
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
-            activeEffects: [new ActiveEffect(effect, RoundsRemaining: 1)]);
+            activeEffects: [new ActiveEffect(effect)]);
 
         session.Store(state);
         await session.SaveChangesAsync();
@@ -351,7 +351,6 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.NotNull(reloaded);
         var activeEffect = Assert.Single(reloaded!.ActiveEffects);
         Assert.Equal(effect.Id, activeEffect.Effect.Id);
-        Assert.Equal(1, activeEffect.RoundsRemaining);
     }
 
     /// <summary>
@@ -1003,7 +1002,6 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
 
         var activeEffect = Assert.Single(result.ActiveEffects);
         Assert.Equal("stormachtige-zeeen", activeEffect.Effect.Id);
-        Assert.Equal(1, activeEffect.RoundsRemaining);
     }
 
     /// <summary>
@@ -1032,7 +1030,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             turnOrder: [],
             turnState: null,
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
-            activeEffects: [new ActiveEffect(effect, RoundsRemaining: 1)]);
+            activeEffects: [new ActiveEffect(effect)]);
 
         var projection = new GameProjection(mapSource);
         var result = projection.Apply(initialState, new EffectExpired(gameId, "stormachtige-zeeen"));
