@@ -148,6 +148,7 @@ public sealed class GameHub(
     ReinforceCommandHandler reinforceCommands,
     AttackCommandHandler attackCommands,
     TurnFlowCommandHandler turnFlowCommands,
+    AttritionCommandHandler attritionCommands,
     TvDisplayCommandHandler tvDisplayCommands,
     TvPairingRegistry tvPairings,
     TimeProvider timeProvider) : Hub<IGameClient>
@@ -554,6 +555,19 @@ public sealed class GameHub(
             await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
                 result.Value.Winners, await FetchStateVersionAsync(versionSession, gameId)));
         }
+
+        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
+    }
+
+    /// <summary>
+    /// FO §9.2 (<c>ArmyAttrition</c>): de wachtende speler kiest van welke gebieden hij legers
+    /// afstaat (gebied → aantal áfgestane legers). Buiten de beurtvolgorde om, tegelijk met de andere
+    /// wachtende spelers; de laatste keuze start de volgende beurt.
+    /// </summary>
+    public async Task<GameStateDto> RemoveArmies(
+        string gameId, string playerId, Dictionary<string, int> removalsByTerritory)
+    {
+        var result = await attritionCommands.RemoveArmiesAsync(gameId, playerId, removalsByTerritory);
 
         return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
     }

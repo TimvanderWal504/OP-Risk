@@ -13,8 +13,9 @@ namespace RiskGame.Persistence.Projections;
 /// <remarks>
 /// Bewust zonder regel: lobby en order-roll (het verloop loopt vanaf de startopstelling), rol- en
 /// missietoewijzing (privé, of vóór de start), getrokken kaarten, rolvaardigheden, het versmallen
-/// van een laatste-kans-venster en het spel-einde (keuzes gebruiker 2026-09-25). De
-/// gebeurtenisronde-events komen er pas bij zodra die ronde bestaat.
+/// van een laatste-kans-venster en het spel-einde (keuzes gebruiker 2026-09-25). Van de
+/// gebeurtenisronde komen alleen de getrokken kaart en de afgestane legers erin — schudden,
+/// verlopen en de bonus zelf zijn geen openbare actie van iemand.
 /// </remarks>
 public sealed partial class GameProjection
 {
@@ -124,4 +125,15 @@ public sealed partial class GameProjection
     private static GameState Update(
         GameState state, Func<RecentAction, bool> matches, Func<RecentAction, RecentAction> change) =>
         state.WithRecentActions(RecentActionLog.Update(state.RecentActions, matches, change));
+
+    private static GameState Record(GameState state, EventCardDrawn @event) =>
+        Append(state, new RecentAction(RecentActionKind.EventDrawn, EventId: @event.EventId));
+
+    /// <summary>Het totaal afgestane legers; de kaart is de laatst getrokken (hij staat al in de state).</summary>
+    private static GameState Record(GameState state, ArmiesRemoved @event) =>
+        Append(state, new RecentAction(
+            RecentActionKind.ArmiesRemoved,
+            PlayerId: @event.PlayerId,
+            Amount: @event.RemovedByTerritory.Values.Sum(),
+            EventId: state.EventRound.CurrentEventId));
 }

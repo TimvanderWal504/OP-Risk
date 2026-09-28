@@ -2,7 +2,7 @@ import type { LocaleTree } from '../i18n/types'
 
 /**
  * Het verloop op de TV (plan-testronde-tv punt 4). Elke zin volgt op de naam van de speler die de
- * actie uitvoert (vet, los gerenderd); alleen `dealt` staat op zichzelf. Een amount van 1 heeft een
+ * actie uitvoert (vet, los gerenderd); alleen `dealt` en `eventDrawn` staan op zichzelf. Een amount van 1 heeft een
  * eigen zin ("een extra leger", besluit gebruiker), zodat er nooit "1 legers" staat. Gebieds- en
  * spelernamen worden geïnterpoleerd; bedragen en totalen komen van de server.
  */
@@ -58,4 +58,7 @@ export const actionTicker = {
     nl: 'doorbreekt de dreigende overwinning van {{achiever}}',
     en: "breaks {{achiever}}'s looming win",
   },
+  eventDrawn: { nl: 'Gebeurteniskaart: {{event}}', en: 'Event card: {{event}}' },
+  armiesRemovedOne: { nl: 'staat een leger af door {{event}}', en: 'gives up one army to {{event}}' },
+  armiesRemoved: { nl: 'staat {{count}} legers af door {{event}}', en: 'gives up {{count}} armies to {{event}}' },
 } satisfies LocaleTree

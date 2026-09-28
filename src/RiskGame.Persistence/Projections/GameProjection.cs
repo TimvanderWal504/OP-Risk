@@ -559,7 +559,9 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
                 $"Gebeurteniskaart '{@event.EventId}' is niet de bovenste van de stapel in spel '{@event.GameId}'.");
         }
 
-        return state.WithEventRound(state.EventRound with { CurrentEventId = @event.EventId, DrawPile = [.. drawPile.Skip(1)] });
+        return Record(
+            state.WithEventRound(state.EventRound with { CurrentEventId = @event.EventId, DrawPile = [.. drawPile.Skip(1)] }),
+            @event);
     }
 
     /// <summary>
@@ -615,15 +617,17 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
         if (state.EventRound.PendingAttrition is not { } pending)
         {
-            return state;
+            return Record(state, @event);
         }
 
         var awaiting = pending.AwaitingPlayerIds.Where(playerId => playerId != @event.PlayerId).ToArray();
 
-        return state.WithEventRound(state.EventRound with
-        {
-            PendingAttrition = awaiting.Length == 0 ? null : pending with { AwaitingPlayerIds = awaiting },
-        });
+        return Record(
+            state.WithEventRound(state.EventRound with
+            {
+                PendingAttrition = awaiting.Length == 0 ? null : pending with { AwaitingPlayerIds = awaiting },
+            }),
+            @event);
     }
 
     /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>

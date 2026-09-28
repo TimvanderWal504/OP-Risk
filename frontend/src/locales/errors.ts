@@ -282,6 +282,18 @@ export const errors = {
     },
   },
   attrition: {
+    notPending: {
+      nl: 'Er hoeven op dit moment geen legers verwijderd te worden.',
+      en: 'No armies need to be removed right now.',
+    },
+    notAwaitingPlayer: {
+      nl: 'Jij hoeft nu geen legers te verwijderen.',
+      en: "You don't need to remove any armies right now.",
+    },
+    removalMustBePositive: {
+      nl: "Verwijder minstens 1 leger van gebied '{{territoryId}}', of laat het weg.",
+      en: "Remove at least 1 army from territory '{{territoryId}}', or leave it out.",
+    },
     territoryMustKeepOneArmy: {
       nl: "Gebied '{{territoryId}}' mag niet onder 1 leger komen.",
       en: "Territory '{{territoryId}}' may not drop below 1 army.",

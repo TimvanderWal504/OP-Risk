@@ -140,7 +140,8 @@ Commando binnen (SignalR)
 | `MoveAfterConquest` | Attack | ≥ gebruikte aanvalsdobbelstenen, ≤ (bron−1) |
 | `AbandonAttack` (= "Ander gevecht") | Attack | Speler aan de beurt, geen actief `PendingCombat`, er staat een bevroren belegering (`TurnState.PausedAttackTarget`) om af te breken |
 | `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter, `TurnState.FortifiesUsed` < toegestane verplaatsingen (1, of `moves` van een actieve `FortifyUpgrade`-rol — FO §5.2) |
-| `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt |
+| `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt. `EndTurn` handelt op de rondegrens de gebeurtenisronde af (§5.2) en wordt bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
+| `RemoveArmies` | tussen twee beurten (`PendingAttrition`) | Er loopt een attrition-keuze en de speler staat op de wachtlijst; elk genoemd gebied is van hem, staat een positief aantal af en houdt minstens 1 leger; het totaal is exact `amount` (of het maximum). De laatste keuze start de beurt van `PendingAttrition.NextPlayerId`. Bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd (FO §9.2) |
 | `SetAutoPass` (host) | elke | Aanroeper is host; doel is afwezige speler |
 | `SetTvDisplay` (host) | elke | Aanroeper is host; tekstschaal/glasdekking/glasblur/dobbelsteenschaal 0–100 in stappen van 5, taal NL/EN. Weergave-instelling van de TV, geen spelregel; bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
 | `VoteReplay` / `HostRestart` (host) | Finished | — |

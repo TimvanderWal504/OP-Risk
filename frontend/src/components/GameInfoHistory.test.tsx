@@ -17,6 +17,7 @@ const traded = (sequence: number): RecentActionDto => ({
   total: null,
   attackerLosses: null,
   defenderLosses: null,
+  eventId: null,
 })
 
 // Een laadfout wordt een toast; daarvoor is de provider nodig.

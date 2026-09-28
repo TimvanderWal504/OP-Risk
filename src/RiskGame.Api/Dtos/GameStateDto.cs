@@ -104,7 +104,8 @@ public sealed record RecentActionDto(
     int? Amount,
     int? Total,
     int? AttackerLosses,
-    int? DefenderLosses);
+    int? DefenderLosses,
+    string? EventId);
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.RecentActionKind"/>.</summary>
 public enum RecentActionKindDto
@@ -121,6 +122,8 @@ public enum RecentActionKindDto
     PlayerEliminated,
     LastChanceOpened,
     LastChanceBroken,
+    EventDrawn,
+    ArmiesRemoved,
 }
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>

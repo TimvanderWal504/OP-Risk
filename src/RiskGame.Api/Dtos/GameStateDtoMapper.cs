@@ -167,7 +167,8 @@ public static class GameStateDtoMapper
             action.Amount,
             action.Total,
             action.AttackerLosses,
-            action.DefenderLosses);
+            action.DefenderLosses,
+            action.EventId);
 
     private static RecentActionKindDto ToDto(RecentActionKind kind) => kind switch
     {
@@ -183,6 +184,8 @@ public static class GameStateDtoMapper
         RecentActionKind.PlayerEliminated => RecentActionKindDto.PlayerEliminated,
         RecentActionKind.LastChanceOpened => RecentActionKindDto.LastChanceOpened,
         RecentActionKind.LastChanceBroken => RecentActionKindDto.LastChanceBroken,
+        RecentActionKind.EventDrawn => RecentActionKindDto.EventDrawn,
+        RecentActionKind.ArmiesRemoved => RecentActionKindDto.ArmiesRemoved,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
     };
 

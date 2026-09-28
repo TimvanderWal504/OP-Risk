@@ -37,7 +37,7 @@ public sealed record FreeReinforcementEffect(string Id, EffectDuration Duration,
 
 /// <summary>Iedereen verliest <paramref name="Amount"/> legers, nooit onder 1 per gebied (altijd instant).</summary>
 public sealed record ArmyAttritionEffect(string Id, EffectDuration Duration, int Amount)
-    : EventEffect(Id, Duration);
+    : EventEffect(Id, Duration), IArmyAttritionEffect;
 
 /// <summary>De genoemde gebieden zijn deze ronde volledig afgesloten (altijd oneRound).</summary>
 public sealed record TerritoryLockedEffect(string Id, EffectDuration Duration, IReadOnlyList<string> TerritoryIds)

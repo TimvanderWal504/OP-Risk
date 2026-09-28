@@ -7,6 +7,7 @@ using RiskGame.Api.Endpoints;
 using RiskGame.Api.Hubs;
 using RiskGame.Api.Services;
 using RiskGame.Persistence.Map;
+using RiskGame.Persistence.Projections;
 using RiskGame.Persistence.Store;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.State;
@@ -35,6 +36,11 @@ builder.Services.AddScoped<SetupCommandHandler>();
 builder.Services.AddScoped<ReinforceCommandHandler>();
 builder.Services.AddScoped<AttackCommandHandler>();
 builder.Services.AddScoped<TurnFlowCommandHandler>();
+builder.Services.AddScoped<AttritionCommandHandler>();
+builder.Services.AddScoped<EventRoundStep>();
+// Stateloos; dezelfde vouwregels als Marten's inline projectie, voor handlers die een net
+// ge-appende event al in het geheugen moeten zien (gebeurtenisronde, FO §9.2).
+builder.Services.AddSingleton(sp => new GameProjection(sp.GetRequiredService<IMapDefinitionSource>()));
 builder.Services.AddScoped<TvDisplayCommandHandler>();
 builder.Services.AddHostedService<TurnTimerBackgroundService>();
 // JoinGameRateLimitFilter houdt per-IP-tellerstate bij (TO §8) die tussen hub-aanroepen moet

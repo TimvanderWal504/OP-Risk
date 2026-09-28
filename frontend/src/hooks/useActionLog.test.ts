@@ -14,6 +14,7 @@ const action = (sequence: number): RecentActionDto => ({
   total: null,
   attackerLosses: null,
   defenderLosses: null,
+  eventId: null,
 })
 
 /** Een loader waarvan de test zelf bepaalt wanneer (en met wat) elk verzoek antwoordt. */

@@ -1,6 +1,7 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Persistence.Projections;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Fortify;
 using RiskGame.Rules.Missions;
@@ -22,7 +23,12 @@ namespace RiskGame.Api.Commands;
 /// alleen nodig om de aflegstapel te hertschudden zodra de trekstapel leeg is (TO §4.2); de
 /// trekstapel zelf is bij spelstart al geschud, dus daar wordt niet nogmaals gedobbeld.
 /// </summary>
-public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
+public sealed class TurnFlowCommandHandler(
+    IDocumentStore store,
+    IRandomSource random,
+    TimeProvider timeProvider,
+    GameProjection projection,
+    EventRoundStep eventRound)
 {
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
@@ -145,7 +151,16 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
         return Result<GameStateDto>.Success(updatedDto);
     }
 
-    public async Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId)
+    /// <summary>
+    /// Beurteinde (FO §5.2), met op de rondegrens de gebeurtenisronde (FO §9.2). Probeert het
+    /// opnieuw bij een gelijktijdige append (<see cref="ConcurrencyRetry"/>): de timer-service en
+    /// de speler kunnen tegelijk de beurt beëindigen, en een tweede poging beslist dan op de state
+    /// ná de eerste — en wordt geweigerd, zodat er nooit twee keer getrokken wordt.
+    /// </summary>
+    public Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId) =>
+        ConcurrencyRetry.RunAsync(() => TryEndTurnAsync(gameId, playerId));
+
+    private async Task<Result<GameStateDto>> TryEndTurnAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
         var state = await session.LoadAsync<GameState>(gameId);
@@ -167,13 +182,12 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
         // missie naar kijkt — dus de hier al geladen `state` is voor die controle exact de state
         // "na afloop van deze beurt"; geen reload nodig.
         //
-        // Geverifieerd (elite-code-review): "GameWon op het moment dat de laatste laatste-
-        // kans-beurt eindigt" is hier bewust gelijkgesteld aan "bij het begin van de volgende
-        // beurt van de missiehouder" (FO §6.2), omdat er tussen die twee momenten vandaag geen
-        // state-mutatie kan plaatsvinden — `EffectExpired` wordt nergens in RiskGame.Api
-        // daadwerkelijk ge-appendt (de vouwregel bestaat in GameProjection, maar wordt nooit
-        // getriggerd) en `ReinforcementCalculator` berekent alleen de versterkingspool, zonder
-        // `TerritoryOwnership` te muteren. Deze aanname moet herzien worden zodra dat verandert.
+        // "GameWon op het moment dat de laatste laatste-kans-beurt eindigt" is hier bewust
+        // gelijkgesteld aan "bij het begin van de volgende beurt van de missiehouder" (FO §6.2):
+        // de overwinning wordt hieronder vastgesteld vóór een eventuele gebeurtenisronde, en een
+        // gewonnen spel trekt geen kaart meer. Een attrition-kaart die het bord tússen twee beurten
+        // verandert, telt pas mee bij de eerstvolgende beurteinde-controle (FO §6.2, besluit
+        // 2026-09-26: geen extra controle direct na de attrition).
         var directWinners = WinConditionEvaluator.DirectWinners(state, playerId);
 
         // FO §5.2: een beurt met minstens één verovering trekt aan het einde 1 kaart. De
@@ -203,7 +217,8 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
             }
         }
 
-        session.Events.Append(gameId, new TurnEnded(gameId, playerId));
+        var turnEnded = new TurnEnded(gameId, playerId);
+        session.Events.Append(gameId, turnEnded);
 
         var gameWon = false;
 
@@ -278,17 +293,38 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
                 return Result<GameStateDto>.Failure("turnFlow.noNextPlayer");
             }
 
-            // Voor de ínkomende speler rekenen, niet voor de uitgaande. De hier geladen state is
-            // dezelfde die de projectie straks ziet: CardDrawn en TurnEnded veranderen niets aan
-            // gebieden, continenten of de bonus van de inkomende speler, dus dezelfde uitkomst.
-            TurnStarter.StartTurn(session, state, nextPlayerId, timeProvider.GetUtcNow());
+            // Voor de ínkomende speler rekenen, niet voor de uitgaande, en op de state zoals de
+            // projectie hem straks ziet: na TurnEnded en na een eventuele gebeurtenisronde, zodat
+            // een net getrokken bonus in ArmiesGranted meetelt (FO §9.2). CardDrawn en de
+            // laatste-kans-events hierboven raken de versterkingen niet.
+            var projected = projection.Apply(state, turnEnded);
+
+            if (EventRoundCalculator.DrawsEventCard(state, nextPlayerId))
+            {
+                var outcome = eventRound.Resolve(session, projected, nextPlayerId);
+
+                projected = outcome.State;
+
+                if (outcome.AwaitsAttrition)
+                {
+                    // De beurt van nextPlayerId start pas na de laatste attrition-keuze
+                    // (AttritionCommandHandler); PendingAttrition onthoudt wie dat is.
+                    return await SaveAndMapAsync(session, gameId);
+                }
+            }
+
+            TurnStarter.StartTurn(session, projected, nextPlayerId, timeProvider.GetUtcNow());
         }
 
+        return await SaveAndMapAsync(session, gameId);
+    }
+
+    private async Task<Result<GameStateDto>> SaveAndMapAsync(IDocumentSession session, string gameId)
+    {
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
-        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<GameStateDto>.Success(updatedDto);
+        return Result<GameStateDto>.Success(GameStateDtoMapper.ToDto(updated!, timeProvider));
     }
 }

@@ -32,7 +32,8 @@ public static class ArmyAttritionCalculator
 
     /// <summary>
     /// Het automatische pad voor een speler zonder keuzevrijheid: elk gebied van de speler
-    /// terug naar 1 leger.
+    /// terug naar 1 leger. Levert per gebied het aantal áfgestane legers (zelfde betekenis als
+    /// bij <see cref="CanApply"/>), niet het aantal dat overblijft.
     /// </summary>
     public static IReadOnlyDictionary<string, int> AutoMaxRemovals(GameState state, string playerId)
     {
@@ -41,11 +42,12 @@ public static class ArmyAttritionCalculator
 
         return state.TerritoriesOf(playerId)
             .Where(territory => territory.ArmyCount > 1)
-            .ToDictionary(territory => territory.TerritoryId, _ => 1);
+            .ToDictionary(territory => territory.TerritoryId, territory => territory.ArmyCount - 1);
     }
 
     /// <summary>
-    /// Of een spelerkeuze geldig is: elk genoemd gebied is van de speler, geen gebied komt
+    /// Of een spelerkeuze geldig is: elk genoemd gebied is van de speler en staat een positief
+    /// aantal af, geen gebied komt
     /// onder 1 leger, en de som van de verwijderingen komt exact overeen met wat er
     /// afgestaan moet worden (<paramref name="amount"/>, of het maximum als dat lager ligt).
     /// </summary>
@@ -63,6 +65,13 @@ public static class ArmyAttritionCalculator
                 return ValidationResult.Failure(
                     "common.territoryNotOwned",
                     new Dictionary<string, string> { ["territoryId"] = territoryId, ["playerId"] = playerId });
+            }
+
+            // Een nul of negatief aantal zou een tekort elders kunnen "compenseren" in de som.
+            if (removed <= 0)
+            {
+                return ValidationResult.Failure(
+                    "attrition.removalMustBePositive", new Dictionary<string, string> { ["territoryId"] = territoryId });
             }
 
             if (removed >= state.Territory(territoryId).ArmyCount)

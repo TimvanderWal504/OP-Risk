@@ -28,6 +28,15 @@ public class ArmyAttritionCalculatorTests
         Assert.True(ArmyAttritionCalculator.HasChoice(state, "p1", amount: 3));
     }
 
+    /// <summary>FO §9.2: bij precies genoeg is er maar één uitkomst, maar de speler kiest toch zelf.</summary>
+    [Fact]
+    public void HasChoice_MetPreciesGenoegAfstaanbareLegers_IsWaar()
+    {
+        var state = TweeGebiedenVoorP1(alaskaArmies: 3, albertaArmies: 2);
+
+        Assert.True(ArmyAttritionCalculator.HasChoice(state, "p1", amount: 3));
+    }
+
     [Fact]
     public void HasChoice_MetTeWeinigAfstaanbareLegers_IsOnwaar()
     {
@@ -43,7 +52,9 @@ public class ArmyAttritionCalculatorTests
 
         var removals = ArmyAttritionCalculator.AutoMaxRemovals(state, "p1");
 
-        Assert.Equal(new Dictionary<string, int> { ["alaska"] = 1 }, removals);
+        // Alaska staat 2 legers af en houdt er 1; Alberta heeft niets af te staan.
+        Assert.Equal(new Dictionary<string, int> { ["alaska"] = 2 }, removals);
+        Assert.Equal(ArmyAttritionCalculator.MaxRemovableArmies(state, "p1"), removals.Values.Sum());
     }
 
     [Fact]

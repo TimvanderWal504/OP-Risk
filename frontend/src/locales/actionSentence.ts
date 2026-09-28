@@ -31,6 +31,10 @@ function territoryName(territoryId: string | null): string {
   return territoryId ? tDynamic(territoryId, 'territories') : ''
 }
 
+function eventName(eventId: string | null): string {
+  return eventId ? tDynamic(`${eventId}.name`, 'events') : ''
+}
+
 /** De zin na de spelernaam; bedragen, totalen en namen komen uit de DTO, nooit berekend. */
 export function actionSentence(
   action: RecentActionDto,
@@ -76,5 +80,11 @@ export function actionSentence(
       return t('lastChanceOpened')
     case RecentActionKindDto.LastChanceBroken:
       return t('lastChanceBroken', { achiever: other })
+    case RecentActionKindDto.EventDrawn:
+      return t('eventDrawn', { event: eventName(action.eventId) })
+    case RecentActionKindDto.ArmiesRemoved:
+      return action.amount === 1
+        ? t('armiesRemovedOne', { event: eventName(action.eventId) })
+        : t('armiesRemoved', { count: action.amount, event: eventName(action.eventId) })
   }
 }

@@ -14,6 +14,7 @@ const action = (overrides: Partial<RecentActionDto> & Pick<RecentActionDto, 'kin
   total: null,
   attackerLosses: null,
   defenderLosses: null,
+  eventId: null,
   ...overrides,
 })
 
@@ -57,6 +58,9 @@ describe('actionSentence', () => {
     ['een uitschakeling', action({ kind: RecentActionKindDto.PlayerEliminated, otherPlayerId: 'bob' }), 'Alice schakelt Bob uit'],
     ['een laatste-kans-venster', action({ kind: RecentActionKindDto.LastChanceOpened }), 'Alice kan winnen: iedereen krijgt nog één laatste beurt'],
     ['een doorbroken laatste kans', action({ kind: RecentActionKindDto.LastChanceBroken, playerId: 'bob', otherPlayerId: 'alice' }), 'Bob doorbreekt de dreigende overwinning van Alice'],
+    ['een getrokken gebeurteniskaart, zonder speler', action({ kind: RecentActionKindDto.EventDrawn, playerId: null, eventId: 'griepgolf' }), 'Gebeurteniskaart: Griepgolf'],
+    ['één afgestaan leger', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 1, eventId: 'pensioengolf' }), 'Alice staat een leger af door Pensioengolf'],
+    ['meerdere afgestane legers', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 3, eventId: 'epidemie-in-de-steden' }), 'Alice staat 3 legers af door Epidemie in de steden'],
   ])('beschrijft %s', (_, recentAction, expected) => {
     expect(line(recentAction)).toBe(expected)
   })

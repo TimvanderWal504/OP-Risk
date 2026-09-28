@@ -24,6 +24,7 @@ namespace RiskGame.Rules.State;
 /// <param name="Total">Het legeraantal op <paramref name="TerritoryId"/> ná de actie.</param>
 /// <param name="AttackerLosses">Opgetelde verliezen van de aanvaller over de hele belegering.</param>
 /// <param name="DefenderLosses">Opgetelde verliezen van de verdediger over de hele belegering.</param>
+/// <param name="EventId">De gebeurteniskaart bij <see cref="RecentActionKind.EventDrawn"/> en <see cref="RecentActionKind.ArmiesRemoved"/>.</param>
 public sealed record RecentAction(
     RecentActionKind Kind,
     int Sequence = 0,
@@ -34,7 +35,8 @@ public sealed record RecentAction(
     int? Amount = null,
     int? Total = null,
     int? AttackerLosses = null,
-    int? DefenderLosses = null);
+    int? DefenderLosses = null,
+    string? EventId = null);
 
 public enum RecentActionKind
 {
@@ -56,4 +58,8 @@ public enum RecentActionKind
     LastChanceOpened,
     /// <summary>Een laatste-kans-venster is doorbroken (FO §6.2); alleen zichtbaar bij "Volle ronde met onthulling".</summary>
     LastChanceBroken,
+    /// <summary>Een gebeurteniskaart is getrokken (FO §9.2); zonder speler, net als <see cref="TerritoriesDealt"/>.</summary>
+    EventDrawn,
+    /// <summary>Een speler heeft legers afgestaan voor een attrition-kaart (FO §9.2), zelf gekozen of automatisch.</summary>
+    ArmiesRemoved,
 }

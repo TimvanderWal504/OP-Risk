@@ -201,6 +201,8 @@ export const RecentActionKindDto = {
   PlayerEliminated: 9,
   LastChanceOpened: 10,
   LastChanceBroken: 11,
+  EventDrawn: 12,
+  ArmiesRemoved: 13,
 } as const
 export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
 
@@ -219,6 +221,8 @@ export interface RecentActionDto {
   total: number | null
   attackerLosses: number | null
   defenderLosses: number | null
+  /** De gebeurteniskaart bij `EventDrawn` en `ArmiesRemoved`; naam via `locales/events.ts`. */
+  eventId: string | null
 }
 
 /** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */
