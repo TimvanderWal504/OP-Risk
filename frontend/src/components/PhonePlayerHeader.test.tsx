@@ -16,7 +16,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -35,7 +34,6 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           loadActionLog={vi.fn()}
-          error={null}
         />,
       )
 
@@ -54,7 +52,6 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           loadActionLog={vi.fn()}
-          error={null}
         />,
       )
 
@@ -75,7 +72,6 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={setTvDisplay}
           loadActionLog={vi.fn()}
-          error={null}
         />,
       )
 
@@ -95,7 +91,6 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           loadActionLog={vi.fn()}
-          error={null}
         />,
       )
 
@@ -128,7 +123,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -147,7 +141,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -165,7 +158,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -183,7 +175,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -201,7 +192,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -237,7 +227,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -256,7 +245,6 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         loadActionLog={vi.fn()}
-        error={null}
       />,
     )
 
@@ -286,7 +274,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: true }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} error={null} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · actief')).toBeInTheDocument()
@@ -296,7 +284,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: false }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} error={null} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · inactief')).toBeInTheDocument()
@@ -304,7 +292,7 @@ describe('PhonePlayerHeader', () => {
 
     it('laat de statusregel ongemoeid zonder rol (rollen uit, of nog niet toegewezen)', () => {
       render(
-        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} error={null} />,
+        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen')).toBeInTheDocument()
@@ -342,7 +330,7 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Fortify)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} error={null} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       // `/Mijn kaarten/` i.p.v. exacte match: het handaantal-badge (hier 3, uit `cards`)
@@ -356,7 +344,7 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Reinforce)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} error={null} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))

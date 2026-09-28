@@ -39,7 +39,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -58,7 +57,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -76,7 +74,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -94,7 +91,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -113,7 +109,6 @@ describe('CardsPanel', () => {
         initialMode="trade"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -138,7 +133,6 @@ describe('CardsPanel', () => {
         initialMode="trade"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -167,7 +161,6 @@ describe('CardsPanel', () => {
         initialMode="trade"
         onTradeInCards={onTradeInCards}
         onClose={onClose}
-        error={null}
       />,
     )
 
@@ -190,7 +183,6 @@ describe('CardsPanel', () => {
         initialMode="trade"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -210,7 +202,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={onClose}
-        error={null}
       />,
     )
 
@@ -229,7 +220,6 @@ describe('CardsPanel', () => {
         initialMode="trade"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -256,7 +246,6 @@ describe('CardsPanel', () => {
         initialMode="browse"
         onTradeInCards={vi.fn()}
         onClose={vi.fn()}
-        error={null}
       />,
     )
 
@@ -264,22 +253,5 @@ describe('CardsPanel', () => {
     expect(
       screen.queryByText('3 kaarten met hetzelfde symbool, of 1 van elk symbool — een Joker vervangt elk symbool.'),
     ).not.toBeInTheDocument()
-  })
-
-  it('toont een servergeweigerde-set-foutmelding wanneer meegegeven', () => {
-    render(
-      <CardsPanel
-        hand={hand}
-        myTerritoryIds={new Set()}
-        hasTradeableCardSet={true}
-        mustTradeInCards={false}
-        initialMode="trade"
-        onTradeInCards={vi.fn()}
-        onClose={vi.fn()}
-        error="Deze kaarten vormen geen geldige set."
-      />,
-    )
-
-    expect(screen.getByText('Deze kaarten vormen geen geldige set.')).toBeInTheDocument()
   })
 })

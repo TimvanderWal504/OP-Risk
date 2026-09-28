@@ -11,7 +11,6 @@ export interface OrderRollWaitStepProps {
   colorHex: string
   canRoll: boolean
   onRoll: () => void
-  error?: string | null
   /** Extra actie(s) alleen voor de host, onderaan het scherm — nu de TV-weergave
    *  (`TvDisplayAccess`, plan-testronde-tv punt 2). De aanroeper beslist wie host is. */
   hostActions?: ReactNode
@@ -23,7 +22,7 @@ export interface OrderRollWaitStepProps {
  * niet leeg) — de server wijst een ongeldige poging af, de client repliceert de
  * tie-break-regel niet (frontend/CLAUDE.md, server-authoritative).
  */
-export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = null, hostActions }: OrderRollWaitStepProps) {
+export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, hostActions }: OrderRollWaitStepProps) {
   const { t } = useTranslation('orderRoll')
 
   return (
@@ -76,8 +75,6 @@ export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, error = n
           )}
         </GlassPanel>
       </div>
-
-      {error && <p className="text-loss">{error}</p>}
 
       {canRoll ? (
         <Button variant="primary" onClick={onRoll}>

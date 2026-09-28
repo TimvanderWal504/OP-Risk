@@ -30,7 +30,6 @@ export interface PhonePlayerHeaderProps {
   setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
   /** Het volledige verloop voor het tabblad Spelverloop in spelinfo. */
   loadActionLog: () => Promise<RecentActionDto[]>
-  error: string | null
 }
 
 /**
@@ -58,7 +57,6 @@ export function PhonePlayerHeader({
   tradeInCards,
   setTvDisplay,
   loadActionLog,
-  error,
 }: PhonePlayerHeaderProps) {
   const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay'])
   const color = state.colors.find((c) => c.id === me.colorId)
@@ -176,7 +174,6 @@ export function PhonePlayerHeader({
           initialMode="browse"
           onTradeInCards={tradeInCards}
           onClose={() => setCardsOpen(false)}
-          error={error}
         />
       )}
       {gameInfoOpen && (
@@ -188,7 +185,6 @@ export function PhonePlayerHeader({
           defaults={state.tvDisplayDefault}
           onChange={setTvDisplay}
           onClose={() => setTvDisplayOpen(false)}
-          error={error}
         />
       )}
     </>

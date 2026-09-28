@@ -75,7 +75,7 @@ export function HomePage() {
               </p>
             </GlassPanel>
           </div>
-          <Footer error={sendToTv.error}>
+          <Footer>
             <Button type="button" variant="secondary" onClick={() => navigate(`/play/${createdGameId}`)}>
               {t('tvPairing:phone.continueToLobby')}
             </Button>

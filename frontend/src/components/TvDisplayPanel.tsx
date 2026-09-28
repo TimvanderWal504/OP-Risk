@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModalShell } from './ui/ModalShell'
 import { Button } from './ui/Button'
@@ -20,8 +20,6 @@ export interface TvDisplayPanelProps {
    */
   onChange: (settings: TvDisplaySettingsDto) => Promise<boolean>
   onClose: () => void
-  /** De laatste hub-fout. Het paneel toont 'm alleen als die door een eigen wijziging ontstond. */
-  error?: string | null
 }
 
 type ScaleKey = 'textScale' | 'glassOpacity' | 'glassBlur' | 'diceScale'
@@ -42,22 +40,17 @@ type ScaleKey = 'textScale' | 'glassOpacity' | 'glassBlur' | 'diceScale'
  * terugdraaien. Na een weigering valt de basis terug op wat de server bevestigd heeft. Dit
  * verandert niets aan wat er getóónd wordt; alleen aan wat er verstuurd wordt.
  */
-export function TvDisplayPanel({ settings, defaults, onChange, onClose, error = null }: TvDisplayPanelProps) {
+export function TvDisplayPanel({ settings, defaults, onChange, onClose }: TvDisplayPanelProps) {
   const { t } = useTranslation('tvDisplay')
   const pendingRef = useRef<TvDisplaySettingsDto | null>(null)
-  // Een fout van vóór het openen (bv. een mislukte startpoging) hoort niet in dit paneel.
-  const [ownError, setOwnError] = useState(false)
 
   const send = async (next: TvDisplaySettingsDto): Promise<boolean> => {
     pendingRef.current = next
-    setOwnError(false)
 
     const accepted = await onChange(next)
 
-    if (!accepted) {
-      if (pendingRef.current === next) pendingRef.current = null
-      setOwnError(true)
-    }
+    // Een weigering verschijnt als toast (`useGameState.invoke`), boven dit paneel.
+    if (!accepted && pendingRef.current === next) pendingRef.current = null
 
     return accepted
   }
@@ -125,7 +118,7 @@ export function TvDisplayPanel({ settings, defaults, onChange, onClose, error = 
         </PanelSection>
       </div>
 
-      <Footer error={ownError ? error : null}>
+      <Footer>
         <Button variant="secondary" disabled={isDefault} onClick={() => void send(defaults)}>
           {t('reset')}
         </Button>

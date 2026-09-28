@@ -32,7 +32,6 @@ const defaultProps = (overrides: Partial<PlaceReinforcementStepProps> = {}): Pla
   onConfirmPlacements: vi.fn(),
   onTradeInCards: vi.fn(),
   onAllPlaced: vi.fn(),
-  error: null,
   ...overrides,
 })
 

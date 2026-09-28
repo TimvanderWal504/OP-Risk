@@ -22,7 +22,6 @@ export interface JoinHostWaitStepProps {
   tvDisplay: TvDisplaySettingsDto
   tvDisplayDefault: TvDisplaySettingsDto
   onSetTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
-  error?: string | null
 }
 
 /**
@@ -40,7 +39,6 @@ export function JoinHostWaitStep({
   tvDisplay,
   tvDisplayDefault,
   onSetTvDisplay,
-  error = null,
 }: JoinHostWaitStepProps) {
   const { t } = useTranslation('join')
 
@@ -110,8 +108,8 @@ export function JoinHostWaitStep({
         </div>
       </GlassPanel>
 
-      <Footer error={error} hint={!canStart ? t('hostWait.waitingForPlayers') : undefined}>
-        <TvDisplayAccess settings={tvDisplay} defaults={tvDisplayDefault} onChange={onSetTvDisplay} error={error} />
+      <Footer hint={!canStart ? t('hostWait.waitingForPlayers') : undefined}>
+        <TvDisplayAccess settings={tvDisplay} defaults={tvDisplayDefault} onChange={onSetTvDisplay} />
         <Button disabled={!canStart} onClick={onStart}>
           {canStart ? t('hostWait.startGame') : t('hostWait.startGameWait')}
         </Button>

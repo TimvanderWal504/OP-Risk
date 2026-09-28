@@ -23,7 +23,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={vi.fn()}
         onEndTurn={vi.fn()}
       />,
@@ -48,7 +47,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={partiallyConnected}
-        error={null}
         onFortify={vi.fn()}
         onEndTurn={vi.fn()}
       />,
@@ -72,7 +70,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={vi.fn()}
         onEndTurn={vi.fn()}
       />,
@@ -99,7 +96,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={vi.fn()}
         onEndTurn={vi.fn()}
       />,
@@ -126,7 +122,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -149,7 +144,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={2}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -166,7 +160,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -187,7 +180,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={2}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -203,7 +195,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -221,7 +212,7 @@ describe('FortifyFlowStep', () => {
     expect(onFortify).toHaveBeenLastCalledWith('alaska', 'brazil', 1)
   })
 
-  it('blijft bij een mislukte verplaatsing op de aantal-stap met een foutmelding, en laat die verdwijnen bij een ander doel', async () => {
+  it('blijft bij een mislukte verplaatsing op de aantal-stap', async () => {
     const user = userEvent.setup()
     const onFortify = vi.fn().mockResolvedValue(false)
 
@@ -231,7 +222,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error="Er is geen aaneengesloten pad."
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,
@@ -241,18 +231,13 @@ describe('FortifyFlowStep', () => {
     await user.click(screen.getByText('Brazilië'))
     await user.click(screen.getByRole('button', { name: 'Bevestig verplaatsing' }))
 
-    expect(await screen.findByText('Er is geen aaneengesloten pad.')).toBeInTheDocument()
-
-    // Terug naar doel, ander doel kiezen: de oude fout hoort te verdwijnen zonder een nieuwe
-    // aanvraag — de melding is gekoppeld aan de combinatie waarop hij ontstond.
-    await user.click(screen.getByText('Ander doelgebied kiezen'))
-    await user.click(screen.getByText('Ontario'))
-
-    expect(screen.queryByText('Er is geen aaneengesloten pad.')).not.toBeInTheDocument()
+    // De fout zelf verschijnt als toast (`useGameState.invoke`); het scherm springt niet door
+    // naar de "nog een verplaatsing?"-tussenstap.
+    expect(await screen.findByRole('button', { name: 'Bevestig verplaatsing' })).toBeEnabled()
     expect(onFortify).toHaveBeenCalledTimes(1)
   })
 
-  it('roept bij "Beurt beëindigen" op de bronstap onEndTurn aan zonder onFortify, en toont een fout bij falen', async () => {
+  it('roept bij "Beurt beëindigen" op de bronstap onEndTurn aan zonder onFortify', async () => {
     const user = userEvent.setup()
     const onFortify = vi.fn()
     const onEndTurn = vi.fn().mockResolvedValue(false)
@@ -263,7 +248,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error="Kan de beurt nu niet beëindigen."
         onFortify={onFortify}
         onEndTurn={onEndTurn}
       />,
@@ -273,7 +257,6 @@ describe('FortifyFlowStep', () => {
 
     expect(onEndTurn).toHaveBeenCalledTimes(1)
     expect(onFortify).not.toHaveBeenCalled()
-    expect(await screen.findByText('Kan de beurt nu niet beëindigen.')).toBeInTheDocument()
   })
 
   it('toont meteen de done-weergave zodra fortifiesRemaining 0 is (reconnect zonder lokale intentie)', () => {
@@ -283,7 +266,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={0}
         reachableGroups={allConnected}
-        error={null}
         onFortify={vi.fn()}
         onEndTurn={vi.fn()}
       />,
@@ -291,27 +273,6 @@ describe('FortifyFlowStep', () => {
 
     expect(screen.getByText('Je hebt deze beurt al verplaatst.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Beurt beëindigen' })).toBeInTheDocument()
-  })
-
-  it('toont op de done-weergave een foutmelding als onEndTurn daar faalt', async () => {
-    const user = userEvent.setup()
-    const onEndTurn = vi.fn().mockResolvedValue(false)
-
-    render(
-      <FortifyFlowStep
-        myTerritories={myTerritories}
-        myColor={myColor}
-        fortifiesRemaining={0}
-        reachableGroups={allConnected}
-        error="Kan de beurt nu niet beëindigen."
-        onFortify={vi.fn()}
-        onEndTurn={onEndTurn}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Beurt beëindigen' }))
-
-    expect(await screen.findByText('Kan de beurt nu niet beëindigen.')).toBeInTheDocument()
   })
 
   it('disabled de knoppen zolang een aanroep loopt', async () => {
@@ -325,7 +286,6 @@ describe('FortifyFlowStep', () => {
         myColor={myColor}
         fortifiesRemaining={1}
         reachableGroups={allConnected}
-        error={null}
         onFortify={onFortify}
         onEndTurn={vi.fn()}
       />,

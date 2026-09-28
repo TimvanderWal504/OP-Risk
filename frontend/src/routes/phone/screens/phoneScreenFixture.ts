@@ -69,7 +69,6 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   state: fixtureState,
   playerId: 'alice',
   me: fixtureState.players[0],
-  error: null,
   orderRollThrows: {},
   territoryCatalog: [],
   chooseColor: vi.fn(),

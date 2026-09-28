@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { GameInfoPanel } from './GameInfoPanel'
+import { ToastProvider } from '../hooks/ToastProvider'
 import { fixtureState } from '../routes/phone/screens/phoneScreenFixture'
 
 const me = fixtureState.players[0]
@@ -32,7 +33,12 @@ describe('GameInfoPanel', () => {
 
   it('haalt het verloop pas op bij het openen van het tabblad Spelverloop', async () => {
     const load = vi.fn().mockResolvedValue([])
-    render(<GameInfoPanel state={fixtureState} me={me} loadActionLog={load} onClose={vi.fn()} />)
+    // Het tabblad meldt een laadfout als toast, dus het heeft de provider nodig.
+    render(
+      <ToastProvider device="phone">
+        <GameInfoPanel state={fixtureState} me={me} loadActionLog={load} onClose={vi.fn()} />
+      </ToastProvider>,
+    )
     expect(load).not.toHaveBeenCalled()
 
     await userEvent.click(screen.getByRole('button', { name: 'Spelverloop' }))

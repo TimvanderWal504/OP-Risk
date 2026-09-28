@@ -22,7 +22,6 @@ export function PhonePage() {
   const {
     state,
     playerId,
-    error,
     orderRollThrows,
     territoryCatalog,
     joinGameWithColor,
@@ -65,7 +64,6 @@ export function PhonePage() {
           takenColorIds={state ? takenColorIds(state) : []}
           stepIndex={0}
           stepCount={3}
-          error={error}
         />
       </PhoneShell>
     )
@@ -106,7 +104,6 @@ export function PhonePage() {
           tradeInCards={tradeInCards}
           setTvDisplay={setTvDisplay}
           loadActionLog={loadActionLog}
-          error={error}
         />
       )}
       {isEliminatedView ? (
@@ -116,7 +113,6 @@ export function PhonePage() {
           state,
           playerId,
           me,
-          error,
           orderRollThrows,
           territoryCatalog,
           chooseColor,

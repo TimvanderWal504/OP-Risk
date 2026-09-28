@@ -24,7 +24,6 @@ export interface FortifyFlowStepProps {
   fortifiesRemaining: number
   /** `TurnStateDto.reachableFortifyGroups` — zie de doc-comment bovenaan dit bestand. */
   reachableGroups: string[][]
-  error: string | null
   onFortify: (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number) => Promise<boolean>
   onEndTurn: () => Promise<boolean>
 }
@@ -60,7 +59,6 @@ export function FortifyFlowStep({
   myColor,
   fortifiesRemaining,
   reachableGroups,
-  error,
   onFortify,
   onEndTurn,
 }: FortifyFlowStepProps) {
@@ -72,20 +70,13 @@ export function FortifyFlowStep({
   const [amount, setAmount] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [pendingIntent, setPendingIntent] = useState<PendingIntent | null>(null)
-  // Gekoppeld aan de combinatie waarop de fout ontstond (niet een losse boolean): navigeer je
-  // terug en kies je een andere combinatie, dan wijkt de vergelijking af en verdwijnt de oude
-  // melding vanzelf — geen aparte reset-code nodig op de terugknoppen.
-  const [lastFailedAttempt, setLastFailedAttempt] = useState<{ from: string; to: string } | null>(null)
-  // Losse, niet-parametrische actie (geen paar om aan te koppelen): bij elke nieuwe poging eerst
-  // op `false` gezet, dus "opnieuw proberen" overschrijft de vorige uitkomst altijd.
-  const [endTurnFailed, setEndTurnFailed] = useState(false)
 
+  // Een mislukte aanroep verschijnt als toast (`useGameState.invoke`); dit scherm blijft dan
+  // gewoon staan waar het stond.
   const handleEndTurn = async () => {
     setSubmitting(true)
-    setEndTurnFailed(false)
     try {
-      const ok = await onEndTurn()
-      if (!ok) setEndTurnFailed(true)
+      await onEndTurn()
     } finally {
       setSubmitting(false)
     }
@@ -105,7 +96,7 @@ export function FortifyFlowStep({
         <GlassPanel elevation="base" context="phone" padding="none" className="my-auto rounded-2xl p-4 text-center">
           <div className="font-display text-h2 font-extrabold text-fg">{confirmationText}</div>
         </GlassPanel>
-        <Footer error={endTurnFailed ? error : null}>
+        <Footer>
           <Button disabled={submitting} onClick={handleEndTurn}>
             {t('done.endTurn')}
           </Button>
@@ -133,7 +124,7 @@ export function FortifyFlowStep({
         <GlassPanel elevation="base" context="phone" padding="none" className="my-auto rounded-2xl p-4 text-center">
           <div className="font-display text-h2 font-extrabold text-fg">{confirmationText}</div>
         </GlassPanel>
-        <Footer error={endTurnFailed ? error : null}>
+        <Footer>
           <Button disabled={submitting} onClick={moveAgain}>
             {t('done.moveAgain')}
           </Button>
@@ -180,12 +171,8 @@ export function FortifyFlowStep({
       // Pas ná succes gezet: anders zou een mislukte aanroep — of de disabled-staat terwijl de
       // aanroep nog loopt — al `pendingIntent` zetten en zo, zodra `fortifiesRemaining` nog > 0
       // is, per ongeluk meteen naar de "nog een verplaatsing?"-tussenstap springen i.p.v. op de
-      // aantal-stap te blijven staan met de foutmelding.
-      if (ok) {
-        setPendingIntent({ from: fromTerritoryId, to: toTerritoryId, amount: clamped })
-      } else {
-        setLastFailedAttempt({ from: fromTerritoryId, to: toTerritoryId })
-      }
+      // aantal-stap te blijven staan terwijl de fout als toast verschijnt.
+      if (ok) setPendingIntent({ from: fromTerritoryId, to: toTerritoryId, amount: clamped })
     } finally {
       setSubmitting(false)
     }
@@ -200,9 +187,6 @@ export function FortifyFlowStep({
   const targets = fromTerritoryId
     ? myTerritories.filter((territory) => territory.territoryId !== fromTerritoryId && reachableIds.has(territory.territoryId))
     : []
-
-  const showFortifyError =
-    lastFailedAttempt !== null && lastFailedAttempt.from === fromTerritoryId && lastFailedAttempt.to === toTerritoryId
 
   return (
     <PhoneScreen>
@@ -237,7 +221,7 @@ export function FortifyFlowStep({
               </GlassPanel>
             ))}
           </div>
-          <Footer error={endTurnFailed ? error : null}>
+          <Footer>
             <Button variant="secondary" disabled={submitting} onClick={handleEndTurn}>
               {t('pickSrc.skipTurn')}
             </Button>
@@ -345,7 +329,7 @@ export function FortifyFlowStep({
             </div>
           </GlassPanel>
 
-          <Footer error={showFortifyError ? error : null}>
+          <Footer>
             <Button disabled={submitting} onClick={confirmFortify}>
               {t('amount.confirm')}
             </Button>

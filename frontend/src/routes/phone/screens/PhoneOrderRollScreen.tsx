@@ -10,7 +10,6 @@ export function PhoneOrderRollScreen({
   state,
   playerId,
   me,
-  error,
   orderRollThrows,
   rollForOrder,
   setTvDisplay,
@@ -23,14 +22,12 @@ export function PhoneOrderRollScreen({
       colorHex={myColor?.hex ?? '#ffffff'}
       canRoll={state.orderRollState?.playersStillToRoll?.includes(playerId) ?? false}
       onRoll={rollForOrder}
-      error={error}
       hostActions={
         me.isHost && (
           <TvDisplayAccess
             settings={state.tvDisplay}
             defaults={state.tvDisplayDefault}
             onChange={setTvDisplay}
-            error={error}
           />
         )
       }

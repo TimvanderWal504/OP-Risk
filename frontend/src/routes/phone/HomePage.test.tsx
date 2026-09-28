@@ -23,9 +23,9 @@ function PlayRoute() {
   return <div>lobby {useParams().gameId}</div>
 }
 
-function mockSend(results: boolean[], error: string | null = null) {
+function mockSend(results: boolean[]) {
   const send = vi.fn(() => Promise.resolve(results.shift() ?? true))
-  vi.mocked(useSendGameToTv).mockReturnValue({ send, sending: false, error })
+  vi.mocked(useSendGameToTv).mockReturnValue({ send, sending: false })
 
   return send
 }
@@ -89,13 +89,12 @@ describe('HomePage', () => {
   })
 
   it('laat bij een mislukte verzending opnieuw proberen, of door naar de lobby', async () => {
-    const send = mockSend([false, true], 'Deze TV is niet meer beschikbaar.')
+    const send = mockSend([false, true])
     renderAt('/pair/K7M2PQ')
 
     await userEvent.click(screen.getByRole('button', { name: 'spel aanmaken' }))
 
     expect(await screen.findByText('De TV heeft het spel nog niet')).toBeInTheDocument()
-    expect(screen.getByText('Deze TV is niet meer beschikbaar.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Naar de lobby' })).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Opnieuw naar de TV sturen' }))

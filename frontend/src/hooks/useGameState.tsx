@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
+import { useToast } from './useToast'
+import { useReportOnce } from './useReportOnce'
+import { ActionLogOfflineError } from './useActionLog'
 import { useCombatBroadcast } from './useCombatBroadcast'
 import { GamePhaseDto, type GameStateDto, type RecentActionDto } from '../types/GameState'
 import type {
@@ -19,6 +23,15 @@ import { apiUrl } from '../config/apiConfig'
 
 const playerIdKey = (gameId: string) => `game:${gameId}:playerId`
 const sessionTokenKey = (gameId: string) => `game:${gameId}:sessionToken`
+// Toastbron van alle hub-fouten: een nieuwe hub-aanroep ruimt de fout van de vorige op, zoals de
+// footer-foutregel die de toast vervangt dat deed.
+const hubToastSource = 'hub'
+
+function hubErrorMessage(hubError: unknown): string {
+  const message = hubError instanceof Error ? hubError.message : String(hubError)
+
+  return translateValidationErrors(parseHubError(message))
+}
 
 /**
  * Speler-kant van de lobby-flow (telefoon, FO §3): join/kleur/rol/start via de hub,
@@ -38,9 +51,13 @@ export function useGameState(gameId: string) {
   const [playerId, setPlayerId] = useState<string | null>(
     () => sessionStorage.getItem(playerIdKey(gameId)),
   )
-  const [error, setError] = useState<string | null>(null)
+  const { showError, clearSource } = useToast()
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
-  const [territoryCatalog, setTerritoryCatalog] = useState<TerritoryCatalogDto[]>([])
+  // `null` tot het laden gelukt is — anders valt "nog niet geladen" niet te onderscheiden van een
+  // lege catalogus, en zou een mislukte load nooit opnieuw geprobeerd worden.
+  const [territoryCatalog, setTerritoryCatalog] = useState<TerritoryCatalogDto[] | null>(null)
+  const catalogReport = useReportOnce('territoryCatalog')
+  const { t } = useTranslation('common')
 
   const persistPlayerId = useCallback(
     (id: string) => {
@@ -103,8 +120,8 @@ export function useGameState(gameId: string) {
         if (!cancelled) applyState(fresh)
       })
       .catch(() => {
-        // Onbekend spel o.i.d. — de join-stap toont zijn eigen foutmelding zodra de
-        // speler daadwerkelijk JoinGame aanroept, hier niets tonen.
+        // Onbekend spel o.i.d. — JoinGame geeft dezelfde fout als toast zodra de speler
+        // deelneemt; hier ook een toast tonen zou 'm dubbel laten verschijnen.
       })
 
     return () => {
@@ -115,23 +132,37 @@ export function useGameState(gameId: string) {
   // Statische territoriumcatalogus (continent per gebied) — eenmalig per gameId, los van de
   // realtime state-stroom: verandert nooit tijdens een spel, dus geen reden om 'm via SignalR
   // mee te laten lopen (RiskGame.Api/Endpoints/GameEndpoints.cs).
+  //
+  // Mislukt het laden, dan wordt dat één keer een toast en probeert het effect het stil opnieuw
+  // bij elke nieuwe state (`stateVersion`) — niet per fase: `phase` blijft het hele spel
+  // `InProgress`, dus een fout midden in het spel zou dan tot een refresh blijven hangen.
+  const catalogLoaded = territoryCatalog !== null
+  const stateVersion = state?.stateVersion
+
   useEffect(() => {
+    if (catalogLoaded) return
+
     let cancelled = false
 
     fetch(apiUrl(`/games/${gameId}/territories`))
-      .then((response) => (response.ok ? (response.json() as Promise<TerritoryCatalogDto[]>) : []))
+      .then((response) => {
+        if (!response.ok) throw new Error(`GET /games/${gameId}/territories: ${response.status}`)
+
+        return response.json() as Promise<TerritoryCatalogDto[]>
+      })
       .then((catalog) => {
-        if (!cancelled) setTerritoryCatalog(catalog)
+        if (cancelled) return
+        setTerritoryCatalog(catalog)
+        catalogReport.resolved()
       })
       .catch(() => {
-        // Kaartlaag toont zelf geen fout op basis hiervan; de claim-/plaatsingsstap blijft dan
-        // gewoon leeg totdat het endpoint weer bereikbaar is.
+        if (!cancelled) catalogReport.report(t('loadErrors.territories'))
       })
 
     return () => {
       cancelled = true
     }
-  }, [gameId])
+  }, [gameId, catalogLoaded, stateVersion, catalogReport, t])
 
   // Herstelt group-membership na elke (re)connect zodra er een bekende playerId is —
   // dekt zowel automatic-reconnect als een page refresh met sessionStorage-hit.
@@ -145,37 +176,33 @@ export function useGameState(gameId: string) {
       .then((fresh) => {
         if (!cancelled) {
           applyState(fresh)
-          setError(null)
+          clearSource(hubToastSource)
         }
       })
       .catch((rejoinError: unknown) => {
-        if (!cancelled) {
-          const message = rejoinError instanceof Error ? rejoinError.message : String(rejoinError)
-          setError(translateValidationErrors(parseHubError(message)))
-        }
+        if (!cancelled) showError(hubErrorMessage(rejoinError), hubToastSource)
       })
 
     return () => {
       cancelled = true
     }
-  }, [connection, connectionState, gameId, playerId])
+  }, [connection, connectionState, gameId, playerId, showError, clearSource])
 
   const invoke = useCallback(
     async <T,>(methodName: string, ...args: unknown[]): Promise<T | undefined> => {
       if (!connection) return undefined
 
       try {
-        setError(null)
+        clearSource(hubToastSource)
 
         return await connection.invoke<T>(methodName, ...args)
       } catch (invokeError) {
-        const message = invokeError instanceof Error ? invokeError.message : String(invokeError)
-        setError(translateValidationErrors(parseHubError(message)))
+        showError(hubErrorMessage(invokeError), hubToastSource)
 
         return undefined
       }
     },
-    [connection],
+    [connection, showError, clearSource],
   )
 
   const chooseColor = useCallback(
@@ -390,9 +417,9 @@ export function useGameState(gameId: string) {
   }, [invoke, gameId, playerId])
 
   // Anders dan de fire-and-forget-acties hierboven: `FortifyFlowStep` moet synchroon weten of de
-  // aanroep lukte om te beslissen of ze op de foutmelding moet blijven staan (i.p.v. door te gaan
+  // aanroep lukte om te beslissen of ze op de huidige stap moet blijven staan (i.p.v. door te gaan
   // naar de volgende stap) — vandaar `Promise<boolean>` i.p.v. `Promise<void>`. `invoke` vangt elke
-  // fout zelf af en geeft dan `undefined` terug (nooit een reject), dus dit hoeft geen eigen
+  // fout zelf af (als toast) en geeft dan `undefined` terug (nooit een reject), dus dit hoeft geen eigen
   // try/catch te hebben.
   const fortify = useCallback(
     async (fromTerritoryId: string, toTerritoryId: string, armiesToMove: number): Promise<boolean> => {
@@ -447,13 +474,15 @@ export function useGameState(gameId: string) {
   )
 
   // Het volledige verloop voor het tabblad Spelverloop (besluit gebruiker 2026-09-26): los van de
-  // state, die er maar een paar meestuurt. Bewust niet via `invoke`: een mislukte leesactie toont
-  // het tabblad zelf als fout, niet als algemene foutmelding in de header.
+  // state, die er maar een paar meestuurt. Bewust niet via `invoke`: een mislukte leesactie meldt
+  // het tabblad zelf (één toast met een eigen bron, `GameInfoHistory`), niet als hub-fout.
+  // Zonder verbinding een `ActionLogOfflineError`: dat meldt het tabblad niet, en omdat
+  // `connectionState` in de deps zit, laadt het na het herstel vanzelf opnieuw.
   const loadActionLog = useCallback(async (): Promise<RecentActionDto[]> => {
-    if (!connection) throw new Error('GetActionLog zonder verbinding')
+    if (!connection || connectionState !== HubConnectionState.Connected) throw new ActionLogOfflineError()
 
     return connection.invoke<RecentActionDto[]>('GetActionLog', gameId)
-  }, [connection, gameId])
+  }, [connection, connectionState, gameId])
 
   const combat = useCombatBroadcast(connection)
 
@@ -461,9 +490,8 @@ export function useGameState(gameId: string) {
     state,
     playerId,
     connectionState,
-    error,
     orderRollThrows,
-    territoryCatalog,
+    territoryCatalog: territoryCatalog ?? [],
     combat,
     joinGameWithColor,
     chooseColor,

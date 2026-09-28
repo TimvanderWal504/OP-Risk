@@ -23,6 +23,13 @@ export const common = {
     decrement: { nl: '{{label}} verlagen', en: 'Decrease {{label}}' },
     increment: { nl: '{{label}} verhogen', en: 'Increase {{label}}' },
   },
+  toast: {
+    dismiss: { nl: 'Sluiten', en: 'Dismiss' },
+  },
+  // Leesacties van de client zelf, geen backend-code (die staan in `errors`).
+  loadErrors: {
+    territories: { nl: 'De gebieden konden niet geladen worden.', en: 'The territories could not be loaded.' },
+  },
   dice: {
     ariaLabel: { nl: 'Dobbelsteen {{value}}', en: 'Die {{value}}' },
   },

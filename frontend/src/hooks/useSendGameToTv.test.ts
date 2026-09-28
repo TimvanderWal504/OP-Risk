@@ -1,8 +1,10 @@
-import { act, renderHook } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+import { act, renderHook, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr'
 import { useSendGameToTv } from './useSendGameToTv'
 import { useSignalR } from './useSignalR'
+import { ToastProvider } from './ToastProvider'
 
 vi.mock('./useSignalR', () => ({ useSignalR: vi.fn() }))
 
@@ -13,10 +15,12 @@ function mockInvoke(invoke: () => Promise<unknown>) {
   return connection
 }
 
+const withToasts = ({ children }: { children: ReactNode }) => createElement(ToastProvider, { device: 'phone', children })
+
 describe('useSendGameToTv', () => {
   it('stuurt koppelcode en spelcode naar de hub', async () => {
     const connection = mockInvoke(() => Promise.resolve())
-    const { result } = renderHook(() => useSendGameToTv())
+    const { result } = renderHook(() => useSendGameToTv(), { wrapper: withToasts })
 
     let accepted = false
     await act(async () => {
@@ -25,12 +29,12 @@ describe('useSendGameToTv', () => {
 
     expect(accepted).toBe(true)
     expect(connection.invoke).toHaveBeenCalledWith('SendGameToTv', 'K7M2PQ', 'ATLAS7')
-    expect(result.current.error).toBeNull()
+    expect(screen.getByRole('alert')).toBeEmptyDOMElement()
   })
 
-  it('vertaalt een geweigerde koppelcode', async () => {
+  it('toont een geweigerde koppelcode vertaald als toast', async () => {
     mockInvoke(() => Promise.reject(new Error(JSON.stringify([{ code: 'tvPairing.unknownCode' }]))))
-    const { result } = renderHook(() => useSendGameToTv())
+    const { result } = renderHook(() => useSendGameToTv(), { wrapper: withToasts })
 
     let accepted = true
     await act(async () => {
@@ -38,6 +42,6 @@ describe('useSendGameToTv', () => {
     })
 
     expect(accepted).toBe(false)
-    expect(result.current.error).toBe('Deze TV is niet meer beschikbaar. Scan de QR-code op de TV opnieuw.')
+    expect(screen.getByRole('alert')).toHaveTextContent('Deze TV is niet meer beschikbaar. Scan de QR-code op de TV opnieuw.')
   })
 })

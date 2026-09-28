@@ -49,7 +49,7 @@ describe('TvDisplayPanel', () => {
 
   it('valt na een weigering terug op de bevestigde waarden en zet de slider terug', async () => {
     const onChange = vi.fn().mockResolvedValueOnce(false).mockResolvedValue(true)
-    render(<TvDisplayPanel settings={defaults} defaults={defaults} onChange={onChange} onClose={vi.fn()} error="Mislukt" />)
+    render(<TvDisplayPanel settings={defaults} defaults={defaults} onChange={onChange} onClose={vi.fn()} />)
 
     await act(async () => commitSlider('Tekstgrootte', 70))
 
@@ -83,17 +83,6 @@ describe('TvDisplayPanel', () => {
     render(<TvDisplayPanel settings={defaults} defaults={defaults} onChange={accepting()} onClose={vi.fn()} />)
 
     expect(screen.getByRole('button', { name: 'Standaard' })).toBeDisabled()
-  })
-
-  it('toont geen fout van vóór het openen, wel een fout van een eigen wijziging', async () => {
-    const onChange = vi.fn().mockResolvedValue(false)
-    render(<TvDisplayPanel settings={defaults} defaults={defaults} onChange={onChange} onClose={vi.fn()} error="Eerdere fout" />)
-
-    expect(screen.queryByText('Eerdere fout')).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Engels' }))
-
-    expect(screen.getByText('Eerdere fout')).toBeInTheDocument()
   })
 
   it('sluit via "Sluiten"', async () => {

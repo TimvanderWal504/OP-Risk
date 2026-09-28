@@ -16,7 +16,6 @@ export interface JoinRoleStepProps {
   onBack: () => void
   stepIndex: number
   stepCount: number
-  error?: string | null
 }
 
 /** Tweede join-stap (FO §3/§8, alleen bij RoleAssignment = Kiezen): rol kiezen. Select-dan-
@@ -30,7 +29,6 @@ export function JoinRoleStep({
   onBack,
   stepIndex,
   stepCount,
-  error = null,
 }: JoinRoleStepProps) {
   const { t } = useTranslation('join')
   const [pendingRoleId, setPendingRoleId] = useState<string | null>(null)
@@ -68,7 +66,7 @@ export function JoinRoleStep({
           )
         })}
       </div>
-      <Footer error={error}>
+      <Footer>
         <div className="flex flex-row gap-2.5">
           <Button variant="secondary" onClick={onBack} className="min-h-[46px] flex-1 text-sm">
             {t('role.back')}

@@ -18,7 +18,6 @@ export function PhoneReinforceScreen({
   placeReinforcements,
   tradeInCards,
   endPhase,
-  error,
 }: PhoneScreenProps) {
   const { t } = useTranslation('reinforce')
 
@@ -60,7 +59,6 @@ export function PhoneReinforceScreen({
       }}
       onTradeInCards={tradeInCards}
       onAllPlaced={endPhase}
-      error={error}
     />
   )
 }

@@ -23,18 +23,4 @@ describe('OrderRollWaitStep', () => {
     expect(screen.getByText('Wachten op andere spelers…')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /gooien/i })).not.toBeInTheDocument()
   })
-
-  it('toont een foutmelding als de server een poging afwijst', () => {
-    render(
-      <OrderRollWaitStep
-        myDice={undefined}
-        colorHex="#ca3c25"
-        canRoll
-        onRoll={vi.fn()}
-        error="Speler hoeft nu niet te werpen."
-      />,
-    )
-
-    expect(screen.getByText('Speler hoeft nu niet te werpen.')).toBeInTheDocument()
-  })
 })

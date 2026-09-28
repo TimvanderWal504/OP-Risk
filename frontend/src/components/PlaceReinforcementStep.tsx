@@ -37,7 +37,6 @@ export interface PlaceReinforcementStepProps {
    *  `armiesRemaining`/`mustTradeInCards` weer beide `false` zijn. Bewust hernoemd van
    *  `onEndPhase`: die naam klopte alleen voor de Versterken-aanroeper. */
   onAllPlaced: () => Promise<void>
-  error: string | null
 }
 
 /**
@@ -58,7 +57,6 @@ export function PlaceReinforcementStep({
   onConfirmPlacements,
   onTradeInCards,
   onAllPlaced,
-  error,
 }: PlaceReinforcementStepProps) {
   const { t } = useTranslation('reinforce')
   const [staged, setStaged] = useState<Record<string, number>>({})
@@ -269,7 +267,6 @@ export function PlaceReinforcementStep({
           initialMode="trade"
           onTradeInCards={onTradeInCards}
           onClose={() => setVoluntaryCardsOpen(false)}
-          error={error}
         />
       )}
     </>

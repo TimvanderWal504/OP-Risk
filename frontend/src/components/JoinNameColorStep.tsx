@@ -20,7 +20,6 @@ export interface JoinNameColorStepProps {
   /** Naam ligt al vast (bv. terug-navigatie vanaf de rolstap): alleen de kleur is nog aanpasbaar. */
   fixedName?: string
   submitting?: boolean
-  error?: string | null
 }
 
 /**
@@ -36,7 +35,6 @@ export function JoinNameColorStep({
   stepCount,
   fixedName,
   submitting = false,
-  error = null,
 }: JoinNameColorStepProps) {
   const { t } = useTranslation(['join', 'common'])
   const [name, setName] = useState(fixedName ?? '')
@@ -106,7 +104,7 @@ export function JoinNameColorStep({
           </div>
         </GlassPanel>
       </div>
-      <Footer error={error}>
+      <Footer>
         <Button
           disabled={!canSubmit}
           onClick={() => pendingColorId && onSubmit(name.trim(), pendingColorId)}

@@ -53,7 +53,6 @@ export function PhoneAttackScreen({
   endPhase,
   placeReinforcements,
   tradeInCards,
-  error,
 }: PhoneScreenProps) {
   const { t } = useTranslation('attack')
 
@@ -208,7 +207,6 @@ export function PhoneAttackScreen({
           }}
           onTradeInCards={tradeInCards}
           onAllPlaced={async () => {}}
-          error={error}
         />
       )
     }
@@ -229,7 +227,6 @@ export function PhoneAttackScreen({
         onRerollAttackDie={rerollAttackDie}
         onKeepAttackDice={keepAttackDice}
         onEndPhase={endPhase}
-        error={error}
       />
     )
   }

@@ -9,7 +9,7 @@ import type { PhoneScreenProps } from './phoneScreens'
  * `PhoneReinforceScreen` — Fortify kent, anders dan Attack, geen aanvaller/verdediger-
  * onderscheid, dus geen 4-rollen-dispatch nodig.
  */
-export function PhoneFortifyScreen({ state, playerId, me, error, fortify, endTurn }: PhoneScreenProps) {
+export function PhoneFortifyScreen({ state, playerId, me, fortify, endTurn }: PhoneScreenProps) {
   const { t } = useTranslation('fortify')
 
   if (!state.turnState) {
@@ -36,7 +36,6 @@ export function PhoneFortifyScreen({ state, playerId, me, error, fortify, endTur
       myColor={myColor}
       fortifiesRemaining={fortifiesRemaining}
       reachableGroups={reachableFortifyGroups}
-      error={error}
       onFortify={fortify}
       onEndTurn={endTurn}
     />

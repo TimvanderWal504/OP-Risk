@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import type { ReactElement } from 'react'
 import { CreateGameForm } from './CreateGameForm'
+import { ToastProvider } from '../hooks/ToastProvider'
 import { DefenseDiceRuleDto } from '../types/GameSettings'
 import { TvLanguageDto } from '../types/TvDisplay'
 import { readRememberedTvDisplay } from '../storage/rememberedTvDisplay'
@@ -12,6 +14,9 @@ const PRESETS_RESPONSE = {
   ok: true,
   json: async () => [{ id: 'classic', armiesByPlayerCount: { 2: 40, 3: 35, 4: 30, 5: 25, 6: 20, 7: 18 } }],
 }
+
+// Fouten verschijnen als toast; het formulier heeft daarvoor de provider nodig.
+const renderWithToasts = (ui: ReactElement) => render(<ToastProvider device="phone">{ui}</ToastProvider>)
 
 describe('CreateGameForm', () => {
   beforeEach(() => {
@@ -27,7 +32,7 @@ describe('CreateGameForm', () => {
     })
     const onCreated = vi.fn()
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={onCreated} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={onCreated} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
@@ -45,7 +50,7 @@ describe('CreateGameForm', () => {
     let finish: () => void = () => {}
     const onCreated = vi.fn(() => new Promise<void>((resolve) => { finish = resolve }))
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={onCreated} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={onCreated} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
@@ -61,7 +66,7 @@ describe('CreateGameForm', () => {
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
 
     expect(screen.getByText('Gooit de aanvaller met 1 dobbelsteen, dan verdedig je ook met 1.')).toBeInTheDocument()
@@ -84,7 +89,7 @@ describe('CreateGameForm', () => {
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
@@ -98,7 +103,7 @@ describe('CreateGameForm', () => {
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
@@ -113,7 +118,7 @@ describe('CreateGameForm', () => {
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ gameId: 'ABC123' }) })
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
@@ -122,7 +127,7 @@ describe('CreateGameForm', () => {
     expect(body.tvDisplay).toBeNull()
   })
 
-  it('toont een vertaalde foutmelding als de server het verzoek weigert', async () => {
+  it('toont een vertaalde fouttoast als de server het verzoek weigert', async () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>
     fetchMock.mockResolvedValueOnce(PRESETS_RESPONSE)
     fetchMock.mockResolvedValueOnce({
@@ -130,10 +135,10 @@ describe('CreateGameForm', () => {
       json: async () => [{ code: 'lobby.gameFull' }],
     })
 
-    render(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
+    renderWithToasts(<CreateGameForm mapId="standaard-43" onCreated={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('radio', { name: /Klassiek/i })).toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: /spel aanmaken/i }))
 
-    expect(await screen.findByText('Dit spel zit vol.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Dit spel zit vol.'))
   })
 })

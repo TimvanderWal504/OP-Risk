@@ -26,7 +26,6 @@ export interface PhoneScreenProps {
   playerId: string
   /** De eigen speler; door de route al opgezocht, dus nooit null in een scherm. */
   me: PlayerDto
-  error: string | null
   orderRollThrows: Record<string, number[]>
   territoryCatalog: TerritoryCatalogDto[]
   chooseColor: (colorId: string) => Promise<void>

@@ -21,6 +21,7 @@ import { Button } from './ui/Button'
 import { GlassPanel } from './ui/GlassPanel'
 import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
+import { useToast } from '../hooks/useToast'
 import { tDynamic } from '../i18n/useT'
 import { apiUrl } from '../config/apiConfig'
 import { readRememberedTvDisplay } from '../storage/rememberedTvDisplay'
@@ -60,12 +61,15 @@ export interface CreateGameFormProps {
   onCreated: (gameId: string) => void | Promise<void>
 }
 
+// Een nieuwe aanmaakpoging ruimt de fouttoast van de vorige op.
+const createGameToastSource = 'createGame'
+
 export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
   const { t } = useTranslation('createGame')
   const [settings, setSettings] = useState<GameSettingsDto>(DEFAULT_SETTINGS)
   const [presets, setPresets] = useState<StartingArmiesPresetDto[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { showError, clearSource } = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -87,7 +91,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setSubmitting(true)
-    setError(null)
+    clearSource(createGameToastSource)
 
     // Onthouden TV-weergave van een vorig spel op deze telefoon (plan-testronde-tv punt 2),
     // alleen als die er is en geldig is — anders kiest de server het design.
@@ -102,7 +106,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
 
       if (!response.ok) {
         const errors = (await response.json().catch(() => null)) as ValidationError[] | null
-        setError(errors && errors.length > 0 ? translateValidationErrors(errors) : t('errors.createFailed'))
+        showError(errors && errors.length > 0 ? translateValidationErrors(errors) : t('errors.createFailed'), createGameToastSource)
 
         return
       }
@@ -112,7 +116,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
       // naar de TV sturen), en zolang dat loopt mag de knop geen tweede spel aanmaken.
       await onCreated(body.gameId)
     } catch {
-      setError(t('errors.connection'))
+      showError(t('errors.connection'), createGameToastSource)
     } finally {
       setSubmitting(false)
     }
@@ -294,7 +298,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
         </div>
       </div>
 
-      <Footer variant="gradient" error={error}>
+      <Footer variant="gradient">
         <Button type="submit" disabled={submitting}>
           {submitting ? t('submit.busy') : t('submit.idle')}
         </Button>

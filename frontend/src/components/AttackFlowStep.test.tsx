@@ -45,7 +45,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -73,7 +72,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={onEndPhase}
-        error={null}
       />,
     )
 
@@ -102,7 +100,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -131,7 +128,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -169,7 +165,6 @@ describe('AttackFlowStep', () => {
           onRerollAttackDie={onRerollAttackDie}
           onKeepAttackDice={vi.fn()}
           onEndPhase={vi.fn()}
-          error={null}
         />,
       )
 
@@ -209,37 +204,12 @@ describe('AttackFlowStep', () => {
           onRerollAttackDie={vi.fn()}
           onKeepAttackDice={onKeepAttackDice}
           onEndPhase={vi.fn()}
-          error={null}
         />,
       )
 
       await user.click(screen.getByRole('button', { name: 'Doorgaan' }))
 
       expect(onKeepAttackDice).toHaveBeenCalled()
-    })
-
-    it('toont de foutmelding op het herwerp-aanbod (elite-code-review-bevinding: een verloren race tegen een al gesloten beslissing bleef voorheen stil)', () => {
-      render(
-        <AttackFlowStep
-          playerId="alice"
-          myTerritories={territories.filter((t) => t.ownerPlayerId === 'alice')}
-          territories={territories}
-          territoryCatalog={territoryCatalog}
-          players={players}
-          colors={colors}
-          myColor={myColor}
-          pendingCombat={rerollPendingCombat}
-          combat={rerollCombat}
-          onDeclareAttack={vi.fn()}
-          onAbandonAttack={vi.fn()}
-          onRerollAttackDie={vi.fn()}
-          onKeepAttackDice={vi.fn()}
-          onEndPhase={vi.fn()}
-          error="attack.noRerollDecisionOpen"
-        />,
-      )
-
-      expect(screen.getByText('attack.noRerollDecisionOpen')).toBeInTheDocument()
     })
 
     it('toont de kale wachtstip i.p.v. het herwerp-aanbod zodra de beslissing gesloten is', () => {
@@ -259,7 +229,6 @@ describe('AttackFlowStep', () => {
           onRerollAttackDie={vi.fn()}
           onKeepAttackDice={vi.fn()}
           onEndPhase={vi.fn()}
-          error={null}
         />,
       )
 
@@ -306,7 +275,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={onEndPhase}
-        error={null}
       />,
     )
 
@@ -359,7 +327,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -404,7 +371,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -452,7 +418,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 
@@ -497,7 +462,6 @@ describe('AttackFlowStep', () => {
         onRerollAttackDie={vi.fn()}
         onKeepAttackDice={vi.fn()}
         onEndPhase={vi.fn()}
-        error={null}
       />,
     )
 

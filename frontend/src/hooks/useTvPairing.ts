@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
+import { retryDelayMs } from './retryBackoff'
 import type { TvPairedMessage } from '../types/HubResponses'
-
-/** Wachttijd vóór de eerste herhaalpoging na een mislukte `RegisterTv`; verdubbelt per poging. */
-export const PAIRING_RETRY_BASE_MS = 1000
-/** Bovengrens van die wachttijd — zelfde plafond als het herverbinden in `GameHubProvider`. */
-export const PAIRING_RETRY_MAX_MS = 30_000
 
 /**
  * TV-kant van "TV koppelen": vraagt een koppelcode aan zodra de verbinding open is, en opnieuw na
@@ -48,10 +44,7 @@ export function useTvPairing() {
         .catch(() => {
           if (cancelled) return
           setFailed(true)
-          retryTimer = setTimeout(
-            () => register(attempt + 1),
-            Math.min(PAIRING_RETRY_BASE_MS * 2 ** attempt, PAIRING_RETRY_MAX_MS),
-          )
+          retryTimer = setTimeout(() => register(attempt + 1), retryDelayMs(attempt))
         })
     }
 

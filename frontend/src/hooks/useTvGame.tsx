@@ -5,6 +5,8 @@ import { useCombatBroadcast } from './useCombatBroadcast'
 import { useHeldCombat } from './useHeldCombat'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage, TerritoryClaimedMessage } from '../types/HubResponses'
+import { useReportOnce } from './useReportOnce'
+import { retryDelayMs } from './retryBackoff'
 import { parseHubError, translateValidationErrors } from '../i18n/hubError'
 
 /**
@@ -12,11 +14,18 @@ import { parseHubError, translateValidationErrors } from '../i18n/hubError'
  * open is (de enige aanroep die de TV doet na het handmatig navigeren naar
  * /tv/:gameId — zie het bouwplan), en abonneert daarna puur op "GameStateUpdated".
  * Geen polling: elke wijziging komt via de group-broadcast in GameHub binnen.
+ *
+ * Mislukt WatchGame, dan zijn er twee gevallen. Een onbekend spel is een eindtoestand
+ * (`unknownGame`, de route toont dat als volledig scherm). Elke andere fout is tijdelijk: die wordt
+ * één keer een toast, en de hook probeert het zelf opnieuw met oplopende wachttijd — de TV heeft
+ * geen bediening (FO §2.1), en zonder geslaagde WatchGame zit deze connectie niet in de spelgroep
+ * en komen er geen updates binnen, ook niet als er al een bord in beeld staat.
  */
 export function useTvGame(gameId: string) {
   const { connection, connectionState } = useSignalR()
   const [state, setState] = useState<GameStateDto | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [unknownGame, setUnknownGame] = useState(false)
+  const { report, resolved } = useReportOnce('watchGame')
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
   // Laatst-geclaimde-gebied-flare (TvClaimingScreen): komt uit het "TerritoryClaimed"-narratief-
   // event, niet uit het vergelijken van twee `territories`-snapshots — dat breekt bij reconnect
@@ -75,28 +84,41 @@ export function useTvGame(gameId: string) {
     if (!connection || connectionState !== HubConnectionState.Connected) return
 
     let cancelled = false
+    let retryTimer: ReturnType<typeof setTimeout> | undefined
 
-    connection
-      .invoke<GameStateDto>('WatchGame', gameId)
-      .then((initial) => {
-        if (!cancelled) {
+    const watch = (attempt: number) => {
+      connection
+        .invoke<GameStateDto>('WatchGame', gameId)
+        .then((initial) => {
+          if (cancelled) return
           applyState(initial)
-          setError(null)
-        }
-      })
-      .catch((watchError: unknown) => {
-        if (!cancelled) {
-          const message = watchError instanceof Error ? watchError.message : String(watchError)
-          setError(translateValidationErrors(parseHubError(message)))
-        }
-      })
+          setUnknownGame(false)
+          resolved()
+        })
+        .catch((watchError: unknown) => {
+          if (cancelled) return
+          const errors = parseHubError(watchError instanceof Error ? watchError.message : String(watchError))
+
+          if (errors.some((error) => error.code === 'common.unknownGame')) {
+            setUnknownGame(true)
+
+            return
+          }
+
+          report(translateValidationErrors(errors))
+          retryTimer = setTimeout(() => watch(attempt + 1), retryDelayMs(attempt))
+        })
+    }
+
+    watch(0)
 
     return () => {
       cancelled = true
+      clearTimeout(retryTimer)
     }
-  }, [connection, connectionState, gameId])
+  }, [connection, connectionState, gameId, report, resolved])
 
   const combat = useHeldCombat(useCombatBroadcast(connection), state)
 
-  return { state, connectionState, error, orderRollThrows, lastClaimedTerritoryId, combat }
+  return { state, connectionState, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat }
 }

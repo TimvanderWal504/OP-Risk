@@ -16,7 +16,6 @@ import type { PhoneScreenProps } from './phoneScreens'
 export function PhoneLobbyScreen({
   state,
   me,
-  error,
   chooseColor,
   selectRole,
   startGame,
@@ -46,7 +45,6 @@ export function PhoneLobbyScreen({
         fixedName={me.name}
         stepIndex={0}
         stepCount={stepCount}
-        error={error}
       />
     )
   }
@@ -60,7 +58,6 @@ export function PhoneLobbyScreen({
         onBack={() => setRevisitingColor(true)}
         stepIndex={1}
         stepCount={stepCount}
-        error={error}
       />
     )
   }
@@ -77,7 +74,6 @@ export function PhoneLobbyScreen({
         tvDisplay={state.tvDisplay}
         tvDisplayDefault={state.tvDisplayDefault}
         onSetTvDisplay={setTvDisplay}
-        error={error}
       />
     )
   }

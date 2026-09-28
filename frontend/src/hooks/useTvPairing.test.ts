@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr'
-import { PAIRING_RETRY_BASE_MS, useTvPairing } from './useTvPairing'
+import { useTvPairing } from './useTvPairing'
+import { RETRY_BASE_MS } from './retryBackoff'
 import { useSignalR } from './useSignalR'
 import type { TvPairedMessage } from '../types/HubResponses'
 
@@ -94,7 +95,7 @@ describe('useTvPairing', () => {
       expect(result.current.pairingCode).toBeNull()
 
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(PAIRING_RETRY_BASE_MS)
+        await vi.advanceTimersByTimeAsync(RETRY_BASE_MS)
       })
 
       expect(invoke).toHaveBeenCalledTimes(2)

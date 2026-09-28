@@ -8,7 +8,6 @@ export interface TvDisplayAccessProps {
   settings: TvDisplaySettingsDto
   defaults: TvDisplaySettingsDto
   onChange: (settings: TvDisplaySettingsDto) => Promise<boolean>
-  error?: string | null
 }
 
 /**
@@ -17,7 +16,7 @@ export interface TvDisplayAccessProps {
  * als de host is uitgeschakeld) zit dezelfde toegang als actie in de header. De aanroeper beslist
  * of de speler host is; dit component rendert altijd.
  */
-export function TvDisplayAccess({ settings, defaults, onChange, error = null }: TvDisplayAccessProps) {
+export function TvDisplayAccess({ settings, defaults, onChange }: TvDisplayAccessProps) {
   const { t } = useTranslation('tvDisplay')
   const [open, setOpen] = useState(false)
 
@@ -32,7 +31,6 @@ export function TvDisplayAccess({ settings, defaults, onChange, error = null }: 
           defaults={defaults}
           onChange={onChange}
           onClose={() => setOpen(false)}
-          error={error}
         />
       )}
     </>

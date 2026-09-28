@@ -32,7 +32,6 @@ export interface CardsPanelProps {
    * volgende render opnieuw opent.
    */
   onClose: () => void
-  error: string | null
 }
 
 const TRADE_SET_SIZE = 3
@@ -56,7 +55,6 @@ export function CardsPanel({
   initialMode,
   onTradeInCards,
   onClose,
-  error,
 }: CardsPanelProps) {
   const { t } = useTranslation('cardsPanel')
   const [mode, setMode] = useState<'browse' | 'trade'>(initialMode)
@@ -153,7 +151,7 @@ export function CardsPanel({
         )}
       </div>
 
-      <Footer error={error} hint={mode === 'trade' ? t('tradeSetRuleHint') : undefined}>
+      <Footer hint={mode === 'trade' ? t('tradeSetRuleHint') : undefined}>
         {mode === 'browse' ? (
           <>
             {hasTradeableCardSet && (

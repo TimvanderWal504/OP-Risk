@@ -64,6 +64,15 @@ export function TvIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+/** Kruisje om iets weg te klikken (fouttoast, `Toast`). */
+export function CloseIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </svg>
+  )
+}
+
 /**
  * Territoriumkaart-symbolen (FO §4.4, "Mijn kaarten"-paneel): sinds taak 5-vervolg de door de
  * gebruiker aangeleverde gevulde silhouetten in `./cardSymbolIcons.tsx` (bewuste, benoemde
@@ -71,3 +80,4 @@ export function TvIcon({ className = 'h-4 w-4' }: IconProps) {
  * Icons). De eerdere zelf getekende lijnstijl-placeholders (`InfantryIcon`/`CavalryIcon`/
  * `ArtilleryIcon`/`JokerIcon`) zijn hier vervallen: niets verwijst er nog naar.
  */
+

@@ -10,7 +10,6 @@ import type { PhoneScreenProps } from './phoneScreens'
 export function PhoneClaimingScreen({
   state,
   playerId,
-  error,
   territoryCatalog,
   claimTerritory,
 }: PhoneScreenProps) {
@@ -28,7 +27,6 @@ export function PhoneClaimingScreen({
       playerId={playerId}
       claimableTerritoryIds={state.setupState.claimableTerritoryIdsByPlayer[playerId] ?? []}
       onClaim={claimTerritory}
-      error={error}
     />
   )
 }

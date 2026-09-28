@@ -27,7 +27,6 @@ export interface ClaimTerritoryStepProps {
    */
   claimableTerritoryIds: string[]
   onClaim: (territoryId: string) => void
-  error?: string | null
 }
 
 /**
@@ -44,7 +43,6 @@ export function ClaimTerritoryStep({
   playerId,
   claimableTerritoryIds,
   onClaim,
-  error = null,
 }: ClaimTerritoryStepProps) {
   const { t } = useTranslation('setup')
   const [pendingTerritoryId, setPendingTerritoryId] = useState<string | null>(null)
@@ -131,7 +129,7 @@ export function ClaimTerritoryStep({
             </div>
           ))}
         </div>
-        <Footer error={error}>
+        <Footer>
           {pendingTerritoryId ? (
             <Button
               onClick={() => {

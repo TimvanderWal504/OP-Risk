@@ -9,17 +9,18 @@ import { HomePage } from './routes/phone/HomePage'
 import './index.css'
 import './i18n'
 import { GameHubProvider } from './hooks/GameHubProvider'
+import { ToastProvider } from './hooks/ToastProvider'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <GameHubProvider>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/pair/:pairingCode" element={<HomePage />} />
+          <Route path="/" element={<ToastProvider device="phone"><HomePage /></ToastProvider>} />
+          <Route path="/pair/:pairingCode" element={<ToastProvider device="phone"><HomePage /></ToastProvider>} />
           <Route path="/tv" element={<TvPairPage />} />
-          <Route path="/tv/:gameId" element={<TvPage />} />
-          <Route path="/play/:gameId" element={<PhonePage />} />
+          <Route path="/tv/:gameId" element={<ToastProvider device="tv"><TvPage /></ToastProvider>} />
+          <Route path="/play/:gameId" element={<ToastProvider device="phone"><PhonePage /></ToastProvider>} />
         </Routes>
       </GameHubProvider>
     </BrowserRouter>
