@@ -277,20 +277,10 @@ public sealed class TurnFlowCommandHandler(IDocumentStore store, IRandomSource r
                 return Result<GameStateDto>.Failure("turnFlow.noNextPlayer");
             }
 
-            var now = timeProvider.GetUtcNow();
-            var timer = PhaseTimerFactory.ForPhase(TurnPhase.Reinforce, state.Settings, currentTimer: null, now);
-
-            // Voor de ínkomende speler rekenen, niet voor de uitgaande: dezelfde state die de
-            // projectie straks ziet, dus dezelfde uitkomst.
-            session.Events.Append(
-                gameId,
-                new PhaseChanged(
-                    gameId,
-                    nextPlayerId,
-                    TurnPhase.Reinforce,
-                    timer.Remaining,
-                    now,
-                    ReinforcementCalculator.CalculateArmies(state, nextPlayerId)));
+            // Voor de ínkomende speler rekenen, niet voor de uitgaande. De hier geladen state is
+            // dezelfde die de projectie straks ziet: CardDrawn en TurnEnded veranderen niets aan
+            // gebieden of continenten, dus dezelfde uitkomst.
+            TurnStarter.StartTurn(session, state, nextPlayerId, timeProvider.GetUtcNow());
         }
 
         await session.SaveChangesAsync();
