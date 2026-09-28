@@ -1,4 +1,3 @@
-using RiskGame.Rules.Effects;
 using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
 
@@ -49,13 +48,10 @@ public static class ReinforcementCalculator
         RoleEffects.Active<ExtraReinforcementEffect>(state, playerId)?.Amount ?? 0;
 
     /// <summary>
-    /// Actieve gebeurtenis-effecten (FO §9.2) gelden voor het hele spel, niet per rol. Elk
-    /// effect bepaalt zelf of en hoeveel het bijdraagt (<see cref="IReinforcementBonusEffect"/>);
-    /// hier wordt alleen opgeteld, zodat een nieuw bonus-effect deze klasse niet raakt.
+    /// Bonuslegers uit een gebeurteniskaart (FO §9.2). Het bedrag is al bij de trekking
+    /// vastgesteld (<see cref="Effects.EventBonusCalculator"/>) en staat op de speler; hier wordt
+    /// het alleen meegeteld, niet opnieuw berekend op de huidige state.
     /// </summary>
     private static int EventBonus(GameState state, string playerId) =>
-        state.ActiveEffects
-            .Select(active => active.Effect)
-            .OfType<IReinforcementBonusEffect>()
-            .Sum(effect => effect.BonusFor(state, playerId));
+        state.Player(playerId).PendingEventBonus;
 }

@@ -28,6 +28,11 @@ namespace RiskGame.Rules.State;
 /// <see cref="TurnState"/>: die hoort bij de actieve speler en wordt bij elke fase-overgang
 /// herbouwd, terwijl de boost van de verdediger moet blijven staan tot diens eigen volgende beurt.
 /// </param>
+/// <param name="PendingEventBonus">
+/// Extra legers uit een gebeurteniskaart (FO §9.2, <c>ContinentOwnerBonus</c>/<c>FreeReinforcement</c>),
+/// vastgesteld bij de trekking en opgeteld bij de eerstvolgende eigen versterking. Staat op de
+/// speler en niet op het effect: het bedrag verschilt per speler en ligt vast op het peilmoment.
+/// </param>
 public sealed record Player(
     string Id,
     string Name,
@@ -38,4 +43,5 @@ public sealed record Player(
     bool IsEliminated,
     string? EliminatedByPlayerId = null,
     bool IsHost = false,
-    bool DefenseBoostUsed = false);
+    bool DefenseBoostUsed = false,
+    int PendingEventBonus = 0);

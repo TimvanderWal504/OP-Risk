@@ -84,31 +84,30 @@ public class ExtensiepuntTests
     }
 
     /// <summary>
-    /// Een verzonnen versterkingseffect telt mee zonder dat
-    /// <see cref="Rules.Reinforcement.ReinforcementCalculator"/> het type kent — dat is de
-    /// Open/Closed-belofte van <see cref="IReinforcementBonusEffect"/> (src/CLAUDE.md).
+    /// Een verzonnen versterkingseffect levert bij de trekking een bonus op zonder dat
+    /// <see cref="EventBonusCalculator"/> het type kent — dat is de Open/Closed-belofte van
+    /// <see cref="IReinforcementBonusEffect"/> (src/CLAUDE.md).
     /// </summary>
     [Fact]
-    public void EenNieuwVersterkingseffect_TeltMeeZonderDeCalculatorTeWijzigen()
+    public void EenNieuwVersterkingseffect_LevertEenBonusOpZonderDeCalculatorTeWijzigen()
     {
-        var state = TestGame.InProgress(
-            activeEffects: [new ActiveEffect(new TestBonusEffect("mobilisatie", 4))]);
+        var state = TestGame.InProgress();
 
-        // Zonder gebieden is de basis het minimum van 3 (FO §5.2); het effect komt daar bovenop.
-        Assert.Equal(3 + 4, Rules.Reinforcement.ReinforcementCalculator.CalculateArmies(state, "p1"));
+        var bonuses = EventBonusCalculator.BonusesAtDraw(state, new TestBonusEffect("mobilisatie", 4));
+
+        Assert.Equal(new Dictionary<string, int> { ["p1"] = 4, ["p2"] = 4 }, bonuses);
     }
 
     /// <summary>
-    /// De ondergrens van 3 legers hoort bij het gebiedsdeel van de berekening en niet over de
-    /// effectensom heen: een effect dat 0 bijdraagt mag het totaal niet naar beneden trekken.
+    /// Een effect dat 0 bijdraagt levert niemand een openstaande bonus op, zodat er ook niets
+    /// "0 legers extra" te melden valt.
     /// </summary>
     [Fact]
-    public void EenEffectDatNietsBijdraagt_LaatDeOndergrensStaan()
+    public void EenEffectDatNietsBijdraagt_LevertGeenBonusOp()
     {
-        var state = TestGame.InProgress(
-            activeEffects: [new ActiveEffect(new TestBonusEffect("windstilte", 0))]);
+        var state = TestGame.InProgress();
 
-        Assert.Equal(3, Rules.Reinforcement.ReinforcementCalculator.CalculateArmies(state, "p1"));
+        Assert.Empty(EventBonusCalculator.BonusesAtDraw(state, new TestBonusEffect("windstilte", 0)));
     }
 
     /// <summary>

@@ -5,8 +5,8 @@ namespace RiskGame.Rules.Effects;
 /// <summary>
 /// Capability-interface voor een effect dat de versterkingspool van een speler verhoogt
 /// (FO §9.2, <c>ContinentOwnerBonus</c> en <c>FreeReinforcement</c>). Het effect bepaalt zelf
-/// of en hoeveel het bijdraagt; <see cref="Reinforcement.ReinforcementCalculator"/> telt
-/// alleen op en kent de concrete types niet.
+/// of en hoeveel het bijdraagt; <see cref="EventBonusCalculator"/> vraagt het bij de trekking
+/// per speler op (peilmoment = trekking) en kent de concrete types niet.
 /// </summary>
 /// <remarks>
 /// Breder dan <see cref="ISeaRouteBlockingEffect"/> (die aan één <see cref="Map.Border"/>

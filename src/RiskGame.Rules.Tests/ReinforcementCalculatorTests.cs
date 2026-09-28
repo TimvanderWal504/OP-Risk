@@ -118,61 +118,43 @@ public class ReinforcementCalculatorTests
     }
 
     [Fact]
-    public void ContinentOwnerBonusEffect_MetVolledigContinentbezit_TeltMee()
+    public void OpenstaandeGebeurtenisbonus_TeltMeeBijDeEigenVersterking()
     {
-        var effect = new ActiveEffect(
-            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2));
+        var players = new[] { TestGame.Player("p1", "red") with { PendingEventBonus = 2 }, TestGame.Player("p2", "blue") };
 
-        var state = TestGame.InProgress(activeEffects: [effect]);
+        var state = TestGame.InProgress(players: players)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
 
-        foreach (var territoryId in AustraliaTerritories)
-        {
-            state = state.WithTerritory(new TerritoryOwnership(territoryId, "p1", 1));
-        }
-
-        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
-
-        // Basis 3 + continentbonus 3 + ContinentOwnerBonus-event 2.
-        Assert.Equal(8, armies);
+        Assert.Equal(3 + 2, ReinforcementCalculator.CalculateArmies(state, "p1"));
+        Assert.Equal(3, ReinforcementCalculator.CalculateArmies(state, "p2"));
     }
 
+    /// <summary>
+    /// FO §9.2: het peilmoment is de trekking. Een bonus-effect dat (nog) als actief effect in de
+    /// state staat telt dus niet live mee — alleen wat bij de trekking op de speler is gezet.
+    /// </summary>
     [Fact]
-    public void ContinentOwnerBonusEffect_ZonderVolledigContinentbezit_TeltNietMee()
+    public void BonusEffectInDeState_WordtBijVersterkenNietOpnieuwBerekend()
     {
-        var effect = new ActiveEffect(
-            new ContinentOwnerBonusEffect("goede-oogst", EffectDuration.Instant, Amount: 2));
+        var effect = new ActiveEffect(Standaard43Data.EventEffect("technologische-doorbraak"));
 
         var state = TestGame.InProgress(activeEffects: [effect])
             .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
 
-        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
-
-        Assert.Equal(3, armies);
-    }
-
-    [Fact]
-    public void FreeReinforcementEffect_TeltAltijdMee()
-    {
-        var effect = new ActiveEffect(
-            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4));
-
-        var state = TestGame.InProgress(activeEffects: [effect])
-            .WithTerritory(new TerritoryOwnership("alaska", "p1", 3));
-
-        var armies = ReinforcementCalculator.CalculateArmies(state, "p1");
-
-        Assert.Equal(7, armies);
+        Assert.Equal(3, ReinforcementCalculator.CalculateArmies(state, "p1"));
     }
 
     [Fact]
     public void CalculateBreakdown_SplitstDeVierOptellermenApart()
     {
-        var effect = new ActiveEffect(
-            new FreeReinforcementEffect("gratis-legers", EffectDuration.Instant, Amount: 4));
         var settings = TestGame.Settings() with { RolesEnabled = true };
-        var players = new[] { TestGame.Player("p1", "red", roleId: "president"), TestGame.Player("p2", "blue") };
+        var players = new[]
+        {
+            TestGame.Player("p1", "red", roleId: "president") with { PendingEventBonus = 4 },
+            TestGame.Player("p2", "blue"),
+        };
 
-        var state = TestGame.InProgress(players: players, settings: settings, activeEffects: [effect])
+        var state = TestGame.InProgress(players: players, settings: settings)
             .WithTerritory(new TerritoryOwnership("eastern-united-states", "p1", 1));
 
         foreach (var territoryId in AustraliaTerritories)
