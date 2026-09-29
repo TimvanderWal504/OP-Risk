@@ -52,4 +52,5 @@ export const fixtureState: GameStateDto = {
   startingArmies: null,
   activeEffect: null,
   pendingAttrition: null,
+  currentEventId: null,
 }

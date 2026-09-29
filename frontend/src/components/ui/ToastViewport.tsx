@@ -18,24 +18,39 @@ export interface ToastViewportProps {
  * - TV: binnen `TvShell` (daar geldt de tekstschaal van de host), in hetzelfde raster als de
  *   bordschermen (`TvMainBoardScreen`), onderaan de kaartkolom — direct boven de verlooprij.
  *
- * De `role="alert"`-lijst staat er ook zonder toasts: een live region die pas samen met zijn
- * inhoud verschijnt, wordt door schermlezers niet altijd voorgelezen.
+ * Twee live regions, die er ook zonder toasts staan (een live region die pas samen met zijn inhoud
+ * verschijnt, wordt door schermlezers niet altijd voorgelezen): `role="alert"` voor fouten en een
+ * beleefde `role="status"` voor neutrale meldingen, zodat nieuws niet als alarm wordt voorgelezen.
  */
 export function ToastViewport({ toasts, device, onDismiss }: ToastViewportProps) {
   // Telefoon: van boven binnen (hangt bovenaan); TV: van onder (staat boven de verlooprij).
   const animation = device === 'tv' ? tvAnimations.toastIn : phoneAnimations.toastIn
-  const items = toasts.map((toast) => (
-    <div key={toast.id} className="pointer-events-auto" style={{ animation }}>
-      <Toast message={toast.message} device={device} onDismiss={() => onDismiss(toast.id)} />
-    </div>
-  ))
+  const render = (tone: ToastItem['tone']) =>
+    toasts
+      .filter((toast) => toast.tone === tone)
+      .map((toast) => (
+        <div key={toast.id} className="pointer-events-auto" style={{ animation }}>
+          <Toast message={toast.message} device={device} tone={toast.tone} onDismiss={() => onDismiss(toast.id)} />
+        </div>
+      ))
 
-  if (device === 'tv') return <TvLayer>{items}</TvLayer>
+  const regions = (className: string) => (
+    <>
+      <div role="alert" className={className}>
+        {render('error')}
+      </div>
+      <div role="status" className={className}>
+        {render('info')}
+      </div>
+    </>
+  )
+
+  if (device === 'tv') return <TvLayer>{regions('flex flex-col items-center gap-2')}</TvLayer>
 
   return createPortal(
     <div className="pointer-events-none fixed inset-x-0 top-0 z-[70]">
-      <div role="alert" className="mx-auto flex w-full max-w-[430px] flex-col gap-2 px-gutter pt-gutter">
-        {items}
+      <div className="mx-auto flex w-full max-w-[430px] flex-col gap-2 px-gutter pt-gutter">
+        {regions('flex flex-col gap-2')}
       </div>
     </div>,
     document.body,
@@ -45,9 +60,7 @@ export function ToastViewport({ toasts, device, onDismiss }: ToastViewportProps)
 function TvLayer({ children }: { children: ReactNode }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-[70] grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <div role="alert" className="col-start-1 row-start-2 flex flex-col items-center justify-end gap-2">
-        {children}
-      </div>
+      <div className="col-start-1 row-start-2 flex flex-col items-center justify-end gap-2">{children}</div>
     </div>
   )
 }

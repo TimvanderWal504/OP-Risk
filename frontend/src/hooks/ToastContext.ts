@@ -4,6 +4,8 @@ import type { ToastDevice, ToastItem } from '../types/Toast'
 export interface ToastApi {
   /** Toont `message` als fouttoast. Staat dezelfde tekst er al, dan begint alleen zijn timer opnieuw. */
   showError: (message: string, source?: string) => void
+  /** Toont `message` als neutrale melding (nieuws, geen fout); zelfde ontdubbeling en timer. */
+  showInfo: (message: string) => void
   dismiss: (id: number) => void
   /** Ruimt alle toasts van `source` op — een geslaagde volgende poging maakt de oude fout achterhaald. */
   clearSource: (source: string) => void

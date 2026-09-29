@@ -11,16 +11,35 @@ describe('ToastViewport', () => {
   })
 
   it('rendert op de telefoon via een portal direct onder body, buiten de eigen boom', () => {
-    const { container } = render(<ToastViewport toasts={[{ id: 1, message: 'Mislukt' }]} device="phone" onDismiss={vi.fn()} />)
+    const { container } = render(<ToastViewport toasts={[{ id: 1, message: 'Mislukt', tone: 'error' }]} device="phone" onDismiss={vi.fn()} />)
 
     const region = screen.getByRole('alert')
     expect(container).not.toContainElement(region)
-    expect(region.parentElement?.parentElement).toBe(document.body)
+    expect(region.parentElement?.parentElement?.parentElement).toBe(document.body)
     expect(within(region).getByText('Mislukt')).toBeInTheDocument()
   })
 
+  /** Nieuws is geen alarm (DESIGN.md § Toast → Neutral variant): een aparte, beleefde status-regio. */
+  it('zet een neutrale melding in de status-regio, niet in de alert-regio', () => {
+    render(
+      <ToastViewport
+        toasts={[
+          { id: 1, message: 'Mislukt', tone: 'error' },
+          { id: 2, message: 'Gebeurteniskaart: Babyboom', tone: 'info' },
+        ]}
+        device="phone"
+        onDismiss={vi.fn()}
+      />,
+    )
+
+    expect(within(screen.getByRole('status')).getByText('Gebeurteniskaart: Babyboom')).toBeInTheDocument()
+    expect(within(screen.getByRole('alert')).queryByText('Gebeurteniskaart: Babyboom')).not.toBeInTheDocument()
+    expect(screen.getByText('Gebeurteniskaart: Babyboom')).not.toHaveClass('text-loss')
+    expect(screen.getByText('Mislukt')).toHaveClass('text-loss')
+  })
+
   it('rendert op de TV op zijn plek in de boom, binnen de TvShell van de aanroeper', () => {
-    const { container } = render(<ToastViewport toasts={[{ id: 1, message: 'Mislukt' }]} device="tv" onDismiss={vi.fn()} />)
+    const { container } = render(<ToastViewport toasts={[{ id: 1, message: 'Mislukt', tone: 'error' }]} device="tv" onDismiss={vi.fn()} />)
 
     const region = screen.getByRole('alert')
     expect(container).toContainElement(region)
@@ -33,8 +52,8 @@ describe('ToastViewport', () => {
     render(
       <ToastViewport
         toasts={[
-          { id: 1, message: 'Eerste' },
-          { id: 2, message: 'Tweede' },
+          { id: 1, message: 'Eerste', tone: 'error' },
+          { id: 2, message: 'Tweede', tone: 'error' },
         ]}
         device="phone"
         onDismiss={onDismiss}

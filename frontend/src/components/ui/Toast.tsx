@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next'
-import type { ToastDevice } from '../../types/Toast'
+import type { ToastDevice, ToastTone } from '../../types/Toast'
 import { GlassPanel } from './GlassPanel'
 import { CloseIcon } from './icons'
 
 export interface ToastProps {
   message: string
   device: ToastDevice
+  /** `error` in Loss Red; `info` (nieuws) in de glas-tekstkleur. Standaard `error`. */
+  tone?: ToastTone
   onDismiss: () => void
 }
 
@@ -15,12 +17,12 @@ export interface ToastProps {
  * heeft geen bediening (FO §2.1), daar verdwijnt hij alleen vanzelf. Positionering en binnenkomst
  * horen bij `ToastViewport`.
  */
-export function Toast({ message, device, onDismiss }: ToastProps) {
+export function Toast({ message, device, tone = 'error', onDismiss }: ToastProps) {
   const { t } = useTranslation('common')
 
   return (
     <GlassPanel elevation="raised" context={device} className="flex items-start gap-3">
-      <p className="flex-1 text-loss">{message}</p>
+      <p className={`flex-1 ${tone === 'error' ? 'text-loss' : 'text-fg'}`}>{message}</p>
       {device === 'phone' && (
         <button type="button" aria-label={t('toast.dismiss')} onClick={onDismiss} className="-m-2 flex-none p-2 text-fg-secondary">
           <CloseIcon />

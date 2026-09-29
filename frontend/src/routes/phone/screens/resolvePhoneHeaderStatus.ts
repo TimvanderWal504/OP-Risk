@@ -9,16 +9,19 @@ import type { GamePhaseDto as GamePhaseDtoType, TurnPhaseDto as TurnPhaseDtoType
  * doc-comment op `setup:idle.placingArmies`: "een fasenaam, net als attack:bystander.subtitle
  * en reinforce:kicker") i.p.v. een nieuwe, tweede bron van dezelfde tekst.
  */
-export type PhoneHeaderStatusId = 'claiming' | 'placingArmies' | 'reinforce' | 'attack' | 'fortify'
+export type PhoneHeaderStatusId = 'claiming' | 'placingArmies' | 'reinforce' | 'attack' | 'fortify' | 'attrition'
 
 /**
  * `null` betekent: geen header op dit moment — `PhonePage.tsx` mount `PlayerHeader` sowieso
  * niet buiten Claiming/InitialPlacement/InProgress (Lobby/OrderRoll/Finished, zie daar), en
- * binnen InProgress ontbreekt een fasenaam alleen zolang `turnState` nog niet gevuld is.
+ * binnen InProgress ontbreekt een fasenaam alleen zolang `turnState` nog niet gevuld is — behalve
+ * tijdens "Legers verwijderen" (FO §9.2): dan loopt er bewust geen beurt, maar blijft de header
+ * (en daarmee Spelinfo) bereikbaar.
  */
 export function resolvePhoneHeaderStatus(
   phase: GamePhaseDtoType,
   turnPhase: TurnPhaseDtoType | null,
+  attritionPending = false,
 ): PhoneHeaderStatusId | null {
   switch (phase) {
     case GamePhaseDto.Claiming:
@@ -34,7 +37,7 @@ export function resolvePhoneHeaderStatus(
         case TurnPhaseDto.Fortify:
           return 'fortify'
         default:
-          return null
+          return attritionPending ? 'attrition' : null
       }
     default:
       return null

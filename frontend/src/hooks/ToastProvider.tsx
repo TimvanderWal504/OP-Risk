@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ToastViewport } from '../components/ui/ToastViewport'
 import { toastAutoDismissMs } from '../styles/motion'
-import type { ToastDevice, ToastItem } from '../types/Toast'
+import type { ToastDevice, ToastItem, ToastTone } from '../types/Toast'
 import { ToastCtx, ToastListCtx } from './ToastContext'
 
 export interface ToastProviderProps {
@@ -41,12 +41,12 @@ export function ToastProvider({ device, children }: ToastProviderProps) {
     [commit],
   )
 
-  const showError = useCallback(
-    (message: string, source?: string) => {
-      const existing = listRef.current.find((toast) => toast.message === message)
+  const show = useCallback(
+    (message: string, tone: ToastTone, source?: string) => {
+      const existing = listRef.current.find((toast) => toast.message === message && toast.tone === tone)
       const id = existing?.id ?? ++nextIdRef.current
 
-      if (!existing) commit([...listRef.current, { id, message, source }])
+      if (!existing) commit([...listRef.current, { id, message, tone, source }])
 
       clearTimeout(timersRef.current.get(id))
       timersRef.current.set(
@@ -56,6 +56,9 @@ export function ToastProvider({ device, children }: ToastProviderProps) {
     },
     [commit, dismiss, device],
   )
+
+  const showError = useCallback((message: string, source?: string) => show(message, 'error', source), [show])
+  const showInfo = useCallback((message: string) => show(message, 'info'), [show])
 
   const clearSource = useCallback(
     (source: string) => {
@@ -82,7 +85,7 @@ export function ToastProvider({ device, children }: ToastProviderProps) {
     }
   }, [])
 
-  const api = useMemo(() => ({ showError, dismiss, clearSource }), [showError, dismiss, clearSource])
+  const api = useMemo(() => ({ showError, showInfo, dismiss, clearSource }), [showError, showInfo, dismiss, clearSource])
   const list = useMemo(() => ({ toasts, device, dismiss }), [toasts, device, dismiss])
 
   return (

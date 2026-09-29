@@ -57,6 +57,7 @@ export const fixtureState: GameStateDto = {
   startingArmies: null,
   activeEffect: null,
   pendingAttrition: null,
+  currentEventId: null,
 }
 
 /** De door de server afgeleide setup-state; tests zetten alleen wat hun gedrag stuurt. */
@@ -83,6 +84,7 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   placeReinforcements: vi.fn(),
   tradeInCards: vi.fn(),
   endPhase: vi.fn(),
+  removeArmies: vi.fn(),
   combat: null,
   declareAttack: vi.fn(),
   chooseDefenseDice: vi.fn(),

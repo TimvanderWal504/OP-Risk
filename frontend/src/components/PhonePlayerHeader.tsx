@@ -58,7 +58,7 @@ export function PhonePlayerHeader({
   setTvDisplay,
   loadActionLog,
 }: PhonePlayerHeaderProps) {
-  const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay'])
+  const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay', 'eventPhone'])
   const color = state.colors.find((c) => c.id === me.colorId)
   const mission = useMissionPanel(me.missionId ?? '')
   const { timer, timerState } = usePhoneHeaderTimer(state.turnState?.timer ?? null)
@@ -66,7 +66,7 @@ export function PhonePlayerHeader({
   const [tvDisplayOpen, setTvDisplayOpen] = useState(false)
   const [gameInfoOpen, setGameInfoOpen] = useState(false)
 
-  const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null)
+  const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null, state.pendingAttrition !== null)
 
   // Geen kleur (zou betekenen: header gemount vóór de kleurkeuze rond is): niets tonen i.p.v.
   // een halve header — zelfde defensieve val-terug-patroon als `TvMainBoardScreen`'s
@@ -89,6 +89,8 @@ export function PhonePlayerHeader({
         return t('attack:bystander.subtitle')
       case 'fortify':
         return t('fortify:bystander.subtitle')
+      case 'attrition':
+        return t('eventPhone:status')
     }
   })()
 

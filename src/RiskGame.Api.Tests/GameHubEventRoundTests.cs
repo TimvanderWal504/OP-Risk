@@ -116,6 +116,7 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         var state = await LoadAsync(factory, gameId);
         Assert.Null(state.EventRound.CurrentEventId);
         Assert.Equal(["babyboom"], state.EventRound.DrawPile);
+        Assert.Null((await connection.InvokeAsync<GameStateDto>("WatchGame", gameId)).CurrentEventId);
     }
 
     [Fact]
@@ -167,6 +168,7 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         // Alice heeft één gebied: basis 3, plus 2 uit Babyboom.
         Assert.Equal("p1", updated.TurnState!.ActivePlayerId);
         Assert.Equal(5, updated.TurnState.ArmiesRemaining);
+        Assert.Equal("babyboom", updated.CurrentEventId);
         Assert.Equal(2, updated.TurnState.ReinforcementBreakdown!.EventBonus);
         Assert.Contains(
             updated.RecentActions,

@@ -35,6 +35,7 @@ export function PhonePage() {
     placeReinforcements,
     tradeInCards,
     endPhase,
+    removeArmies,
     combat,
     declareAttack,
     chooseDefenseDice,
@@ -76,7 +77,8 @@ export function PhonePage() {
   // zien, precies de valse-positief die de doc-comment op `PhonePlayerHeader` net beweert te
   // vermijden. Pas hier, buiten het component, wordt de mount zelf voorwaardelijk.
   const headerPhase = displayPhase ?? state.phase
-  const showHeader = resolvePhoneHeaderStatus(headerPhase, state.turnState?.turnPhase ?? null) !== null
+  const showHeader =
+    resolvePhoneHeaderStatus(headerPhase, state.turnState?.turnPhase ?? null, state.pendingAttrition !== null) !== null
 
   // Geldt door élke fase heen zolang de speler is uitgeschakeld en het spel nog loopt — vóór
   // de fase-dispatch, want eliminatie is geen speleigenschap van één fase. Bij `Finished` juist
@@ -125,6 +127,7 @@ export function PhonePage() {
           placeReinforcements,
           tradeInCards,
           endPhase,
+          removeArmies,
           combat,
           declareAttack,
           chooseDefenseDice,

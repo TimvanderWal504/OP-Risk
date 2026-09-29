@@ -140,7 +140,7 @@ public static class GameStateDtoMapper
             // de aanroeper vult 'm via OrderRollProgressReader.
             OrderRollState: null,
             setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer,
-            ToActiveEffectDto(state), ToDto(state.EventRound.PendingAttrition));
+            ToActiveEffectDto(state), ToDto(state.EventRound.PendingAttrition), state.EventRound.CurrentEventId);
     }
 
     /// <summary>

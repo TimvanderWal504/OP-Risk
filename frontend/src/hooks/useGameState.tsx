@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { useToast } from './useToast'
+import { useEventDrawNotice } from './useEventDrawNotice'
 import { useReportOnce } from './useReportOnce'
 import { ActionLogOfflineError } from './useActionLog'
 import { useCombatBroadcast } from './useCombatBroadcast'
@@ -328,6 +329,18 @@ export function useGameState(gameId: string) {
     if (updated) applyState(updated)
   }, [invoke, gameId, playerId])
 
+  /** "Legers verwijderen" (FO §9.2): gebied → aantal áfgestane legers; de server valideert opnieuw. */
+  const removeArmies = useCallback(
+    async (removalsByTerritory: Record<string, number>) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('RemoveArmies', gameId, playerId, removalsByTerritory)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
+
   // De aanvaller krijgt zijn eigen worp ook via de "attack"-broadcast (dezelfde group als de
   // caller), dus geen los retourwaarde-pad nodig — zelfde fire-and-forget-patroon als
   // `placeReinforcements`. `combat` (hieronder) draagt de weergavedata voor zowel aanvaller als
@@ -486,6 +499,10 @@ export function useGameState(gameId: string) {
 
   const combat = useCombatBroadcast(connection)
 
+  // Korte melding bij elke getrokken gebeurteniskaart (FO §9.2) — hier, naast de fouttoasts van
+  // de telefoon, zodat elke telefoonroute hem krijgt.
+  useEventDrawNotice(state, playerId)
+
   return {
     state,
     playerId,
@@ -510,6 +527,7 @@ export function useGameState(gameId: string) {
     rerollAttackDie,
     keepAttackDice,
     endPhase,
+    removeArmies,
     fortify,
     endTurn,
     setTvDisplay,

@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import type { GameStateDto } from '../types/GameState'
+import { EventDurationDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
+import { Badge } from './ui/Badge'
 import { ColorAvatar } from './ui/ColorAvatar'
+import { PanelSection } from './ui/PanelSection'
 import { GlassPanel } from './ui/GlassPanel'
 import { secondaryWashBg } from '../styles/glass-tokens'
 import { tDynamic } from '../i18n/useT'
@@ -27,9 +30,13 @@ interface StandingRow {
  * Volgorde: nog meedoende spelers eerst, dan op gebieden, legers en beurtvolgorde — deterministisch,
  * zodat rijen niet verspringen bij gelijke stand. Uitgeschakelde spelers staan gedimd onderaan,
  * zoals op de TV.
+ *
+ * Bovenaan de laatst getrokken gebeurteniskaart, tot de volgende trekking (FO §2.2 punt 3, DESIGN.md
+ * § Event Round) — in dezelfde vorm als de catalogus onder Regels. Vóór de eerste trekking niets.
  */
 export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
-  const { t } = useTranslation(['gameInfo', 'common'])
+  const { t } = useTranslation(['gameInfo', 'common', 'eventPhone'])
+  const currentEvent = state.events.find((event) => event.id === state.currentEventId)
 
   const rows: StandingRow[] = state.players.map((player) => {
     const owned = state.territories.filter((territory) => territory.ownerPlayerId === player.id)
@@ -55,6 +62,23 @@ export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
 
   return (
     <div className="flex flex-col gap-2">
+      {currentEvent && (
+        <PanelSection label={t('eventPhone:stand.title')}>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-display text-h3 font-extrabold text-fg">{tDynamic(`${currentEvent.id}.name`, 'events')}</span>
+              <Badge>
+                {t(
+                  currentEvent.duration === EventDurationDto.OneRound
+                    ? 'rules.events.duration.oneRound'
+                    : 'rules.events.duration.instant',
+                )}
+              </Badge>
+            </div>
+            <p className="m-0 font-body text-sm text-fg-secondary">{tDynamic(`${currentEvent.id}.description`, 'events')}</p>
+          </div>
+        </PanelSection>
+      )}
       {rows.map(({ player, territories, armies, continents }) => {
         const color = state.colors.find((c) => c.id === player.colorId)
         const isMe = player.id === me.id

@@ -37,6 +37,15 @@ describe('ToastProvider', () => {
     expect(region()).toBeEmptyDOMElement()
   })
 
+  it('toont een neutrale melding in de status-regio, niet als fout', () => {
+    const { api } = renderProvider()
+
+    act(() => api().showInfo('Gebeurteniskaart: Babyboom'))
+
+    expect(within(screen.getByRole('status')).getByText('Gebeurteniskaart: Babyboom')).toBeInTheDocument()
+    expect(region()).toBeEmptyDOMElement()
+  })
+
   it('rendert op de TV zelf niets, maar levert de lijst aan de TV-route', () => {
     const { api, list } = renderProvider('tv')
 

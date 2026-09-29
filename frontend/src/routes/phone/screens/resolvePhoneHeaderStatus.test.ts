@@ -21,6 +21,12 @@ describe('resolvePhoneHeaderStatus', () => {
     expect(resolvePhoneHeaderStatus(GamePhaseDto.InProgress, null)).toBeNull()
   })
 
+  /** Tijdens "Legers verwijderen" loopt er geen beurt, maar Spelinfo moet bereikbaar blijven (FO §9.2). */
+  it('geeft attrition tijdens InProgress zonder beurt terwijl er legers verwijderd worden', () => {
+    expect(resolvePhoneHeaderStatus(GamePhaseDto.InProgress, null, true)).toBe('attrition')
+    expect(resolvePhoneHeaderStatus(GamePhaseDto.Lobby, null, true)).toBeNull()
+  })
+
   it('geeft null voor fases zonder persistente header (Lobby/OrderRoll/Finished)', () => {
     expect(resolvePhoneHeaderStatus(GamePhaseDto.Lobby, null)).toBeNull()
     expect(resolvePhoneHeaderStatus(GamePhaseDto.OrderRoll, null)).toBeNull()

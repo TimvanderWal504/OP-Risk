@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { GameInfoStandings } from './GameInfoStandings'
 import { fixtureState } from '../routes/phone/screens/phoneScreenFixture'
-import type { GameStateDto } from '../types/GameState'
+import { EventDurationDto, EventEffectKindDto, type GameStateDto } from '../types/GameState'
 
 const [alice, bob] = fixtureState.players
 const carol = { ...bob, id: 'carol', name: 'Carol', colorId: 'green' }
@@ -79,5 +79,28 @@ describe('GameInfoStandings', () => {
 
     expect(screen.getByText('(Jij)')).toBeInTheDocument()
     expect(screen.queryByText(/territory-24|24 gebieden/i)).not.toBeInTheDocument()
+  })
+
+  /** FO §2.2 punt 3: de laatst getrokken kaart bovenaan de stand, tot de volgende trekking. */
+  it('toont de laatst getrokken gebeurteniskaart bovenaan', () => {
+    render(
+      <GameInfoStandings
+        state={state({
+          events: [{ id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound, effectKind: EventEffectKindDto.SeaBlockade, amount: null }],
+          currentEventId: 'stormachtige-zeeen',
+        })}
+        me={alice}
+      />,
+    )
+
+    expect(screen.getByText('Gebeurteniskaart')).toBeInTheDocument()
+    expect(screen.getByText('Stormachtige zeeën')).toBeInTheDocument()
+    expect(screen.getByText('1 ronde')).toBeInTheDocument()
+  })
+
+  it('toont geen kaart vóór de eerste trekking', () => {
+    render(<GameInfoStandings state={state()} me={alice} />)
+
+    expect(screen.queryByText('Gebeurteniskaart')).not.toBeInTheDocument()
   })
 })

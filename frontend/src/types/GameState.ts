@@ -175,6 +175,8 @@ export interface GameStateDto {
   activeEffect: ActiveEffectDto | null
   /** Lopende "Legers verwijderen"-keuzes; `null` als er niets openstaat. */
   pendingAttrition: PendingAttritionDto | null
+  /** De laatst getrokken gebeurteniskaart, tot de volgende trekking (Spelinfo → Stand); `null` vóór de eerste. */
+  currentEventId: string | null
 }
 
 /** Spiegelt RiskGame.Api.Dtos.ContinentDto; weergavenaam via `tDynamic(id, 'continents')`. */

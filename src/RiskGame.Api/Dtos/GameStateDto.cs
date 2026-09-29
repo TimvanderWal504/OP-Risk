@@ -73,7 +73,11 @@ public sealed record GameStateDto(
     string? PendingWinnerPlayerId = null,
     int? StartingArmies = null,
     ActiveEffectDto? ActiveEffect = null,
-    PendingAttritionDto? PendingAttrition = null);
+    PendingAttritionDto? PendingAttrition = null,
+    string? CurrentEventId = null);
+
+// CurrentEventId: de laatst getrokken gebeurteniskaart tot de volgende trekking (FO §2.2 punt 3:
+// Spelinfo → Stand); null vóór de eerste trekking of met de gebeurtenisronde uit.
 
 /// <summary>
 /// Het ronde-effect dat nu geldt (FO §9.2) — er is er hoogstens één. De afgesloten gebieden en
