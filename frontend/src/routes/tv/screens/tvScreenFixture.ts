@@ -50,4 +50,6 @@ export const fixtureState: GameStateDto = {
   nextCardTradeValue: 4,
   recentActions: [],
   startingArmies: null,
+  activeEffect: null,
+  pendingAttrition: null,
 }

@@ -266,7 +266,7 @@ public sealed class GameProjectionRecentActionsTests
         var chosen = BuildState().WithEventRound(EventRoundState.Empty with
         {
             CurrentEventId = "pensioengolf",
-            PendingAttrition = new PendingAttrition("pensioengolf", 1, AwaitingPlayerIds: ["p1", "p2"], NextPlayerId: "p1"),
+            PendingAttrition = new PendingAttrition("pensioengolf", 1, ChooserPlayerIds: ["p1", "p2"], AwaitingPlayerIds: ["p1", "p2"], NextPlayerId: "p1"),
         });
         chosen = Projection.Apply(chosen, new ArmiesRemoved("game-1", "p1", new Dictionary<string, int> { ["brazil"] = 1 }));
         chosen = Projection.Apply(chosen, new ArmiesRemoved("game-1", "p2", new Dictionary<string, int> { ["venezuela"] = 1 }));

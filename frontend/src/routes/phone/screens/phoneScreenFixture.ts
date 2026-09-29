@@ -55,6 +55,8 @@ export const fixtureState: GameStateDto = {
   nextCardTradeValue: 4,
   recentActions: [],
   startingArmies: null,
+  activeEffect: null,
+  pendingAttrition: null,
 }
 
 /** De door de server afgeleide setup-state; tests zetten alleen wat hun gedrag stuurt. */

@@ -53,10 +53,53 @@ describe('TvMainBoardScreen', () => {
     vi.unstubAllGlobals()
   })
 
-  it('rendert niets zolang er geen turnState is (fase nog niet InProgress)', () => {
-    const { container } = render(<TvMainBoardScreen state={{ ...fixtureState, turnState: null }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+  /**
+   * Tijdens "Legers verwijderen" loopt er geen beurt (FO §9.2): het bord blijft staan (DESIGN.md
+   * § Event Round), alleen de beurtkop valt weg.
+   */
+  it('laat het bord staan zonder lopende beurt, zonder beurtkop', async () => {
+    render(
+      <TvMainBoardScreen
+        state={{
+          ...stateInProgress,
+          turnState: null,
+          pendingAttrition: { eventId: 'griepgolf', amount: 2, chooserPlayerIds: ['alice'], awaitingPlayerIds: ['alice'] },
+        }}
+        orderRollThrows={{}}
+        lastClaimedTerritoryId={null}
+        combat={null}
+      />,
+    )
 
-    expect(container).toBeEmptyDOMElement()
+    expect(await screen.findByText('Alice')).toBeInTheDocument()
+    expect(screen.queryByText('2:00')).not.toBeInTheDocument()
+  })
+
+  it('toont het lopende effect linksboven en arceert de afgesloten gebieden', async () => {
+    const { container } = render(
+      <TvMainBoardScreen
+        state={{
+          ...stateInProgress,
+          events: [{ id: 'aardbeving-in-china', duration: 1, effectKind: 2, amount: null }],
+          activeEffect: { eventId: 'aardbeving-in-china', lockedTerritoryIds: ['alaska'], blockedBorders: [] },
+        }}
+        orderRollThrows={{}}
+        lastClaimedTerritoryId={null}
+        combat={null}
+      />,
+    )
+
+    expect(await screen.findByText('Aardbeving in China')).toBeInTheDocument()
+    expect(screen.getByText('Actief effect')).toBeInTheDocument()
+    await waitFor(() => expect(container.querySelectorAll('[data-testid="locked-territories"] path')).toHaveLength(1))
+  })
+
+  it('toont geen effect-chip en geen arcering zonder lopend effect', async () => {
+    const { container } = render(<TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    await screen.findByText('Alice')
+    expect(screen.queryByText('Actief effect')).not.toBeInTheDocument()
+    expect(container.querySelector('[data-testid="locked-territories"]')).toBeNull()
   })
 
   it('toont de beurtstatus-header voor de actieve speler', () => {

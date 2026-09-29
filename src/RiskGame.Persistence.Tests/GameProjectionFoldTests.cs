@@ -218,7 +218,7 @@ public sealed class GameProjectionFoldTests
     {
         var state = BuildState(AttackTurnState()).WithEventRound(EventRoundState.Empty with
         {
-            PendingAttrition = new PendingAttrition("griepgolf", Amount: 2, AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"),
+            PendingAttrition = new PendingAttrition("griepgolf", Amount: 2, ChooserPlayerIds: ["p1"], AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"),
         });
 
         var folded = Projection.Apply(

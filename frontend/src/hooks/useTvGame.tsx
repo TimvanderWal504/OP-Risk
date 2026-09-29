@@ -3,6 +3,7 @@ import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { useCombatBroadcast } from './useCombatBroadcast'
 import { useHeldCombat } from './useHeldCombat'
+import { useHeldEvent } from './useHeldEvent'
 import { GamePhaseDto, type GameStateDto } from '../types/GameState'
 import type { DiceRolledMessage, TerritoryClaimedMessage } from '../types/HubResponses'
 import { useReportOnce } from './useReportOnce'
@@ -119,6 +120,7 @@ export function useTvGame(gameId: string) {
   }, [connection, connectionState, gameId, report, resolved])
 
   const combat = useHeldCombat(useCombatBroadcast(connection), state)
+  const event = useHeldEvent(state, combat !== null)
 
-  return { state, connectionState, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat }
+  return { state, connectionState, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event }
 }

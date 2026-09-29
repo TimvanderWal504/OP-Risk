@@ -598,8 +598,9 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             .WithTurnState(null)
             .WithEventRound(state.EventRound with
             {
+                // Bij de start wacht iedere kiezer nog: de lijst dient twee keer.
                 PendingAttrition = new PendingAttrition(
-                    @event.EventId, @event.Amount, @event.AwaitingPlayerIds, @event.NextPlayerId),
+                    @event.EventId, @event.Amount, @event.AwaitingPlayerIds, @event.AwaitingPlayerIds, @event.NextPlayerId),
             });
 
     /// <summary>

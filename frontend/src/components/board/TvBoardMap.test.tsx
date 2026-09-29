@@ -1,6 +1,6 @@
 import { render, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { atlasRoughTok, seaRouteTok } from '../../styles/design-tokens'
+import { atlasRoughTok, eventRoundTok, seaRouteTok } from '../../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from '../../map/boardScale'
 import type { TerritoryGeometry } from '../../map/loadTerritoryGeometry'
 import { TvBoardMap } from './TvBoardMap'
@@ -101,7 +101,7 @@ describe('TvBoardMap', () => {
           strokeWidth: 1,
         })}
         renderMarker={(territory) => <circle key={territory.id} data-testid="marker" />}
-        seaRoutes={[{ key: 'alaska--ukraine', from: { x: 0, y: 0 }, to: { x: 100, y: 0 }, toIsEdge: false }]}
+        seaRoutes={[{ key: 'alaska--ukraine', routeTerritoryIds: ['alaska', 'ukraine'], from: { x: 0, y: 0 }, to: { x: 100, y: 0 }, toIsEdge: false }]}
       />,
     )
 
@@ -123,5 +123,45 @@ describe('TvBoardMap', () => {
 
     const marker = container.querySelector('[data-testid="marker"]')!
     expect(layer.compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  /** DESIGN.md § Event Round: arcering boven de vulling, buiten de ruwe-rand-filter, onder de markers. */
+  it('arceert alleen de afgesloten gebieden, buiten de filter en onder de markers', () => {
+    const { container } = render(
+      <TvBoardMap
+        geometry={geometry}
+        markerRadius={0}
+        filterId="atlasRoughTest5"
+        getTerritoryVisual={() => ({ fillHex: '#111111', fillOpacity: 1, strokeHex: '#ffffff', strokeOpacity: 1, strokeWidth: 1 })}
+        renderMarker={(territory) => <circle key={territory.id} data-testid="marker" />}
+        lockedTerritoryIds={new Set(['ukraine'])}
+      />,
+    )
+
+    const layer = container.querySelector('[data-testid="locked-territories"]')!
+    expect(layer.closest('[filter]')).toBeNull()
+    expect(layer.getAttribute('fill-opacity')).toBe(String(eventRoundTok.lockedHatchOpacity))
+    const hatched = layer.querySelectorAll('path')
+    expect(hatched).toHaveLength(1)
+    expect(hatched[0].getAttribute('d')).toBe('M2 2 L3 3 Z')
+    expect(hatched[0].getAttribute('fill')).toBe('url(#atlasRoughTest5-locked-hatch)')
+    expect(container.querySelector('pattern#atlasRoughTest5-locked-hatch line')?.getAttribute('stroke')).toBe(eventRoundTok.lockedHatchColor)
+
+    const marker = container.querySelector('[data-testid="marker"]')!
+    expect(layer.compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('tekent geen arceringslaag zonder afgesloten gebieden', () => {
+    const { container } = render(
+      <TvBoardMap
+        geometry={geometry}
+        markerRadius={0}
+        filterId="atlasRoughTest6"
+        getTerritoryVisual={() => ({ fillHex: '#111111', fillOpacity: 1, strokeHex: '#ffffff', strokeOpacity: 1, strokeWidth: 1 })}
+        renderMarker={() => null}
+      />,
+    )
+
+    expect(container.querySelector('[data-testid="locked-territories"]')).toBeNull()
   })
 })

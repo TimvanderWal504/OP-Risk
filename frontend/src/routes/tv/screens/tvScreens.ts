@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
+import type { HeldEvent } from '../../../hooks/useHeldEvent'
+import type { PendingAttritionDto } from '../../../types/GameState'
 import type { StageScrimLevel } from '../../../styles/glass-tokens'
 import { TvLobbyScreen } from './TvLobbyScreen'
 import { TvOrderRollScreen } from './TvOrderRollScreen'
@@ -11,6 +13,7 @@ import { TvMainBoardScreen } from './TvMainBoardScreen'
 import { TvPlaceholderScreen } from './TvPlaceholderScreen'
 import { TvGameOverScreen } from './TvGameOverScreen'
 import { TvCombatOverlay } from './TvCombatOverlay'
+import { TvEventOverlay } from './TvEventOverlay'
 
 /** Wat elk host-scherm van de route meekrijgt; zie `PhoneScreenProps` voor dezelfde opzet. */
 export interface TvScreenProps {
@@ -20,6 +23,8 @@ export interface TvScreenProps {
   lastClaimedTerritoryId: string | null
   /** Combat-broadcastdata, al gehouden door `useHeldCombat` — zie `resolveTvOverlay`. */
   combat: CombatBroadcastState | null
+  /** Een net getrokken gebeurteniskaart, al gehouden door `useHeldEvent` (C10). */
+  event?: HeldEvent | null
 }
 
 export type TvScreen = (props: TvScreenProps) => ReactNode
@@ -69,11 +74,18 @@ export function resolveStageScrimLevel(phase: GamePhaseDto | undefined): StageSc
  * (motion.ts C9-C11, plus C12 voor de framing): het bord blijft staan, er komt een laag
  * overheen. Een resolver met alleen een fase-as kan dat niet uitdrukken.
  *
- * Combat is de eerste overlay die dit invult (C9/C11 — gevecht + eliminatie). Gebeurtenis/
- * attritie (C10) blijven `null` — ander domein, buiten scope van het Attack-bouwplan.
- * `combat` komt hier al gehouden binnen (`useHeldCombat` in `useTvGame.tsx`): deze resolver
- * hoeft zelf geen houd-/guard-logica te kennen, alleen "is er iets om te tonen".
+ * Combat (C9/C11 — gevecht + eliminatie) en de gebeurteniskaart (C10, DESIGN.md § Event Round).
+ * Een gevecht wint altijd van de kaart. De kaart staat er zolang `useHeldEvent` hem vasthoudt, of
+ * zolang er "Legers verwijderen"-keuzes lopen (dat laatste is geen houd-periode: het staat er ook
+ * na een herladen TV). Beide komen al gehouden binnen: deze resolver kent zelf geen houd-logica.
  */
-export function resolveTvOverlay(combat: CombatBroadcastState | null): TvScreen | null {
-  return combat !== null ? TvCombatOverlay : null
+export function resolveTvOverlay(
+  combat: CombatBroadcastState | null,
+  event: HeldEvent | null = null,
+  pendingAttrition: PendingAttritionDto | null = null,
+): TvScreen | null {
+  if (combat !== null) return TvCombatOverlay
+  if (event !== null || pendingAttrition !== null) return TvEventOverlay
+
+  return null
 }

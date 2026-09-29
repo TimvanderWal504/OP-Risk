@@ -1,6 +1,7 @@
 import { apiUrl } from '../config/apiConfig'
 import type { TerritoryGeometry } from './loadTerritoryGeometry'
 import { LON_MAX, LON_MIN, MAP_WIDTH_PX, type ProjectedPoint } from './projection'
+import type { BorderDto } from '../types/GameState'
 
 /** Eén `border`-entry uit `data/maps/{mapId}/adjacency_validated.json` (FO §4.2). */
 interface Border {
@@ -16,6 +17,8 @@ export interface SeaRoute {
 
 export interface SeaRouteSegment {
   key: string
+  /** De twee gebieden van de route (ongericht) — om een geblokkeerde route te herkennen. */
+  routeTerritoryIds: [string, string]
   /** Altijd een gebiedscentroïde. */
   from: ProjectedPoint
   to: ProjectedPoint
@@ -69,7 +72,8 @@ export function toSeaRouteSegments(routes: SeaRoute[], geometry: TerritoryGeomet
     if (!a || !b) return []
 
     const key = `${from}--${to}`
-    const direct = [{ key, from: a, to: b, toIsEdge: false }]
+    const routeTerritoryIds: [string, string] = [from, to]
+    const direct = [{ key, routeTerritoryIds, from: a, to: b, toIsEdge: false }]
     const dx = b.x - a.x
 
     if (Math.abs(dx) <= FULL_TURN_PX / 2) return direct
@@ -81,8 +85,8 @@ export function toSeaRouteSegments(routes: SeaRoute[], geometry: TerritoryGeomet
     if (isOnMap(ghostB.x) || isOnMap(ghostA.x)) return direct
 
     return [
-      { key: `${key}--a`, from: a, to: clipToMapEdge(a, ghostB), toIsEdge: true },
-      { key: `${key}--b`, from: b, to: clipToMapEdge(b, ghostA), toIsEdge: true },
+      { key: `${key}--a`, routeTerritoryIds, from: a, to: clipToMapEdge(a, ghostB), toIsEdge: true },
+      { key: `${key}--b`, routeTerritoryIds, from: b, to: clipToMapEdge(b, ghostA), toIsEdge: true },
     ]
   })
 }
@@ -108,4 +112,17 @@ export function trimSeaRouteSegment(segment: SeaRouteSegment, inset: number): Se
     from: { x: segment.from.x + ux * inset, y: segment.from.y + uy * inset },
     to: { x: segment.to.x - ux * endInset, y: segment.to.y - uy * endInset },
   }
+}
+
+/**
+ * Laat de routes weg die een lopend effect blokkeert (FO §9.2; DESIGN.md § Sea Routes → Blocked).
+ * Welke grenzen geblokkeerd zijn, bepaalt de server (`ActiveEffectDto.blockedBorders`); hier wordt
+ * alleen vergeleken, in beide richtingen.
+ */
+export function withoutBlockedRoutes(segments: SeaRouteSegment[], blockedBorders: BorderDto[]): SeaRouteSegment[] {
+  if (blockedBorders.length === 0) return segments
+
+  const blocked = new Set(blockedBorders.flatMap(({ from, to }) => [`${from}|${to}`, `${to}|${from}`]))
+
+  return segments.filter(({ routeTerritoryIds: [from, to] }) => !blocked.has(`${from}|${to}`))
 }

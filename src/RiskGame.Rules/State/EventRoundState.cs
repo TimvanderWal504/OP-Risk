@@ -24,6 +24,10 @@ public sealed record EventRoundState(
 /// </summary>
 /// <param name="EventId">De getrokken attrition-kaart.</param>
 /// <param name="Amount">Hoeveel legers elke speler moet afstaan.</param>
+/// <param name="ChooserPlayerIds">
+/// Wie bij de trekking zelf moest kiezen (vast, ook als ze al gekozen hebben): de TV toont
+/// "Nog N van M" en een vinkje per kiezer, en dat is zonder deze lijst niet meer te reconstrueren.
+/// </param>
 /// <param name="AwaitingPlayerIds">Wie nog moet kiezen.</param>
 /// <param name="NextPlayerId">
 /// Wiens beurt begint zodra iedereen gekozen heeft. Moet hier vastliggen: zonder
@@ -32,5 +36,6 @@ public sealed record EventRoundState(
 public sealed record PendingAttrition(
     string EventId,
     int Amount,
+    IReadOnlyList<string> ChooserPlayerIds,
     IReadOnlyList<string> AwaitingPlayerIds,
     string NextPlayerId);

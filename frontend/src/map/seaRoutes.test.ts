@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { loadTerritoryGeometry, type TerritoryGeometry } from './loadTerritoryGeometry'
 import { LON_MAX, LON_MIN, MAP_WIDTH_PX, project } from './projection'
-import { loadSeaRoutes, toSeaRouteSegments, trimSeaRouteSegment, type SeaRouteSegment } from './seaRoutes'
+import { loadSeaRoutes, toSeaRouteSegments, trimSeaRouteSegment, withoutBlockedRoutes, type SeaRouteSegment } from './seaRoutes'
 
 function territory(id: string, lon: number, lat: number): TerritoryGeometry {
   return { id, continent: 'test', centroidPx: project(lon, lat), pathD: '' }
@@ -48,7 +48,7 @@ describe('toSeaRouteSegments', () => {
     const segments = toSeaRouteSegments([{ from: 'iceland', to: 'greenland' }], geometry)
 
     expect(segments).toEqual([
-      { key: 'iceland--greenland', from: geometry[0].centroidPx, to: geometry[1].centroidPx, toIsEdge: false },
+      { key: 'iceland--greenland', routeTerritoryIds: ['iceland', 'greenland'], from: geometry[0].centroidPx, to: geometry[1].centroidPx, toIsEdge: false },
     ])
   })
 
@@ -89,7 +89,7 @@ describe('toSeaRouteSegments', () => {
     const segments = toSeaRouteSegments([{ from: 'far-east', to: 'far-west' }], geometry)
 
     expect(segments).toEqual([
-      { key: 'far-east--far-west', from: geometry[0].centroidPx, to: geometry[1].centroidPx, toIsEdge: false },
+      { key: 'far-east--far-west', routeTerritoryIds: ['far-east', 'far-west'], from: geometry[0].centroidPx, to: geometry[1].centroidPx, toIsEdge: false },
     ])
   })
 
@@ -103,6 +103,7 @@ describe('toSeaRouteSegments', () => {
 describe('trimSeaRouteSegment', () => {
   const segment = (toIsEdge: boolean): SeaRouteSegment => ({
     key: 'a--b',
+    routeTerritoryIds: ['a', 'b'],
     from: { x: 0, y: 0 },
     to: { x: 30, y: 40 },
     toIsEdge,
@@ -157,5 +158,33 @@ describe('zeeroutes op de echte kaartdata (standaard-43)', () => {
         expect(x).toBeLessThanOrEqual(MAP_WIDTH_PX)
       }
     }
+  })
+})
+
+describe('withoutBlockedRoutes', () => {
+  const route = (from: string, to: string): SeaRouteSegment => ({
+    key: `${from}--${to}`,
+    routeTerritoryIds: [from, to],
+    from: { x: 0, y: 0 },
+    to: { x: 1, y: 1 },
+    toIsEdge: false,
+  })
+
+  it('laat een geblokkeerde route weg, in welke richting de server hem ook noemt', () => {
+    const segments = [route('kamchatka', 'alaska'), route('iceland', 'greenland')]
+
+    expect(withoutBlockedRoutes(segments, [{ from: 'alaska', to: 'kamchatka' }]).map((s) => s.key)).toEqual(['iceland--greenland'])
+  })
+
+  it('laat beide stompjes van een route over de datumgrens weg', () => {
+    const stubs = [{ ...route('kamchatka', 'alaska'), key: 'kamchatka--alaska--a' }, { ...route('kamchatka', 'alaska'), key: 'kamchatka--alaska--b' }]
+
+    expect(withoutBlockedRoutes(stubs, [{ from: 'kamchatka', to: 'alaska' }])).toEqual([])
+  })
+
+  it('laat alles staan zonder blokkade', () => {
+    const segments = [route('iceland', 'greenland')]
+
+    expect(withoutBlockedRoutes(segments, [])).toBe(segments)
   })
 })

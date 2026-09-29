@@ -104,6 +104,19 @@ public sealed class GameStateDtoMapperGameInfoTests
         Assert.Equal(expected, dto.Events.Single(summary => summary.Id == eventId).EffectKind);
     }
 
+    /// <summary>Alleen bij legerverlies is er één bedrag voor iedereen; een bonus verschilt per speler.</summary>
+    [Theory]
+    [InlineData("epidemie-in-de-steden", 3)]
+    [InlineData("pensioengolf", 1)]
+    [InlineData("babyboom", null)]
+    [InlineData("stormachtige-zeeen", null)]
+    public void Events_DragenHetBedragAlleenBijLegerverlies(string eventId, int? expected)
+    {
+        var dto = GameStateDtoMapper.ToDto(State(GamePhase.InProgress), TimeProvider.System);
+
+        Assert.Equal(expected, dto.Events.Single(summary => summary.Id == eventId).Amount);
+    }
+
     [Fact]
     public void NextCardTradeValue_IsDeWaardeVanDeVolgendeInleg()
     {

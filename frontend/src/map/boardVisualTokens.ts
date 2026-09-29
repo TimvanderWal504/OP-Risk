@@ -1,4 +1,4 @@
-import { atlasRoughTok, boardMarkerTok, boardTok, seaRouteTok } from '../styles/design-tokens'
+import { atlasRoughTok, boardMarkerTok, boardTok, eventRoundTok, seaRouteTok } from '../styles/design-tokens'
 import { DESIGN_UNIT_PX, designToMap } from './boardScale'
 
 /**
@@ -95,6 +95,18 @@ export const seaRoute = {
   opacity: seaRouteTok.opacity,
   strokeWidth: designToMap(seaRouteTok.sw),
   dotGap: designToMap(seaRouteTok.dotGap),
+} as const
+
+/**
+ * Arcering over een afgesloten gebied (`eventRoundTok`), omgerekend naar onze viewBox. Hoort bij de
+ * kaart, dus schaalt niet mee met de TV-tekstschaal (zoals de zeeroutes).
+ */
+export const lockedHatch = {
+  color: eventRoundTok.lockedHatchColor,
+  /** Opacity, geen lengte-eenheid — gaat niet door `designToMap`. */
+  opacity: eventRoundTok.lockedHatchOpacity,
+  gap: designToMap(eventRoundTok.lockedHatchGap),
+  strokeWidth: designToMap(eventRoundTok.lockedHatchSw),
 } as const
 
 /**

@@ -171,6 +171,10 @@ export interface GameStateDto {
   recentActions: RecentActionDto[]
   /** Startlegers per speler in dit spel; `null` in de lobby. */
   startingArmies: number | null
+  /** Het ronde-effect dat nu geldt (gebeurtenisronde, FO §9.2); `null` als er geen is. */
+  activeEffect: ActiveEffectDto | null
+  /** Lopende "Legers verwijderen"-keuzes; `null` als er niets openstaat. */
+  pendingAttrition: PendingAttritionDto | null
 }
 
 /** Spiegelt RiskGame.Api.Dtos.ContinentDto; weergavenaam via `tDynamic(id, 'continents')`. */
@@ -246,4 +250,32 @@ export interface EventSummaryDto {
   duration: EventDurationDto
   /** Soort gevolg, door de server afgeleid — kies icoon en zinnen hierop, nooit op de id. */
   effectKind: EventEffectKindDto
+  /** Hoeveel legers iedereen afstaat bij `Attrition`; `null` bij elke andere soort. */
+  amount: number | null
+}
+
+/** Spiegelt RiskGame.Api.Dtos.BorderDto: een grens tussen twee gebieden, ongericht. */
+export interface BorderDto {
+  from: string
+  to: string
+}
+
+/**
+ * Spiegelt RiskGame.Api.Dtos.ActiveEffectDto: het ronde-effect dat nu geldt (hoogstens één), met wat
+ * het raakt — door de server bepaald, zodat de kaart niets hoeft af te leiden.
+ */
+export interface ActiveEffectDto {
+  eventId: string
+  lockedTerritoryIds: string[]
+  blockedBorders: BorderDto[]
+}
+
+/** Spiegelt RiskGame.Api.Dtos.PendingAttritionDto: lopende "Legers verwijderen"-keuzes (FO §9.2). */
+export interface PendingAttritionDto {
+  eventId: string
+  amount: number
+  /** Wie moest kiezen (vast). */
+  chooserPlayerIds: string[]
+  /** Wie nog niet koos. */
+  awaitingPlayerIds: string[]
 }

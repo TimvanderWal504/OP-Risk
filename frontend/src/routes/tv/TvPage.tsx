@@ -20,7 +20,7 @@ import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './scr
 export function TvPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { t } = useTranslation('lobby')
-  const { state, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat } = useTvGame(gameId!)
+  const { state, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event } = useTvGame(gameId!)
   const toastList = useToastList()
   const displayPhase = useHeldPhase(state?.phase)
   useTvLanguage(state?.tvDisplay.language)
@@ -34,8 +34,8 @@ export function TvPage() {
   } else if (!state) {
     content = <div className="flex h-full items-center justify-center text-fg-muted">{t('tv.connecting')}</div>
   } else {
-    const screenProps = { state, orderRollThrows, lastClaimedTerritoryId, combat }
-    const overlay = resolveTvOverlay(combat)
+    const screenProps = { state, orderRollThrows, lastClaimedTerritoryId, combat, event }
+    const overlay = resolveTvOverlay(combat, event, state.pendingAttrition)
 
     shellProps = { scrimLevel: resolveStageScrimLevel(displayPhase), display: state.tvDisplay }
     // createElement en niet <Screen …/>: zie PhonePage — het schermtype is dynamisch, de

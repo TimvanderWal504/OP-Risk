@@ -251,6 +251,26 @@ export const seaRouteTok = {
 } as const;
 
 /**
+ * Gebeurtenisronde op de TV (DESIGN.md § Event Round, brief 2026-09-29 — bewust opgedragen
+ * nieuwe tokens). Kaartwaarden in design-eenheden, zoals `seaRouteTok`.
+ *
+ * - `lockedHatch*`: diagonale arcering over een afgesloten gebied (`TerritoryLocked`). De kleur is
+ *   voorlopig Recon Silver: de gebruiker twijfelt of dat de juiste is ("probeer het en laat zien
+ *   waar het staat") — dit is de ene plek om hem te wisselen.
+ * - `cardWidthPx`: breedte van de gebeurteniskaart-overlay (760, uit de oorspronkelijke
+ *   TV-mockup), vóór de tekstschaal van de host.
+ */
+export const eventRoundTok = {
+  lockedHatchColor: palette.silver[300],
+  lockedHatchOpacity: 0.55,
+  lockedHatchGap: 10,
+  lockedHatchSw: 2.5,
+  cardWidthPx: 760,
+  /** De glans die één keer over de kaart schuift (uit de oorspronkelijke TV-mockup). */
+  cardSheenGradient: 'linear-gradient(100deg, transparent, rgba(255,255,255,.08), transparent)',
+} as const;
+
+/**
  * Legerteller-marker op de kaart — `armyEl` in het oorspronkelijke TV-design.
  * Waarden in `boardViewBox`-eenheden. `ringSwHl` (1.75) hoort bij de
  * selectie-/gevechtsstaat, die nog niet gebouwd is.

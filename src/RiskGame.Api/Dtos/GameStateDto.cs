@@ -71,7 +71,28 @@ public sealed record GameStateDto(
     SetupStateDto? SetupState = null,
     int StateVersion = 0,
     string? PendingWinnerPlayerId = null,
-    int? StartingArmies = null);
+    int? StartingArmies = null,
+    ActiveEffectDto? ActiveEffect = null,
+    PendingAttritionDto? PendingAttrition = null);
+
+/// <summary>
+/// Het ronde-effect dat nu geldt (FO §9.2) — er is er hoogstens één. De afgesloten gebieden en
+/// geblokkeerde zeegrenzen zijn door de server bepaald (<see cref="RiskGame.Rules.Effects.ActiveEffectQueries"/>),
+/// zodat de TV ze kan tekenen zonder de effectregels na te bouwen.
+/// </summary>
+public sealed record ActiveEffectDto(
+    string EventId, IReadOnlyList<string> LockedTerritoryIds, IReadOnlyList<BorderDto> BlockedBorders);
+
+/// <summary>Een grens tussen twee gebieden, ongericht.</summary>
+public sealed record BorderDto(string From, string To);
+
+/// <summary>
+/// Lopende "Legers verwijderen"-keuzes (FO §9.2). <see cref="ChooserPlayerIds"/> is wie moest
+/// kiezen, <see cref="AwaitingPlayerIds"/> wie dat nog niet deed — samen geven ze "Nog N van M" en
+/// de vinkjes, zonder dat de client iets telt of afleidt.
+/// </summary>
+public sealed record PendingAttritionDto(
+    string EventId, int Amount, IReadOnlyList<string> ChooserPlayerIds, IReadOnlyList<string> AwaitingPlayerIds);
 
 /// <summary>
 /// Een continent met z'n bonus en, als één speler het volledig bezit, wie dat is (spelinfo,
@@ -88,7 +109,11 @@ public sealed record ContinentDto(string Id, int Bonus, string? OwnerPlayerId);
 /// <see cref="GameSettingsDto.RolesEnabled"/>: de client verbergt de sectie als gebeurtenissen uit
 /// staan.
 /// </summary>
-public sealed record EventSummaryDto(string Id, EventDurationDto Duration, EventEffectKindDto EffectKind);
+/// <param name="Amount">
+/// Hoeveel legers iedereen afstaat bij <see cref="EventEffectKindDto.Attrition"/>; null bij elke andere
+/// soort (een bonus verschilt per speler; de TV leest de ontvangers uit het verloop).
+/// </param>
+public sealed record EventSummaryDto(string Id, EventDurationDto Duration, EventEffectKindDto EffectKind, int? Amount);
 
 /// <summary>
 /// Wat voor soort gevolg een gebeurteniskaart heeft (FO §9.2), server-side afgeleid uit de

@@ -78,7 +78,7 @@ describe('actionSentence', () => {
     ['een zeeblokkade', 'stormachtige-zeeen', EventEffectKindDto.SeaBlockade, 'Stormachtige zeeën is voorbij: de zeeroutes zijn weer open'],
     ['een afgesloten gebied', 'aardbeving-in-china', EventEffectKindDto.TerritoryLock, 'Aardbeving in China is voorbij: de afgesloten gebieden zijn weer open'],
   ])('beschrijft het einde van %s', (_, eventId, effectKind, expected) => {
-    const state = { ...fixtureState, events: [{ id: eventId, duration: EventDurationDto.OneRound, effectKind }] }
+    const state = { ...fixtureState, events: [{ id: eventId, duration: EventDurationDto.OneRound, effectKind, amount: null }] }
     const expired = action({ kind: RecentActionKindDto.EffectExpired, playerId: null, eventId })
 
     expect(actionSentence(expired, state, i18next.getFixedT('nl', 'actionTicker'))).toBe(expected)

@@ -16,12 +16,19 @@ import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import type { TvScreenProps } from './tvScreens'
 import { ActionTicker } from '../../../components/ActionTicker'
+import { ActiveEffectChip } from '../../../components/ActiveEffectChip'
+import { withoutBlockedRoutes } from '../../../map/seaRoutes'
 
 /**
  * TV-hoofdbord tijdens `GamePhaseDto.InProgress`. Read-only weergave (FO §7.3/§2.3: de telefoon
  * is de enige invoerbron) — geen `onClick` op de gebiedslagen. Selectie-/gevechtsringen horen
- * bij Attack en zijn hier bewust niet gebouwd; idem de gebeurtenis-feed — blijft buiten scope
- * tot er een server-databron voor is.
+ * bij Attack en zijn hier bewust niet gebouwd.
+ *
+ * Gebeurtenisronde (DESIGN.md § Event Round): een lopend effect laat geblokkeerde zeeroutes weg,
+ * arceert afgesloten gebieden en zet de actief-effect-chip linksboven op de kaart — alles uit wat de
+ * server meestuurt. Tijdens "Legers verwijderen" loopt er geen beurt (`turnState` is `null`): het
+ * bord blijft dan staan, zonder beurtkop en zonder eigen/vijand-perspectief (zelfde keuze als het
+ * gelijktijdig plaatsen op `TvInitialPlacementScreen`: elk gebied op de volle eigen-opaciteit).
  *
  * Zijpaneel (spelerslijst): zelfde `GlassPanel`-patroon als `TvClaimingScreen`, met
  * territorium- én legertotaal per speler (`state.territories` is al client-side beschikbaar).
@@ -29,7 +36,8 @@ import { ActionTicker } from '../../../components/ActionTicker'
 export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { t } = useTranslation('board')
   const { data: geometry } = useTerritoryGeometry()
-  const seaRoutes = useSeaRoutes(geometry)
+  const seaRoutes = withoutBlockedRoutes(useSeaRoutes(geometry), state.activeEffect?.blockedBorders ?? [])
+  const lockedTerritoryIds = new Set(state.activeEffect?.lockedTerritoryIds ?? [])
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
   const textScale = useTvDisplayScale().text
@@ -53,9 +61,11 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
 
   const turnState = state.turnState
   const activePlayer = state.players.find((p) => p.id === turnState?.activePlayerId)
-  if (!turnState || !activePlayer) return null
+  if (turnState && !activePlayer) return null
 
-  const activeColor = state.colors.find((c) => c.id === activePlayer.colorId)
+  const activeColor = state.colors.find((c) => c.id === activePlayer?.colorId)
+  // Zonder lopende beurt (attrition-keuzes) is er geen "eigen" perspectief: alles telt als eigen.
+  const isOwnedByViewer = (ownerId: string | undefined) => (activePlayer ? ownerId === activePlayer.id : true)
 
   const territoryCountByPlayer: Record<string, number> = {}
   const armyTotalByPlayer: Record<string, number> = {}
@@ -67,12 +77,14 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
 
   return (
     <div className="absolute inset-0 grid grid-cols-[1fr_402px] grid-rows-[96px_1fr_146px] gap-4 gap-x-6.5 p-6 px-6.5">
-      <TurnStatusHeader
-        activePlayer={activePlayer}
-        activeColor={activeColor}
-        turnPhase={turnState.turnPhase}
-        timer={turnState.timer}
-      />
+      {turnState && activePlayer && (
+        <TurnStatusHeader
+          activePlayer={activePlayer}
+          activeColor={activeColor}
+          turnPhase={turnState.turnPhase}
+          timer={turnState.timer}
+        />
+      )}
 
       <TvBoardMap
         geometry={geometry}
@@ -81,11 +93,13 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
         // vijand-ring (0,125 design-eenheid) is niet zichtbaar.
         markerRadius={marker.discR + marker.ringSwOwn / 2}
         filterId="atlasRough"
+        lockedTerritoryIds={lockedTerritoryIds}
+        topLeft={<ActiveEffectChip state={state} />}
         getTerritoryVisual={(territory) => {
           const entry = ownership.get(territory.id)
           const owner = entry?.owner
           const color = entry?.color
-          const isOwn = owner?.id === activePlayer.id
+          const isOwn = isOwnedByViewer(owner?.id)
           const fillHex = color?.hex ?? boardTok.neutral
           const fillOpacity = color ? (isOwn ? boardTok.ownFill : boardTok.enFill) : boardTok.neuFill
           const strokeOpacity = color ? (isOwn ? boardTok.ownStroke : boardTok.enStroke) : boardTok.neuStroke
@@ -103,7 +117,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
           const color = entry?.color
           const ringColor = color?.hex ?? boardTok.neutral
           // De derde ringSw-tak (1.75) hoort bij de nog niet gebouwde selectiestaat.
-          const ringSw = owner?.id === activePlayer.id ? marker.ringSwOwn : marker.ringSwEnemy
+          const ringSw = isOwnedByViewer(owner?.id) ? marker.ringSwOwn : marker.ringSwEnemy
 
           const wasArmy = prevArmy[territory.id]
           const dir = wasArmy !== undefined && wasArmy !== owned.armyCount ? (owned.armyCount > wasArmy ? 1 : -1) : 0
@@ -174,7 +188,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
             const color = state.colors.find((c) => c.id === player?.colorId)
             if (!player || !color) return null
 
-            const isCurrent = playerId === activePlayer.id
+            const isCurrent = playerId === activePlayer?.id
 
             return (
               <div

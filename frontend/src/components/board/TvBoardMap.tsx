@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { TerritoryGeometry } from '../../map/loadTerritoryGeometry'
 import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../map/projection'
-import { atlasRough, seaRoute } from '../../map/boardVisualTokens'
+import { atlasRough, lockedHatch, seaRoute } from '../../map/boardVisualTokens'
 import { trimSeaRouteSegment, type SeaRouteSegment } from '../../map/seaRoutes'
 import { GlassPanel } from '../ui/GlassPanel'
 
@@ -31,6 +31,13 @@ interface TvBoardMapProps {
   markerRadius: number
   /** Bv. de claim-flare-ring op `TvClaimingScreen`, na de gebieds-/markerlagen. */
   extraOverlay?: ReactNode
+  /**
+   * Gebieden die een lopend effect afsluit (FO §9.2, `TerritoryLocked`) — door de server bepaald.
+   * Krijgen een statische arcering over de vulling (DESIGN.md § Event Round).
+   */
+  lockedTerritoryIds?: ReadonlySet<string>
+  /** Linksboven over de kaart, buiten de SVG — de actief-effect-chip (DESIGN.md § Event Round). */
+  topLeft?: ReactNode
 }
 
 /**
@@ -47,6 +54,8 @@ export function TvBoardMap({
   seaRoutes = [],
   markerRadius,
   extraOverlay,
+  lockedTerritoryIds,
+  topLeft,
 }: TvBoardMapProps) {
   // + de straal van één stip (ronde cap), zodat ook de eerste/laatste stip buiten de ring valt.
   const seaRouteInset = markerRadius + seaRoute.strokeWidth / 2
@@ -59,6 +68,7 @@ export function TvBoardMap({
       className="relative col-start-1 row-start-2 min-w-0 overflow-hidden"
     >
       <div className="absolute inset-0"/>
+      {topLeft && <div className="absolute top-4 left-4 z-10">{topLeft}</div>}
       <svg
         viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
         preserveAspectRatio="xMidYMid meet"
@@ -81,6 +91,15 @@ export function TvBoardMap({
               yChannelSelector="G"
             />
           </filter>
+          <pattern
+            id={`${filterId}-locked-hatch`}
+            patternUnits="userSpaceOnUse"
+            width={lockedHatch.gap}
+            height={lockedHatch.gap}
+            patternTransform="rotate(45)"
+          >
+            <line x1={0} y1={0} x2={0} y2={lockedHatch.gap} stroke={lockedHatch.color} strokeWidth={lockedHatch.strokeWidth} />
+          </pattern>
         </defs>
 
         <g filter={`url(#${filterId})`}>
@@ -105,6 +124,18 @@ export function TvBoardMap({
             )
           })}
         </g>
+
+        {/* Afgesloten gebieden: statische arcering boven de vulling, buiten de ruwe-rand-filter
+            (die zou de lijnen vervormen), onder routes en markers. */}
+        {lockedTerritoryIds && lockedTerritoryIds.size > 0 && (
+          <g data-testid="locked-territories" fillOpacity={lockedHatch.opacity} stroke="none">
+            {geometry
+              ?.filter((territory) => lockedTerritoryIds.has(territory.id))
+              .map((territory) => (
+                <path key={territory.id} d={territory.pathD} fill={`url(#${filterId}-locked-hatch)`} />
+              ))}
+          </g>
+        )}
 
         {/* Buiten de ruwe-rand-filter: die zou de stippen vervormen tot vlekken. */}
         <g

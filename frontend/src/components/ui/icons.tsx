@@ -64,6 +64,59 @@ export function TvIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+/**
+ * Gebeurtenisronde (DESIGN.md § Event Round): één lijn-icoon per soort gevolg, zelfde conventie als
+ * hierboven. Bonus en legerverlies zijn elkaars spiegel (plus/min in een cirkel); een afgesloten
+ * gebied hergebruikt `LockIcon`.
+ */
+export function EventBonusIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+      <circle cx="8" cy="8" r="6.2" />
+      <path d="M8 5v6M5 8h6" />
+    </svg>
+  )
+}
+
+export function EventArmyLossIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+      <circle cx="8" cy="8" r="6.2" />
+      <path d="M5 8h6" />
+    </svg>
+  )
+}
+
+/** Twee golven met een schuine streep erdoor: zeeroutes dicht. */
+export function EventSeaBlockadeIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1.8 6.6c1.1-1 2.1-1 3.1 0s2.1 1 3.1 0 2.1-1 3.1 0 2.1 1 3.1 0" />
+      <path d="M1.8 10.6c1.1-1 2.1-1 3.1 0s2.1 1 3.1 0 2.1-1 3.1 0 2.1 1 3.1 0" />
+      <path d="M3 13.6 13 2.4" />
+    </svg>
+  )
+}
+
+/** Een kaart met een vonk: een gebeurtenis zonder eigen soort (`Other`). */
+export function EventCardIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.4" y="1.8" width="9.2" height="12.4" rx="1.4" />
+      <path d="M8 5.2v5.6M5.2 8h5.6" />
+    </svg>
+  )
+}
+
+/** Vinkje: een wachtende speler heeft gekozen (attrition-wachtstaat op de TV). */
+export function CheckIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 8.4 6.6 11.4 12.5 4.8" />
+    </svg>
+  )
+}
+
 /** Kruisje om iets weg te klikken (fouttoast, `Toast`). */
 export function CloseIcon({ className = 'h-4 w-4' }: IconProps) {
   return (

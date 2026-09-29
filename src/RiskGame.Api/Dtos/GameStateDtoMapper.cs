@@ -118,7 +118,10 @@ public static class GameStateDtoMapper
 
         var events = state.Map.Events
             .Select(definition => new EventSummaryDto(
-                definition.Id, ToDto(definition.Effect.Duration), EffectKindOf(definition.Effect)))
+                definition.Id,
+                ToDto(definition.Effect.Duration),
+                EffectKindOf(definition.Effect),
+                (definition.Effect as IArmyAttritionEffect)?.Amount))
             .ToArray();
 
         // Pas betekenisvol zodra de lobby dicht is: het spelersaantal ligt dan vast (zie ook de
@@ -136,8 +139,38 @@ public static class GameStateDtoMapper
             // Niet af te leiden uit GameState (TurnOrder is tijdens de order-roll nog leeg):
             // de aanroeper vult 'm via OrderRollProgressReader.
             OrderRollState: null,
-            setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer);
+            setupState, StateVersion: 0, pendingWinnerPlayerId, startingArmiesPerPlayer,
+            ToActiveEffectDto(state), ToDto(state.EventRound.PendingAttrition));
     }
+
+    /// <summary>
+    /// Het lopende ronde-effect met wat het raakt, via dezelfde bevraging als de guards
+    /// (<see cref="ActiveEffectQueries"/>); zeegrenzen één keer per paar.
+    /// </summary>
+    private static ActiveEffectDto? ToActiveEffectDto(GameState state)
+    {
+        if (state.ActiveEffects.Count == 0)
+        {
+            return null;
+        }
+
+        var lockedTerritoryIds = state.Map.Territories
+            .Select(territory => territory.Id)
+            .Where(territoryId => ActiveEffectQueries.IsTerritoryLocked(state, territoryId))
+            .ToArray();
+
+        var isBlocked = ActiveEffectQueries.BlockedBorderPredicate(state);
+        var blockedBorders = isBlocked is null
+            ? []
+            : state.Map.Borders.Where(isBlocked).Select(border => new BorderDto(border.From, border.To)).ToArray();
+
+        return new ActiveEffectDto(state.ActiveEffects[0].Effect.Id, lockedTerritoryIds, blockedBorders);
+    }
+
+    private static PendingAttritionDto? ToDto(PendingAttrition? pending) =>
+        pending is null
+            ? null
+            : new PendingAttritionDto(pending.EventId, pending.Amount, pending.ChooserPlayerIds, pending.AwaitingPlayerIds);
 
     /// <summary>
     /// Het volledige openbare verloop, nieuwste eerst: voor het tabblad Spelverloop op de telefoon

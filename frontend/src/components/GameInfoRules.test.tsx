@@ -19,8 +19,8 @@ const state = (settings: Partial<GameSettingsDto> = {}, overrides: Partial<GameS
     { id: 'asia', bonus: 7, ownerPlayerId: null },
   ],
   events: [
-    { id: 'goede-oogst', duration: EventDurationDto.Instant, effectKind: EventEffectKindDto.Bonus },
-    { id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound, effectKind: EventEffectKindDto.SeaBlockade },
+    { id: 'goede-oogst', duration: EventDurationDto.Instant, effectKind: EventEffectKindDto.Bonus, amount: null },
+    { id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound, effectKind: EventEffectKindDto.SeaBlockade, amount: null },
   ],
   nextCardTradeValue: 8,
   startingArmies: 35,

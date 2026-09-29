@@ -1425,6 +1425,7 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             var actualAttrition = actual.EventRound.PendingAttrition!;
             Assert.Equal(expectedAttrition.EventId, actualAttrition.EventId);
             Assert.Equal(expectedAttrition.Amount, actualAttrition.Amount);
+            Assert.Equal(expectedAttrition.ChooserPlayerIds, actualAttrition.ChooserPlayerIds);
             Assert.Equal(expectedAttrition.AwaitingPlayerIds, actualAttrition.AwaitingPlayerIds);
             Assert.Equal(expectedAttrition.NextPlayerId, actualAttrition.NextPlayerId);
         }

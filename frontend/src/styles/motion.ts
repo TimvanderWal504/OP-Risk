@@ -94,6 +94,10 @@ export const tvAnimations = {
   cardReveal: "atlasCard .55s cubic-bezier(.2,.7,.3,1) both",
   /** Sheen-sweep over onthulde kaart (L401, L415). */
   cardSheen: 'atlasSheen 2.4s ease-in-out infinite',
+  /** Eén glans-pass over de gebeurteniskaart (DESIGN.md § Event Round, brief 2026-09-29: "a single
+   *  `cardSheen` pass") — zelfde keyframe en duur als `cardSheen`, maar niet oneindig: een
+   *  doorlopende animatie op de TV staat op zwakke hardware 8 s lang te draaien voor niets. */
+  cardSheenOnce: 'atlasSheen 2.4s ease-in-out 1 both',
   /** Titel-slam, twee losse instanties met verschillende duur (L433 / L447). */
   titleSlamShort: 'atlasSlam .7s cubic-bezier(.2,.7,.3,1) both',
   titleSlamLong: 'atlasSlam .8s cubic-bezier(.2,.7,.3,1) both',

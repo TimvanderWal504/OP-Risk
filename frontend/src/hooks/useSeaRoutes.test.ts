@@ -45,6 +45,7 @@ describe('useSeaRoutes', () => {
     await waitFor(() => expect(result.current).toHaveLength(1))
     expect(result.current[0]).toEqual({
       key: 'iceland--greenland',
+      routeTerritoryIds: ['iceland', 'greenland'],
       from: { x: 100, y: 50 },
       to: { x: 80, y: 40 },
       toIsEdge: false,

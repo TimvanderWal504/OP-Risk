@@ -27,6 +27,7 @@ import { tvPairing } from './tvPairing'
 import { gameInfo } from './gameInfo'
 import { actionTicker } from './actionTicker'
 import { events } from './events'
+import { eventTv } from './eventTv'
 import { cards } from './cards'
 import { quotes } from './quotes'
 
@@ -60,6 +61,7 @@ export const trees = {
   gameInfo,
   actionTicker,
   events,
+  eventTv,
   cards,
   quotes,
 } as const

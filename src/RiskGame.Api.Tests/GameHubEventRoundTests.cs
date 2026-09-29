@@ -213,7 +213,13 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         var gameId = await SetUpAsync(
             factory, drawPile: ["beringstraat-dichtgevroren"], activeEventIds: ["stormachtige-zeeen"]);
 
-        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
+        var updated = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
+
+        // De TV tekent de blokkade uit wat de server meestuurt: alleen de Beringstraat, niets op slot.
+        Assert.Equal("beringstraat-dichtgevroren", updated.ActiveEffect!.EventId);
+        var blocked = Assert.Single(updated.ActiveEffect.BlockedBorders);
+        Assert.Equal(["alaska", "kamchatka"], new[] { blocked.From, blocked.To }.Order());
+        Assert.Empty(updated.ActiveEffect.LockedTerritoryIds);
 
         var state = await LoadAsync(factory, gameId);
         Assert.Equal("beringstraat-dichtgevroren", Assert.Single(state.ActiveEffects).Effect.Id);
@@ -238,6 +244,9 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         var waiting = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
 
         Assert.Null(waiting.TurnState);
+        Assert.Equal(("epidemie-in-de-steden", 3), (waiting.PendingAttrition!.EventId, waiting.PendingAttrition.Amount));
+        Assert.Equal(["p1"], waiting.PendingAttrition.ChooserPlayerIds);
+        Assert.Equal(["p1"], waiting.PendingAttrition.AwaitingPlayerIds);
         var pending = (await LoadAsync(factory, gameId)).EventRound.PendingAttrition!;
         Assert.Equal(["p1"], pending.AwaitingPlayerIds);
         Assert.Equal("p1", pending.NextPlayerId);
@@ -270,6 +279,25 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
             resumed.RecentActions,
             action => action.Kind == RecentActionKindDto.ArmiesRemoved && action.PlayerId == "p1" && action.Amount == 3);
         Assert.Null((await LoadAsync(factory, gameId)).EventRound.PendingAttrition);
+        Assert.Null(resumed.PendingAttrition);
+    }
+
+    /// <summary>Na één keuze blijven de kiezers dezelfde twee; alleen de wachtlijst krimpt (TV: "Nog 1 van 2").</summary>
+    [Fact]
+    public async Task Attrition_NaEenKeuze_BlijvenDeKiezersStaanEnKrimptDeWachtlijst()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ApiTestHost.ConnectAsync(factory, client);
+
+        var gameId = await SetUpAsync(factory, drawPile: ["griepgolf"], alaskaArmies: 5, albertaArmies: 5);
+        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
+
+        var afterFirst = await connection.InvokeAsync<GameStateDto>(
+            "RemoveArmies", gameId, "p1", new Dictionary<string, int> { ["alaska"] = 2 });
+
+        Assert.Equal(["p1", "p2"], afterFirst.PendingAttrition!.ChooserPlayerIds);
+        Assert.Equal(["p2"], afterFirst.PendingAttrition.AwaitingPlayerIds);
     }
 
     /// <summary>

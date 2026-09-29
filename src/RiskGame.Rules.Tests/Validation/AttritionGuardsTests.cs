@@ -12,7 +12,7 @@ public sealed class AttritionGuardsTests
             .WithTerritory(new TerritoryOwnership("alberta", "p1", 2))
             .WithEventRound(EventRoundState.Empty with
             {
-                PendingAttrition = new PendingAttrition("griepgolf", amount, AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"),
+                PendingAttrition = new PendingAttrition("griepgolf", amount, ChooserPlayerIds: ["p1"], AwaitingPlayerIds: ["p1"], NextPlayerId: "p1"),
             });
 
     [Fact]
