@@ -64,7 +64,7 @@ describe('PlaceReinforcementStep', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: '+' }))
+    await user.click(screen.getByRole('button', { name: /Leger plaatsen op/ }))
 
     expect(screen.getByText('2')).toBeInTheDocument() // resterende pool: 3 - 1
     expect(onConfirmPlacements).not.toHaveBeenCalled()
@@ -79,7 +79,7 @@ describe('PlaceReinforcementStep', () => {
       />,
     )
 
-    const plusButton = screen.getByRole('button', { name: '+' })
+    const plusButton = screen.getByRole('button', { name: /Leger plaatsen op/ })
     await user.click(plusButton)
     await user.click(plusButton)
 

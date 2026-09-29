@@ -33,6 +33,11 @@ export const common = {
   dice: {
     ariaLabel: { nl: 'Dobbelsteen {{value}}', en: 'Die {{value}}' },
   },
+  // Toegankelijke namen van de legerstepper (`ArmyStepperRow`), met het gebied erin.
+  armyStepper: {
+    place: { nl: 'Leger plaatsen op {{territory}}', en: 'Place an army on {{territory}}' },
+    unplace: { nl: 'Leger terugnemen van {{territory}}', en: 'Take an army back from {{territory}}' },
+  },
   playerHeader: {
     hostBadge: { nl: 'Host', en: 'Host' },
     actions: {

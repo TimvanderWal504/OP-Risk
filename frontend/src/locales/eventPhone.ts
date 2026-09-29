@@ -22,6 +22,9 @@ export const eventPhone = {
       en: '{{count}} territories with 1 army can spare none.',
     },
     confirm: { nl: 'Bevestigen', en: 'Confirm' },
+    // Toegankelijke namen van de stepper: hier haalt `−` weg en zet `+` terug.
+    removeOne: { nl: 'Leger weghalen van {{territory}}', en: 'Remove an army from {{territory}}' },
+    restoreOne: { nl: 'Leger terugzetten op {{territory}}', en: 'Put an army back on {{territory}}' },
   },
   wait: {
     removed_one: { nl: 'Je hebt {{count}} leger verwijderd.', en: 'You removed {{count}} army.' },

@@ -45,7 +45,7 @@ describe('RemoveArmiesStep', () => {
 
     expect(confirm).toBeDisabled()
 
-    const rows = screen.getAllByRole('button', { name: '−' })
+    const rows = screen.getAllByRole('button', { name: /Leger weghalen van/ })
     fireEvent.click(rows[0])
     expect(confirm).toBeDisabled()
     fireEvent.click(rows[0])
@@ -58,7 +58,7 @@ describe('RemoveArmiesStep', () => {
   it('laat een gebied nooit onder 1 leger komen', () => {
     renderStep()
 
-    const [, albertaMinus] = screen.getAllByRole('button', { name: '−' })
+    const [, albertaMinus] = screen.getAllByRole('button', { name: /Leger weghalen van/ })
     fireEvent.click(albertaMinus)
 
     expect(albertaMinus).toBeDisabled()
@@ -67,7 +67,7 @@ describe('RemoveArmiesStep', () => {
   it('verstuurt een keuze maar één keer, ook bij een dubbele tik', async () => {
     let resolve!: () => void
     const onConfirm = renderStep(vi.fn().mockReturnValue(new Promise<void>((r) => (resolve = r))))
-    const [alaskaMinus] = screen.getAllByRole('button', { name: '−' })
+    const [alaskaMinus] = screen.getAllByRole('button', { name: /Leger weghalen van/ })
     fireEvent.click(alaskaMinus)
     fireEvent.click(alaskaMinus)
 
@@ -78,5 +78,14 @@ describe('RemoveArmiesStep', () => {
 
     expect(onConfirm).toHaveBeenCalledTimes(1)
     await act(async () => resolve())
+  })
+
+  /** Hier haalt `−` weg en zet `+` terug — de namen zeggen dat, met het gebied erin (review taak 7). */
+  it('geeft de knoppen een toegankelijke naam met het gebied', () => {
+    renderStep()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Leger weghalen van Alaska' }))
+
+    expect(screen.getByRole('button', { name: 'Leger terugzetten op Alaska' })).toBeEnabled()
   })
 })

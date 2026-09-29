@@ -23,7 +23,7 @@ export function PlaceInitialArmyStep({
   armiesLeft,
   onPlace,
 }: PlaceInitialArmyStepProps) {
-  const { t } = useTranslation('setup')
+  const { t } = useTranslation(['setup', 'common'])
   const canPlace = armiesLeft > 0
 
   return (
@@ -45,6 +45,7 @@ export function PlaceInitialArmyStep({
             armyCount={territory.armyCount}
             canIncrement={canPlace}
             onIncrement={() => onPlace(territory.territoryId)}
+            incrementLabel={t('common:armyStepper.place', { territory: tDynamic(territory.territoryId, 'territories') })}
           />
         ))}
       </div>

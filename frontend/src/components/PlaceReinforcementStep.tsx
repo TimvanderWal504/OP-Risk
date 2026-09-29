@@ -58,7 +58,7 @@ export function PlaceReinforcementStep({
   onTradeInCards,
   onAllPlaced,
 }: PlaceReinforcementStepProps) {
-  const { t } = useTranslation('reinforce')
+  const { t } = useTranslation(['reinforce', 'common'])
   const [staged, setStaged] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState(false)
   // Afgeleide open-staat i.p.v. een los `useEffect` dat op de *overgang* van
@@ -232,6 +232,8 @@ export function PlaceReinforcementStep({
                         canDecrement={(staged[territoryId] ?? 0) > 0}
                         onIncrement={() => inc(territoryId)}
                         onDecrement={() => dec(territoryId)}
+                        incrementLabel={t('common:armyStepper.place', { territory: tDynamic(territoryId, 'territories') })}
+                        decrementLabel={t('common:armyStepper.unplace', { territory: tDynamic(territoryId, 'territories') })}
                       />
                     )
                   })}

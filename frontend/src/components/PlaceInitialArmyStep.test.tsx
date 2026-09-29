@@ -18,7 +18,7 @@ describe('PlaceInitialArmyStep', () => {
     )
 
     expect(screen.getByText('Alaska')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '+' }))
+    await userEvent.click(screen.getByRole('button', { name: /Leger plaatsen op/ }))
     expect(onPlace).toHaveBeenCalledWith('alaska')
   })
 
@@ -32,6 +32,6 @@ describe('PlaceInitialArmyStep', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: '+' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Leger plaatsen op/ })).toBeDisabled()
   })
 })

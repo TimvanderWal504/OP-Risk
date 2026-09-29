@@ -22,6 +22,13 @@ export interface ArmyStepperRowProps {
   canDecrement?: boolean
   onIncrement: () => void
   onDecrement?: () => void
+  /**
+   * Toegankelijke naam van de `+`-knop, mét het gebied ("Leger plaatsen op Alaska") — verplicht:
+   * zonder hoort een schermlezer in een lijst alleen tien keer "plus" (review 2026-09-29).
+   */
+  incrementLabel: string
+  /** Idem voor de `−`-knop; alleen bij `incrementOnly=false`. */
+  decrementLabel?: string
 }
 
 /** Herbruikbare per-gebied legerrij, gedeeld tussen Startopstelling-plaatsen en (later)
@@ -37,6 +44,8 @@ export function ArmyStepperRow({
   canDecrement = false,
   onIncrement,
   onDecrement,
+  incrementLabel,
+  decrementLabel,
 }: ArmyStepperRowProps) {
   if (incrementOnly) {
     return (
@@ -52,6 +61,7 @@ export function ArmyStepperRow({
           type="button"
           disabled={!canIncrement}
           onClick={onIncrement}
+          aria-label={incrementLabel}
           className="flex h-[46px] w-[46px] flex-none items-center justify-center rounded-xl font-display text-2xl font-black disabled:cursor-not-allowed"
           style={{
             background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)',
@@ -86,6 +96,7 @@ export function ArmyStepperRow({
           type="button"
           disabled={!canDecrement}
           onClick={onDecrement}
+          aria-label={decrementLabel}
           className="flex h-full w-full items-center justify-center font-black text-xl text-fg disabled:cursor-not-allowed disabled:opacity-50"
         >
           {'−'}
@@ -96,6 +107,7 @@ export function ArmyStepperRow({
         type="button"
         disabled={!canIncrement}
         onClick={onIncrement}
+        aria-label={incrementLabel}
         className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[11px] font-black text-xl disabled:cursor-not-allowed"
         style={{
           background: canIncrement ? 'var(--pitch-500)' : 'var(--border-strong)',

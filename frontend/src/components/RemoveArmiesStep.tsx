@@ -98,6 +98,8 @@ export function RemoveArmiesStep({ eventId, amount, myTerritories, myColor, terr
                     canDecrement={after > 1 && left > 0}
                     onIncrement={() => change(territory.territoryId, -1)}
                     onDecrement={() => change(territory.territoryId, 1)}
+                    incrementLabel={t('remove.restoreOne', { territory: tDynamic(territory.territoryId, 'territories') })}
+                    decrementLabel={t('remove.removeOne', { territory: tDynamic(territory.territoryId, 'territories') })}
                   />
                 )
               })}

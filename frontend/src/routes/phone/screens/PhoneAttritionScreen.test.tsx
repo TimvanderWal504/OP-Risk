@@ -78,7 +78,7 @@ describe('PhoneInProgressScreen tijdens "Legers verwijderen"', () => {
     const before = attritionState({ pendingAttrition: pending(), stateVersion: 7 })
     const { rerender } = show(before, 'alice')
 
-    fireEvent.click(screen.getByRole('button', { name: '−' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Leger weghalen van Alaska' }))
     expect(screen.getByText('1', { selector: '.text-size8' })).toBeInTheDocument()
 
     const after = { ...before, stateVersion: 8, pendingAttrition: pending({ awaitingPlayerIds: ['alice'] }) }

@@ -16,12 +16,13 @@ describe('ArmyStepperRow', () => {
         armyCount={2}
         canIncrement
         onIncrement={onIncrement}
+        incrementLabel="Leger plaatsen op Alaska"
       />,
     )
 
     expect(screen.getByText('Alaska')).toBeInTheDocument()
     expect(screen.getAllByRole('button')).toHaveLength(1)
-    await userEvent.click(screen.getByRole('button', { name: '+' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Leger plaatsen op Alaska' }))
     expect(onIncrement).toHaveBeenCalledOnce()
   })
 
@@ -34,10 +35,11 @@ describe('ArmyStepperRow', () => {
         armyCount={5}
         canIncrement={false}
         onIncrement={vi.fn()}
+        incrementLabel="Leger plaatsen op Alaska"
       />,
     )
 
-    expect(screen.getByRole('button', { name: '+' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Leger plaatsen op Alaska' })).toBeDisabled()
   })
 
   it('volwaardige stepper: +/− roepen onIncrement/onDecrement aan en tonen base → total', async () => {
@@ -55,6 +57,8 @@ describe('ArmyStepperRow', () => {
         canDecrement
         onIncrement={onIncrement}
         onDecrement={onDecrement}
+        incrementLabel="Leger plaatsen op Alaska"
+        decrementLabel="Leger terugnemen van Alaska"
       />,
     )
 
@@ -62,10 +66,10 @@ describe('ArmyStepperRow', () => {
     expect(screen.getByText('6')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: '+' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Leger plaatsen op Alaska' }))
     expect(onIncrement).toHaveBeenCalledOnce()
 
-    await userEvent.click(screen.getByRole('button', { name: '−' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Leger terugnemen van Alaska' }))
     expect(onDecrement).toHaveBeenCalledOnce()
   })
 
@@ -82,9 +86,11 @@ describe('ArmyStepperRow', () => {
         canDecrement={false}
         onIncrement={vi.fn()}
         onDecrement={vi.fn()}
+        incrementLabel="Leger plaatsen op Alaska"
+        decrementLabel="Leger terugnemen van Alaska"
       />,
     )
 
-    expect(screen.getByRole('button', { name: '−' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Leger terugnemen van Alaska' })).toBeDisabled()
   })
 })
