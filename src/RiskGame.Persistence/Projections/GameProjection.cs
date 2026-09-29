@@ -586,7 +586,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithActiveEffects([.. state.ActiveEffects, new ActiveEffect(eventDefinition.Effect)]);
         }
 
-        return state;
+        return Record(state, @event);
     }
 
     /// <summary>
@@ -615,9 +615,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             state = state.WithTerritory(territory with { ArmyCount = territory.ArmyCount - removed });
         }
 
+        // Zonder lopende keuzes is dit het automatische maximum, bij de trekking zelf.
         if (state.EventRound.PendingAttrition is not { } pending)
         {
-            return Record(state, @event);
+            return RecordAutomatic(state, @event);
         }
 
         var awaiting = pending.AwaitingPlayerIds.Where(playerId => playerId != @event.PlayerId).ToArray();
@@ -632,8 +633,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>
     public GameState Apply(GameState state, EffectExpired @event) =>
-        state.WithActiveEffects(
-            [.. state.ActiveEffects.Where(activeEffect => activeEffect.Effect.Id != @event.EventId)]);
+        Record(
+            state.WithActiveEffects(
+                [.. state.ActiveEffects.Where(activeEffect => activeEffect.Effect.Id != @event.EventId)]),
+            @event);
 
     /// <summary>
     /// Legt de winnaar(s) vast en sluit het spel af (FO §7). Wist ook <see cref="GameState.TurnState"/>

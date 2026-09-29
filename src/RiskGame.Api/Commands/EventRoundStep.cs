@@ -82,12 +82,9 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
                 continue;
             }
 
+            // Ook een lege verdeling: wie geen legers kan missen, staat zo toch in het verloop.
             var removals = ArmyAttritionCalculator.AutoMaxRemovals(state, playerId);
-
-            if (removals.Count > 0)
-            {
-                state = Emit(session, state, new ArmiesRemoved(gameId, playerId, removals), projection.Apply);
-            }
+            state = Emit(session, state, new ArmiesRemoved(gameId, playerId, removals), projection.Apply);
         }
 
         if (choosers.Count == 0)

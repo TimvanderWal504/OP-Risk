@@ -88,7 +88,22 @@ public sealed record ContinentDto(string Id, int Bonus, string? OwnerPlayerId);
 /// <see cref="GameSettingsDto.RolesEnabled"/>: de client verbergt de sectie als gebeurtenissen uit
 /// staan.
 /// </summary>
-public sealed record EventSummaryDto(string Id, EventDurationDto Duration);
+public sealed record EventSummaryDto(string Id, EventDurationDto Duration, EventEffectKindDto EffectKind);
+
+/// <summary>
+/// Wat voor soort gevolg een gebeurteniskaart heeft (FO §9.2), server-side afgeleid uit de
+/// capability-interfaces van het effect — zodat de client icoon en zinnen kan kiezen zonder het
+/// effect zelf te kennen. <see cref="Other"/> vangt een effect-type op dat hier (nog) geen eigen
+/// soort heeft: dat oogt generiek, maar breekt niets.
+/// </summary>
+public enum EventEffectKindDto
+{
+    Bonus,
+    SeaBlockade,
+    TerritoryLock,
+    Attrition,
+    Other,
+}
 
 /// <summary>
 /// Eén regel in het verloop (<see cref="RiskGame.Rules.State.RecentAction"/>). Welke velden gevuld
@@ -105,7 +120,8 @@ public sealed record RecentActionDto(
     int? Total,
     int? AttackerLosses,
     int? DefenderLosses,
-    string? EventId);
+    string? EventId,
+    int? EventBonus);
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.RecentActionKind"/>.</summary>
 public enum RecentActionKindDto
@@ -124,6 +140,8 @@ public enum RecentActionKindDto
     LastChanceBroken,
     EventDrawn,
     ArmiesRemoved,
+    EventBonusGranted,
+    EffectExpired,
 }
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>

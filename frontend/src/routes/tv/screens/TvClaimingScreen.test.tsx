@@ -58,7 +58,7 @@ describe('TvClaimingScreen', () => {
   })
 
   it('toont het verloop onder de kaart zodra er acties zijn (plan-testronde-tv punt 4)', () => {
-    render(<TvClaimingScreen state={{ ...claimingState, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+    render(<TvClaimingScreen state={{ ...claimingState, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null, eventBonus: null }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('Verloop')).toBeInTheDocument()
   })

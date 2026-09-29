@@ -117,7 +117,8 @@ public static class GameStateDtoMapper
             .ToArray();
 
         var events = state.Map.Events
-            .Select(definition => new EventSummaryDto(definition.Id, ToDto(definition.Effect.Duration)))
+            .Select(definition => new EventSummaryDto(
+                definition.Id, ToDto(definition.Effect.Duration), EffectKindOf(definition.Effect)))
             .ToArray();
 
         // Pas betekenisvol zodra de lobby dicht is: het spelersaantal ligt dan vast (zie ook de
@@ -168,7 +169,8 @@ public static class GameStateDtoMapper
             action.Total,
             action.AttackerLosses,
             action.DefenderLosses,
-            action.EventId);
+            action.EventId,
+            action.EventBonus);
 
     private static RecentActionKindDto ToDto(RecentActionKind kind) => kind switch
     {
@@ -186,7 +188,24 @@ public static class GameStateDtoMapper
         RecentActionKind.LastChanceBroken => RecentActionKindDto.LastChanceBroken,
         RecentActionKind.EventDrawn => RecentActionKindDto.EventDrawn,
         RecentActionKind.ArmiesRemoved => RecentActionKindDto.ArmiesRemoved,
+        RecentActionKind.EventBonusGranted => RecentActionKindDto.EventBonusGranted,
+        RecentActionKind.EffectExpired => RecentActionKindDto.EffectExpired,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
+    };
+
+    /// <summary>
+    /// De soort gevolg, afgeleid uit wat het effect kán (capability-interfaces), niet uit zijn
+    /// concrete type. Een effect zonder bekende soort wordt <see cref="EventEffectKindDto.Other"/>,
+    /// geen exception: de catalogus gaat mee in élke state-push, ook met de gebeurtenisronde uit,
+    /// dus een throw hier zou elk spel op die kaartvariant onbruikbaar maken.
+    /// </summary>
+    public static EventEffectKindDto EffectKindOf(IEffect effect) => effect switch
+    {
+        IReinforcementBonusEffect => EventEffectKindDto.Bonus,
+        ISeaRouteBlockingEffect => EventEffectKindDto.SeaBlockade,
+        ITerritoryLockingEffect => EventEffectKindDto.TerritoryLock,
+        IArmyAttritionEffect => EventEffectKindDto.Attrition,
+        _ => EventEffectKindDto.Other,
     };
 
     private static EventDurationDto ToDto(EffectDuration duration) => duration switch

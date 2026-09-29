@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { GameInfoRules } from './GameInfoRules'
 import { fixtureState } from '../routes/phone/screens/phoneScreenFixture'
-import { EventDurationDto, type GameStateDto } from '../types/GameState'
+import { EventDurationDto, EventEffectKindDto, type GameStateDto } from '../types/GameState'
 import {
   DefenseDiceRuleDto,
   MissionWinTimingDto,
@@ -19,8 +19,8 @@ const state = (settings: Partial<GameSettingsDto> = {}, overrides: Partial<GameS
     { id: 'asia', bonus: 7, ownerPlayerId: null },
   ],
   events: [
-    { id: 'goede-oogst', duration: EventDurationDto.Instant },
-    { id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound },
+    { id: 'goede-oogst', duration: EventDurationDto.Instant, effectKind: EventEffectKindDto.Bonus },
+    { id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound, effectKind: EventEffectKindDto.SeaBlockade },
   ],
   nextCardTradeValue: 8,
   startingArmies: 35,

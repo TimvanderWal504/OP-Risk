@@ -16,6 +16,8 @@ namespace RiskGame.Persistence.Projections;
 /// van een laatste-kans-venster en het spel-einde (keuzes gebruiker 2026-09-25). Van de
 /// gebeurtenisronde komen alleen de getrokken kaart en de afgestane legers erin — schudden,
 /// verlopen en de bonus zelf zijn geen openbare actie van iemand.
+/// Aangevuld 2026-09-29 (besluit gebruiker): ook de uitkomst van een kaart — de bonus per speler,
+/// het bonusdeel bij de beurtstart, wie geen legers kon missen, en het einde van een ronde-effect.
 /// </remarks>
 public sealed partial class GameProjection
 {
@@ -26,12 +28,27 @@ public sealed partial class GameProjection
         Append(state, new RecentAction(
             RecentActionKind.TerritoryClaimed, PlayerId: @event.PlayerId, TerritoryId: @event.TerritoryId));
 
-    /// <summary>Alleen de intrede in Versterken: het begin van een beurt, en zo ook de beurtgrens voor samenvoegen.</summary>
-    private static GameState Record(GameState state, PhaseChanged @event) =>
-        @event is { TurnPhase: TurnPhase.Reinforce, ArmiesGranted: { } armiesGranted }
-            ? Append(state, new RecentAction(
-                RecentActionKind.ReinforcementsGranted, PlayerId: @event.PlayerId, Amount: armiesGranted))
-            : state;
+    /// <summary>
+    /// Alleen de intrede in Versterken: het begin van een beurt, en zo ook de beurtgrens voor samenvoegen.
+    /// Een openstaande gebeurtenisbonus zit in <c>ArmiesGranted</c> en wordt pas bij het einde van de
+    /// beurt geïnd, dus hij staat hier nog op de speler; de kaart is de laatst getrokken.
+    /// </summary>
+    private static GameState Record(GameState state, PhaseChanged @event)
+    {
+        if (@event is not { TurnPhase: TurnPhase.Reinforce, ArmiesGranted: { } armiesGranted })
+        {
+            return state;
+        }
+
+        var eventBonus = state.Player(@event.PlayerId).PendingEventBonus;
+
+        return Append(state, new RecentAction(
+            RecentActionKind.ReinforcementsGranted,
+            PlayerId: @event.PlayerId,
+            Amount: armiesGranted,
+            EventId: eventBonus > 0 ? state.EventRound.CurrentEventId : null,
+            EventBonus: eventBonus > 0 ? eventBonus : null));
+    }
 
     private static GameState Record(GameState state, InitialArmyPlaced @event) =>
         RecordPlacement(state, @event.PlayerId, @event.TerritoryId, amount: 1);
@@ -136,4 +153,40 @@ public sealed partial class GameProjection
             PlayerId: @event.PlayerId,
             Amount: @event.RemovedByTerritory.Values.Sum(),
             EventId: state.EventRound.CurrentEventId));
+
+    /// <summary>
+    /// Eén regel per speler die bonus krijgt, in beurtvolgorde — of één "Iedereen"-regel als elke
+    /// meespelende speler hetzelfde krijgt.
+    /// </summary>
+    private static GameState Record(GameState state, EffectApplied @event)
+    {
+        foreach (var playerId in state.TurnOrder.Where(@event.BonusByPlayer.ContainsKey))
+        {
+            state = Append(state, new RecentAction(
+                RecentActionKind.EventBonusGranted,
+                PlayerId: playerId,
+                Amount: @event.BonusByPlayer[playerId],
+                EventId: @event.EventId));
+        }
+
+        return CollapseToEveryone(state, RecentActionKind.EventBonusGranted, @event.EventId);
+    }
+
+    /// <summary>
+    /// Automatisch afgestane legers (geen keuzevrijheid) ontstaan allemaal in hetzelfde moment, bij de
+    /// trekking: staat iedereen hetzelfde af, dan is dat één "Iedereen"-regel. Een zelf gekozen afstand
+    /// komt later en los binnen en wordt nooit samengevat.
+    /// </summary>
+    private static GameState RecordAutomatic(GameState state, ArmiesRemoved @event) =>
+        CollapseToEveryone(Record(state, @event), RecentActionKind.ArmiesRemoved, state.EventRound.CurrentEventId!);
+
+    private static GameState CollapseToEveryone(GameState state, RecentActionKind kind, string eventId)
+    {
+        var participantIds = state.Players.Where(player => !player.IsEliminated).Select(player => player.Id).ToArray();
+
+        return state.WithRecentActions(RecentActionLog.CollapseToEveryone(state.RecentActions, kind, eventId, participantIds));
+    }
+
+    private static GameState Record(GameState state, EffectExpired @event) =>
+        Append(state, new RecentAction(RecentActionKind.EffectExpired, EventId: @event.EventId));
 }

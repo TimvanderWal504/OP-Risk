@@ -2,7 +2,8 @@ import type { LocaleTree } from '../i18n/types'
 
 /**
  * Het verloop op de TV (plan-testronde-tv punt 4). Elke zin volgt op de naam van de speler die de
- * actie uitvoert (vet, los gerenderd); alleen `dealt` en `eventDrawn` staan op zichzelf. Een amount van 1 heeft een
+ * actie uitvoert (vet, los gerenderd); alleen `dealt`, `eventDrawn`, `effectExpired*` en de `*Everyone`-zinnen
+ * (een samengevatte regel zonder speler) staan op zichzelf. Een amount van 1 heeft een
  * eigen zin ("een extra leger", besluit gebruiker), zodat er nooit "1 legers" staat. Gebieds- en
  * spelernamen worden geïnterpoleerd; bedragen en totalen komen van de server.
  */
@@ -12,6 +13,10 @@ export const actionTicker = {
   dealt: { nl: 'De gebieden zijn willekeurig verdeeld', en: 'The territories have been dealt at random' },
   claimed: { nl: 'claimt {{territory}}', en: 'claims {{territory}}' },
   granted: { nl: 'krijgt {{count}} legers om te plaatsen', en: 'receives {{count}} armies to place' },
+  grantedWithBonus: {
+    nl: 'krijgt {{count}} legers om te plaatsen, waarvan {{bonus}} door {{event}}',
+    en: 'receives {{count}} armies to place, {{bonus}} of them from {{event}}',
+  },
   placedOne: {
     nl: 'plaatst een extra leger op {{territory}}. Totaal nu {{total}}.',
     en: 'places an extra army on {{territory}}. Total now {{total}}.',
@@ -61,4 +66,45 @@ export const actionTicker = {
   eventDrawn: { nl: 'Gebeurteniskaart: {{event}}', en: 'Event card: {{event}}' },
   armiesRemovedOne: { nl: 'staat een leger af door {{event}}', en: 'gives up one army to {{event}}' },
   armiesRemoved: { nl: 'staat {{count}} legers af door {{event}}', en: 'gives up {{count}} armies to {{event}}' },
+  armiesRemovedOneEveryone: {
+    nl: 'Iedereen staat een leger af door {{event}}',
+    en: 'Everyone gives up one army to {{event}}',
+  },
+  armiesRemovedEveryone: {
+    nl: 'Iedereen staat {{count}} legers af door {{event}}',
+    en: 'Everyone gives up {{count}} armies to {{event}}',
+  },
+  armiesRemovedNoneEveryone: {
+    nl: 'Niemand heeft legers om af te staan ({{event}})',
+    en: 'Nobody has armies to give up ({{event}})',
+  },
+  armiesRemovedNone: {
+    nl: 'heeft geen legers om af te staan ({{event}})',
+    en: 'has no armies to give up ({{event}})',
+  },
+  eventBonusOneEveryone: {
+    nl: 'Iedereen krijgt een extra leger bij de volgende beurt ({{event}})',
+    en: 'Everyone gets one extra army on their next turn ({{event}})',
+  },
+  eventBonusEveryone: {
+    nl: 'Iedereen krijgt {{count}} extra legers bij de volgende beurt ({{event}})',
+    en: 'Everyone gets {{count}} extra armies on their next turn ({{event}})',
+  },
+  eventBonusOne: {
+    nl: 'krijgt een extra leger bij de volgende beurt ({{event}})',
+    en: 'gets one extra army on their next turn ({{event}})',
+  },
+  eventBonus: {
+    nl: 'krijgt {{count}} extra legers bij de volgende beurt ({{event}})',
+    en: 'gets {{count}} extra armies on their next turn ({{event}})',
+  },
+  effectExpired: { nl: '{{event}} is voorbij', en: '{{event}} is over' },
+  effectExpiredSea: {
+    nl: '{{event}} is voorbij: de zeeroutes zijn weer open',
+    en: '{{event}} is over: the sea routes are open again',
+  },
+  effectExpiredLock: {
+    nl: '{{event}} is voorbij: de afgesloten gebieden zijn weer open',
+    en: '{{event}} is over: the closed territories are open again',
+  },
 } satisfies LocaleTree

@@ -89,6 +89,21 @@ public sealed class GameStateDtoMapperGameInfoTests
         }
     }
 
+    /// <summary>De soort gevolg komt van de server, per kaart uit de echte events.json (FO §9.2).</summary>
+    [Theory]
+    [InlineData("babyboom", EventEffectKindDto.Bonus)]
+    [InlineData("goede-oogst", EventEffectKindDto.Bonus)]
+    [InlineData("stormachtige-zeeen", EventEffectKindDto.SeaBlockade)]
+    [InlineData("beringstraat-dichtgevroren", EventEffectKindDto.SeaBlockade)]
+    [InlineData("aardbeving-in-china", EventEffectKindDto.TerritoryLock)]
+    [InlineData("griepgolf", EventEffectKindDto.Attrition)]
+    public void Events_DragenDeSoortGevolg(string eventId, EventEffectKindDto expected)
+    {
+        var dto = GameStateDtoMapper.ToDto(State(GamePhase.InProgress), TimeProvider.System);
+
+        Assert.Equal(expected, dto.Events.Single(summary => summary.Id == eventId).EffectKind);
+    }
+
     [Fact]
     public void NextCardTradeValue_IsDeWaardeVanDeVolgendeInleg()
     {
@@ -126,5 +141,20 @@ public sealed class GameStateDtoMapperGameInfoTests
         var dto = GameStateDtoMapper.ToDto(State(GamePhase.InProgress), TimeProvider.System);
 
         Assert.Equal(expected, dto.StartingArmies);
+    }
+
+    /// <summary>
+    /// Een effect-type zonder eigen soort breekt de state-push niet (de catalogus gaat ook mee met de
+    /// gebeurtenisronde uit): het wordt <see cref="EventEffectKindDto.Other"/>.
+    /// </summary>
+    [Fact]
+    public void EffectKindOf_OnbekendEffect_IsOther() =>
+        Assert.Equal(EventEffectKindDto.Other, GameStateDtoMapper.EffectKindOf(new UnknownEffect()));
+
+    private sealed class UnknownEffect : IEffect
+    {
+        public string Id => "onbekend";
+
+        public EffectDuration Duration => EffectDuration.Instant;
     }
 }

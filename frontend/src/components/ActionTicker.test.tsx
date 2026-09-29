@@ -16,6 +16,7 @@ const claimed = (sequence: number, territoryId: string, playerId = 'alice'): Rec
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
+  eventBonus: null,
 })
 
 const state = (...newestFirst: RecentActionDto[]): GameStateDto => ({ ...fixtureState, recentActions: newestFirst })

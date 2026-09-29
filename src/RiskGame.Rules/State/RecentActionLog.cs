@@ -30,6 +30,32 @@ public static class RecentActionLog
     }
 
     /// <summary>
+    /// Vat de bovenste reeks regels van <paramref name="kind"/> voor dezelfde gebeurteniskaart samen
+    /// tot één regel zonder speler ("Iedereen …"), als die reeks precies alle
+    /// <paramref name="participantIds"/> dekt, allemaal met hetzelfde bedrag (besluit gebruiker
+    /// 2026-09-29: zelfde moment, zelfde uitkomst voor iedereen = één regel). Anders blijft het log
+    /// ongewijzigd. De samengevatte regel houdt het volgnummer van de nieuwste regel, zodat het
+    /// volgnummer blijft oplopen.
+    /// </summary>
+    public static IReadOnlyList<RecentAction> CollapseToEveryone(
+        IReadOnlyList<RecentAction> log, RecentActionKind kind, string eventId, IReadOnlyCollection<string> participantIds)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        ArgumentNullException.ThrowIfNull(participantIds);
+
+        var run = log
+            .TakeWhile(action => action.Kind == kind && action.EventId == eventId && action.PlayerId is not null)
+            .ToArray();
+
+        var coversEveryone = run.Length >= 2
+            && run.Length == participantIds.Count
+            && run.Select(action => action.PlayerId!).ToHashSet().SetEquals(participantIds)
+            && run.Select(action => action.Amount).Distinct().Count() == 1;
+
+        return coversEveryone ? [run[0] with { PlayerId = null }, .. log.Skip(run.Length)] : log;
+    }
+
+    /// <summary>
     /// Werkt de meest recente regel bij die aan <paramref name="matches"/> voldoet, op zijn eigen
     /// plek en met zijn eigen volgnummer — voor een actie die bij een eerdere regel hoort maar
     /// niet per se bij de bovenste (een meeverplaatsing na een verovering die een uitschakeling

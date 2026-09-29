@@ -187,6 +187,17 @@ export const EventDurationDto = {
 } as const
 export type EventDurationDto = (typeof EventDurationDto)[keyof typeof EventDurationDto]
 
+/** Spiegelt RiskGame.Api.Dtos.EventEffectKindDto (int-serialisatie, zelfde volgorde). */
+export const EventEffectKindDto = {
+  Bonus: 0,
+  SeaBlockade: 1,
+  TerritoryLock: 2,
+  Attrition: 3,
+  /** Een effect-type zonder eigen soort: generiek tonen. */
+  Other: 4,
+} as const
+export type EventEffectKindDto = (typeof EventEffectKindDto)[keyof typeof EventEffectKindDto]
+
 /** Spiegelt RiskGame.Api.Dtos.RecentActionKindDto (int-serialisatie, zelfde volgorde). */
 export const RecentActionKindDto = {
   TerritoriesDealt: 0,
@@ -203,6 +214,8 @@ export const RecentActionKindDto = {
   LastChanceBroken: 11,
   EventDrawn: 12,
   ArmiesRemoved: 13,
+  EventBonusGranted: 14,
+  EffectExpired: 15,
 } as const
 export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
 
@@ -221,12 +234,16 @@ export interface RecentActionDto {
   total: number | null
   attackerLosses: number | null
   defenderLosses: number | null
-  /** De gebeurteniskaart bij `EventDrawn` en `ArmiesRemoved`; naam via `locales/events.ts`. */
+  /** De gebeurteniskaart bij de gebeurtenisregels en bij een beurtstart met bonus; naam via `locales/events.ts`. */
   eventId: string | null
+  /** Het deel van `amount` bij `ReinforcementsGranted` dat uit een gebeurteniskaart komt; `null` als er geen is. */
+  eventBonus: number | null
 }
 
 /** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */
 export interface EventSummaryDto {
   id: string
   duration: EventDurationDto
+  /** Soort gevolg, door de server afgeleid — kies icoon en zinnen hierop, nooit op de id. */
+  effectKind: EventEffectKindDto
 }

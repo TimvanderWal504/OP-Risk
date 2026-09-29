@@ -1,6 +1,12 @@
 import type { TFunction } from 'i18next'
 import { tDynamic } from '../i18n/useT'
-import { RecentActionKindDto, type GameStateDto, type PlayerColorDto, type RecentActionDto } from '../types/GameState'
+import {
+  EventEffectKindDto,
+  RecentActionKindDto,
+  type GameStateDto,
+  type PlayerColorDto,
+  type RecentActionDto,
+} from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 
 /**
@@ -35,6 +41,15 @@ function eventName(eventId: string | null): string {
   return eventId ? tDynamic(`${eventId}.name`, 'events') : ''
 }
 
+/** Welke staart "is voorbij" krijgt, hangt af van de soort gevolg die de server meestuurt. */
+function expiredKey(state: GameStateDto, eventId: string | null) {
+  const kind = state.events.find((event) => event.id === eventId)?.effectKind
+
+  if (kind === EventEffectKindDto.SeaBlockade) return 'effectExpiredSea' as const
+  if (kind === EventEffectKindDto.TerritoryLock) return 'effectExpiredLock' as const
+  return 'effectExpired' as const
+}
+
 /** De zin na de spelernaam; bedragen, totalen en namen komen uit de DTO, nooit berekend. */
 export function actionSentence(
   action: RecentActionDto,
@@ -52,7 +67,9 @@ export function actionSentence(
     case RecentActionKindDto.TerritoryClaimed:
       return t('claimed', { territory })
     case RecentActionKindDto.ReinforcementsGranted:
-      return t('granted', { count: action.amount })
+      return action.eventBonus
+        ? t('grantedWithBonus', { count: action.amount, bonus: action.eventBonus, event: eventName(action.eventId) })
+        : t('granted', { count: action.amount })
     case RecentActionKindDto.ArmiesPlaced:
       return action.amount === 1
         ? t('placedOne', { territory, total: action.total })
@@ -82,9 +99,22 @@ export function actionSentence(
       return t('lastChanceBroken', { achiever: other })
     case RecentActionKindDto.EventDrawn:
       return t('eventDrawn', { event: eventName(action.eventId) })
-    case RecentActionKindDto.ArmiesRemoved:
-      return action.amount === 1
-        ? t('armiesRemovedOne', { event: eventName(action.eventId) })
-        : t('armiesRemoved', { count: action.amount, event: eventName(action.eventId) })
+    case RecentActionKindDto.ArmiesRemoved: {
+      // Zonder speler: iedereen stond automatisch hetzelfde af (één samengevatte regel).
+      const everyone = action.playerId === null
+      const event = eventName(action.eventId)
+      if (action.amount === 0) return t(everyone ? 'armiesRemovedNoneEveryone' : 'armiesRemovedNone', { event })
+      if (action.amount === 1) return t(everyone ? 'armiesRemovedOneEveryone' : 'armiesRemovedOne', { event })
+      return t(everyone ? 'armiesRemovedEveryone' : 'armiesRemoved', { count: action.amount, event })
+    }
+    case RecentActionKindDto.EventBonusGranted: {
+      // Zonder speler: iedereen kreeg hetzelfde (één samengevatte regel).
+      const everyone = action.playerId === null
+      const event = eventName(action.eventId)
+      if (action.amount === 1) return t(everyone ? 'eventBonusOneEveryone' : 'eventBonusOne', { event })
+      return t(everyone ? 'eventBonusEveryone' : 'eventBonus', { count: action.amount, event })
+    }
+    case RecentActionKindDto.EffectExpired:
+      return t(expiredKey(state, action.eventId), { event: eventName(action.eventId) })
   }
 }

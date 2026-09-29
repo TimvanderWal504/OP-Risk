@@ -24,7 +24,11 @@ namespace RiskGame.Rules.State;
 /// <param name="Total">Het legeraantal op <paramref name="TerritoryId"/> ná de actie.</param>
 /// <param name="AttackerLosses">Opgetelde verliezen van de aanvaller over de hele belegering.</param>
 /// <param name="DefenderLosses">Opgetelde verliezen van de verdediger over de hele belegering.</param>
-/// <param name="EventId">De gebeurteniskaart bij <see cref="RecentActionKind.EventDrawn"/> en <see cref="RecentActionKind.ArmiesRemoved"/>.</param>
+/// <param name="EventId">
+/// De gebeurteniskaart bij de gebeurtenisregels, en bij <see cref="RecentActionKind.ReinforcementsGranted"/>
+/// de kaart waar <paramref name="EventBonus"/> vandaan komt.
+/// </param>
+/// <param name="EventBonus">Het deel van de toegekende versterkingen dat uit een gebeurteniskaart komt (FO §9.2); null als er geen is.</param>
 public sealed record RecentAction(
     RecentActionKind Kind,
     int Sequence = 0,
@@ -36,7 +40,8 @@ public sealed record RecentAction(
     int? Total = null,
     int? AttackerLosses = null,
     int? DefenderLosses = null,
-    string? EventId = null);
+    string? EventId = null,
+    int? EventBonus = null);
 
 public enum RecentActionKind
 {
@@ -60,6 +65,17 @@ public enum RecentActionKind
     LastChanceBroken,
     /// <summary>Een gebeurteniskaart is getrokken (FO §9.2); zonder speler, net als <see cref="TerritoriesDealt"/>.</summary>
     EventDrawn,
-    /// <summary>Een speler heeft legers afgestaan voor een attrition-kaart (FO §9.2), zelf gekozen of automatisch.</summary>
+    /// <summary>
+    /// Een speler heeft legers afgestaan voor een attrition-kaart (FO §9.2), zelf gekozen of automatisch;
+    /// <see cref="RecentAction.Amount"/> 0 als hij geen legers kón missen. Zonder speler: iedereen stond
+    /// automatisch hetzelfde af (<see cref="RecentActionLog.CollapseToEveryone"/>).
+    /// </summary>
     ArmiesRemoved,
+    /// <summary>
+    /// Een speler krijgt bonuslegers uit een gebeurteniskaart, bij zijn volgende versterking (FO §9.2).
+    /// Zonder speler: iedereen kreeg hetzelfde (<see cref="RecentActionLog.CollapseToEveryone"/>).
+    /// </summary>
+    EventBonusGranted,
+    /// <summary>Een ronde-effect is voorbij (FO §9.2); zonder speler.</summary>
+    EffectExpired,
 }

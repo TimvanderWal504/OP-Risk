@@ -171,6 +171,11 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         Assert.Contains(
             updated.RecentActions,
             action => action.Kind == RecentActionKindDto.EventDrawn && action.EventId == "babyboom");
+        // Iedereen krijgt hetzelfde: één "Iedereen"-regel (besluit 2026-09-29).
+        var bonus = Assert.Single(updated.RecentActions, action => action.Kind == RecentActionKindDto.EventBonusGranted);
+        Assert.Equal((null, 2), (bonus.PlayerId, bonus.Amount));
+        var turnStart = updated.RecentActions.First(action => action.Kind == RecentActionKindDto.ReinforcementsGranted);
+        Assert.Equal(("p1", 5, 2, "babyboom"), (turnStart.PlayerId, turnStart.Amount, turnStart.EventBonus, turnStart.EventId));
 
         var state = await LoadAsync(factory, gameId);
         Assert.Equal("babyboom", state.EventRound.CurrentEventId);
@@ -212,6 +217,9 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
 
         var state = await LoadAsync(factory, gameId);
         Assert.Equal("beringstraat-dichtgevroren", Assert.Single(state.ActiveEffects).Effect.Id);
+        Assert.Contains(
+            state.RecentActions,
+            action => action.Kind == RecentActionKind.EffectExpired && action.EventId == "stormachtige-zeeen");
     }
 
     /// <summary>
@@ -264,9 +272,12 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
         Assert.Null((await LoadAsync(factory, gameId)).EventRound.PendingAttrition);
     }
 
-    /// <summary>Wie alleen gebieden met 1 leger heeft, staat niets af en wacht niemand op (FO §9.2).</summary>
+    /// <summary>
+    /// Wie alleen gebieden met 1 leger heeft, kiest niet en wordt niet afgewacht, maar staat wél in het
+    /// verloop: "heeft geen legers om af te staan" (FO §9.2, besluit 2026-09-29).
+    /// </summary>
     [Fact]
-    public async Task Attrition_SpelerZonderAfstaanbareLegers_DoetNietMee()
+    public async Task Attrition_SpelerZonderAfstaanbareLegers_KiestNietMaarStaatInHetVerloop()
     {
         await using var factory = CreateFactory();
         using var client = factory.CreateClient();
@@ -274,13 +285,12 @@ public sealed class GameHubEventRoundTests(PostgresFixture postgres)
 
         var gameId = await SetUpAsync(factory, drawPile: ["griepgolf"], alaskaArmies: 5, albertaArmies: 1);
 
-        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
+        var waiting = await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p2");
 
         Assert.Equal(["p1"], (await LoadAsync(factory, gameId)).EventRound.PendingAttrition!.AwaitingPlayerIds);
-
-        await using var session = factory.Services.GetRequiredService<IDocumentStore>().QuerySession();
-        var events = (await session.Events.FetchStreamAsync(gameId)).Select(@event => @event.Data);
-        Assert.DoesNotContain(events.OfType<ArmiesRemoved>(), removed => removed.PlayerId == "p2");
+        Assert.Contains(
+            waiting.RecentActions,
+            action => action.Kind == RecentActionKindDto.ArmiesRemoved && action.PlayerId == "p2" && action.Amount == 0);
     }
 
     [Fact]

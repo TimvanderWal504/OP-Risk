@@ -172,4 +172,43 @@ public sealed class RecentActionLogTests
 
         Assert.Same(log, updated);
     }
+
+    private static RecentAction Bonus(string playerId, int amount, string eventId = "babyboom") =>
+        new(RecentActionKind.EventBonusGranted, PlayerId: playerId, Amount: amount, EventId: eventId);
+
+    [Fact]
+    public void CollapseToEveryone_IedereenHetzelfde_WordtEenRegelZonderSpeler()
+    {
+        var log = AppendAll(Bonus("p1", 2), Bonus("p2", 2), Bonus("p3", 2));
+
+        var collapsed = RecentActionLog.CollapseToEveryone(log, RecentActionKind.EventBonusGranted, "babyboom", ["p1", "p2", "p3"]);
+
+        var everyone = Assert.Single(collapsed);
+        Assert.Equal((null, 2, 3), (everyone.PlayerId, everyone.Amount, everyone.Sequence));
+    }
+
+    [Fact]
+    public void CollapseToEveryone_VerschillendeBedragen_BlijftPerSpeler()
+    {
+        var log = AppendAll(Bonus("p1", 2), Bonus("p2", 1));
+
+        Assert.Same(log, RecentActionLog.CollapseToEveryone(log, RecentActionKind.EventBonusGranted, "babyboom", ["p1", "p2"]));
+    }
+
+    [Fact]
+    public void CollapseToEveryone_NietIedereenErbij_BlijftPerSpeler()
+    {
+        var log = AppendAll(Bonus("p1", 2), Bonus("p2", 2));
+
+        Assert.Same(log, RecentActionLog.CollapseToEveryone(log, RecentActionKind.EventBonusGranted, "babyboom", ["p1", "p2", "p3"]));
+    }
+
+    /// <summary>Alleen de bovenste reeks van dezelfde kaart telt; een oudere regel ertussen breekt hem.</summary>
+    [Fact]
+    public void CollapseToEveryone_AndereKaartInDeReeks_BlijftPerSpeler()
+    {
+        var log = AppendAll(Bonus("p1", 2, "technologische-doorbraak"), Bonus("p2", 2));
+
+        Assert.Same(log, RecentActionLog.CollapseToEveryone(log, RecentActionKind.EventBonusGranted, "babyboom", ["p1", "p2"]));
+    }
 }

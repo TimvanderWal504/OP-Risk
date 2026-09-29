@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { i18next } from '../i18n'
 import { actionActor, actionSentence } from './actionSentence'
 import { fixtureState } from '../routes/tv/screens/tvScreenFixture'
-import { RecentActionKindDto, type RecentActionDto } from '../types/GameState'
+import { EventDurationDto, EventEffectKindDto, RecentActionKindDto, type RecentActionDto } from '../types/GameState'
 
 const action = (overrides: Partial<RecentActionDto> & Pick<RecentActionDto, 'kind'>): RecentActionDto => ({
   sequence: 1,
@@ -15,6 +15,7 @@ const action = (overrides: Partial<RecentActionDto> & Pick<RecentActionDto, 'kin
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
+  eventBonus: null,
   ...overrides,
 })
 
@@ -61,8 +62,26 @@ describe('actionSentence', () => {
     ['een getrokken gebeurteniskaart, zonder speler', action({ kind: RecentActionKindDto.EventDrawn, playerId: null, eventId: 'griepgolf' }), 'Gebeurteniskaart: Griepgolf'],
     ['één afgestaan leger', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 1, eventId: 'pensioengolf' }), 'Alice staat een leger af door Pensioengolf'],
     ['meerdere afgestane legers', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 3, eventId: 'epidemie-in-de-steden' }), 'Alice staat 3 legers af door Epidemie in de steden'],
+    ['geen legers om af te staan', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 0, eventId: 'epidemie-in-de-steden' }), 'Alice heeft geen legers om af te staan (Epidemie in de steden)'],
+    ['een bonus van meerdere legers', action({ kind: RecentActionKindDto.EventBonusGranted, amount: 2, eventId: 'babyboom' }), 'Alice krijgt 2 extra legers bij de volgende beurt (Babyboom)'],
+    ['een bonus van één leger', action({ kind: RecentActionKindDto.EventBonusGranted, amount: 1, eventId: 'bevolkingsgroei' }), 'Alice krijgt een extra leger bij de volgende beurt (Bevolkingsgroei)'],
+    ['een bonus voor iedereen', action({ kind: RecentActionKindDto.EventBonusGranted, playerId: null, amount: 2, eventId: 'babyboom' }), 'Iedereen krijgt 2 extra legers bij de volgende beurt (Babyboom)'],
+    ['iedereen staat automatisch een leger af', action({ kind: RecentActionKindDto.ArmiesRemoved, playerId: null, amount: 1, eventId: 'pensioengolf' }), 'Iedereen staat een leger af door Pensioengolf'],
+    ['niemand kan iets missen', action({ kind: RecentActionKindDto.ArmiesRemoved, playerId: null, amount: 0, eventId: 'griepgolf' }), 'Niemand heeft legers om af te staan (Griepgolf)'],
+    ['een beurtstart met bonus', action({ kind: RecentActionKindDto.ReinforcementsGranted, amount: 5, eventBonus: 2, eventId: 'babyboom' }), 'Alice krijgt 5 legers om te plaatsen, waarvan 2 door Babyboom'],
   ])('beschrijft %s', (_, recentAction, expected) => {
     expect(line(recentAction)).toBe(expected)
+  })
+
+  /** De staart van "is voorbij" volgt de soort gevolg die de server meestuurt, niet de id. */
+  it.each<[string, string, EventEffectKindDto, string]>([
+    ['een zeeblokkade', 'stormachtige-zeeen', EventEffectKindDto.SeaBlockade, 'Stormachtige zeeën is voorbij: de zeeroutes zijn weer open'],
+    ['een afgesloten gebied', 'aardbeving-in-china', EventEffectKindDto.TerritoryLock, 'Aardbeving in China is voorbij: de afgesloten gebieden zijn weer open'],
+  ])('beschrijft het einde van %s', (_, eventId, effectKind, expected) => {
+    const state = { ...fixtureState, events: [{ id: eventId, duration: EventDurationDto.OneRound, effectKind }] }
+    const expired = action({ kind: RecentActionKindDto.EffectExpired, playerId: null, eventId })
+
+    expect(actionSentence(expired, state, i18next.getFixedT('nl', 'actionTicker'))).toBe(expected)
   })
 
   it('geeft een actie zonder speler de neutrale avatar', () => {

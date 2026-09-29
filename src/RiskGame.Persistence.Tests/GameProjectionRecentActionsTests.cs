@@ -201,4 +201,76 @@ public sealed class GameProjectionRecentActionsTests
 
         Assert.Empty(state.RecentActions);
     }
+
+    [Fact]
+    public void EffectApplied_MetBonusVoorIedereenHetzelfde_IsEenIedereenRegel()
+    {
+        var state = Projection.Apply(
+            BuildState(),
+            new EffectApplied("game-1", "babyboom", new Dictionary<string, int> { ["p2"] = 2, ["p1"] = 2 }));
+
+        var everyone = Assert.Single(state.RecentActions);
+        Assert.Equal((RecentActionKind.EventBonusGranted, null, 2, "babyboom"), (everyone.Kind, everyone.PlayerId, everyone.Amount, everyone.EventId));
+    }
+
+    /// <summary>Verschillende bedragen: per speler, in beurtvolgorde — ongeacht de volgorde in het event.</summary>
+    [Fact]
+    public void EffectApplied_MetVerschillendeBedragen_IsPerSpelerInBeurtvolgorde()
+    {
+        var state = Projection.Apply(
+            BuildState(),
+            new EffectApplied("game-1", "goede-oogst", new Dictionary<string, int> { ["p2"] = 1, ["p1"] = 2 }));
+
+        // Nieuwste eerst: p1 (eerst in de beurtvolgorde) staat onderaan.
+        Assert.Equal([("p2", 1), ("p1", 2)], state.RecentActions.Select(action => (action.PlayerId, action.Amount)));
+    }
+
+    [Fact]
+    public void PhaseChangedNaarVersterken_ZonderBonus_NoemtGeenKaart_MetBonusWel()
+    {
+        var state = Projection.Apply(BuildState(), new EventDeckShuffled("game-1", ["babyboom"]));
+        state = Projection.Apply(state, new EventCardDrawn("game-1", "babyboom"));
+        state = Projection.Apply(state, new EffectApplied("game-1", "babyboom", new Dictionary<string, int> { ["p1"] = 2 }));
+        state = Projection.Apply(state, new PhaseChanged("game-1", "p1", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), Now, ArmiesGranted: 5));
+        state = Projection.Apply(state, new TurnEnded("game-1", "p1"));
+        state = Projection.Apply(state, new PhaseChanged("game-1", "p2", TurnPhase.Reinforce, TimeSpan.FromMinutes(3), Now, ArmiesGranted: 3));
+
+        var turnStarts = state.RecentActions.Where(action => action.Kind == RecentActionKind.ReinforcementsGranted).ToArray();
+        Assert.Equal(("p2", null, null), (turnStarts[0].PlayerId, turnStarts[0].EventBonus, turnStarts[0].EventId));
+        Assert.Equal(("p1", 2, "babyboom"), (turnStarts[1].PlayerId, turnStarts[1].EventBonus, turnStarts[1].EventId));
+    }
+
+    [Fact]
+    public void EffectExpired_IsEenRegelZonderSpeler()
+    {
+        var state = Projection.Apply(
+            BuildState().WithActiveEffects([new Rules.Effects.ActiveEffect(MapSource.Load("standaard-43").Events.Single(e => e.Id == "stormachtige-zeeen").Effect)]),
+            new EffectExpired("game-1", "stormachtige-zeeen"));
+
+        var expired = Assert.Single(state.RecentActions);
+        Assert.Equal((RecentActionKind.EffectExpired, null, "stormachtige-zeeen"), (expired.Kind, expired.PlayerId, expired.EventId));
+    }
+
+    /// <summary>Automatisch afgestaan, iedereen hetzelfde: één regel. Een zelf gekozen afstand nooit.</summary>
+    [Fact]
+    public void ArmiesRemoved_AutomatischIedereenHetzelfde_IsEenIedereenRegel_GekozenNiet()
+    {
+        var state = Projection.Apply(BuildState(), new EventDeckShuffled("game-1", ["pensioengolf"]));
+        state = Projection.Apply(state, new EventCardDrawn("game-1", "pensioengolf"));
+        state = Projection.Apply(state, new ArmiesRemoved("game-1", "p1", new Dictionary<string, int> { ["brazil"] = 1 }));
+        state = Projection.Apply(state, new ArmiesRemoved("game-1", "p2", new Dictionary<string, int> { ["venezuela"] = 1 }));
+
+        var everyone = state.RecentActions[0];
+        Assert.Equal((RecentActionKind.ArmiesRemoved, null, 1), (everyone.Kind, everyone.PlayerId, everyone.Amount));
+
+        var chosen = BuildState().WithEventRound(EventRoundState.Empty with
+        {
+            CurrentEventId = "pensioengolf",
+            PendingAttrition = new PendingAttrition("pensioengolf", 1, AwaitingPlayerIds: ["p1", "p2"], NextPlayerId: "p1"),
+        });
+        chosen = Projection.Apply(chosen, new ArmiesRemoved("game-1", "p1", new Dictionary<string, int> { ["brazil"] = 1 }));
+        chosen = Projection.Apply(chosen, new ArmiesRemoved("game-1", "p2", new Dictionary<string, int> { ["venezuela"] = 1 }));
+
+        Assert.Equal(["p2", "p1"], chosen.RecentActions.Select(action => action.PlayerId));
+    }
 }
