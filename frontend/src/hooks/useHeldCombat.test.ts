@@ -185,4 +185,28 @@ describe('useHeldCombat', () => {
     })
     expect(result.current).toEqual(second)
   })
+
+  it('laat de houd-periode na een afgehandeld gevecht meteen los bij "Verder op TV"', () => {
+    const state = inProgressState({ pendingCombat: null })
+    const resolved = combat({ narrated: narrated() })
+    const { result, rerender } = renderHook(({ skip }) => useHeldCombat(resolved, state, skip), {
+      initialProps: { skip: 0 },
+    })
+
+    expect(result.current).toEqual(resolved)
+    rerender({ skip: 1 })
+    expect(result.current).toBeNull()
+  })
+
+  it('laat een lopend gevecht staan bij "Verder op TV" — dat is geen wachttijd', () => {
+    const pendingCombat = { fromTerritoryId: 'a', toTerritoryId: 'b', attackDice: 1, attackerRolls: [4], awaitingRerollDecision: false }
+    const state = inProgressState({ pendingCombat })
+    const live = combat()
+    const { result, rerender } = renderHook(({ skip }) => useHeldCombat(live, state, skip), {
+      initialProps: { skip: 0 },
+    })
+
+    rerender({ skip: 1 })
+    expect(result.current).toEqual(live)
+  })
 })

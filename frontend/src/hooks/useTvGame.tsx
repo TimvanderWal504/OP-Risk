@@ -28,6 +28,8 @@ export function useTvGame(gameId: string) {
   const [unknownGame, setUnknownGame] = useState(false)
   const { report, resolved } = useReportOnce('watchGame')
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
+  // Telt op bij elk "Verder op TV"-seintje van de host (FO §2.2); de houd-hooks laten dan los.
+  const [skipSignal, setSkipSignal] = useState(0)
   // Laatst-geclaimde-gebied-flare (TvClaimingScreen): komt uit het "TerritoryClaimed"-narratief-
   // event, niet uit het vergelijken van twee `territories`-snapshots — dat breekt bij reconnect
   // (geen vorige snapshot) en bij meerdere claims tussen twee broadcasts (welke krijgt de flare?).
@@ -70,14 +72,19 @@ export function useTvGame(gameId: string) {
       setLastClaimedTerritoryId(message.territoryId)
     }
 
+    // "Verder op TV" (FO §2.2): elk seintje telt op; de houd-hooks laten dan los.
+    const onHoldsSkipped = () => setSkipSignal((current) => current + 1)
+
     connection.on('GameStateUpdated', onUpdate)
     connection.on('DiceRolled', onDiceRolled)
     connection.on('TerritoryClaimed', onTerritoryClaimed)
+    connection.on('HoldsSkipped', onHoldsSkipped)
 
     return () => {
       connection.off('GameStateUpdated', onUpdate)
       connection.off('DiceRolled', onDiceRolled)
       connection.off('TerritoryClaimed', onTerritoryClaimed)
+      connection.off('HoldsSkipped', onHoldsSkipped)
     }
   }, [connection, gameId])
 
@@ -119,8 +126,8 @@ export function useTvGame(gameId: string) {
     }
   }, [connection, connectionState, gameId, report, resolved])
 
-  const combat = useHeldCombat(useCombatBroadcast(connection), state)
-  const event = useHeldEvent(state, combat !== null)
+  const combat = useHeldCombat(useCombatBroadcast(connection), state, skipSignal)
+  const event = useHeldEvent(state, combat !== null, skipSignal)
 
-  return { state, connectionState, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event }
+  return { state, connectionState, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event, skipSignal }
 }

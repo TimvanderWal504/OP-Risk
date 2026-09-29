@@ -20,9 +20,9 @@ import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './scr
 export function TvPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { t } = useTranslation('lobby')
-  const { state, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event } = useTvGame(gameId!)
+  const { state, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event, skipSignal } = useTvGame(gameId!)
   const toastList = useToastList()
-  const displayPhase = useHeldPhase(state?.phase)
+  const displayPhase = useHeldPhase(state?.phase, skipSignal)
   useTvLanguage(state?.tvDisplay.language)
   useDocumentTitle('tv')
 

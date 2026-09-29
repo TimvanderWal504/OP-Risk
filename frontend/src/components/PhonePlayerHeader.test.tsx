@@ -15,6 +15,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Claiming}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -33,6 +34,7 @@ describe('PhonePlayerHeader', () => {
           phase={GamePhaseDto.Claiming}
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
+          skipTvHold={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -51,6 +53,7 @@ describe('PhonePlayerHeader', () => {
           phase={GamePhaseDto.Claiming}
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
+          skipTvHold={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -71,6 +74,7 @@ describe('PhonePlayerHeader', () => {
           phase={GamePhaseDto.Claiming}
           tradeInCards={vi.fn()}
           setTvDisplay={setTvDisplay}
+          skipTvHold={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -90,11 +94,33 @@ describe('PhonePlayerHeader', () => {
           phase={GamePhaseDto.Claiming}
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
+          skipTvHold={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
 
       expect(screen.queryByRole('button', { name: 'TV-weergave' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Verder op TV' })).not.toBeInTheDocument()
+    })
+
+    /** FO §2.2 (besluit 2026-09-29): een vaste host-actie die de wachttijd op de TV doorklikt. */
+    it('geeft de host "Verder op TV", dat de wachttijden laat doorklikken', async () => {
+      const skipTvHold = vi.fn().mockResolvedValue(undefined)
+      render(
+        <PhonePlayerHeader
+          state={fixtureState}
+          me={fixtureState.players[0]}
+          phase={GamePhaseDto.Claiming}
+          tradeInCards={vi.fn()}
+          setTvDisplay={vi.fn()}
+          skipTvHold={skipTvHold}
+          loadActionLog={vi.fn()}
+        />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: 'Verder op TV' }))
+
+      expect(skipTvHold).toHaveBeenCalledOnce()
     })
   })
 
@@ -122,6 +148,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.InProgress}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -140,6 +167,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Claiming}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -157,6 +185,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Claiming}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -174,6 +203,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Lobby}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -191,6 +221,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Claiming}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -226,6 +257,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.InProgress}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -244,6 +276,7 @@ describe('PhonePlayerHeader', () => {
         phase={GamePhaseDto.Claiming}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -274,7 +307,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: true }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · actief')).toBeInTheDocument()
@@ -284,7 +317,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: false }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · inactief')).toBeInTheDocument()
@@ -292,7 +325,7 @@ describe('PhonePlayerHeader', () => {
 
     it('laat de statusregel ongemoeid zonder rol (rollen uit, of nog niet toegewezen)', () => {
       render(
-        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen')).toBeInTheDocument()
@@ -330,7 +363,7 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Fortify)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       // `/Mijn kaarten/` i.p.v. exacte match: het handaantal-badge (hier 3, uit `cards`)
@@ -344,7 +377,7 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Reinforce)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))

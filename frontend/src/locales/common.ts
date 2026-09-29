@@ -33,6 +33,8 @@ export const common = {
   dice: {
     ariaLabel: { nl: 'Dobbelsteen {{value}}', en: 'Die {{value}}' },
   },
+  // "Verder op TV" (FO §2.2): de host klikt de wachttijd op de TV door.
+  skipTvHold: { nl: 'Verder op TV', en: 'Continue on TV' },
   // Toegankelijke namen van de legerstepper (`ArmyStepperRow`), met het gebied erin.
   armyStepper: {
     place: { nl: 'Leger plaatsen op {{territory}}', en: 'Place an army on {{territory}}' },

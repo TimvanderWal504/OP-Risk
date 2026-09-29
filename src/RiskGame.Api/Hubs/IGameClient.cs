@@ -18,6 +18,13 @@ public interface IGameClient
 
     Task GameStateUpdated(GameStateDto state);
 
+    /// <summary>
+    /// De host klikt de lopende wachttijden door ("Verder op TV", FO §2.2): gebeurteniskaart,
+    /// gevecht na afloop, uitslag van het volgorde-dobbelen. Naar de hele spelgroep, want de
+    /// telefoons houden de volgorde-uitslag ook vast. Geen payload: puur presentatie.
+    /// </summary>
+    Task HoldsSkipped();
+
     /// <summary>Alleen naar de ene TV-connectie die de koppelcode aanvroeg (<see cref="GameHub.RegisterTv"/>).</summary>
     Task TvPaired(TvPairedMessage message);
 }

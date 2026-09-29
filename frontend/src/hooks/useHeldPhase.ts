@@ -17,10 +17,18 @@ const ORDER_ROLL_REVEAL_HOLD_MS = 5000
 /**
  * Houdt `GamePhaseDto.OrderRoll` nog even als weergavefase vast nadat de server al naar
  * de volgende fase is gegaan, zodat de bepaalde spelersvolgorde zichtbaar blijft.
+ *
+ * `skipSignal` telt op zodra de host "Verder op TV" kiest (FO §2.2): dan eindigt de hold meteen.
  */
-export function useHeldPhase(phase: GamePhaseDto | undefined): GamePhaseDto | undefined {
+export function useHeldPhase(phase: GamePhaseDto | undefined, skipSignal = 0): GamePhaseDto | undefined {
   const [displayPhase, setDisplayPhase] = useState(phase)
   const [heldPhase, setHeldPhase] = useState(phase)
+  const [seenSkip, setSeenSkip] = useState(skipSignal)
+
+  if (skipSignal !== seenSkip) {
+    setSeenSkip(skipSignal)
+    if (phase !== undefined && displayPhase !== phase) setDisplayPhase(phase)
+  }
 
   if (phase !== undefined && phase !== heldPhase) {
     setHeldPhase(phase)

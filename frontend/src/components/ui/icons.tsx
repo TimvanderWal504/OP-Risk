@@ -117,6 +117,15 @@ export function CheckIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+/** Twee pijlen vooruit: "Verder op TV" — de host klikt een wachttijd op de TV door (FO §2.2). */
+export function SkipForwardIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 3.5 7.5 8l-5 4.5V3.5ZM8.5 3.5 13.5 8l-5 4.5V3.5Z" />
+    </svg>
+  )
+}
+
 /** Kruisje om iets weg te klikken (fouttoast, `Toast`). */
 export function CloseIcon({ className = 'h-4 w-4' }: IconProps) {
   return (

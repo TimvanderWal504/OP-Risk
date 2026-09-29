@@ -90,4 +90,16 @@ describe('useHeldEvent', () => {
     rerender({ state: withLog([drawn('griepgolf', 5)], { pendingAttrition: null }) })
     expect(result.current).toBeNull()
   })
+
+  it('laat de kaart meteen los bij "Verder op TV"', () => {
+    const { result, rerender } = renderHook(({ state, skip }) => useHeldEvent(state, false, skip), {
+      initialProps: { state: withLog([]), skip: 0 },
+    })
+
+    rerender({ state: withLog([drawn('babyboom', 5)]), skip: 0 })
+    expect(result.current).not.toBeNull()
+
+    rerender({ state: withLog([drawn('babyboom', 5)]), skip: 1 })
+    expect(result.current).toBeNull()
+  })
 })

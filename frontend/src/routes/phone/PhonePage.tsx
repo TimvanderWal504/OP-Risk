@@ -36,6 +36,8 @@ export function PhonePage() {
     tradeInCards,
     endPhase,
     removeArmies,
+    skipTvHold,
+    skipSignal,
     combat,
     declareAttack,
     chooseDefenseDice,
@@ -48,7 +50,7 @@ export function PhonePage() {
     setTvDisplay,
     loadActionLog,
   } = useGameState(gameId!)
-  const displayPhase = useHeldPhase(state?.phase)
+  const displayPhase = useHeldPhase(state?.phase, skipSignal)
   useDocumentTitle('player')
 
   const me = state?.players.find((player) => player.id === playerId)
@@ -105,6 +107,7 @@ export function PhonePage() {
           phase={headerPhase}
           tradeInCards={tradeInCards}
           setTvDisplay={setTvDisplay}
+          skipTvHold={skipTvHold}
           loadActionLog={loadActionLog}
         />
       )}
@@ -128,6 +131,7 @@ export function PhonePage() {
           tradeInCards,
           endPhase,
           removeArmies,
+          skipTvHold,
           combat,
           declareAttack,
           chooseDefenseDice,

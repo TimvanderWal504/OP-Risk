@@ -573,6 +573,27 @@ public sealed class GameHub(
     }
 
     /// <summary>
+    /// "Verder op TV" (FO §2.2): de host laat de lopende wachttijden eindigen — de getrokken
+    /// gebeurteniskaart, een afgehandeld gevecht, de uitslag van het volgorde-dobbelen. Alleen
+    /// presentatie: raakt de event-store niet (zoals TV koppelen), de server stuurt alleen een
+    /// seintje naar de spelgroep. Houdt niemand iets vast, dan gebeurt er niets.
+    /// </summary>
+    public async Task SkipTvHold(string gameId, string playerId)
+    {
+        await using var session = store.QuerySession();
+        var state = await LoadGameOrThrowAsync(session, gameId);
+
+        var validation = LobbyGuards.CallerIsHost(state, playerId);
+
+        if (!validation.IsSuccess)
+        {
+            throw new HubException(HubErrorSerializer.Serialize(validation.Errors));
+        }
+
+        await Clients.Group(GameGroups.All(gameId)).HoldsSkipped();
+    }
+
+    /// <summary>
     /// Host-only, in elke fase (plan-testronde-tv punt 2): legt de TV-weergave vast. Geen eigen
     /// broadcast-kanaal — het event hoogt de <see cref="GameStateDto.StateVersion"/> op, dus de TV
     /// pikt de nieuwe waarden op via de gewone state-push. Losse parameters i.p.v. een DTO-argument,

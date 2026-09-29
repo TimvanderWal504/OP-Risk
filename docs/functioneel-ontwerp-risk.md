@@ -19,7 +19,7 @@ Een digitale Risk-implementatie in Jackbox-stijl. Eén **host-scherm** (TV/groot
 
 ### 2.1 Host-scherm (TV) — passief bord
 
-De host-TV heeft **geen** bedieningsfunctie. Het toont:
+De host-TV heeft **geen** bedieningsfunctie (de wachttijden erop kan de host vanaf zijn telefoon doorklikken, zie **Verder op TV** in §2.2). Het toont:
 
 - De wereldkaart met alle gebieden, kleuren per speler en legeraantallen
 - Wiens beurt het is + actieve fase (Versterken / Aanvallen / Verplaatsen) + resterende beurttijd
@@ -38,7 +38,9 @@ De telefoon van de speler toont drie soorten informatie:
 2. **Privé-informatie** — eigen territoriumkaarten en eigen geheime missie. Deze verschijnen nooit op de TV. Uitzondering: zie §6.2 voor de naam-onthulling tijdens een laatste-kans-venster (winconditie Geheime missies, timing-optie "Volle ronde met onthulling") — die onthult wie mogelijk wint, nooit de missie-inhoud zelf.
 3. **Spelinformatie** — ranglijst/overzicht: wie heeft de meeste gebieden, welke continenten zijn in bezit en van wie, legertotalen. Staat de gebeurtenisronde aan (§9.2), dan toont de stand ook de laatst getrokken gebeurteniskaart (naam, omschrijving, duur) tot de volgende trekking — vóór de eerste trekking niets. Daarnaast het volledige spelverloop: elke openbare actie van het spel, nieuwste bovenaan (de TV toont alleen de laatste paar).
 
-De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), en na afloop direct een nieuw spel opzetten (§7).
+De host is functioneel gewoon een speler met een telefoon, met als enige extra bevoegdheden: spel opzetten (lobby, instellingen §10), spel starten, een afwezige speler op auto-pass zetten (§11.2), "Verder op TV" (hieronder), en na afloop direct een nieuw spel opzetten (§7).
+
+**Verder op TV:** de TV houdt sommige uitkomsten even vast voordat hij verder gaat: de uitslag van de beurtvolgorde (5 s), een afgehandeld gevecht (5 s) en een getrokken gebeurteniskaart (8 s, §9.2). De host kan die wachttijd doorklikken met **"Verder op TV"**: een vaste actie in zijn telefoonheader, en op het beurtvolgordescherm (dat geen header heeft) een knop die alleen verschijnt zolang de uitslag nog vastgehouden wordt. Het klikt ook de beurtvolgorde-uitslag op de telefoons van alle spelers door. Het is puur presentatie: het spel zelf verandert niet, er wordt niets vastgelegd, en een lopend gevecht of een openstaande keuze (zoals legers verwijderen bij een gebeurtenis) wordt niet overgeslagen. Houdt de TV niets vast, dan gebeurt er niets.
 
 **Host-opzetflow (vóór de lobby):** de host opent dezelfde app als elke speler, maar kiest bij het openen "Nieuw spel starten" in plaats van "Deelnemen aan spel". Dit leidt naar het instellingenscherm (§10); pas na bevestiging daarvan wordt de lobby aangemaakt en verschijnt de QR-code op de TV. Dit en de koppelstap hieronder zijn de enige plekken waar de host een ander scherm ziet dan een reguliere speler vóór de lobby.
 

@@ -74,4 +74,21 @@ describe('useTvGame', () => {
     expect(result.current.game.unknownGame).toBe(false)
     expect(result.current.toasts).toEqual([])
   })
+
+  /** "Verder op TV" (FO §2.2): de naam moet exact overeenkomen met `IGameClient.HoldsSkipped` op de server. */
+  it('telt elk "HoldsSkipped"-seintje van de host op in skipSignal', async () => {
+    mockWatchGame([])
+    const result = renderTvGame()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    const on = vi.mocked(useSignalR().connection!.on)
+    const onHoldsSkipped = on.mock.calls.find(([name]) => name === 'HoldsSkipped')?.[1] as () => void
+    expect(result.current.game.skipSignal).toBe(0)
+
+    act(() => onHoldsSkipped())
+
+    expect(result.current.game.skipSignal).toBe(1)
+  })
 })

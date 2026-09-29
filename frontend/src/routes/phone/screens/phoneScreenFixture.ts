@@ -85,6 +85,7 @@ export const fixtureProps = (overrides: Partial<PhoneScreenProps> = {}): PhoneSc
   tradeInCards: vi.fn(),
   endPhase: vi.fn(),
   removeArmies: vi.fn(),
+  skipTvHold: vi.fn(),
   combat: null,
   declareAttack: vi.fn(),
   chooseDefenseDice: vi.fn(),

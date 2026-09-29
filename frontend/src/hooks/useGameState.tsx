@@ -54,6 +54,8 @@ export function useGameState(gameId: string) {
   )
   const { showError, clearSource } = useToast()
   const [orderRollThrows, setOrderRollThrows] = useState<Record<string, number[]>>({})
+  // Telt op bij elk "Verder op TV"-seintje van de host (FO §2.2); de houd-hooks laten dan los.
+  const [skipSignal, setSkipSignal] = useState(0)
   // `null` tot het laden gelukt is — anders valt "nog niet geladen" niet te onderscheiden van een
   // lege catalogus, en zou een mislukte load nooit opnieuw geprobeerd worden.
   const [territoryCatalog, setTerritoryCatalog] = useState<TerritoryCatalogDto[] | null>(null)
@@ -96,12 +98,17 @@ export function useGameState(gameId: string) {
       setOrderRollThrows((current) => ({ ...current, [message.playerId]: message.dice }))
     }
 
+    // "Verder op TV" (FO §2.2): ook de telefoon houdt de volgorde-uitslag vast en laat die los.
+    const onHoldsSkipped = () => setSkipSignal((current) => current + 1)
+
     connection.on('GameStateUpdated', onUpdate)
     connection.on('DiceRolled', onDiceRolled)
+    connection.on('HoldsSkipped', onHoldsSkipped)
 
     return () => {
       connection.off('GameStateUpdated', onUpdate)
       connection.off('DiceRolled', onDiceRolled)
+      connection.off('HoldsSkipped', onHoldsSkipped)
     }
   }, [connection, gameId])
 
@@ -329,6 +336,13 @@ export function useGameState(gameId: string) {
     if (updated) applyState(updated)
   }, [invoke, gameId, playerId])
 
+  /** "Verder op TV" (FO §2.2), alleen de host: laat de wachttijden op TV en telefoons eindigen. */
+  const skipTvHold = useCallback(async () => {
+    if (!playerId) return
+
+    await invoke('SkipTvHold', gameId, playerId)
+  }, [invoke, gameId, playerId])
+
   /** "Legers verwijderen" (FO §9.2): gebied → aantal áfgestane legers; de server valideert opnieuw. */
   const removeArmies = useCallback(
     async (removalsByTerritory: Record<string, number>) => {
@@ -528,6 +542,8 @@ export function useGameState(gameId: string) {
     keepAttackDice,
     endPhase,
     removeArmies,
+    skipTvHold,
+    skipSignal,
     fortify,
     endTurn,
     setTvDisplay,

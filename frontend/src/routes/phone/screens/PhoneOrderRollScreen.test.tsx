@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fixtureProps, fixtureState } from './phoneScreenFixture'
 import { PhoneOrderRollScreen } from './PhoneOrderRollScreen'
 import { TvLanguageDto } from '../../../types/TvDisplay'
+import { GamePhaseDto } from '../../../types/GameState'
 
 describe('PhoneOrderRollScreen', () => {
   it('laat gooien zodra de server aangeeft dat er nog gegooid mag worden', async () => {
@@ -89,5 +90,19 @@ describe('PhoneOrderRollScreen', () => {
 
     expect(screen.queryByRole('button', { name: 'Gooien' })).not.toBeInTheDocument()
     expect(screen.getByText('Wachten op andere spelers…')).toBeInTheDocument()
+  })
+
+  /** De uitslag-hold (useHeldPhase): de server is al verder, dit scherm staat nog even. */
+  it('geeft de host "Verder op TV" alleen zolang de uitslag nog vastgehouden wordt', async () => {
+    const skipTvHold = vi.fn().mockResolvedValue(undefined)
+    const orderRoll = { ...fixtureState, phase: GamePhaseDto.OrderRoll }
+    const { rerender } = render(<PhoneOrderRollScreen {...fixtureProps({ skipTvHold, state: orderRoll })} />)
+
+    expect(screen.queryByRole('button', { name: 'Verder op TV' })).not.toBeInTheDocument()
+
+    rerender(<PhoneOrderRollScreen {...fixtureProps({ skipTvHold, state: { ...fixtureState, phase: GamePhaseDto.Claiming } })} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Verder op TV' }))
+
+    expect(skipTvHold).toHaveBeenCalledOnce()
   })
 })

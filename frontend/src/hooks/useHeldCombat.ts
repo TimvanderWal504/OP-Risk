@@ -33,6 +33,7 @@ const COMBAT_REVEAL_HOLD_MS = 5000
 export function useHeldCombat(
   combat: CombatBroadcastState | null,
   state: GameStateDto | null,
+  skipSignal = 0,
 ): CombatBroadcastState | null {
   const [held, setHeld] = useState<CombatBroadcastState | null>(combat)
 
@@ -66,6 +67,11 @@ export function useHeldCombat(
 
   const leftAttackWithinInProgress = isInProgress && (turnPhase !== TurnPhaseDto.Attack || activePlayerChanged)
 
+  // Elk nieuw "Verder op TV"-seintje telt precies één render; houdt er dan niets vast, dan vervalt het.
+  const [seenSkip, setSeenSkip] = useState(skipSignal)
+  const skipRequested = skipSignal !== seenSkip
+  if (skipRequested) setSeenSkip(skipSignal)
+
   // Beide aanpassingen gebeuren tijdens render (niet in een effect — react-hooks/set-state-in-effect
   // zou een synchrone setState in een effect toch als extra cascaderende render zien, terwijl dit
   // gewoon afgeleide state is die "meteen klopt" moet zijn, net als `useHeldPhase.ts`).
@@ -74,7 +80,13 @@ export function useHeldCombat(
   // InProgress (EndPhase naar Fortify, een nieuwe actieve speler, of een nieuwe beurt) — niet
   // bij de overgang naar Finished, want juist een winnende eliminatie hoort de houd-periode
   // gewoon af te laten lopen.
-  if (leftAttackWithinInProgress && held !== null) {
+  //
+  // "Verder op TV" (FO §2.2) gaat daarvóór: alleen de houd-periode ná een afgehandeld gevecht is door
+  // te klikken — niet een lopend gevecht, want dat is geen wachttijd maar het spel zelf.
+  if (skipRequested && held !== null && held.narrated != null && pendingCombat === null) {
+    setHeld(null)
+    setDismissedCorrelationId(held.correlationId)
+  } else if (leftAttackWithinInProgress && held !== null) {
     setHeld(null)
     setDismissedCorrelationId(held.correlationId)
   } else if (

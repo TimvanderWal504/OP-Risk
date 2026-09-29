@@ -39,6 +39,8 @@ export interface PhoneScreenProps {
   /** Kaarten inleveren (FO §4.4/§5.2/§7) — zelfde fire-and-forget-patroon als `placeReinforcements`. */
   tradeInCards: (cardIds: string[]) => Promise<void>
   endPhase: () => Promise<void>
+  /** "Verder op TV" (FO §2.2), alleen de host — de header en het volgordescherm bieden 'm aan. */
+  skipTvHold: () => Promise<void>
   /** "Legers verwijderen" (FO §9.2) — gebied → aantal áfgestane legers; fire-and-forget. */
   removeArmies: (removalsByTerritory: Record<string, number>) => Promise<void>
   /** Narratieve gevechts-broadcastdata (attacker/defender-worpen + resultaat), zie

@@ -23,15 +23,24 @@ export type HeldEvent = EventDraw
  * - Bij legerverlies toont `resolveTvOverlay` de wachtstaat zolang er gekozen wordt; zodra de laatste
  *   keuze binnen is, verdwijnt ook de vastgehouden kaart.
  *
+ * - "Verder op TV" (`skipSignal` telt op, FO §2.2) laat de kaart meteen los. De wachtstaat bij
+ *   legerverlies is geen hold en blijft staan.
+ *
  * Aanpassingen tijdens render, niet in een effect — zelfde patroon als `useHeldCombat`/`useHeldPhase`.
  */
-export function useHeldEvent(state: GameStateDto | null, combatActive: boolean): HeldEvent | null {
+export function useHeldEvent(state: GameStateDto | null, combatActive: boolean, skipSignal = 0): HeldEvent | null {
   const latest = latestEventDraw(state?.recentActions)
   // `undefined` = nog geen state gezien; `null` = gezien, nog nooit een trekking.
   const [seenSequence, setSeenSequence] = useState<number | null | undefined>(undefined)
   const [held, setHeld] = useState<HeldEvent | null>(null)
   const pending = (state?.pendingAttrition ?? null) !== null
   const [wasPending, setWasPending] = useState(false)
+  const [seenSkip, setSeenSkip] = useState(skipSignal)
+
+  if (skipSignal !== seenSkip) {
+    setSeenSkip(skipSignal)
+    if (held !== null) setHeld(null)
+  }
 
   if (state && seenSequence === undefined) {
     setSeenSequence(latest?.sequence ?? null)

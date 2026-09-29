@@ -7,7 +7,7 @@ import { MissionChangedNotice } from './ui/MissionChangedNotice'
 import { CardsPanel } from './CardsPanel'
 import { TvDisplayPanel } from './TvDisplayPanel'
 import { GameInfoPanel } from './GameInfoPanel'
-import { CardsIcon, InfoIcon, MissionIcon, TvIcon } from './ui/icons'
+import { CardsIcon, InfoIcon, MissionIcon, SkipForwardIcon, TvIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
 import { resolvePhoneHeaderStatus } from '../routes/phone/screens/resolvePhoneHeaderStatus'
@@ -28,6 +28,8 @@ export interface PhonePlayerHeaderProps {
   tradeInCards: (cardIds: string[]) => Promise<void>
   /** TV-weergave instellen (plan-testronde-tv punt 2) — de actie staat alleen bij de host. */
   setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
+  /** "Verder op TV" (FO §2.2), alleen voor de host: laat de wachttijden op de TV eindigen. */
+  skipTvHold: () => Promise<void>
   /** Het volledige verloop voor het tabblad Spelverloop in spelinfo. */
   loadActionLog: () => Promise<RecentActionDto[]>
 }
@@ -56,6 +58,7 @@ export function PhonePlayerHeader({
   phase,
   tradeInCards,
   setTvDisplay,
+  skipTvHold,
   loadActionLog,
 }: PhonePlayerHeaderProps) {
   const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay', 'eventPhone'])
@@ -146,6 +149,13 @@ export function PhonePlayerHeader({
             label: t('tvDisplay:title'),
             onClick: () => setTvDisplayOpen(true),
             active: tvDisplayOpen,
+          },
+          // Vaste host-actie (besluit 2026-09-29): klikt een lopende wachttijd op de TV door; houdt
+          // de TV niets vast, dan gebeurt er niets.
+          {
+            icon: <SkipForwardIcon className="h-[18px] w-[18px]" />,
+            label: t('common:skipTvHold'),
+            onClick: () => void skipTvHold(),
           },
         ]
       : []),
