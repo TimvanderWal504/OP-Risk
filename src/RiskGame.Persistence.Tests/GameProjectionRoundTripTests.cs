@@ -931,6 +931,48 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// Auto-pass en host-overdracht (FO §11.1/§11.2): de host zet p2 op auto-pass, valt daarna zelf
+    /// weg (auto-pass + overdracht naar p3) en p2 komt terug. Live projectie en replay moeten
+    /// identiek zijn, en de document-opslag moet beide vlaggen bewaren. De stream slaat de spelstart
+    /// bewust over: auto-pass kan alleen in een lopend spel, maar de vouwregels kijken niet naar de fase.
+    /// </summary>
+    [Fact]
+    public async Task AutoPassEnHostOverdracht_LiveProjectieEnReplay_LeverenIdentiekeGameStateOp()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using var session = store.LightweightSession();
+
+        session.Events.StartStream<GameState>(
+            gameId,
+            new GameCreated(gameId, "standaard-43", Settings),
+            new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
+            new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
+            new PlayerJoined(gameId, "p3", "Carol", IsHost: false),
+            new TurnOrderDetermined(gameId, ["p1", "p2", "p3"]),
+            new AutoPassEnabled(gameId, "p2", AutoPassReason.Host),
+            new AutoPassEnabled(gameId, "p1", AutoPassReason.Disconnected),
+            new HostTransferred(gameId, "p1", "p3"),
+            new AutoPassDisabled(gameId, "p2"));
+
+        await session.SaveChangesAsync();
+
+        var live = await session.LoadAsync<GameState>(gameId);
+        var replayed = await ReplayFromRawEventsAsync(session, gameId, mapSource);
+
+        Assert.NotNull(live);
+        Assert.True(live!.Player("p1").IsAutoPass);
+        Assert.False(live.Player("p1").IsHost);
+        Assert.False(live.Player("p2").IsAutoPass);
+        Assert.True(live.Player("p3").IsHost);
+        Assert.False(live.Player("p3").IsAutoPass);
+
+        AssertIdenticalGameState(live, replayed!);
+    }
+
+    /// <summary>
     /// <see cref="PlayerEliminated"/> vouwt zowel de handoverdracht als wíe uitschakelde
     /// (FO §7, §6.1) — de veroveraar krijgt de handkaarten van de uitgeschakelde speler.
     /// </summary>
@@ -1366,6 +1408,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 PendingWinBroken pendingWinBroken => projection.Apply(state!, pendingWinBroken),
                 GameWon gameWon => projection.Apply(state!, gameWon),
                 TvDisplaySettingsChanged tvDisplayChanged => projection.Apply(state!, tvDisplayChanged),
+                AutoPassEnabled autoPassEnabled => projection.Apply(state!, autoPassEnabled),
+                AutoPassDisabled autoPassDisabled => projection.Apply(state!, autoPassDisabled),
+                HostTransferred hostTransferred => projection.Apply(state!, hostTransferred),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
@@ -1415,6 +1460,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             Assert.Equal(expectedPlayer.IsEliminated, actualPlayer.IsEliminated);
             Assert.Equal(expectedPlayer.EliminatedByPlayerId, actualPlayer.EliminatedByPlayerId);
             Assert.Equal(expectedPlayer.PendingEventBonus, actualPlayer.PendingEventBonus);
+            Assert.Equal(expectedPlayer.IsHost, actualPlayer.IsHost);
+            Assert.Equal(expectedPlayer.IsAutoPass, actualPlayer.IsAutoPass);
         }
 
         Assert.Equal(expected.EventRound.CurrentEventId, actual.EventRound.CurrentEventId);

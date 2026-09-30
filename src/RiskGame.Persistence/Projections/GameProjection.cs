@@ -670,6 +670,34 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     public GameState Apply(GameState state, PendingWinBroken @event) =>
         Record(state.WithPendingWin(null), @event);
 
+    /// <summary>Zet de speler op auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassEnabled"/>.</summary>
+    public GameState Apply(GameState state, AutoPassEnabled @event) =>
+        state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = true });
+
+    /// <summary>Haalt de speler van auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassDisabled"/>.</summary>
+    public GameState Apply(GameState state, AutoPassDisabled @event) =>
+        state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = false });
+
+    /// <summary>
+    /// Verplaatst het host-schap (FO §11.1) — zie doc-comment op <see cref="HostTransferred"/>. Was
+    /// <see cref="HostTransferred.FromPlayerId"/> geen host, dan zou dit stil twee hosts opleveren:
+    /// een onmogelijke toestand, dus een exception in plaats van een fout die pas later opvalt.
+    /// </summary>
+    public GameState Apply(GameState state, HostTransferred @event)
+    {
+        var previousHost = state.Player(@event.FromPlayerId);
+
+        if (!previousHost.IsHost)
+        {
+            throw new InvalidOperationException(
+                $"HostTransferred van '{@event.FromPlayerId}', maar die is geen host in spel '{@event.GameId}'.");
+        }
+
+        return state
+            .WithPlayer(previousHost with { IsHost = false })
+            .WithPlayer(state.Player(@event.ToPlayerId) with { IsHost = true });
+    }
+
     /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>
     public GameState Apply(GameState state, TvDisplaySettingsChanged @event) =>
         state.WithTvDisplay(new TvDisplaySettings(
