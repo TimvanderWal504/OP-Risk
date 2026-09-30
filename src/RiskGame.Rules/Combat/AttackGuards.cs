@@ -16,8 +16,8 @@ public static class AttackGuards
 {
     private const int MinAttackDice = 1;
     private const int MaxAttackDice = 3;
-    private const int MinDefenseDice = 1;
-    private const int MaxDefenseDice = 2;
+    internal const int MinDefenseDice = 1;
+    internal const int MaxDefenseDice = 2;
 
     /// <summary>
     /// Of <paramref name="playerId"/> vanuit <paramref name="fromTerritoryId"/> een aanval

@@ -83,8 +83,12 @@ public static class CardSetEvaluator
         return ThreeCardCombinations(hand).Any(combination => Validate(rules, combination).IsSuccess);
     }
 
-    /// <summary>Alle C(n,3)-deelverzamelingen van drie kaarten uit <paramref name="cards"/>, orde-onafhankelijk.</summary>
-    private static IEnumerable<IReadOnlyList<Card>> ThreeCardCombinations(IReadOnlyList<Card> cards)
+    /// <summary>
+    /// Alle C(n,3)-deelverzamelingen van drie kaarten uit <paramref name="cards"/>, in de volgorde
+    /// van de hand. <c>internal</c> voor <see cref="AutoPass.AutoPassPlanner"/>, die uit dezelfde
+    /// combinaties een set kiest.
+    /// </summary>
+    internal static IEnumerable<IReadOnlyList<Card>> ThreeCardCombinations(IReadOnlyList<Card> cards)
     {
         for (var i = 0; i < cards.Count - 2; i++)
         {

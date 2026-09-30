@@ -33,8 +33,10 @@ internal static class TestGame
         string? roleId = null,
         IReadOnlyList<Card>? hand = null,
         string? eliminatedByPlayerId = null,
-        bool isHost = false) =>
-        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, eliminatedByPlayerId, isHost);
+        bool isHost = false,
+        bool isAutoPass = false) =>
+        new(id, $"Speler {id}", colorId, hand ?? [], roleId, mission, isEliminated, eliminatedByPlayerId, isHost,
+            IsAutoPass: isAutoPass);
 
     /// <summary>
     /// Een spel in volle gang. Alle gebieden zijn onverdeeld tenzij een test ze via

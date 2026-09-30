@@ -20,8 +20,10 @@ namespace RiskGame.Rules.State;
 /// deed.
 /// </param>
 /// <param name="IsHost">
-/// De eerste speler die join'de (FO §2.1: "spel opzetten, spel starten"). Bepaalt wie
-/// <c>StartGame</c> en de host-only commando's (auto-pass, herstart) mag uitvoeren.
+/// Begint bij de eerste speler die join'de (FO §2.1: "spel opzetten, spel starten") en kan
+/// tijdens het spel overgaan naar een andere speler als de host wegvalt (FO §11.1,
+/// <c>HostTransferred</c>). Bepaalt wie <c>StartGame</c> en de host-only commando's (auto-pass,
+/// herstart) mag uitvoeren.
 /// </param>
 /// <param name="DefenseBoostUsed">
 /// Of de <c>DefenseBoost</c>-rol (FO §8.1) deze ronde al is ingezet. Staat hier en niet op
@@ -32,6 +34,11 @@ namespace RiskGame.Rules.State;
 /// Extra legers uit een gebeurteniskaart (FO §9.2, <c>ContinentOwnerBonus</c>/<c>FreeReinforcement</c>),
 /// vastgesteld bij de trekking en opgeteld bij de eerstvolgende eigen versterking. Staat op de
 /// speler en niet op het effect: het bedrag verschilt per speler en ligt vast op het peilmoment.
+/// </param>
+/// <param name="IsAutoPass">
+/// Of de speler op auto-pass staat (FO §11.2): de server speelt dan zijn beurt, verdediging en
+/// legerverlies-keuze automatisch. Een spelfeit en geen verbindingsinfo: het blijft staan tot de
+/// speler terugkomt (FO §11.2), los van of hij op dat moment verbonden is.
 /// </param>
 public sealed record Player(
     string Id,
@@ -44,4 +51,5 @@ public sealed record Player(
     string? EliminatedByPlayerId = null,
     bool IsHost = false,
     bool DefenseBoostUsed = false,
-    int PendingEventBonus = 0);
+    int PendingEventBonus = 0,
+    bool IsAutoPass = false);
