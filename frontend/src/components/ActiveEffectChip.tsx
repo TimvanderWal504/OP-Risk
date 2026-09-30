@@ -11,7 +11,7 @@ export interface ActiveEffectChipProps {
 }
 
 /**
- * Het ronde-effect dat nu geldt, linksboven op het TV-bord (DESIGN.md § Event Round). Er is er
+ * Het ronde-effect dat nu geldt, onderaan het TV-bord onder zuidelijk Afrika (DESIGN.md § Event Round). Er is er
  * hoogstens één; zonder lopend effect rendert er niets (The Invisible Design Rule). Tekst uit de
  * type-schaal, zodat de chip meeschaalt met de tekstinstelling van de host.
  */

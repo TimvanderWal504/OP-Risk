@@ -25,7 +25,7 @@ import { withoutBlockedRoutes } from '../../../map/seaRoutes'
  * bij Attack en zijn hier bewust niet gebouwd.
  *
  * Gebeurtenisronde (DESIGN.md § Event Round): een lopend effect laat geblokkeerde zeeroutes weg,
- * arceert afgesloten gebieden en zet de actief-effect-chip linksboven op de kaart — alles uit wat de
+ * arceert afgesloten gebieden en zet de actief-effect-chip onderaan de kaart, onder Afrika — alles uit wat de
  * server meestuurt. Tijdens "Legers verwijderen" loopt er geen beurt (`turnState` is `null`): het
  * bord blijft dan staan, zonder beurtkop en zonder eigen/vijand-perspectief (zelfde keuze als het
  * gelijktijdig plaatsen op `TvInitialPlacementScreen`: elk gebied op de volle eigen-opaciteit).
@@ -94,7 +94,7 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
         markerRadius={marker.discR + marker.ringSwOwn / 2}
         filterId="atlasRough"
         lockedTerritoryIds={lockedTerritoryIds}
-        topLeft={<ActiveEffectChip state={state} />}
+        belowAfrica={<ActiveEffectChip state={state} />}
         getTerritoryVisual={(territory) => {
           const entry = ownership.get(territory.id)
           const owner = entry?.owner

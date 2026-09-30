@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import type { TerritoryGeometry } from '../../map/loadTerritoryGeometry'
-import { MAP_HEIGHT_PX, MAP_WIDTH_PX } from '../../map/projection'
+import { MAP_HEIGHT_PX, MAP_WIDTH_PX, project } from '../../map/projection'
 import { atlasRough, lockedHatch, seaRoute } from '../../map/boardVisualTokens'
 import { trimSeaRouteSegment, type SeaRouteSegment } from '../../map/seaRoutes'
 import { GlassPanel } from '../ui/GlassPanel'
+import { eventRoundTok } from '../../styles/design-tokens'
 
 export interface TerritoryFillVisual {
   fillHex: string
@@ -36,9 +37,19 @@ interface TvBoardMapProps {
    * Krijgen een statische arcering over de vulling (DESIGN.md § Event Round).
    */
   lockedTerritoryIds?: ReadonlySet<string>
-  /** Linksboven over de kaart, buiten de SVG — de actief-effect-chip (DESIGN.md § Event Round). */
-  topLeft?: ReactNode
+  /**
+   * Onderaan over de kaart, gecentreerd onder zuidelijk Afrika, buiten de SVG — de actief-effect-chip
+   * (DESIGN.md § Event Round).
+   */
+  belowAfrica?: ReactNode
 }
+
+/**
+ * Horizontale plek van `belowAfrica`, als fractie van de paneelbreedte. Klopt exact zolang de kaart
+ * de breedte van het paneel vult (`meet` begrensd door de breedte), wat het TV-raster altijd geeft;
+ * bij een smaller paneel schuift de chip hooguit iets naar het midden.
+ */
+const BELOW_AFRICA_LEFT = `${(project(eventRoundTok.effectChipAnchorLon, 0).x / MAP_WIDTH_PX) * 100}%`
 
 /**
  * Gedeelde kaartlaag van de drie "bord"-schermen (`TvMainBoardScreen`,
@@ -55,7 +66,7 @@ export function TvBoardMap({
   markerRadius,
   extraOverlay,
   lockedTerritoryIds,
-  topLeft,
+  belowAfrica,
 }: TvBoardMapProps) {
   // + de straal van één stip (ronde cap), zodat ook de eerste/laatste stip buiten de ring valt.
   const seaRouteInset = markerRadius + seaRoute.strokeWidth / 2
@@ -68,7 +79,11 @@ export function TvBoardMap({
       className="relative col-start-1 row-start-2 min-w-0 overflow-hidden"
     >
       <div className="absolute inset-0"/>
-      {topLeft && <div className="absolute top-4 left-4 z-10">{topLeft}</div>}
+      {belowAfrica && (
+        <div className="absolute bottom-4 z-10 -translate-x-1/2" style={{ left: BELOW_AFRICA_LEFT }}>
+          {belowAfrica}
+        </div>
+      )}
       <svg
         viewBox={`0 0 ${MAP_WIDTH_PX} ${MAP_HEIGHT_PX}`}
         preserveAspectRatio="xMidYMid meet"

@@ -266,6 +266,11 @@ export const eventRoundTok = {
   lockedHatchGap: 10,
   lockedHatchSw: 2.5,
   cardWidthPx: 760,
+  /**
+   * Lengtegraad waarop de actief-effect-chip onderaan de kaart centreert: de lege oceaan onder
+   * zuidelijk Afrika, tussen Argentinië en Australië (besluit gebruiker 2026-09-29, eerder linksboven).
+   */
+  effectChipAnchorLon: 25,
   /** De glans die één keer over de kaart schuift (uit de oorspronkelijke TV-mockup). */
   cardSheenGradient: 'linear-gradient(100deg, transparent, rgba(255,255,255,.08), transparent)',
 } as const;

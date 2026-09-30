@@ -75,7 +75,7 @@ describe('TvMainBoardScreen', () => {
     expect(screen.queryByText('2:00')).not.toBeInTheDocument()
   })
 
-  it('toont het lopende effect linksboven en arceert de afgesloten gebieden', async () => {
+  it('toont het lopende effect onder Afrika en arceert de afgesloten gebieden', async () => {
     const { container } = render(
       <TvMainBoardScreen
         state={{
