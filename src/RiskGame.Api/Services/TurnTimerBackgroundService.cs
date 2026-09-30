@@ -24,12 +24,13 @@ namespace RiskGame.Api.Services;
 /// vergelijkt de klok met een deadline die volledig uit de laatst geprojecteerde
 /// <see cref="GameState"/> is af te leiden — een serverherstart verliest dus niets.
 ///
-/// Bij meerdere replica's kan <see cref="TurnFlowCommandHandler"/> nog steeds dubbel vuren:
-/// <c>session.Events.Append</c> gebeurt zonder verwachte streamversie, dus twee
-/// gelijktijdige pollers die dezelfde verlopen timer zien, kunnen allebei een geldige
-/// overgang appenden. Single-instance blijft daarom voorlopig een aanname (een latere
-/// bouwstap: expected-version guard of lease) — niet langer omdat state verloren zou gaan
-/// bij herstart, maar omdat concurrency-bescherming op de command handler zelf ontbreekt.
+/// Het beurteinde (<see cref="TurnFlowCommandHandler.EndTurnAsync"/>) is beschermd tegen een
+/// gelijktijdige overgang: het laadt de state met de streamversie als verwachting
+/// (<see cref="GameStateForWriting"/>) en probeert het bij een conflict opnieuw, dus een speler en
+/// deze service die tegelijk de beurt beëindigen, trekken nooit twee keer. De overstap naar
+/// Verplaatsen (<see cref="TurnFlowCommandHandler.ForceAdvanceToFortifyAsync"/>) appendt nog zonder
+/// verwachte streamversie: twee gelijktijdige pollers (meerdere replica's) kunnen die allebei
+/// appenden. Single-instance blijft daarom voorlopig een aanname.
 /// </remarks>
 public sealed class TurnTimerBackgroundService(
     IServiceScopeFactory scopeFactory,

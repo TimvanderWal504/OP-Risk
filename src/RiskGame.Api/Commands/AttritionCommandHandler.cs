@@ -18,7 +18,9 @@ public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider t
     /// <summary>
     /// Probeert het opnieuw bij een gelijktijdige append (<see cref="ConcurrencyRetry"/>): kiezen
     /// twee spelers tegelijk als laatsten, dan ziet de tweede poging de keuze van de ander en start
-    /// precies één van beide de volgende beurt.
+    /// precies één van beide de volgende beurt. Dat conflict ontstaat alleen omdat de state via
+    /// <see cref="GameStateForWriting"/> geladen wordt — anders zouden beide keuzes op de oude
+    /// wachtlijst beslissen, allebei opslaan, en startte niemand de beurt.
     /// </summary>
     public Task<Result<GameStateDto>> RemoveArmiesAsync(
         string gameId, string playerId, IReadOnlyDictionary<string, int> removalsByTerritory) =>
@@ -28,7 +30,7 @@ public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider t
         string gameId, string playerId, IReadOnlyDictionary<string, int> removalsByTerritory)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await GameStateForWriting.LoadAsync(session, gameId);
 
         if (state is null)
         {

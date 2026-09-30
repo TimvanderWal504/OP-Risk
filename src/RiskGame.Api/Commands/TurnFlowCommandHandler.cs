@@ -155,7 +155,9 @@ public sealed class TurnFlowCommandHandler(
     /// Beurteinde (FO §5.2), met op de rondegrens de gebeurtenisronde (FO §9.2). Probeert het
     /// opnieuw bij een gelijktijdige append (<see cref="ConcurrencyRetry"/>): de timer-service en
     /// de speler kunnen tegelijk de beurt beëindigen, en een tweede poging beslist dan op de state
-    /// ná de eerste — en wordt geweigerd, zodat er nooit twee keer getrokken wordt.
+    /// ná de eerste — en wordt geweigerd, zodat er nooit twee keer getrokken wordt. Het conflict
+    /// wordt herkend vanaf het laden (<see cref="GameStateForWriting"/>), niet pas bij overlappend
+    /// opslaan.
     /// </summary>
     public Task<Result<GameStateDto>> EndTurnAsync(string gameId, string playerId) =>
         ConcurrencyRetry.RunAsync(() => TryEndTurnAsync(gameId, playerId));
@@ -163,7 +165,7 @@ public sealed class TurnFlowCommandHandler(
     private async Task<Result<GameStateDto>> TryEndTurnAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await GameStateForWriting.LoadAsync(session, gameId);
 
         if (state is null)
         {
