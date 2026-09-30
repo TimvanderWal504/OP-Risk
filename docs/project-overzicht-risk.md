@@ -61,7 +61,7 @@ Zodra het bord er is: `map-background-final.png` (aanwezig in `data/maps/standaa
 `azure-hosting-deployment.md` is uitgewerkt maar nog niet als daadwerkelijke provisioning-/deployronde doorlopen (Azure App Service + Neon + Vercel daadwerkelijk aanmaken en de deploy-/testchecklist doorlopen — zie het document).
 
 ### 2.4 Reconnect & randgevallen hardmaken in de UI
-De serverzijde (sessietoken, reconnect via SignalR, auto-pass) staat in de rules/API-laag; of dit end-to-end via de frontend werkt (ander apparaat, tabblad sluiten tijdens iemands beurt) is nog niet apart geverifieerd. Dit is stap 6 uit §3.
+De serverzijde van sessietoken en reconnect via SignalR staat in de rules/API-laag (auto-pass is in opbouw, TO §11 stap 6); of dit end-to-end via de frontend werkt (ander apparaat, tabblad sluiten tijdens iemands beurt) is nog niet apart geverifieerd. Dit is stap 6 uit §3.
 
 ---
 

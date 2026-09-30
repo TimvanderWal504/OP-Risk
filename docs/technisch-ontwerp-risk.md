@@ -59,7 +59,7 @@ GameState
 ├─ GameId
 ├─ Phase            (Lobby | OrderRoll | Claiming | InitialPlacement | InProgress | Finished)
 ├─ Settings         (winconditie, startopstelling, startlegers, timer, feature-toggles)
-├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isAutoPass, pendingEventBonus)
+├─ Players[]        (id, naam, kleur, rol?, missie?, kaarten[], isEliminated, isHost, isAutoPass, pendingEventBonus)
 ├─ Territories[]    (territoryId → ownerPlayerId, armyCount)
 ├─ TurnState        (activePlayerId, currentPhase, timer? {resterend, gepauzeerd}, pendingCombat? {from, to, attackDice,
 │                    attackerRolls, awaitingRerollDecision}, rerolledTargetTerritoryIds[], fortifiesUsed, ...)
@@ -100,6 +100,8 @@ De adjacency-graaf wordt bij opstart uit `adjacency_validated.json` in een `Dict
 
 **`SeaRoutesBlocked`-afhandeling (FO §9.2):** het effect filtert `type: "sea"`-grenzen weg. Ondersteunt de optionele `routes`-parameter voor gedeeltelijke blokkade. Heeft een speler door de blokkade nul geldige aanvallen of verplaatsingen, dan slaat de engine die fase **niet** over (herzien 2026-09-26, FO §9.2): een fase afsluiten blijft een speleractie (`EndPhase`/`EndTurn`) of een timer-afloop. De guards leveren dan simpelweg geen geldige doelen. Welke gebieden afgesloten en welke grenzen geblokkeerd zijn, bevragen de guards op één plek (`ActiveEffectQueries`). Getest scenario: 6 eilandgebieden (Groenland, IJsland, Groot-Brittannië, Japan, Madagaskar, Nieuw-Guinea) raken volledig geïsoleerd bij volledige blokkade.
 
+**Frontgebieden voor auto-pass (FO §11.2):** de automatische versterking verdeelt over eigen gebieden met minstens één grens (land of zee) naar een gebied van een ander. Dat is de **kale** graaf, zonder `ActiveEffectQueries`: een zeeblokkade duurt één ronde en maakt een eiland niet tot achterland. Of er op een gebied geplaatst mag worden, beslist uitsluitend `ReinforceGuards.CanPlaceArmies` — dezelfde regel als voor een speler zelf.
+
 ---
 
 ## 4. Commando's & validatie
@@ -110,7 +112,9 @@ Elke speleractie is een **commando** dat de client naar de server stuurt. De ser
 Commando binnen (SignalR)
       │
       ▼
-1. Authenticatie   → hoort dit token bij deze speler in dit spel?
+1. Authenticatie   → hoort dit token bij deze speler in dit spel? (vandaag alleen bij RejoinGame
+                     en SetAutoPass; de overige commando's vertrouwen de meegestuurde playerId —
+                     algemene hub-autorisatie is een aparte taak)
 2. Autorisatie     → is het deze spelers beurt / mag hij dit nu?
 3. Fase-check      → past dit commando bij de huidige fase?
 4. Regelvalidatie  → rules engine: is de actie geldig op de huidige state?
@@ -142,7 +146,7 @@ Commando binnen (SignalR)
 | `Fortify` | Fortify | Pad via eigen gebieden bestaat, ≥ 1 leger blijft achter, `TurnState.FortifiesUsed` < toegestane verplaatsingen (1, of `moves` van een actieve `FortifyUpgrade`-rol — FO §5.2) |
 | `EndPhase` / `EndTurn` | diverse | Speler is aan de beurt. `EndTurn` handelt op de rondegrens de gebeurtenisronde af (§5.2) en wordt bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
 | `RemoveArmies` | tussen twee beurten (`PendingAttrition`) | Er loopt een attrition-keuze en de speler staat op de wachtlijst; elk genoemd gebied is van hem, staat een positief aantal af en houdt minstens 1 leger; het totaal is exact `amount` (of het maximum). De laatste keuze start de beurt van `PendingAttrition.NextPlayerId`. Bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd (FO §9.2) |
-| `SetAutoPass` (host) | elke | Aanroeper is host; doel is afwezige speler |
+| `SetAutoPass` (host) | InProgress | De aanroepende connectie hoort bij de meegestuurde speler (`PlayerPresenceRegistry`, hieronder) en die is host; doel ≠ host, niet uitgeschakeld, nog niet op auto-pass; daarna blijft minstens één niet-uitgeschakelde speler zonder auto-pass over. Handelt in dezelfde batch af wat op het doel wacht (verdediging, attrition-keuze, eigen beurt — FO §11.2). Bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd. Er is geen commando om auto-pass op te heffen: dat doet `RejoinGame` (§6.3) |
 | `SetTvDisplay` (host) | elke | Aanroeper is host; tekstschaal/glasdekking/glasblur/dobbelsteenschaal 0–100 in stappen van 5, taal NL/EN. Weergave-instelling van de TV, geen spelregel; bij een botsende gelijktijdige append tot 3× opnieuw geprobeerd |
 | `VoteReplay` / `HostRestart` (host) | Finished | — |
 | `RegisterTv` (TV) | vóór een spel | Geen — geeft de aanroepende connectie een koppelcode (zelfde alfabet/lengte als een spelcode) voor "TV koppelen" (FO §2.2). Opnieuw aanroepen vervangt de vorige code van die connectie |
@@ -151,6 +155,8 @@ Commando binnen (SignalR)
 **Het volledige verloop is een leesaanroep, geen commando.** `GetActionLog(gameId)` levert elke openbare regel uit `GameState.RecentActions` (nieuwste eerst, laatste-kans-regels alleen bij "Volle ronde met onthulling"), voor het tabblad Spelverloop op de telefoon. De state-update stuurt er maar de laatste 10 mee (`GameStateDtoMapper.TvRecentActionCount`), zodat hij niet meegroeit met de lengte van het spel.
 
 **TV-koppeling is geen commando op het spel.** `RegisterTv`/`SendGameToTv` raken de event store niet: een koppeling is transiënte verbindingsinfo, geen speltoestand. De server houdt ze in-memory bij (`TvPairingRegistry`, per connectie, opgeruimd bij disconnect). Gevolgen: na een server-herstart of reconnect vraagt de TV zelf een nieuwe code aan, en bij meerdere serverinstanties moeten TV en host-telefoon op dezelfde instantie uitkomen — dezelfde beperking als de SignalR-groepen zonder backplane.
+
+**Aanwezigheid is ook transiënte verbindingsinfo (FO §11.1).** `PlayerPresenceRegistry` (singleton, in-memory) houdt per connectie bij welke speler in welk spel erachter zit. Alleen `JoinGame` en `RejoinGame` mét geldig sessietoken registreren; `WatchGame` (TV, en de telefoon vóór het joinen) telt niet mee. `OnDisconnectedAsync` meldt de connectie af; is dat de laatste connectie van die speler, dan noteert de registry "weg sinds". Twee dingen hangen eraan: `SetAutoPass` controleert ermee dat de aanroepende connectie echt bij de meegestuurde speler hoort (de enige hub-methode die dat vandaag doet; algemene hub-autorisatie is een aparte taak), en `HostAbsenceBackgroundService` (elke 5 s, via `TimeProvider`) loopt de registry door en zet een host die in een `InProgress`-spel 2 minuten weg is op auto-pass, met in dezelfde batch `HostTransferred` naar de volgende speler in de beurtvolgorde en dezelfde directe afhandeling als `SetAutoPass` (de host kan net verdediger, attrition-kiezer of zelf aan de beurt zijn). Een uitgeschakelde host krijgt alleen `HostTransferred`. Is er geen geschikte opvolger (niet uitgeschakeld, niet op auto-pass), dan gebeurt er niets. De service laadt een spel pas als die grens bereikt is, niet elke ronde alle spellen. Zelfde beperkingen als de TV-koppeling: na een server-herstart is de registry leeg (de 2 minuten lopen pas na een nieuwe verbinding die weer wegvalt), en bij meerdere instanties klopt hij niet.
 
 ### 4.2 Server-side dobbelen
 
@@ -179,12 +185,23 @@ TerritoryClaimed, InitialArmyPlaced, RoleAssigned, MissionAssigned,
 CardsTraded, ArmiesReinforced, AttackDeclared, DiceRolled, AttackDieRerolled, AttackDiceKept, CombatResolved,
 TerritoryConquered, ArmiesMovedAfterConquest, Fortified,
 CardDrawn, PlayerEliminated, EventDeckShuffled, EventCardDrawn, EffectApplied, EffectExpired,
-AttritionStarted, ArmiesRemoved, PhaseChanged, TurnEnded, MissionCompleted, GameWon
+AttritionStarted, ArmiesRemoved, PhaseChanged, TurnEnded, MissionCompleted, GameWon,
+AutoPassEnabled, AutoPassDisabled, HostTransferred
 ```
 
 **Gebeurtenisronde tussen twee beurten (FO §9.2).** Op de rondegrens appendt `EndTurn` — ná de missie-/laatste-kans-afhandeling en alleen zonder `GameWon` — `EffectExpired` voor de lopende effecten, zo nodig `EventDeckShuffled`, dan `EventCardDrawn` en `EffectApplied`. Bonuslegers liggen per speler vast in het event (peilmoment = trekking; `EffectApplied` is daarvoor `effect_applied_v2`, zelfde wipe-afspraak als hierboven), staan tot dan op `Player.PendingEventBonus` en worden bij de volgende `PhaseChanged` naar Versterken van die speler in `ArmiesGranted` meegenomen. Een `ArmyAttrition`-kaart met minstens één speler met keuzevrijheid opent met `AttritionStarted` de `PendingAttrition` (in `GameState.EventRound`, samen met de laatst getrokken kaart en de trekstapel) en **sluit `TurnState`** (`null`): zo weigeren alle beurtguards en de timer-service vanzelf, en kan een late timer-tick of een dubbele `EndTurn` geen tweede trekking veroorzaken. `PendingAttrition` bewaart de volgende speler, omdat die zonder `TurnState` niet meer af te leiden is. Elke keuze wordt een `ArmiesRemoved`; de laatste start de beurt van de volgende speler, met versterkingen berekend op de state ná de attrition.
 
 Dit is de eerste plek waar meerdere spelers tegelijk naar dezelfde stream schrijven. Marten weigert een gelijktijdige append al zelf op het stream-versienummer (`EventStreamUnexpectedMaxEventIdException`); `EndTurn` en `RemoveArmies` vangen dat op met dezelfde retry als `SetTvDisplay` (verse sessie, state herladen, opnieuw beoordelen, hooguit 3 pogingen).
+
+**Van beurteinde naar volgende beurt: één plek (`TurnAdvancer`).** Alles tussen het einde van een beurt en het begin van de volgende — `TurnEnded`, missie-/laatste-kans-afhandeling, de volgende speler bepalen, de gebeurtenisronde op de rondegrens en `PhaseChanged` naar Versterken — zit in één scoped service. Elk pad dat een beurt beëindigt gebruikt hem — `EndTurn`, de laatste `RemoveArmies`, `SetAutoPass`, de host-uitval uit `HostAbsenceBackgroundService` en het afronden van een afgebroken beurt (hieronder) — zodat FO §6.2 maar op één plek bestaat.
+
+**Laatste-kans-venster en auto-pass.** Bij elk beurteinde worden de resterende tegenstanders van een lopend `PendingWin` opnieuw gefilterd op niet uitgeschakeld én niet op auto-pass — ongeacht of de speler wiens beurt eindigt zelf nog in de lijst stond. Is de lijst daarna leeg (en de missie nog vervuld), dan volgt `GameWon`, vóór een eventuele gebeurtenisronde. Zo telt wie tijdens een venster op auto-pass gaat "vanaf dat moment" als al geweest (FO §6.2), en valt de winst niet pas na diens automatische beurt.
+
+**Afgebroken beurt.** Gaat de actieve speler op auto-pass, dan kan zijn beurt niet altijd meteen eindigen: een gegooide aanval die op een menselijke verdediger wacht, moet eerst uitgespeeld worden (FO §11.2). Daarvoor is geen extra state nodig: "de actieve speler staat op auto-pass" is de markering. Elk command dat een gevecht afrondt (`ChooseDefenseDice`, en een automatische verdediging) kijkt daarnaar en sluit in dezelfde batch de beurt af — minimum meeverplaatsen bij een verovering, het timeout-pad (`CardTradeReversal`) en `TurnAdvancer` — zodat de hervatte beurttimer nooit gaat lopen. Heft `RejoinGame` de auto-pass eerder op, dan valt de markering weg en speelt de speler zijn beurt gewoon verder.
+
+**Automatische beurt (auto-pass, FO §11.2).** Is de volgende speler op auto-pass, dan speelt `TurnAdvancer` diens beurt in dezelfde batch af met de gewone events: `PhaseChanged` naar Versterken (met `ArmiesGranted`, dus ook een openstaande gebeurtenisbonus), zo nodig `CardsTraded`, `ArmiesReinforced` per gebied en `TurnEnded`. Welke inleg en welke plaatsingen, berekent de rules engine vooraf (`AutoPassPlanner`); de projectie vouwt alleen. Het beurteinde controleert de missies van de anderen, maar niet de `requiresOwnTurn`-missie van de auto-pass-speler, en de speler telt in een laatste-kans-venster als "al geweest". Daarna door naar de volgende speler (rondegrens incluis), tot er een speler zonder auto-pass aan de beurt is of een attrition-keuze op een mens wacht. De lus stopt altijd, want `SetAutoPass` laat nooit iedereen op auto-pass achter. Verdedigen en attrition-keuzes van een auto-pass-speler lopen op dezelfde manier via de bestaande events (`CombatResolved` resp. `ArmiesRemoved`), direct in het command dat erom vraagt.
+
+**`AutoPassEnabled` / `AutoPassDisabled` / `HostTransferred`.** `AutoPassEnabled` draagt de reden (`Host` of `Disconnected`, voor het spelverloop). `HostTransferred` verschijnt in dezelfde batch als `AutoPassEnabled(Disconnected)`, zodat er nooit een host op auto-pass bestaat; alleen bij een uitgeschakelde host staat het alleen (FO §11.1). `Player.IsAutoPass` is een nieuw veld: zelfde wipe-afspraak als hierboven.
 
 De **geprojecteerde `GameState`** (§3.1) is een Marten-projectie (inline of async) over deze events. Clients krijgen nooit de ruwe events, alleen de projectie of deltas daarvan.
 
@@ -225,7 +242,7 @@ Na elke succesvolle commando-verwerking pusht de server een **delta** (of, bij t
 
 ### 6.3 Reconnect (FO §11.1)
 
-SignalR's automatische reconnect + een `sessionToken` in `sessionStorage` (per tab, zelfde schaal als `playerId` — bewust niet `localStorage`: dat zou gedeeld zijn tussen tabs en daarmee spelersidentiteiten door elkaar halen zodra iemand meerdere spelers vanaf één machine test/speelt). `JoinGame` geeft het token eenmalig terug aan de aanroepende connectie; `RejoinGame` vereist het om de eigen `Hand`/`MissionId` weer te mogen zien (§6.1) en om opnieuw aan `game-{id}-player-{playerId}` gekoppeld te worden. Zonder geldig token (nog geen sessie bekend, of een andere client die alleen de publieke `playerId` kent) degradeert `RejoinGame` naar de publieke, tv-achtige weergave — nooit een foutmelding. **Nog niet gebouwd:** bij een nieuw apparaat naam invoeren om aan een bestaande positie te koppelen en het oude token te invalideren — een apart vervolgstuk.
+SignalR's automatische reconnect + een `sessionToken` in `sessionStorage` (per tab, zelfde schaal als `playerId` — bewust niet `localStorage`: dat zou gedeeld zijn tussen tabs en daarmee spelersidentiteiten door elkaar halen zodra iemand meerdere spelers vanaf één machine test/speelt). `JoinGame` geeft het token eenmalig terug aan de aanroepende connectie; `RejoinGame` vereist het om de eigen `Hand`/`MissionId` weer te mogen zien (§6.1) en om opnieuw aan `game-{id}-player-{playerId}` gekoppeld te worden. Zonder geldig token (nog geen sessie bekend, of een andere client die alleen de publieke `playerId` kent) degradeert `RejoinGame` naar de publieke, tv-achtige weergave — nooit een foutmelding. Met een geldig token registreert `RejoinGame` de connectie in `PlayerPresenceRegistry` (§4.1) en heft het een auto-pass op (FO §11.2): in een `InProgress`-spel waarin de speler op auto-pass staat appendt het `AutoPassDisabled` en pusht de nieuwe state naar iedereen. Dat is de enige plek waar `RejoinGame` schrijft. Het loopt via dezelfde retry als de andere commando's; mislukt het toch, dan wordt het gelogd en krijgt de telefoon gewoon zijn state terug — herverbinden mag nooit op het opheffen van auto-pass stuklopen. **Nog niet gebouwd:** bij een nieuw apparaat naam invoeren om aan een bestaande positie te koppelen en het oude token te invalideren — een apart vervolgstuk.
 
 ---
 
@@ -326,5 +343,5 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 3. **Minimal API + SignalR-hub** — ✅ gedaan. `RiskGame.Api`: `GameEndpoints`/`HubEndpoints`, `GameHub` + `IGameClient`, commandohandlers per fase, `TurnTimerBackgroundService`; getest incl. `PostgresFixture`.
 4. **Frontend met placeholder-kaart** (rechthoeken) — 🔶 gedeeltelijk. Lobby, joinen, kleur-/rolkeuze en order-roll staan (met i18n en TV-motion); het speelbord zelf (versterken/aanvallen/verplaatsen, ook als placeholder) is nog niet gebouwd.
 5. **Echte kaartlaag**: SVG-overlay met de v4-projectie over de gedeelde stage-illustratie (zie §7.2) — ⬜ nog niet gestart. `frontend/src/map/` bevat alleen een `.gitkeep`.
-6. **Reconnect & randgevallen** — 🔶 grotendeels aanwezig: sessietoken + groepen zijn nu écht geverifieerd bij `RejoinGame` (§6.3), rate limiting op `JoinGame` staat (§8). Apparaatwissel (token invalideren bij een nieuw apparaat) en auto-pass (`SetAutoPass`, zie frontend/CLAUDE.md's bevinding) zijn nog niet gebouwd.
+6. **Reconnect & randgevallen** — 🔶 grotendeels aanwezig: sessietoken + groepen zijn nu écht geverifieerd bij `RejoinGame` (§6.3), rate limiting op `JoinGame` staat (§8). Auto-pass (`SetAutoPass`, aanwezigheid, host-overdracht — §4.1, §5.2, §6.3) is in opbouw op `feat/auto-pass`. Apparaatwissel (token invalideren bij een nieuw apparaat) is nog niet gebouwd.
 
