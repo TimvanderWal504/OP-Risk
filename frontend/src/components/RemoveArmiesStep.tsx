@@ -9,6 +9,7 @@ import { Collapsible } from './ui/Collapsible'
 import { GlassPanel } from './ui/GlassPanel'
 import { PhoneScreen } from './ui/PhoneScreen'
 import { StatHeaderCard } from './ui/StatHeaderCard'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface RemoveArmiesStepProps {
   eventId: string
@@ -112,7 +113,7 @@ export function RemoveArmiesStep({ eventId, amount, myTerritories, myColor, terr
         )}
       </div>
 
-      <Button className="mt-[11px]" disabled={left !== 0 || submitting} onClick={confirm}>
+      <Button {...toastAnchor} className="mt-[11px]" disabled={left !== 0 || submitting} onClick={confirm}>
         {t('remove.confirm')}
       </Button>
     </PhoneScreen>

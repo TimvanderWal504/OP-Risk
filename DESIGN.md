@@ -106,12 +106,12 @@ components:
     textColor: "{colors.field-ink-100}"
     height: "52px"
   toast-error:
-    backgroundColor: "{colors.glass-surface-raised}"
+    backgroundColor: "{colors.glass-surface-raised-opaque}"
     textColor: "{colors.loss-red}"
     rounded: "{rounded.card}"
     padding: "{spacing.panelPadding}"
   toast-info:
-    backgroundColor: "{colors.glass-surface-raised}"
+    backgroundColor: "{colors.glass-surface-raised-opaque}"
     textColor: "{colors.field-ink-100}"
     rounded: "{rounded.card}"
     padding: "{spacing.panelPadding}"
@@ -566,8 +566,8 @@ Added 2026-09-26. Written by hand, pending a `/impeccable document` regeneration
 
 ### Toast (`Toast` / `ToastViewport`)
 Added 2026-09-27 (user request: every unexpected error as a dismissable toast; replaces the footer error line). Covers hub refusals ("niet jouw beurt" included), create-game and send-to-TV failures, and failed reads (rejoin/watch, the Spelverloop tab, the territory catalogue). Empty states, hints and process status stay inline.
-- **Surface:** one `GlassPanel` raised tier per toast (card radius, panel padding), the message in Loss Red body text. Several toasts stack with an 8px gap; the same text twice never stacks — it just restarts its timer.
-- **Phone:** fixed to the top, as wide as the `PhoneShell` column (430px max, gutter on both sides), rendered via a portal above every modal (`z-[70]`, over `DefendStep`'s `z-[60]`) — errors from the cards, defend and TV-display panels must stay visible. A line-style `CloseIcon` (×, "Sluiten") dismisses it; otherwise it leaves after 8 s (`toastAutoDismissMs.phone`). Enters from above with `phToastIn` (`phRise` mirrored: `translateY(-14px)` → 0 plus fade, .3s); leaves instantly.
+- **Surface:** one `GlassPanel` raised tier per toast (card radius, panel padding), but **opaque**: the raised fallback tint (`glass-surface-raised-opaque`, `#243246`) instead of the see-through glass, with a 1px border in the tone color — Loss Red for an error, `silver-400` for news — and a line icon in front in that color (`AlertIcon`, a warning triangle; `NoticeIcon`, an "i" in a circle — not `InfoIcon`, which is Spelinfo's bar chart). User decision 2026-09-29, after a see-through toast disappeared into the phone screen behind it. The message is Loss Red body text for an error. Several toasts stack with an 8px gap; the same text twice never stacks — it just restarts its timer.
+- **Phone:** fixed to the **bottom**, 8px above the screen's own buttons (user decision 2026-09-29; it used to hang at the top). There is no shared footer slot, so every bottom action block carries `toastAnchor` (`data-toast-anchor`): `Footer`, and the screens with their own bottom buttons (Versterken, Legers verwijderen, the order roll, Meeverplaatsen, Verdedigen, the mission panel). The toast measures the highest anchor that is visible and not covered — a screen footer under an open modal doesn't count — and re-measures while it shows if the screen changes or resizes; with no anchor it sits on the bottom gutter. As wide as the `PhoneShell` column (430px max, gutter on both sides), rendered via a portal above every modal (`z-[70]`, over `DefendStep`'s `z-[60]`) — errors from the cards, defend and TV-display panels must stay visible. A line-style `CloseIcon` (×, "Sluiten") dismisses it; otherwise it leaves after 8 s (`toastAutoDismissMs.phone`). Enters from below with `phRise` (`translateY(14px)` → 0 plus fade, .3s), the same as the TV; leaves instantly.
 - **TV:** inside `TvShell`, so the host's text-size setting scales it like the rest of the screen, on the board grid (`96px / 1fr / 146px` rows, `1fr / 402px` columns): bottom of the map column, centred, directly above the Verloop row. No ×, the TV has no controls (FO §2.1); it leaves after 5 s (`toastAutoDismissMs.tv`). Enters from below with `phRise` (`tvAnimations.toastIn`, .3s). Only transient failures become a toast: an unknown game stays the full-screen "Onbekend spel".
 - **Clearing:** a new attempt from the same source clears that source's toast (a hub call clears the previous hub error, as the footer line used to). Reads that retry on their own report only their first failure until one succeeds.
 - **Accessibility:** the toast list is a `role="alert"` region that exists even when empty, so screen readers announce a toast when it appears.

@@ -5,6 +5,7 @@ import { Button } from './ui/Button'
 import { GlassPanel } from './ui/GlassPanel'
 import { phoneAnimations } from '../styles/motion'
 import { PhoneScreen } from './ui/PhoneScreen'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface OrderRollWaitStepProps {
   myDice: number[] | undefined
@@ -77,14 +78,14 @@ export function OrderRollWaitStep({ myDice, colorHex, canRoll, onRoll, hostActio
       </div>
 
       {canRoll ? (
-        <Button variant="primary" onClick={onRoll}>
+        <Button {...toastAnchor} variant="primary" onClick={onRoll}>
           {t('rollButton')}
         </Button>
       ) : (
-        <p className="w-full pt-1.5 text-sm text-fg-muted">{t('waitingForOthers')}</p>
+        <p {...toastAnchor} className="w-full pt-1.5 text-sm text-fg-muted">{t('waitingForOthers')}</p>
       )}
 
-      {hostActions && <div className="flex w-full flex-col gap-3 pt-3">{hostActions}</div>}
+      {hostActions && <div {...toastAnchor} className="flex w-full flex-col gap-3 pt-3">{hostActions}</div>}
     </PhoneScreen>
   )
 }

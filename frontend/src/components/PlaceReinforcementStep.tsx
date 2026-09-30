@@ -12,6 +12,7 @@ import { CardsPanel } from './CardsPanel'
 import { shadowGlowPitch } from '../styles/design-tokens'
 import { tDynamic } from '../i18n/useT'
 import { PhoneScreen } from './ui/PhoneScreen'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface PlaceReinforcementStepProps {
   myTerritories: TerritoryDto[]
@@ -245,6 +246,7 @@ export function PlaceReinforcementStep({
 
         {!isDone && (
           <button
+            {...toastAnchor}
             type="button"
             disabled={!buttonEnabled}
             onClick={buttonAction}

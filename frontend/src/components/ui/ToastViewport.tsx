@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { phoneAnimations, tvAnimations } from '../../styles/motion'
 import type { ToastDevice, ToastItem } from '../../types/Toast'
 import { Toast } from './Toast'
+import { useToastAnchorInset } from '../../hooks/useToastAnchorInset'
 
 export interface ToastViewportProps {
   toasts: ToastItem[]
@@ -14,7 +15,8 @@ export interface ToastViewportProps {
  * De toastlaag, op `z-[70]`: boven de hoogste modal (`DefendStep`, `z-[60]`) en de TV-gevechts-
  * overlay, want juist daar ontstaan fouten die zichtbaar moeten blijven.
  *
- * - Telefoon: bovenaan, even breed als `PhoneShell`, via een portal naar `document.body`.
+ * - Telefoon: onderaan, net boven de knoppen van het scherm (`toastAnchor`, besluit gebruiker
+ *   2026-09-29), even breed als `PhoneShell`, via een portal naar `document.body`.
  * - TV: binnen `TvShell` (daar geldt de tekstschaal van de host), in hetzelfde raster als de
  *   bordschermen (`TvMainBoardScreen`), onderaan de kaartkolom — direct boven de verlooprij.
  *
@@ -23,8 +25,10 @@ export interface ToastViewportProps {
  * beleefde `role="status"` voor neutrale meldingen, zodat nieuws niet als alarm wordt voorgelezen.
  */
 export function ToastViewport({ toasts, device, onDismiss }: ToastViewportProps) {
-  // Telefoon: van boven binnen (hangt bovenaan); TV: van onder (staat boven de verlooprij).
+  // Beide van onder binnen: de telefoon staat boven de knoppen, de TV boven de verlooprij.
   const animation = device === 'tv' ? tvAnimations.toastIn : phoneAnimations.toastIn
+  const layerRef = useRef<HTMLDivElement>(null)
+  const anchorInset = useToastAnchorInset(device === 'phone' && toasts.length > 0, layerRef)
   const render = (tone: ToastItem['tone']) =>
     toasts
       .filter((toast) => toast.tone === tone)
@@ -48,8 +52,12 @@ export function ToastViewport({ toasts, device, onDismiss }: ToastViewportProps)
   if (device === 'tv') return <TvLayer>{regions('flex flex-col items-center gap-2')}</TvLayer>
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[70]">
-      <div className="mx-auto flex w-full max-w-[430px] flex-col gap-2 px-gutter pt-gutter">
+    <div ref={layerRef} className="pointer-events-none fixed inset-x-0 bottom-0 z-[70]">
+      <div
+        className="mx-auto flex w-full max-w-[430px] flex-col gap-2 px-gutter"
+        // 8px boven de knoppen (de stapelafstand tussen toasts); zonder knoppen de gewone marge.
+        style={{ paddingBottom: anchorInset > 0 ? anchorInset + 8 : 'var(--spacing-gutter)' }}
+      >
         {regions('flex flex-col gap-2')}
       </div>
     </div>,

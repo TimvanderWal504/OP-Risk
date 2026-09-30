@@ -286,17 +286,6 @@ select:focus-visible,
     opacity: 1;
   }
 }
-/* Fouttoast (ToastViewport) — phRise gespiegeld, zie motion.ts `phToastIn`. */
-@keyframes phToastIn {
-  0% {
-    transform: translateY(-14px);
-    opacity: 0;
-  }
-  100% {
-    transform: none;
-    opacity: 1;
-  }
-}
 
 /* De stage-achtergrond staat als token in de export (--atlas-stage-bg, colors_and_type.css
    L279 licht / L291 donker). Hier de token gebruiken en niet de waarden overschrijven: anders

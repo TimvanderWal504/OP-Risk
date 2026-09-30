@@ -4,6 +4,7 @@ import { GlassPanel } from './GlassPanel'
 import { Button } from './Button'
 import { LockIcon } from './icons'
 import { tDynamic } from '../../i18n/useT'
+import { toastAnchor } from '../../hooks/useToastAnchorInset'
 
 export interface MissionPanelProps {
   missionId: string
@@ -47,7 +48,7 @@ export function MissionPanel({ missionId, onClose }: MissionPanelProps) {
           <p className="font-body text-body text-fg-secondary">{tDynamic(`${missionId}.description`, 'missions')}</p>
         </GlassPanel>
       </div>
-      <Button variant="secondary" onClick={onClose}>
+      <Button {...toastAnchor} variant="secondary" onClick={onClose}>
         {t('close')}
       </Button>
     </ModalShell>

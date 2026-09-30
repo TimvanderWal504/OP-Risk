@@ -5,6 +5,7 @@ import { ColorSymbol } from './ui/ColorSymbol'
 import { GlassPanel } from './ui/GlassPanel'
 import { tDynamic } from '../i18n/useT'
 import { PhoneScreen } from './ui/PhoneScreen'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface ConquestMoveStepProps {
   fromTerritoryId: string
@@ -106,6 +107,7 @@ export function ConquestMoveStep({ fromTerritoryId, toTerritoryId, myColor, minA
       </GlassPanel>
 
       <button
+        {...toastAnchor}
         type="button"
         disabled={submitting}
         onClick={confirm}

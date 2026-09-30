@@ -16,6 +16,9 @@ describe('ToastViewport', () => {
     const region = screen.getByRole('alert')
     expect(container).not.toContainElement(region)
     expect(region.parentElement?.parentElement?.parentElement).toBe(document.body)
+    // Onderaan het scherm (DESIGN.md § Toast): zonder knoppenblok op de gewone marge.
+    expect(region.parentElement?.parentElement).toHaveClass('bottom-0')
+    expect(region.parentElement).toHaveStyle({ paddingBottom: 'var(--spacing-gutter)' })
     expect(within(region).getByText('Mislukt')).toBeInTheDocument()
   })
 

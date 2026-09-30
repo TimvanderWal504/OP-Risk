@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { toastAnchor } from '../../hooks/useToastAnchorInset'
 
 export interface FooterProps {
   /** De actie(s), meestal één of meer {@link Button}s. Vrij wisselbaar zodat
@@ -19,7 +20,7 @@ export interface FooterProps {
 export function Footer({ children, error = null, hint, variant = 'plain' }: FooterProps) {
   if (variant === 'gradient') {
     return (
-      <div className="relative mt-auto flex-none bg-gradient-to-t from-[var(--bg)] from-26% to-transparent px-gutter pt-3 pb-4">
+      <div {...toastAnchor} className="relative mt-auto flex-none bg-gradient-to-t from-[var(--bg)] from-26% to-transparent px-gutter pt-3 pb-4">
         {error && <p className="mb-2 text-loss">{error}</p>}
         <div className="flex flex-col gap-3">{children}</div>
         {hint && <p className="mt-2 text-xs text-fg-muted">{hint}</p>}
@@ -28,7 +29,7 @@ export function Footer({ children, error = null, hint, variant = 'plain' }: Foot
   }
 
   return (
-    <div className="mt-auto flex-none">
+    <div {...toastAnchor} className="mt-auto flex-none">
       {error && <p className="mb-2 text-loss">{error}</p>}
       <div className="flex flex-col gap-3">{children}</div>
       {hint && <p className="mt-2 text-xs text-fg-muted">{hint}</p>}

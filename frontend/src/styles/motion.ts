@@ -168,7 +168,7 @@ export const tvAnimations = {
    *  in plaats van een keyframe-string; duur en easing zijn die van `panelFrameIn`/`feedFrameIn`. */
   tickerEnter: { durationMs: 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
   /** Fouttoast op de TV (2026-09-26, bewuste wijziging op verzoek): hij staat onderaan, boven de
-   *  verlooprij, dus komt hij van onder binnen — `phRise`, zelfde duur als de telefoon-`toastIn`.
+   *  verlooprij, dus komt hij van onder binnen — `phRise`, net als de telefoon-`toastIn`.
    *  Alleen transform/opacity. */
   toastIn: 'phRise .3s both',
 } as const;
@@ -185,9 +185,6 @@ export const phoneKeyframes = {
   phSpin: `to{transform:rotate(360deg);}`,
   phSlam: `0%{transform:scale(1.8);opacity:0;letter-spacing:.3em;}60%{opacity:1;}100%{transform:scale(1);opacity:1;letter-spacing:.01em;}`,
   phRise: `0%{transform:translateY(14px);opacity:0;}100%{transform:none;opacity:1;}`,
-  /** Fouttoast bovenaan het scherm (2026-09-26, bewuste wijziging op verzoek): `phRise` gespiegeld,
-   *  zelfde afstand — de toast komt van boven binnen omdat hij daar hangt. */
-  phToastIn: `0%{transform:translateY(-14px);opacity:0;}100%{transform:none;opacity:1;}`,
   /** Skeleton-loading-sheen. Let op: gebruikt `background-position`, geen transform/opacity —
    *  op de telefoon is dat geen probleem (geen zwakke-GPU-eis), maar wel expliciet melden
    *  als dit patroon ooit naar TV zou moeten. */
@@ -206,8 +203,9 @@ export const phoneAnimations = {
   skeletonShimmer: 'phShim 1.1s linear infinite',
   /** Rij-entree in bottom-sheet (L249). */
   rowRise: 'phRise .3s both',
-  /** Fouttoast binnenkomst (`ToastViewport`), zelfde duur als `rowRise`. Verdwijnen is instant. */
-  toastIn: 'phToastIn .3s both',
+  /** Toast-binnenkomst (`ToastViewport`): van onder, want hij staat boven de knoppen (besluit
+   *  gebruiker 2026-09-29, eerder van boven). `phRise`, zelfde duur als `rowRise`. Verdwijnen is instant. */
+  toastIn: 'phRise .3s both',
   /** Avatar-/resultaat-reveal, vier losse instanties met eigen duur/delay (L336, L360, L597, L1024). */
   popImmediate: 'phPop .5s both',
   popDelayed: 'phPop .4s .5s both',

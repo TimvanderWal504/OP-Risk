@@ -126,6 +126,25 @@ export function SkipForwardIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
+/** Driehoek met uitroepteken: een fouttoast (`Toast`, tone `error`). */
+export function AlertIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2.2 14.2 13H1.8L8 2.2ZM8 6.4v3M8 11.3v.01" />
+    </svg>
+  )
+}
+
+/** "i" in een cirkel: een nieuwsmelding (`Toast`, tone `info`). Niet `InfoIcon`: dat is Spelinfo. */
+export function NoticeIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+      <circle cx={8} cy={8} r={6.2} />
+      <path d="M8 7.4v3.6M8 5v.01" />
+    </svg>
+  )
+}
+
 /** Kruisje om iets weg te klikken (fouttoast, `Toast`). */
 export function CloseIcon({ className = 'h-4 w-4' }: IconProps) {
   return (

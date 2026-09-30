@@ -9,6 +9,7 @@ import { GlassPanel } from './ui/GlassPanel'
 import { noTimerChipTint, defenseDiceBlueTint } from '../styles/glass-tokens'
 import { phoneAnimations } from '../styles/motion'
 import { tDynamic } from '../i18n/useT'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface DefendStepProps {
   attackerName: string
@@ -172,7 +173,7 @@ export function DefendStep({
         </GlassPanel>
       </div>
 
-      <div className="flex min-h-[210px] flex-none flex-col justify-end">
+      <div {...toastAnchor} className="flex min-h-[210px] flex-none flex-col justify-end">
         {result === null ? (
           /* Keuzeblok als één paneel — dezelfde structuur als de dobbelsteen-picker van
              AttackFlowStep: de twee kaarten houden hun eigen rand (die draagt de keuze), maar
