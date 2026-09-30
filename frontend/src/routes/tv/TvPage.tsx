@@ -6,9 +6,11 @@ import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { useTvLanguage } from '../../hooks/useTvLanguage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToastList } from '../../hooks/useToastList'
+import { useEventOverlayExit } from '../../hooks/useEventOverlayExit'
 import { TvShell, type TvShellProps } from '../../components/ui/TvShell'
 import { ToastViewport } from '../../components/ui/ToastViewport'
-import { resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
+import { resolveShownEvent, resolveStageScrimLevel, resolveTvOverlay, resolveTvScreen } from './screens/tvScreens'
+import { TvEventOverlay } from './screens/TvEventOverlay'
 
 /**
  * De host-route: verbindt met het spel en laat de fase bepalen welk scherm er hangt, met
@@ -23,6 +25,10 @@ export function TvPage() {
   const { state, unknownGame, orderRollThrows, lastClaimedTerritoryId, combat, event, skipSignal } = useTvGame(gameId!)
   const toastList = useToastList()
   const displayPhase = useHeldPhase(state?.phase, skipSignal)
+  const { leaving, onLeft } = useEventOverlayExit(
+    state ? resolveShownEvent(combat, event, state.pendingAttrition) : null,
+    combat !== null,
+  )
   useTvLanguage(state?.tvDisplay.language)
   useDocumentTitle('tv')
 
@@ -35,7 +41,12 @@ export function TvPage() {
     content = <div className="flex h-full items-center justify-center text-fg-muted">{t('tv.connecting')}</div>
   } else {
     const screenProps = { state, orderRollThrows, lastClaimedTerritoryId, combat, event }
-    const overlay = resolveTvOverlay(combat, event, state.pendingAttrition)
+    const liveOverlay = resolveTvOverlay(combat, event, state.pendingAttrition)
+    // Een kaart die net weg moest, gaat nog één `overlayOut` lang uit (DESIGN.md § Event Round) —
+    // als dezelfde overlay op dezelfde plek, zodat hij niet opnieuw binnenkomt.
+    const overlay = liveOverlay ?? (leaving ? TvEventOverlay : null)
+    const overlayProps =
+      liveOverlay === null && leaving ? { ...screenProps, eventExit: { shown: leaving, onExited: onLeft } } : screenProps
 
     shellProps = { scrimLevel: resolveStageScrimLevel(displayPhase), display: state.tvDisplay }
     // createElement en niet <Screen …/>: zie PhonePage — het schermtype is dynamisch, de
@@ -43,7 +54,7 @@ export function TvPage() {
     content = (
       <>
         {createElement(resolveTvScreen(displayPhase), screenProps)}
-        {overlay && createElement(overlay, screenProps)}
+        {overlay && createElement(overlay, overlayProps)}
       </>
     )
   }

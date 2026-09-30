@@ -72,8 +72,10 @@ export function RemoveArmiesStep({ eventId, amount, myTerritories, myColor, terr
       <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
         {continentGroups.map((group) => (
           <GlassPanel key={group.continent} elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
+            {/* Altijd open, zonder chevron (DESIGN.md § Event Round): de lijst is kort — alleen
+                gebieden die een leger kunnen missen. */}
             <Collapsible
-              collapsible={continentGroups.length >= 2}
+              collapsible={false}
               defaultOpen
               title={
                 <span className="font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">

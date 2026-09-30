@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 import type { ActiveEffectDto, PendingCombatDto, PlayerColorDto, TerritoryDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
@@ -268,7 +269,7 @@ export function AttackFlowStep({
               </GlassPanel>
             ))}
           </div>
-          <Button variant="secondary" onClick={backToSrc} className="mt-3">
+          <Button {...toastAnchor} variant="secondary" onClick={backToSrc} className="mt-3">
             {t('pickTgt.back')}
           </Button>
         </>
@@ -333,7 +334,10 @@ export function AttackFlowStep({
               </div>
             </GlassPanel>
           </div>
+          {/* Toastanker op de bovenste van de twee knoppen: een geweigerde aanval landt als toast
+              hier, en moet boven "Gooien" en "Terug" staan, niet eroverheen. */}
           <button
+            {...toastAnchor}
             type="button"
             disabled={submitting}
             onClick={roll}

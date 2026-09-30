@@ -37,6 +37,9 @@ const state = (overrides: Partial<GameStateDto>): GameStateDto => ({
   ...overrides,
 })
 
+// De trekking zelf, op het volgnummer dat `show` standaard meegeeft.
+const drawn = (eventId: string) => action({ kind: RecentActionKindDto.EventDrawn, sequence: 5, eventId })
+
 const show = (overrides: Partial<GameStateDto>, eventId: string | null, sequence = 5) =>
   render(
     <TvEventOverlay
@@ -60,7 +63,15 @@ describe('TvEventOverlay', () => {
   })
 
   it('noemt "iedereen" als iedereen dezelfde bonus kreeg', () => {
-    show({ recentActions: [action({ kind: RecentActionKindDto.EventBonusGranted, sequence: 6, amount: 2, eventId: 'babyboom' })] }, 'babyboom')
+    show(
+      {
+        recentActions: [
+          action({ kind: RecentActionKindDto.EventBonusGranted, sequence: 6, amount: 2, eventId: 'babyboom' }),
+          drawn('babyboom'),
+        ],
+      },
+      'babyboom',
+    )
 
     expect(screen.getByText('Iedereen krijgt +2 bij de volgende beurt')).toBeInTheDocument()
   })
@@ -71,6 +82,7 @@ describe('TvEventOverlay', () => {
         recentActions: [
           action({ kind: RecentActionKindDto.EventBonusGranted, sequence: 7, amount: 2, playerId: 'bob', eventId: 'goede-oogst' }),
           action({ kind: RecentActionKindDto.EventBonusGranted, sequence: 6, amount: 2, playerId: 'alice', eventId: 'goede-oogst' }),
+          drawn('goede-oogst'),
           // Een oudere trekking van dezelfde kaart telt niet mee.
           action({ kind: RecentActionKindDto.EventBonusGranted, sequence: 2, amount: 2, playerId: 'alice', eventId: 'goede-oogst' }),
         ],
@@ -82,9 +94,19 @@ describe('TvEventOverlay', () => {
   })
 
   it('zegt het als niemand bonus kreeg', () => {
-    show({}, 'goede-oogst')
+    show({ recentActions: [drawn('goede-oogst')] }, 'goede-oogst')
 
     expect(screen.getByText('Niemand krijgt extra legers')).toBeInTheDocument()
+  })
+
+  it('zegt niets over de bonus als de trekking al uit het verloop-venster is geschoven', () => {
+    show(
+      { recentActions: [action({ kind: RecentActionKindDto.ArmiesPlaced, sequence: 20, playerId: 'alice', amount: 1, total: 4 })] },
+      'goede-oogst',
+    )
+
+    expect(screen.getByText('Goede oogst')).toBeInTheDocument()
+    expect(screen.queryByText('Niemand krijgt extra legers')).not.toBeInTheDocument()
   })
 
   it('toont bij legerverlies de wachtstaat met een vinkje voor wie al koos', () => {
@@ -98,5 +120,22 @@ describe('TvEventOverlay', () => {
     expect(screen.getByText('Nog 1 van 2 spelers kiezen')).toBeInTheDocument()
     const choosers = container.querySelectorAll('[data-testid="attrition-chooser"]')
     expect([...choosers].map((chooser) => chooser.getAttribute('data-done'))).toEqual(['true', 'false'])
+  })
+
+  it('toont bij het uitgaan de laatst getoonde kaart, ook als de keuzes net klaar zijn', () => {
+    render(
+      <TvEventOverlay
+        state={state({ pendingAttrition: null })}
+        event={null}
+        eventExit={{ shown: { eventId: 'epidemie-in-de-steden', draw: null }, onExited: () => {} }}
+        orderRollThrows={{}}
+        lastClaimedTerritoryId={null}
+        combat={null}
+      />,
+    )
+
+    expect(screen.getByText('Epidemie in de steden')).toBeInTheDocument()
+    expect(screen.getByText('Iedereen verwijdert 3 legers')).toBeInTheDocument()
+    expect(screen.queryByText(/spelers kiezen/)).not.toBeInTheDocument()
   })
 })

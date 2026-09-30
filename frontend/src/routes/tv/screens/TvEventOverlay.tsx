@@ -21,61 +21,75 @@ import type { TvScreenProps } from './tvScreens'
  * legerverlies staat eronder de wachtstaat ("Nog N van M spelers kiezen" + kiezer-avatars). Welke
  * kaart, welke soort en wie wat kreeg, komt allemaal van de server; hier wordt niets afgeleid.
  */
-export function TvEventOverlay({ state, event }: TvScreenProps) {
+export function TvEventOverlay({ state, event, eventExit }: TvScreenProps) {
   const { t, i18n } = useTranslation('eventTv')
   const textScale = useTvDisplayScale().text
 
-  const pending = state.pendingAttrition
-  const eventId = pending?.eventId ?? event?.eventId
+  // Bij het uitgaan is de kaart al uit de state verdwenen: dan geldt wat er als laatste stond.
+  const pending = eventExit ? null : state.pendingAttrition
+  const draw = eventExit ? eventExit.shown.draw : (event ?? null)
+  const eventId = eventExit?.shown.eventId ?? pending?.eventId ?? draw?.eventId
   const summary = state.events.find((candidate) => candidate.id === eventId)
   // `resolveTvOverlay` mount dit alleen met een kaart of lopende keuzes; puur voor de typechecker.
   if (!eventId || !summary) return null
 
   const list = new Intl.ListFormat(i18n.language, { type: 'conjunction' })
-  const consequence = consequenceLine(state, event ?? null, summary.effectKind, summary.amount, t, list)
+  const consequence = consequenceLine(state, draw, summary.effectKind, summary.amount, t, list)
 
   return (
-    <ModalShell
-      context="tv"
-      animated
-      className="absolute inset-0 flex items-center justify-center"
-      style={{ borderRadius: 0, animation: tvAnimations.overlayIn }}
+    // De uitgang eindigt bij `animationend` van de scrim; de kaart erbinnen heeft eigen animaties
+    // (`cardReveal`, de glans), die bubbelen ook hierheen — vandaar de keyframe-naam.
+    <div
+      className="absolute inset-0"
+      onAnimationEnd={(animationEvent) => {
+        if (eventExit && animationEvent.animationName === OVERLAY_OUT_KEYFRAME) eventExit.onExited()
+      }}
     >
-      <GlassPanel
-        elevation="raised"
+      <ModalShell
         context="tv"
-        padding="none"
         animated
-        className="relative flex flex-col items-center overflow-hidden rounded-sheet px-12 py-11 text-center"
-        style={{ width: eventRoundTok.cardWidthPx * textScale, animation: tvAnimations.cardReveal }}
+        className="absolute inset-0 flex items-center justify-center"
+        style={{ borderRadius: 0, animation: eventExit ? tvAnimations.overlayOut : tvAnimations.overlayIn }}
       >
-        {/* Eén glans over de kaart bij het onthullen; transform-only. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-2/5"
-          style={{
-            background: eventRoundTok.cardSheenGradient,
-            animation: tvAnimations.cardSheenOnce,
-          }}
-        />
-        <span className="font-body text-label font-extrabold uppercase tracking-[.24em] text-silver-400">{t('kicker')}</span>
-        <EventKindIcon kind={summary.effectKind} className="mt-3.5 mb-1.5 h-[1em] w-[1em] text-size12 text-fg" />
-        <h1 className="m-0 mb-3.5 font-display text-size11 font-black leading-none tracking-[-.01em] text-fg">
-          {tDynamic(`${eventId}.name`, 'events')}
-        </h1>
-        <p className="m-0 max-w-[600px] font-body text-size6 leading-[1.4] text-fg-secondary">
-          {tDynamic(`${eventId}.description`, 'events')}
-        </p>
-        <div className="mt-6">
-          <Badge>{t(summary.duration === EventDurationDto.OneRound ? 'duration.oneRound' : 'duration.instant')}</Badge>
-        </div>
-        {consequence && <div className="mt-4 font-body text-size4 font-extrabold text-fg-secondary">{consequence}</div>}
+        <GlassPanel
+          elevation="raised"
+          context="tv"
+          padding="none"
+          animated
+          className="relative flex flex-col items-center overflow-hidden rounded-sheet px-12 py-11 text-center"
+          style={{ width: eventRoundTok.cardWidthPx * textScale, animation: tvAnimations.cardReveal }}
+        >
+          {/* Eén glans over de kaart bij het onthullen; transform-only. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 w-2/5"
+            style={{
+              background: eventRoundTok.cardSheenGradient,
+              animation: tvAnimations.cardSheenOnce,
+            }}
+          />
+          <span className="font-body text-label font-extrabold uppercase tracking-[.24em] text-silver-400">{t('kicker')}</span>
+          <EventKindIcon kind={summary.effectKind} className="mt-3.5 mb-1.5 h-[1em] w-[1em] text-size12 text-fg" />
+          <h1 className="m-0 mb-3.5 font-display text-size11 font-black leading-none tracking-[-.01em] text-fg">
+            {tDynamic(`${eventId}.name`, 'events')}
+          </h1>
+          <p className="m-0 max-w-[600px] font-body text-size6 leading-[1.4] text-fg-secondary">
+            {tDynamic(`${eventId}.description`, 'events')}
+          </p>
+          <div className="mt-6">
+            <Badge>{t(summary.duration === EventDurationDto.OneRound ? 'duration.oneRound' : 'duration.instant')}</Badge>
+          </div>
+          {consequence && <div className="mt-4 font-body text-size4 font-extrabold text-fg-secondary">{consequence}</div>}
 
-        {pending && pending.eventId === eventId && <AttritionWait state={state} t={t} />}
-      </GlassPanel>
-    </ModalShell>
+          {pending && pending.eventId === eventId && <AttritionWait state={state} t={t} />}
+        </GlassPanel>
+      </ModalShell>
+    </div>
   )
 }
+
+/** De keyframe achter `tvAnimations.overlayOut` — de eerste term van de shorthand. */
+const OVERLAY_OUT_KEYFRAME = tvAnimations.overlayOut.split(' ')[0]
 
 /** "Nog N van M spelers kiezen" en een avatar per kiezer, met een vinkje wie al koos. */
 function AttritionWait({ state, t }: { state: GameStateDto; t: TFunction<'eventTv'> }) {
@@ -123,7 +137,9 @@ function consequenceLine(
 ): string | null {
   switch (kind) {
     case EventEffectKindDto.Bonus: {
-      if (!event) return null
+      // Staat de trekking zelf niet meer in het verloop-venster, dan zijn de bonusregels erna ook
+      // (deels) weg: geen regel is dan beter dan een onware "Niemand krijgt extra legers".
+      if (!event || !state.recentActions.some((action) => action.sequence === event.sequence)) return null
       const lines = state.recentActions.filter(
         (action) =>
           action.kind === RecentActionKindDto.EventBonusGranted &&

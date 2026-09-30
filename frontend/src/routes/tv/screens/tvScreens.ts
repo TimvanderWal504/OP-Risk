@@ -3,6 +3,7 @@ import type { GameStateDto } from '../../../types/GameState'
 import { GamePhaseDto } from '../../../types/GameState'
 import type { CombatBroadcastState } from '../../../hooks/useCombatBroadcast'
 import type { HeldEvent } from '../../../hooks/useHeldEvent'
+import type { ShownEvent } from '../../../hooks/useEventOverlayExit'
 import type { PendingAttritionDto } from '../../../types/GameState'
 import type { StageScrimLevel } from '../../../styles/glass-tokens'
 import { TvLobbyScreen } from './TvLobbyScreen'
@@ -25,6 +26,11 @@ export interface TvScreenProps {
   combat: CombatBroadcastState | null
   /** Een net getrokken gebeurteniskaart, al gehouden door `useHeldEvent` (C10). */
   event?: HeldEvent | null
+  /**
+   * Alleen voor `TvEventOverlay`: de kaart gaat uit (`overlayOut`) en `onExited` ruimt hem op zodra
+   * die animatie klaar is — zie `useEventOverlayExit`.
+   */
+  eventExit?: { shown: ShownEvent; onExited: () => void } | null
 }
 
 export type TvScreen = (props: TvScreenProps) => ReactNode
@@ -88,4 +94,19 @@ export function resolveTvOverlay(
   if (event !== null || pendingAttrition !== null) return TvEventOverlay
 
   return null
+}
+
+/**
+ * Welke kaart de gebeurtenis-overlay toont — dezelfde voorwaarden als `resolveTvOverlay`: niets
+ * tijdens een gevecht, anders de kaart van de lopende attrition-keuzes of de vastgehouden trekking.
+ */
+export function resolveShownEvent(
+  combat: CombatBroadcastState | null,
+  event: HeldEvent | null,
+  pendingAttrition: PendingAttritionDto | null,
+): ShownEvent | null {
+  if (combat !== null) return null
+  const eventId = pendingAttrition?.eventId ?? event?.eventId
+
+  return eventId ? { eventId, draw: event } : null
 }

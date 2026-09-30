@@ -46,8 +46,10 @@ interface TvBoardMapProps {
 
 /**
  * Horizontale plek van `belowAfrica`, als fractie van de paneelbreedte. Klopt exact zolang de kaart
- * de breedte van het paneel vult (`meet` begrensd door de breedte), wat het TV-raster altijd geeft;
- * bij een smaller paneel schuift de chip hooguit iets naar het midden.
+ * de breedte van het paneel vult (`meet` begrensd door de breedte). Is het paneel naar verhouding
+ * breder dan de kaart (begrensd door de hoogte), dan krijgt de kaart zijstroken en ligt Afrika
+ * dichter bij het midden dan deze fractie: de chip staat dan iets rechts van zijn anker. Omdat
+ * 25°O dicht bij het midden van de kaart ligt, blijft dat verschil klein.
  */
 const BELOW_AFRICA_LEFT = `${(project(eventRoundTok.effectChipAnchorLon, 0).x / MAP_WIDTH_PX) * 100}%`
 

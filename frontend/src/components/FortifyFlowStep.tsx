@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toastAnchor } from '../hooks/useToastAnchorInset'
 import type { PlayerColorDto, TerritoryDto } from '../types/GameState'
 import { ColorSymbol } from './ui/ColorSymbol'
 import { GlassPanel } from './ui/GlassPanel'
@@ -262,7 +263,7 @@ export function FortifyFlowStep({
               </GlassPanel>
             ))}
           </div>
-          <Button variant="secondary" onClick={backToSrc} className="mt-3">
+          <Button {...toastAnchor} variant="secondary" onClick={backToSrc} className="mt-3">
             {t('pickTgt.back')}
           </Button>
         </>
