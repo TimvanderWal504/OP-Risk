@@ -15,12 +15,12 @@ export interface ActionTickerProps {
 
 /**
  * Het verloop op de TV (plan-testronde-tv punt 4, DESIGN.md § Action Ticker): de laatste acties
- * als één stilstaande rij, oudste links en nieuwste rechts met een "Laatste"-kicker. Wat links niet
- * meer past, valt buiten beeld. De state levert er hoogstens `TvRecentActionCount` (10), nieuwste
+ * als één stilstaande rij, nieuwste links met een "Laatste"-kicker en oudere regels rechts ervan. Wat
+ * rechts niet meer past, valt buiten beeld. De state levert er hoogstens `TvRecentActionCount` (10), nieuwste
  * eerst.
  *
- * Een nieuwe regel komt rechts binnen (besluit gebruiker 2026-09-26): de rij schuift over de
- * breedte van de nieuwe regel(s) naar links en de nieuwe regel vervaagt in (`tickerEnter`). Alleen
+ * Een nieuwe regel komt links binnen (besluit gebruiker 2026-09-29, eerder rechts): de rij schuift
+ * over de breedte van de nieuwe regel(s) naar rechts en de nieuwe regel vervaagt in (`tickerEnter`). Alleen
  * als het volgnummer van de bovenste regel verandert: niet bij het eerste renderen of een
  * reconnect, en niet bij een regel die alleen bijwerkt (een volgende plaatsing op hetzelfde gebied,
  * een belegering die een verovering wordt — die houden hun volgnummer). Komt er een nieuwe regel
@@ -59,15 +59,13 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
 
     const { durationMs, easing } = tvAnimations.tickerEnter
     row.animate(
-      [{ transform: `translateX(${enteringWidth + stillToTravel}px)` }, { transform: 'none' }],
+      [{ transform: `translateX(${stillToTravel - enteringWidth}px)` }, { transform: 'none' }],
       { duration: durationMs, easing },
     )
     entering.forEach((item) => item.animate([{ opacity: 0 }, { opacity: 1 }], { duration: durationMs, easing }))
   }, [headSequence])
 
   if (headSequence === undefined) return null
-
-  const chronological = [...newestFirst].reverse()
 
   return (
     <GlassPanel
@@ -81,8 +79,8 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
         {t('title')}
       </div>
       <div className="min-w-0 overflow-hidden">
-        <div ref={rowRef} data-testid="action-ticker-row" className="flex justify-end gap-3">
-          {chronological.map((action) => {
+        <div ref={rowRef} data-testid="action-ticker-row" className="flex gap-3">
+          {newestFirst.map((action) => {
             const { actor, color } = actionActor(action, state)
 
             return (
@@ -112,7 +110,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
-/** Hoe ver een nog lopende inkomst de rij op dit moment naar rechts heeft staan (0 als er niets loopt). */
+/** Waar een nog lopende inkomst de rij op dit moment heeft staan, negatief = nog links (0 als er niets loopt). */
 function currentTranslateX(row: HTMLElement): number {
   const transform = getComputedStyle(row).transform
 

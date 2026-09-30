@@ -35,12 +35,12 @@ describe('ActionTicker', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('zet de oudste links en de nieuwste rechts, alleen die gemarkeerd als laatste', () => {
+  it('zet de nieuwste links en de oudere rechts ervan, alleen de nieuwste gemarkeerd als laatste', () => {
     render(<ActionTicker state={state(claimed(2, 'peru', 'bob'), claimed(1, 'brazil'))} />)
 
     expect(screen.getByText('Verloop')).toBeInTheDocument()
-    expect(items()).toEqual(['Alice claimt Brazilië', 'Bob claimt Peru'])
-    const [older, newest] = screen.getAllByTestId('action-ticker-item')
+    expect(items()).toEqual(['Bob claimt Peru', 'Alice claimt Brazilië'])
+    const [newest, older] = screen.getAllByTestId('action-ticker-item')
     expect(newest).toHaveTextContent('Laatste')
     expect(older).not.toHaveTextContent('Laatste')
   })
@@ -80,7 +80,7 @@ describe('ActionTicker', () => {
       rerender(<ActionTicker state={state(claimed(2, 'peru'), claimed(1, 'brazil'))} />)
 
       expect(animate).toHaveBeenCalledWith(
-        [{ transform: 'translateX(200px)' }, { transform: 'none' }],
+        [{ transform: 'translateX(-200px)' }, { transform: 'none' }],
         expect.objectContaining({ duration: 500 }),
       )
       expect(animate).toHaveBeenCalledWith([{ opacity: 0 }, { opacity: 1 }], expect.objectContaining({ duration: 500 }))

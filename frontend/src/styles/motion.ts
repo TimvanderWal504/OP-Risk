@@ -162,9 +162,9 @@ export const tvAnimations = {
   /** C12 — rechterspelerspaneel en feed-strip framen in terwijl het bord blijft staan; feed start .06s later (L371/L407). */
   panelFrameIn: 'atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both',
   feedFrameIn: 'atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both',
-  /** Verloop-ticker (plan-testronde-tv punt 4; besluit gebruiker 2026-09-26): een stilstaande rij
-   *  waar een nieuwe regel rechts binnenkomt. De rij schuift over de breedte van die regel naar
-   *  links en de regel vervaagt in. De afstand is gemeten, dus dit is de Web Animations API-timing
+  /** Verloop-ticker (plan-testronde-tv punt 4; besluit gebruiker 2026-09-29): een stilstaande rij
+   *  waar een nieuwe regel links binnenkomt. De rij schuift over de breedte van die regel naar
+   *  rechts en de regel vervaagt in. De afstand is gemeten, dus dit is de Web Animations API-timing
    *  in plaats van een keyframe-string; duur en easing zijn die van `panelFrameIn`/`feedFrameIn`. */
   tickerEnter: { durationMs: 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
   /** Fouttoast op de TV (2026-09-26, bewuste wijziging op verzoek): hij staat onderaan, boven de
