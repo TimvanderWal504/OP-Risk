@@ -13,7 +13,7 @@ namespace RiskGame.Api.Commands;
 /// (FO §5.1). Geen dobbelen nodig, dus geen <see cref="RiskGame.Rules.Abstractions.IRandomSource"/>
 /// — alleen guards, event(s) appenden en de nieuwe projectie teruggeven.
 /// </summary>
-public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeProvider)
+public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeProvider, TurnAdvancer turnAdvancer)
 {
     public async Task<Result<GameStateDto>> ClaimTerritoryAsync(string gameId, string playerId, string territoryId)
     {
@@ -97,7 +97,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
             // het laatste startleger plaatste (bij SetupMode.Random kan dat iedereen zijn).
             // Zijn versterkingen horen dus ook voor hém berekend te worden. Het laatste startleger
             // verandert geen eigenaar of continentbezit, dus de al geladen state volstaat.
-            TurnStarter.StartTurn(session, state, state.TurnOrder[0], timeProvider.GetUtcNow());
+            turnAdvancer.StartTurn(session, state, state.TurnOrder[0]);
         }
 
         await session.SaveChangesAsync();

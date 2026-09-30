@@ -13,7 +13,8 @@ namespace RiskGame.Api.Commands;
 /// gebieden hij legers afstaat, buiten de beurtvolgorde om en tegelijk met de andere wachtende
 /// spelers. De laatste keuze start de beurt van de speler die al bij de trekking vastlag.
 /// </summary>
-public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider timeProvider, GameProjection projection)
+public sealed class AttritionCommandHandler(
+    IDocumentStore store, TimeProvider timeProvider, GameProjection projection, TurnAdvancer turnAdvancer)
 {
     /// <summary>
     /// Probeert het opnieuw bij een gelijktijdige append (<see cref="ConcurrencyRetry"/>): kiezen
@@ -50,8 +51,7 @@ public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider t
         if (projected.EventRound.PendingAttrition is null)
         {
             // De guard garandeert dat er een PendingAttrition was; zonder wachtenden is dit de laatste keuze.
-            TurnStarter.StartTurn(
-                session, projected, state.EventRound.PendingAttrition!.NextPlayerId, timeProvider.GetUtcNow());
+            turnAdvancer.StartTurn(session, projected, state.EventRound.PendingAttrition!.NextPlayerId);
         }
 
         await session.SaveChangesAsync();

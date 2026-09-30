@@ -1,10 +1,8 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
-using RiskGame.Persistence.Projections;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Fortify;
-using RiskGame.Rules.Missions;
 using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.Results;
 using RiskGame.Rules.State;
@@ -16,19 +14,19 @@ namespace RiskGame.Api.Commands;
 /// <summary>
 /// Voert de TO §4-pijplijn uit voor <c>Fortify</c>, <c>EndPhase</c> en <c>EndTurn</c>
 /// (FO §5.2, §5.5). De rules-engine (<see cref="FortifyGuards"/>, <see cref="TurnGuards"/>,
-/// <see cref="TurnPhaseTransitions"/>, <see cref="TurnOrderCalculator"/>,
-/// <see cref="WinConditionEvaluator"/>) bestond al; deze handler rijgt ze aan elkaar, net als
+/// <see cref="TurnPhaseTransitions"/>) bestond al; deze handler rijgt ze aan elkaar, net als
 /// <see cref="AttackCommandHandler"/> dat deed voor Aanvallen. <see cref="EndTurnAsync"/> trekt
 /// ook de kaart na een veroverende beurt (FO §5.2) — <see cref="IRandomSource"/> is daarbij
 /// alleen nodig om de aflegstapel te hertschudden zodra de trekstapel leeg is (TO §4.2); de
-/// trekstapel zelf is bij spelstart al geschud, dus daar wordt niet nogmaals gedobbeld.
+/// trekstapel zelf is bij spelstart al geschud, dus daar wordt niet nogmaals gedobbeld. Wat er na
+/// het beurteinde gebeurt (missies, laatste kans, gebeurtenisronde, volgende beurt) doet
+/// <see cref="TurnAdvancer"/>.
 /// </summary>
 public sealed class TurnFlowCommandHandler(
     IDocumentStore store,
     IRandomSource random,
     TimeProvider timeProvider,
-    GameProjection projection,
-    EventRoundStep eventRound)
+    TurnAdvancer turnAdvancer)
 {
     public async Task<Result<GameStateDto>> FortifyAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
@@ -177,19 +175,6 @@ public sealed class TurnFlowCommandHandler(
             return Result<GameStateDto>.Failure(validation.Errors);
         }
 
-        // FO §6.1/§6.2: de server controleert de missievoorwaarden na elke beurt. TurnEnded
-        // vouwt alleen een geïnde gebeurtenisbonus weg (zie GameProjection) — niets waar een
-        // missie naar kijkt — dus de hier al geladen `state` is voor die controle exact de state
-        // "na afloop van deze beurt"; geen reload nodig.
-        //
-        // "GameWon op het moment dat de laatste laatste-kans-beurt eindigt" is hier bewust
-        // gelijkgesteld aan "bij het begin van de volgende beurt van de missiehouder" (FO §6.2):
-        // de overwinning wordt hieronder vastgesteld vóór een eventuele gebeurtenisronde, en een
-        // gewonnen spel trekt geen kaart meer. Een attrition-kaart die het bord tússen twee beurten
-        // verandert, telt pas mee bij de eerstvolgende beurteinde-controle (FO §6.2, besluit
-        // 2026-09-26: geen extra controle direct na de attrition).
-        var directWinners = WinConditionEvaluator.DirectWinners(state, playerId);
-
         // FO §5.2: een beurt met minstens één verovering trekt aan het einde 1 kaart. De
         // trekstapel is al geschud (taak 1: bij spelstart, of hierbeneden bij een lege
         // trekstapel) — de bovenste kaart pakken voegt dus geen extra toeval toe.
@@ -217,103 +202,12 @@ public sealed class TurnFlowCommandHandler(
             }
         }
 
-        var turnEnded = new TurnEnded(gameId, playerId);
-        session.Events.Append(gameId, turnEnded);
+        // Missiecontrole, laatste-kans-venster, gebeurtenisronde en de volgende beurt (TO §5.2).
+        var advanced = turnAdvancer.EndTurn(session, state, playerId);
 
-        var gameWon = false;
-
-        if (directWinners.Count > 0)
+        if (!advanced.IsSuccess)
         {
-            session.Events.Append(gameId, new GameWon(gameId, directWinners));
-            gameWon = true;
-        }
-        else if (state.PendingWin is { } pendingWin)
-        {
-            if (pendingWin.RemainingPlayerIds.Contains(playerId))
-            {
-                if (!WinConditionEvaluator.StillHoldsLastChanceMission(state, pendingWin.AchieverPlayerId))
-                {
-                    session.Events.Append(
-                        gameId,
-                        new PendingWinBroken(gameId, pendingWin.AchieverPlayerId, pendingWin.MissionId, playerId));
-                }
-                else
-                {
-                    var remaining = pendingWin.RemainingPlayerIds
-                        .Where(id => id != playerId && !state.Player(id).IsEliminated)
-                        .ToArray();
-
-                    if (remaining.Length == 0)
-                    {
-                        session.Events.Append(gameId, new GameWon(gameId, [pendingWin.AchieverPlayerId]));
-                        gameWon = true;
-                    }
-                    else
-                    {
-                        session.Events.Append(
-                            gameId,
-                            new PendingWinNarrowed(gameId, pendingWin.AchieverPlayerId, playerId, remaining));
-                    }
-                }
-            }
-
-            // Anders: het venster loopt, maar deze beurt hoort er niet bij (bv. de missiehouder
-            // zelf) — niets aan PendingWin te doen, gewoon door naar de volgende speler hieronder.
-        }
-        else
-        {
-            var lastChanceWinners = WinConditionEvaluator.LastChanceEligibleWinners(state, playerId);
-
-            if (lastChanceWinners.Count > 0)
-            {
-                // Vereenvoudiging (FO §6.2): vervullen meerdere spelers in dezelfde beurt tegelijk
-                // zo'n missie, dan opent alleen de eerste in de beurtvolgorde een venster; de
-                // overige(n) worden opnieuw beoordeeld zodra dit venster is afgerond.
-                var achieverId = state.TurnOrder.First(lastChanceWinners.Contains);
-                var missionId = state.Player(achieverId).Mission!.Id;
-
-                // Kan hier nooit leeg zijn: was achieverId de enige niet-uitgeschakelde speler,
-                // dan had HasWorldDomination hierboven al direct gewonnen.
-                var remainingOpponents = state.Players
-                    .Where(player => !player.IsEliminated && player.Id != achieverId)
-                    .Select(player => player.Id)
-                    .ToArray();
-
-                session.Events.Append(
-                    gameId, new PendingWinOpened(gameId, achieverId, missionId, remainingOpponents));
-            }
-        }
-
-        if (!gameWon)
-        {
-            var nextPlayerId = TurnOrderCalculator.NextActivePlayerId(state);
-
-            if (nextPlayerId is null)
-            {
-                return Result<GameStateDto>.Failure("turnFlow.noNextPlayer");
-            }
-
-            // Voor de ínkomende speler rekenen, niet voor de uitgaande, en op de state zoals de
-            // projectie hem straks ziet: na TurnEnded en na een eventuele gebeurtenisronde, zodat
-            // een net getrokken bonus in ArmiesGranted meetelt (FO §9.2). CardDrawn en de
-            // laatste-kans-events hierboven raken de versterkingen niet.
-            var projected = projection.Apply(state, turnEnded);
-
-            if (EventRoundCalculator.DrawsEventCard(state, nextPlayerId))
-            {
-                var outcome = eventRound.Resolve(session, projected, nextPlayerId);
-
-                projected = outcome.State;
-
-                if (outcome.AwaitsAttrition)
-                {
-                    // De beurt van nextPlayerId start pas na de laatste attrition-keuze
-                    // (AttritionCommandHandler); PendingAttrition onthoudt wie dat is.
-                    return await SaveAndMapAsync(session, gameId);
-                }
-            }
-
-            TurnStarter.StartTurn(session, projected, nextPlayerId, timeProvider.GetUtcNow());
+            return Result<GameStateDto>.Failure(advanced.Errors);
         }
 
         return await SaveAndMapAsync(session, gameId);

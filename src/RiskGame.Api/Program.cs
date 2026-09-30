@@ -38,6 +38,7 @@ builder.Services.AddScoped<AttackCommandHandler>();
 builder.Services.AddScoped<TurnFlowCommandHandler>();
 builder.Services.AddScoped<AttritionCommandHandler>();
 builder.Services.AddScoped<EventRoundStep>();
+builder.Services.AddScoped<TurnAdvancer>();
 // Stateloos; dezelfde vouwregels als Marten's inline projectie, voor handlers die een net
 // ge-appende event al in het geheugen moeten zien (gebeurtenisronde, FO §9.2).
 builder.Services.AddSingleton(sp => new GameProjection(sp.GetRequiredService<IMapDefinitionSource>()));
