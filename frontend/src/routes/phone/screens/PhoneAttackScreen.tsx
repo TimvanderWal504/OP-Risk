@@ -221,6 +221,7 @@ export function PhoneAttackScreen({
         colors={state.colors}
         myColor={myColor}
         pendingCombat={state.turnState.pendingCombat}
+        activeEffect={state.activeEffect}
         combat={combat as CombatBroadcastState | null}
         onDeclareAttack={declareAttack}
         onAbandonAttack={abandonAttack}

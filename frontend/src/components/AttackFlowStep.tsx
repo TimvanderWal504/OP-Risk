@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { PendingCombatDto, PlayerColorDto, TerritoryDto } from '../types/GameState'
+import type { ActiveEffectDto, PendingCombatDto, PlayerColorDto, TerritoryDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 import type { TerritoryCatalogDto } from '../types/TerritoryCatalog'
 import type { CombatBroadcastState } from '../hooks/useCombatBroadcast'
@@ -23,8 +23,15 @@ export interface AttackFlowStepProps {
   colors: PlayerColorDto[]
   myColor: PlayerColorDto | null
   pendingCombat: PendingCombatDto | null
+  /**
+   * Het ronde-effect dat nu geldt (FO §9.2): een afgesloten gebied kan niet aanvallen of aangevallen
+   * worden, en over een geblokkeerde zeeroute kan niet aangevallen worden. Wat afgesloten en
+   * geblokkeerd is, bepaalt de server; hier wordt alleen weggelaten wat hij toch zou weigeren.
+   */
+  activeEffect: ActiveEffectDto | null
   combat: CombatBroadcastState | null
-  onDeclareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<void>
+  /** `true` als de server de aanval aannam; bij een weigering blijft de flow op het dobbelsteenscherm. */
+  onDeclareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<boolean>
   /** "Ander gevecht" (FO §5.4): stopt de belegering van het huidige doelwit handmatig, zodat de
    *  beurttimer meteen hervat i.p.v. pas bij een volgende `onDeclareAttack`. */
   onAbandonAttack: () => Promise<void>
@@ -54,6 +61,7 @@ export function AttackFlowStep({
   colors,
   myColor,
   pendingCombat,
+  activeEffect,
   combat,
   onDeclareAttack,
   onAbandonAttack,
@@ -81,23 +89,23 @@ export function AttackFlowStep({
 
   const ownerOf = (territoryId: string) => territories.find((t) => t.territoryId === territoryId)?.ownerPlayerId ?? null
   const neighborsOf = (territoryId: string) => territoryCatalog.find((entry) => entry.id === territoryId)?.neighborTerritoryIds ?? []
-  const hasEnemyNeighbor = (territoryId: string) =>
-    neighborsOf(territoryId).some((neighborId) => {
-      const owner = ownerOf(neighborId)
-      return owner !== null && owner !== playerId
-    })
+  const locked = new Set(activeEffect?.lockedTerritoryIds ?? [])
+  const blocked = new Set((activeEffect?.blockedBorders ?? []).flatMap(({ from, to }) => [`${from}|${to}`, `${to}|${from}`]))
+  const attackableNeighborsOf = (territoryId: string) =>
+    locked.has(territoryId)
+      ? []
+      : neighborsOf(territoryId).filter((neighborId) => {
+          const owner = ownerOf(neighborId)
+          return owner !== null && owner !== playerId && !locked.has(neighborId) && !blocked.has(`${territoryId}|${neighborId}`)
+        })
 
-  const attackableSources = myTerritories.filter((t) => t.armyCount >= 2 && hasEnemyNeighbor(t.territoryId))
+  const attackableSources = myTerritories.filter((t) => t.armyCount >= 2 && attackableNeighborsOf(t.territoryId).length > 0)
 
   const fromArmyCount = fromTerritoryId ? (myTerritories.find((t) => t.territoryId === fromTerritoryId)?.armyCount ?? 0) : 0
   const maxDice = Math.min(3, fromArmyCount - 1)
 
   const targets = fromTerritoryId
-    ? neighborsOf(fromTerritoryId)
-        .filter((neighborId) => {
-          const owner = ownerOf(neighborId)
-          return owner !== null && owner !== playerId
-        })
+    ? attackableNeighborsOf(fromTerritoryId)
         .map((territoryId) => {
           const territory = territories.find((t) => t.territoryId === territoryId)!
           const owner = players.find((p) => p.id === territory.ownerPlayerId)
@@ -148,8 +156,7 @@ export function AttackFlowStep({
 
     setSubmitting(true)
     try {
-      await onDeclareAttack(fromTerritoryId, toTerritoryId, diceN)
-      setPhase('rolled')
+      if (await onDeclareAttack(fromTerritoryId, toTerritoryId, diceN)) setPhase('rolled')
     } finally {
       setSubmitting(false)
     }

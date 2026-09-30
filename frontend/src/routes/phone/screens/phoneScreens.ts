@@ -46,7 +46,8 @@ export interface PhoneScreenProps {
   /** Narratieve gevechts-broadcastdata (attacker/defender-worpen + resultaat), zie
    *  `useCombatBroadcast.ts`. Alleen relevant tijdens `TurnPhaseDto.Attack`. */
   combat: CombatBroadcastState | null
-  declareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<void>
+  /** `true` als de server de aanval aannam — anders blijft de flow op het dobbelsteenscherm. */
+  declareAttack: (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => Promise<boolean>
   /** Géén fire-and-forget: `DefendStep` toont het resultaat rechtstreeks uit deze respons. */
   chooseDefenseDice: (defenseDice: number, useDefenseBoost?: boolean) => Promise<CombatResultResponse | undefined>
   moveAfterConquest: (armiesToMove: number) => Promise<void>

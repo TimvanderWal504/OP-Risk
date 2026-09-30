@@ -7,6 +7,7 @@ import { useEventDrawNotice } from './useEventDrawNotice'
 import { useReportOnce } from './useReportOnce'
 import { ActionLogOfflineError } from './useActionLog'
 import { useCombatBroadcast } from './useCombatBroadcast'
+import { useTurnCombat } from './useTurnCombat'
 import { GamePhaseDto, type GameStateDto, type RecentActionDto } from '../types/GameState'
 import type {
   CombatResultResponse,
@@ -360,8 +361,10 @@ export function useGameState(gameId: string) {
   // `placeReinforcements`. `combat` (hieronder) draagt de weergavedata voor zowel aanvaller als
   // verdediger.
   const declareAttack = useCallback(
-    async (fromTerritoryId: string, toTerritoryId: string, attackDice: number) => {
-      if (!playerId) return
+    // `true` als de server de aanval aannam; bij een weigering (al als toast gemeld) blijft de
+    // aanvaller op het dobbelsteenscherm in plaats van op een gevecht te wachten dat niet komt.
+    async (fromTerritoryId: string, toTerritoryId: string, attackDice: number): Promise<boolean> => {
+      if (!playerId) return false
 
       const response = await invoke<DeclareAttackResponse>(
         'DeclareAttack',
@@ -372,7 +375,11 @@ export function useGameState(gameId: string) {
         attackDice,
       )
 
-      if (response) applyState(response.state)
+      if (!response) return false
+
+      applyState(response.state)
+
+      return true
     },
     [invoke, gameId, playerId],
   )
@@ -511,7 +518,7 @@ export function useGameState(gameId: string) {
     return connection.invoke<RecentActionDto[]>('GetActionLog', gameId)
   }, [connection, connectionState, gameId])
 
-  const combat = useCombatBroadcast(connection)
+  const combat = useTurnCombat(useCombatBroadcast(connection), state?.turnState?.activePlayerId ?? null)
 
   // Korte melding bij elke getrokken gebeurteniskaart (FO §9.2) — hier, naast de fouttoasts van
   // de telefoon, zodat elke telefoonroute hem krijgt.

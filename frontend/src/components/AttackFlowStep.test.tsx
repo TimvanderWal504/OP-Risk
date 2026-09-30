@@ -39,6 +39,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={null}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
@@ -66,6 +67,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={null}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
@@ -82,7 +84,7 @@ describe('AttackFlowStep', () => {
 
   it('doorloopt bron → doel → dobbelstenen en roept onDeclareAttack aan bij "Gooi"', async () => {
     const user = userEvent.setup()
-    const onDeclareAttack = vi.fn().mockResolvedValue(undefined)
+    const onDeclareAttack = vi.fn().mockResolvedValue(true)
 
     render(
       <AttackFlowStep
@@ -94,6 +96,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={null}
         onDeclareAttack={onDeclareAttack}
         onAbandonAttack={vi.fn()}
@@ -122,6 +125,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={{ fromTerritoryId: 'alaska', toTerritoryId: 'kamchatka', attackDice: 2, attackerRolls: [5, 3], awaitingRerollDecision: false }}
+        activeEffect={null}
         combat={{ correlationId: 'c1', attackerRolls: [5, 3], defenderRolls: null, reroll: null, defenseBoostUsed: false, narrated: null }}
         onDeclareAttack={vi.fn()}
         onAbandonAttack={vi.fn()}
@@ -159,6 +163,7 @@ describe('AttackFlowStep', () => {
           colors={colors}
           myColor={myColor}
           pendingCombat={rerollPendingCombat}
+          activeEffect={null}
           combat={rerollCombat}
           onDeclareAttack={vi.fn()}
           onAbandonAttack={vi.fn()}
@@ -198,6 +203,7 @@ describe('AttackFlowStep', () => {
           colors={colors}
           myColor={myColor}
           pendingCombat={rerollPendingCombat}
+          activeEffect={null}
           combat={rerollCombat}
           onDeclareAttack={vi.fn()}
           onAbandonAttack={vi.fn()}
@@ -223,6 +229,7 @@ describe('AttackFlowStep', () => {
           colors={colors}
           myColor={myColor}
           pendingCombat={{ ...rerollPendingCombat, awaitingRerollDecision: false }}
+          activeEffect={null}
           combat={rerollCombat}
           onDeclareAttack={vi.fn()}
           onAbandonAttack={vi.fn()}
@@ -251,6 +258,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={{
           correlationId: 'c1',
           attackerRolls: [5, 3],
@@ -303,6 +311,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={{
           correlationId: 'c1',
           attackerRolls: [5, 3],
@@ -347,6 +356,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={{
           correlationId: 'c1',
           attackerRolls: [5, 3],
@@ -394,6 +404,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={{
           correlationId: 'c1',
           attackerRolls: [6, 3],
@@ -438,6 +449,7 @@ describe('AttackFlowStep', () => {
         colors={colors}
         myColor={myColor}
         pendingCombat={null}
+        activeEffect={null}
         combat={{
           correlationId: 'c1',
           attackerRolls: [2, 1],
@@ -468,5 +480,76 @@ describe('AttackFlowStep', () => {
     expect(screen.queryByText('Nog een keer aanvallen')).not.toBeInTheDocument()
     // De overige vervolgacties blijven wel beschikbaar.
     expect(screen.getByText('Ander gevecht')).toBeInTheDocument()
+  })
+
+  /** FO §9.2: een afgesloten gebied valt niet aan en wordt niet aangevallen; over een dichte zeeroute ook niet. */
+  describe('met een lopend ronde-effect', () => {
+    const catalog = [
+      { id: 'alaska', continent: 'north-america', neighborTerritoryIds: ['kamchatka', 'alberta'] },
+      { id: 'kamchatka', continent: 'asia', neighborTerritoryIds: ['alaska'] },
+      { id: 'alberta', continent: 'north-america', neighborTerritoryIds: ['alaska'] },
+    ]
+    const board = [
+      { territoryId: 'alaska', ownerPlayerId: 'alice', armyCount: 4 },
+      { territoryId: 'kamchatka', ownerPlayerId: 'bob', armyCount: 2 },
+      { territoryId: 'alberta', ownerPlayerId: 'bob', armyCount: 2 },
+    ]
+    const renderFlow = (
+      activeEffect: { eventId: string; lockedTerritoryIds: string[]; blockedBorders: { from: string; to: string }[] },
+      onDeclareAttack = vi.fn().mockResolvedValue(true),
+    ) =>
+      render(
+        <AttackFlowStep
+          playerId="alice"
+          myTerritories={board.filter((t) => t.ownerPlayerId === 'alice')}
+          territories={board}
+          territoryCatalog={catalog}
+          players={players}
+          colors={colors}
+          myColor={myColor}
+          pendingCombat={null}
+          activeEffect={activeEffect}
+          combat={null}
+          onDeclareAttack={onDeclareAttack}
+          onAbandonAttack={vi.fn()}
+          onRerollAttackDie={vi.fn()}
+          onKeepAttackDice={vi.fn()}
+          onEndPhase={vi.fn()}
+        />,
+      )
+
+    it('biedt een afgesloten eigen gebied niet als bron aan', () => {
+      renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['alaska'], blockedBorders: [] })
+
+      expect(screen.queryByText('Alaska')).not.toBeInTheDocument()
+    })
+
+    it('biedt een afgesloten vijandelijk gebied niet als doel aan', async () => {
+      renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['kamchatka'], blockedBorders: [] })
+
+      await userEvent.click(screen.getByText('Alaska'))
+
+      expect(screen.queryByText('Kamtsjatka')).not.toBeInTheDocument()
+      expect(screen.getByText('Alberta')).toBeInTheDocument()
+    })
+
+    it('biedt geen doel aan over een geblokkeerde zeeroute, in welke richting die ook is opgegeven', async () => {
+      renderFlow({ eventId: 'stormachtige-zeeen', lockedTerritoryIds: [], blockedBorders: [{ from: 'kamchatka', to: 'alaska' }] })
+
+      await userEvent.click(screen.getByText('Alaska'))
+
+      expect(screen.queryByText('Kamtsjatka')).not.toBeInTheDocument()
+      expect(screen.getByText('Alberta')).toBeInTheDocument()
+    })
+
+    it('blijft op het dobbelsteenscherm als de server de aanval weigert', async () => {
+      renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: [], blockedBorders: [] }, vi.fn().mockResolvedValue(false))
+
+      await userEvent.click(screen.getByText('Alaska'))
+      await userEvent.click(screen.getByText('Kamtsjatka'))
+      await userEvent.click(screen.getByRole('button', { name: /Gooi/ }))
+
+      expect(screen.getByRole('button', { name: /Gooi/ })).toBeInTheDocument()
+    })
   })
 })
