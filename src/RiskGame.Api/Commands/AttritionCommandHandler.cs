@@ -51,7 +51,12 @@ public sealed class AttritionCommandHandler(
         if (projected.EventRound.PendingAttrition is null)
         {
             // De guard garandeert dat er een PendingAttrition was; zonder wachtenden is dit de laatste keuze.
-            turnAdvancer.StartTurn(session, projected, state.EventRound.PendingAttrition!.NextPlayerId);
+            var started = turnAdvancer.StartTurn(session, projected, state.EventRound.PendingAttrition!.NextPlayerId);
+
+            if (!started.IsSuccess)
+            {
+                return Result<GameStateDto>.Failure(started.Errors);
+            }
         }
 
         await session.SaveChangesAsync();

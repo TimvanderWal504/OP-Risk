@@ -97,7 +97,12 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
             // het laatste startleger plaatste (bij SetupMode.Random kan dat iedereen zijn).
             // Zijn versterkingen horen dus ook voor hém berekend te worden. Het laatste startleger
             // verandert geen eigenaar of continentbezit, dus de al geladen state volstaat.
-            turnAdvancer.StartTurn(session, state, state.TurnOrder[0]);
+            var started = turnAdvancer.StartTurn(session, state, state.TurnOrder[0]);
+
+            if (!started.IsSuccess)
+            {
+                return Result<GameStateDto>.Failure(started.Errors);
+            }
         }
 
         await session.SaveChangesAsync();

@@ -37,21 +37,21 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
 
         foreach (var expiring in state.ActiveEffects.ToArray())
         {
-            state = Emit(session, state, new EffectExpired(gameId, expiring.Effect.Id), projection.Apply);
+            state = ProjectedAppend.Emit(session, state, new EffectExpired(gameId, expiring.Effect.Id), projection.Apply);
         }
 
         var draw = EventDeckCalculator.Draw(state.EventRound.DrawPile, state.Map.Events, random);
 
         if (draw.ShuffledOrder is { } shuffledOrder)
         {
-            state = Emit(session, state, new EventDeckShuffled(gameId, shuffledOrder), projection.Apply);
+            state = ProjectedAppend.Emit(session, state, new EventDeckShuffled(gameId, shuffledOrder), projection.Apply);
         }
 
-        state = Emit(session, state, new EventCardDrawn(gameId, draw.EventId), projection.Apply);
+        state = ProjectedAppend.Emit(session, state, new EventCardDrawn(gameId, draw.EventId), projection.Apply);
 
         var effect = state.Map.Events.Single(definition => definition.Id == draw.EventId).Effect;
 
-        state = Emit(
+        state = ProjectedAppend.Emit(
             session,
             state,
             new EffectApplied(gameId, draw.EventId, EventBonusCalculator.BonusesAtDraw(state, effect)),
@@ -84,7 +84,7 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
 
             // Ook een lege verdeling: wie geen legers kan missen, staat zo toch in het verloop.
             var removals = ArmyAttritionCalculator.AutoMaxRemovals(state, playerId);
-            state = Emit(session, state, new ArmiesRemoved(gameId, playerId, removals), projection.Apply);
+            state = ProjectedAppend.Emit(session, state, new ArmiesRemoved(gameId, playerId, removals), projection.Apply);
         }
 
         if (choosers.Count == 0)
@@ -92,18 +92,9 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
             return new EventRoundOutcome(state, AwaitsAttrition: false);
         }
 
-        state = Emit(
+        state = ProjectedAppend.Emit(
             session, state, new AttritionStarted(gameId, eventId, amount, choosers, nextPlayerId), projection.Apply);
 
         return new EventRoundOutcome(state, AwaitsAttrition: true);
-    }
-
-    private static GameState Emit<TEvent>(
-        IDocumentSession session, GameState state, TEvent @event, Func<GameState, TEvent, GameState> fold)
-        where TEvent : notnull
-    {
-        session.Events.Append(state.GameId, @event);
-
-        return fold(state, @event);
     }
 }
