@@ -247,7 +247,7 @@ export const seaRouteTok = {
   color: palette.silver[300],
   opacity: 0.6,
   sw: 4,
-  dotGap: 12,
+  dotGap: 8,
 } as const;
 
 /**
@@ -262,9 +262,9 @@ export const seaRouteTok = {
  */
 export const eventRoundTok = {
   lockedHatchColor: palette.silver[300],
-  lockedHatchOpacity: 0.55,
-  lockedHatchGap: 10,
-  lockedHatchSw: 2.5,
+  lockedHatchOpacity: 0.75,
+  lockedHatchGap: 5,
+  lockedHatchSw: 3.5,
   cardWidthPx: 760,
   /**
    * Lengtegraad waarop de actief-effect-chip onderaan de kaart centreert: de lege oceaan onder
