@@ -11,8 +11,8 @@ namespace RiskGame.Api.Services;
 /// Alleen een connectie die zich als speler bewees (<c>JoinGame</c>, of <c>RejoinGame</c> met een
 /// geldig sessietoken) wordt geregistreerd — een TV of een telefoon die alleen meekijkt niet. Eén
 /// speler kan meerdere connecties hebben (een tweede tabblad); hij is pas weg als de laatste sluit.
-/// Een afwezige speler blijft hier staan tot hij terugkomt: het opruimen van spelers uit spellen die
-/// niet meer lopen, hoort bij de lezer van deze lijst (de host-uitval, TO §4.1).
+/// Een afwezige speler blijft hier staan tot hij terugkomt of tot <see cref="HostAbsenceMonitor"/> hem
+/// vergeet omdat zijn spel niet meer loopt (<see cref="Forget"/>).
 /// </remarks>
 public sealed class PlayerPresenceRegistry(TimeProvider timeProvider)
 {
@@ -81,6 +81,32 @@ public sealed class PlayerPresenceRegistry(TimeProvider timeProvider)
         lock (_lock)
         {
             return _absentSince.TryGetValue(new PlayerKey(gameId, playerId), out var since) ? since : null;
+        }
+    }
+
+    /// <summary>
+    /// De spelers die al minstens sinds <paramref name="cutoff"/> geen connectie meer hebben — voor de
+    /// host-uitval (FO §11.1).
+    /// </summary>
+    public IReadOnlyList<(string GameId, string PlayerId)> AbsentPlayers(DateTimeOffset cutoff)
+    {
+        lock (_lock)
+        {
+            return [.. _absentSince
+                .Where(entry => entry.Value <= cutoff)
+                .Select(entry => (entry.Key.GameId, entry.Key.PlayerId))];
+        }
+    }
+
+    /// <summary>
+    /// Vergeet een afwezige speler — voor spellen die niet meer lopen, zodat de lijst niet onbegrensd
+    /// groeit. Een speler die intussen opnieuw verbond, blijft staan.
+    /// </summary>
+    public void Forget(string gameId, string playerId)
+    {
+        lock (_lock)
+        {
+            _absentSince.Remove(new PlayerKey(gameId, playerId));
         }
     }
 

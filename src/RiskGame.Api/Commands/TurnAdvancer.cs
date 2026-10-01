@@ -1,6 +1,7 @@
 using Marten;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Projections;
+using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.AutoPass;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Reinforcement;
@@ -25,12 +26,12 @@ namespace RiskGame.Api.Commands;
 /// eindigt bij de eerste speler zonder auto-pass, bij <c>GameWon</c>, of bij een attrition-keuze die
 /// op een mens wacht — hooguit één ronde diep.
 /// </remarks>
-public sealed class TurnAdvancer(GameProjection projection, EventRoundStep eventRound, TimeProvider timeProvider)
+public sealed class TurnAdvancer(
+    GameProjection projection, EventRoundStep eventRound, IRandomSource random, TimeProvider timeProvider)
 {
     /// <summary>
-    /// Beëindigt de eigen beurt van <paramref name="playerId"/> en start de volgende.
-    /// <paramref name="state"/> is de state van vóór het beurteinde; events die de aanroeper al voor
-    /// deze beurt appendde (zoals <c>CardDrawn</c>) raken missies en versterkingen niet.
+    /// Beëindigt de eigen beurt van <paramref name="playerId"/> (met de kaart bij een verovering, FO
+    /// §5.2) en start de volgende. <paramref name="state"/> is de state van vóór het beurteinde.
     /// </summary>
     public ValidationResult EndTurn(IDocumentSession session, GameState state, string playerId)
     {
@@ -38,7 +39,60 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
         ArgumentNullException.ThrowIfNull(state);
         ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
 
-        return EndTurn(session, state, playerId, isOwnTurn: true);
+        return EndTurn(session, DrawCardIfConquered(session, state, playerId), playerId, isOwnTurn: true);
+    }
+
+    /// <summary>
+    /// Beëindigt de beurt van een speler die midden in die beurt op auto-pass ging (FO §11.2), nadat
+    /// een lopend gevecht is uitgespeeld: de kaart bij een verovering wel (die heeft hij verdiend), maar
+    /// het is geen eigen beurteinde — zijn <c>requiresOwnTurn</c>-missie telt niet (FO §6.1).
+    /// </summary>
+    public ValidationResult EndInterruptedTurn(IDocumentSession session, GameState state, string playerId)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
+
+        return EndTurn(session, DrawCardIfConquered(session, state, playerId), playerId, isOwnTurn: false);
+    }
+
+    /// <summary>
+    /// FO §5.2: een beurt met minstens één verovering trekt aan het einde 1 kaart. De trekstapel is
+    /// al geschud (bij spelstart, of hier bij een lege trekstapel) — de bovenste kaart pakken voegt
+    /// dus geen extra toeval toe; <see cref="IRandomSource"/> is alleen nodig om de aflegstapel te
+    /// hertschudden (TO §4.2).
+    /// </summary>
+    private GameState DrawCardIfConquered(IDocumentSession session, GameState state, string playerId)
+    {
+        if (!state.TurnState!.HasConqueredThisTurn)
+        {
+            return state;
+        }
+
+        var gameId = state.GameId;
+
+        if (state.Deck.DrawPile.Count == 0 && state.Deck.DiscardPile.Count > 0)
+        {
+            var reshuffled = random.PickRandomSubset(state.Deck.DiscardPile, state.Deck.DiscardPile.Count);
+            state = ProjectedAppend.Emit(
+                session, state, new DeckShuffled(gameId, [.. reshuffled.Select(card => card.Id)]), projection.Apply);
+        }
+
+        if (state.Deck.DrawPile.Count > 0)
+        {
+            return ProjectedAppend.Emit(
+                session, state, new CardDrawn(gameId, playerId, state.Deck.DrawPile[0].Id), projection.Apply);
+        }
+
+        if (state.Players.Sum(player => player.Hand.Count) != state.Map.Deck.Count)
+        {
+            // Beide stapels leeg terwijl niet alle kaarten in een hand zitten kan alleen een
+            // bug zijn (bv. een stream zonder DeckShuffled bij spelstart) — geen stille no-op.
+            throw new InvalidOperationException(
+                $"Trekstapel en aflegstapel zijn beide leeg voor spel '{gameId}', maar niet alle kaarten zijn in een hand.");
+        }
+
+        return state;
     }
 
     /// <summary>

@@ -552,35 +552,43 @@ public sealed class GameHub(
     /// </summary>
     private async Task NarrateCombatAsync(string gameId, DefenseResolution combat, GameStateDto state)
     {
-        await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
-            combat.DefenderId,
-            combat.DefenderRolls,
-            combat.DefenseBoostUsed ? "defenseBoost" : "defense",
-            combat.CorrelationId));
-
         await using var versionSession = store.QuerySession();
-        var stateVersion = await FetchStateVersionAsync(versionSession, gameId);
+        var versionedState = state with { StateVersion = await FetchStateVersionAsync(versionSession, gameId) };
 
-        await Clients.Group(GameGroups.All(gameId)).CombatNarrated(new CombatNarratedMessage(
-            combat.CorrelationId,
-            combat.AttackerId,
-            combat.DefenderId,
-            combat.FromTerritoryId,
-            combat.ToTerritoryId,
-            combat.AttackerLosses,
-            combat.DefenderLosses,
-            combat.Conquered,
-            combat.EliminatedPlayerId,
-            stateVersion));
-
-        if (state.Winners.Count > 0)
-        {
-            await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(state.Winners, stateVersion));
-        }
+        await CombatNarration.BroadcastAsync(Clients, gameId, combat, versionedState);
     }
 
     private Task NarrateAutoDefenseAsync(string gameId, DefenseResolution? autoDefense, GameStateDto state) =>
         autoDefense is null ? Task.CompletedTask : NarrateCombatAsync(gameId, autoDefense, state);
+
+    /// <summary>
+    /// De host zet een afwezige speler op auto-pass (FO §11.2, TO §4.1). Anders dan de andere
+    /// commando's vertrouwt dit de meegestuurde <paramref name="playerId"/> niet: de aanroepende
+    /// verbinding moet zich als die speler bewezen hebben (<see cref="PlayerPresenceRegistry"/>) —
+    /// het host-id is publiek, en auto-pass laat een ander automatisch verdedigen en zijn beurten
+    /// verliezen. Wat er op de doelspeler wachtte, wordt meteen afgehandeld en verteld op de TV.
+    /// </summary>
+    public async Task<GameStateDto> SetAutoPass(string gameId, string playerId, string targetPlayerId)
+    {
+        if (!presence.IsConnectionOf(Context.ConnectionId, gameId, playerId))
+        {
+            throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.notYourConnection", new Dictionary<string, string> { ["playerId"] = playerId })));
+        }
+
+        var result = await autoPassCommands.SetAutoPassAsync(gameId, playerId, targetPlayerId);
+
+        if (result.IsSuccess)
+        {
+            foreach (var combat in result.Value.Combats)
+            {
+                await NarrateCombatAsync(gameId, combat, result.Value.State);
+            }
+        }
+
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, changeResult => changeResult.State, state => state, (_, s) => s, _ => playerId);
+    }
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
     {

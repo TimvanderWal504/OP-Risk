@@ -45,7 +45,11 @@ builder.Services.AddScoped<TurnAdvancer>();
 builder.Services.AddSingleton(sp => new GameProjection(sp.GetRequiredService<IMapDefinitionSource>()));
 builder.Services.AddScoped<TvDisplayCommandHandler>();
 builder.Services.AddScoped<AutoPassCommandHandler>();
+builder.Services.AddScoped<AutoPassResolver>();
+builder.Services.AddScoped<DefenseStep>();
+builder.Services.AddScoped<HostAbsenceMonitor>();
 builder.Services.AddHostedService<TurnTimerBackgroundService>();
+builder.Services.AddHostedService<HostAbsenceBackgroundService>();
 // JoinGameRateLimitFilter houdt per-IP-tellerstate bij (TO §8) die tussen hub-aanroepen moet
 // overleven — expliciet als singleton, anders zou SignalR er mogelijk telkens een verse,
 // lege instantie van maken en is de hele maatregel een stille no-op.
