@@ -19,7 +19,7 @@ public sealed class ReinforceCommandHandler(IDocumentStore store, TimeProvider t
         string gameId, string playerId, string territoryId, int amount)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -60,7 +60,7 @@ public sealed class ReinforceCommandHandler(IDocumentStore store, TimeProvider t
         string gameId, string playerId, IReadOnlyList<string> cardIds)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

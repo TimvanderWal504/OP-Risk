@@ -24,7 +24,7 @@ public sealed class OrderRollCommandHandler(IDocumentStore store, IRandomSource 
     public async Task<Result<OrderRollResult>> RollForOrderAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

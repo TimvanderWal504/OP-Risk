@@ -29,7 +29,7 @@ public sealed class AttritionCommandHandler(
         string gameId, string playerId, IReadOnlyDictionary<string, int> removalsByTerritory)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

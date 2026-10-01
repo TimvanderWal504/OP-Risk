@@ -18,7 +18,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
     public async Task<Result<GameStateDto>> ClaimTerritoryAsync(string gameId, string playerId, string territoryId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -56,7 +56,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
     public async Task<Result<GameStateDto>> PlaceInitialArmyAsync(string gameId, string playerId, string territoryId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

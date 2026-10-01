@@ -49,7 +49,7 @@ public sealed class AutoPassCommandHandler(
         string gameId, string hostPlayerId, string targetPlayerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -79,7 +79,7 @@ public sealed class AutoPassCommandHandler(
     private async Task<Result<AutoPassChangeResult?>> TryMarkHostAbsentAsync(string gameId, string hostPlayerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is not { Phase: GamePhase.InProgress }
             || !state.HasPlayer(hostPlayerId)
@@ -120,7 +120,7 @@ public sealed class AutoPassCommandHandler(
     private async Task<Result<GameStateDto?>> TryPlayerReturnedAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

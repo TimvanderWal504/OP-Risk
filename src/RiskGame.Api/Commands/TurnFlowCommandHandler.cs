@@ -28,7 +28,7 @@ public sealed class TurnFlowCommandHandler(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int armiesToMove)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -54,7 +54,7 @@ public sealed class TurnFlowCommandHandler(
     public async Task<Result<GameStateDto>> EndPhaseAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -97,7 +97,7 @@ public sealed class TurnFlowCommandHandler(
     public async Task<Result<GameStateDto>> ForceAdvanceToFortifyAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -157,7 +157,7 @@ public sealed class TurnFlowCommandHandler(
     private async Task<Result<GameStateDto>> TryEndTurnAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

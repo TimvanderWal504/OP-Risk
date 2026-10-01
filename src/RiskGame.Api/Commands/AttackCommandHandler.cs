@@ -56,7 +56,7 @@ public sealed class AttackCommandHandler(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -126,7 +126,7 @@ public sealed class AttackCommandHandler(
         string gameId, string playerId, int dieIndex)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -171,7 +171,7 @@ public sealed class AttackCommandHandler(
     public async Task<Result<KeepAttackDiceResult>> KeepAttackDiceAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -210,7 +210,7 @@ public sealed class AttackCommandHandler(
         string gameId, string playerId, int defenseDice, bool useDefenseBoost)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -253,7 +253,7 @@ public sealed class AttackCommandHandler(
     public async Task<Result<GameStateDto>> AbandonAttackAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -284,7 +284,7 @@ public sealed class AttackCommandHandler(
         string gameId, string playerId, int armiesToMove)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
