@@ -524,6 +524,12 @@ describe('AttackFlowStep', () => {
       expect(screen.queryByText('Alaska')).not.toBeInTheDocument()
     })
 
+    it('telt een afgesloten doel of een doel over een dichte zeeroute niet mee in "doelen"', () => {
+      renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['kamchatka'], blockedBorders: [] })
+
+      expect(screen.getByText(/1\s+doelen/)).toBeInTheDocument()
+    })
+
     it('biedt een afgesloten vijandelijk gebied niet als doel aan', async () => {
       renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['kamchatka'], blockedBorders: [] })
 
