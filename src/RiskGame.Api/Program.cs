@@ -29,6 +29,7 @@ builder.Services.AddSingleton<IDocumentStore>(sp =>
 });
 builder.Services.AddSingleton<IRandomSource, SystemRandomSource>();
 builder.Services.AddSingleton<TvPairingRegistry>();
+builder.Services.AddSingleton<PlayerPresenceRegistry>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<LobbyCommandHandler>();
 builder.Services.AddScoped<OrderRollCommandHandler>();
@@ -43,6 +44,7 @@ builder.Services.AddScoped<TurnAdvancer>();
 // ge-appende event al in het geheugen moeten zien (gebeurtenisronde, FO §9.2).
 builder.Services.AddSingleton(sp => new GameProjection(sp.GetRequiredService<IMapDefinitionSource>()));
 builder.Services.AddScoped<TvDisplayCommandHandler>();
+builder.Services.AddScoped<AutoPassCommandHandler>();
 builder.Services.AddHostedService<TurnTimerBackgroundService>();
 // JoinGameRateLimitFilter houdt per-IP-tellerstate bij (TO §8) die tussen hub-aanroepen moet
 // overleven — expliciet als singleton, anders zou SignalR er mogelijk telkens een verse,

@@ -150,8 +150,11 @@ public sealed class GameHub(
     TurnFlowCommandHandler turnFlowCommands,
     AttritionCommandHandler attritionCommands,
     TvDisplayCommandHandler tvDisplayCommands,
+    AutoPassCommandHandler autoPassCommands,
     TvPairingRegistry tvPairings,
-    TimeProvider timeProvider) : Hub<IGameClient>
+    PlayerPresenceRegistry presence,
+    TimeProvider timeProvider,
+    ILogger<GameHub> logger) : Hub<IGameClient>
 {
     /// <summary>
     /// "TV koppelen": geeft deze connectie een koppelcode die de TV als QR toont. De host-telefoon
@@ -187,6 +190,7 @@ public sealed class GameHub(
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         tvPairings.Remove(Context.ConnectionId);
+        presence.Unregister(Context.ConnectionId);
 
         return base.OnDisconnectedAsync(exception);
     }
@@ -245,6 +249,7 @@ public sealed class GameHub(
             // anders dan bij RejoinGame vóórdat het een sessietoken vereiste, is er hier niets
             // te impersoneren: de identiteit (én het token) ontstaan pas in dit moment.
             await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, result.Value.PlayerId));
+            presence.Register(Context.ConnectionId, gameId, result.Value.PlayerId);
 
             // De telefoon roept vóór het joinen WatchGame aan (voor het kleurenpalet op de
             // join-stap) en zit daardoor ook in de tv-groep. Een connectie die speler wordt
@@ -301,11 +306,52 @@ public sealed class GameHub(
         if (stored is not null && sessionToken.Length > 0 && TokensMatch(stored.Token, sessionToken))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, playerId));
+            presence.Register(Context.ConnectionId, gameId, playerId);
 
-            return GameStateDtoMapper.RedactForPlayer(dto, playerId);
+            var returned = state.Phase == GamePhase.InProgress && state.Player(playerId).IsAutoPass
+                ? await ReturnFromAutoPassAsync(gameId, playerId)
+                : null;
+
+            return GameStateDtoMapper.RedactForPlayer(returned ?? dto, playerId);
         }
 
         return GameStateDtoMapper.RedactForTv(dto);
+    }
+
+    /// <summary>
+    /// De speler is terug (FO §11.2): auto-pass vervalt en iedereen krijgt de nieuwe state. Levert die
+    /// state op, of <c>null</c> als er niets veranderde. Herverbinden mag hier nooit op stuklopen
+    /// (TO §6.3): botst het opheffen ook na de herhaalpogingen nog, dan wordt dat gelogd en krijgt de
+    /// telefoon gewoon de state zoals hij was — de speler blijft dan op auto-pass tot zijn volgende
+    /// herverbinding.
+    /// </summary>
+    private async Task<GameStateDto?> ReturnFromAutoPassAsync(string gameId, string playerId)
+    {
+        Result<GameStateDto?> result;
+
+        try
+        {
+            result = await autoPassCommands.PlayerReturnedAsync(gameId, playerId);
+        }
+        catch (Exception ex) when (ConcurrencyRetry.IsConflict(ex))
+        {
+            logger.LogWarning(
+                ex, "Auto-pass van speler {PlayerId} in spel {GameId} niet opgeheven bij herverbinden.", playerId, gameId);
+            return null;
+        }
+
+        // Een failure kan hier alleen "onbekend spel" zijn, en het spel is al geladen; null = niets veranderd.
+        if (!result.IsSuccess || result.Value is null)
+        {
+            return null;
+        }
+
+        await using var session = store.QuerySession();
+        var versionedState = result.Value with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+
+        await GameStatePush.BroadcastAsync(Clients, gameId, versionedState);
+
+        return versionedState;
     }
 
     public async Task<GameStateDto> ChooseColor(string gameId, string playerId, string colorId)

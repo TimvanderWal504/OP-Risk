@@ -35,6 +35,10 @@ public static class ConcurrencyRetry
         }
     }
 
-    private static bool IsConflict(Exception ex) =>
+    /// <summary>
+    /// Of <paramref name="ex"/> een botsende gelijktijdige append is — ook voor een aanroeper die na
+    /// de laatste poging nog iets anders wil doen dan falen (<c>RejoinGame</c>).
+    /// </summary>
+    public static bool IsConflict(Exception ex) =>
         ex is ConcurrencyException or EventStreamUnexpectedMaxEventIdException;
 }
