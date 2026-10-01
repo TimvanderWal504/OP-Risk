@@ -632,6 +632,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             @event);
     }
 
+    /// <summary>Zet de pool op 0: de speler kon hem nergens kwijt (FO §9.2).</summary>
+    public GameState Apply(GameState state, ArmiesLapsed @event) =>
+        Record(state.WithTurnState(state.TurnState! with { ArmiesRemaining = 0 }), @event);
+
     /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>
     public GameState Apply(GameState state, EffectExpired @event) =>
         Record(

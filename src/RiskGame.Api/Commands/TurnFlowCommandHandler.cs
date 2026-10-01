@@ -72,6 +72,12 @@ public sealed class TurnFlowCommandHandler(
         var now = timeProvider.GetUtcNow();
         var timer = PhaseTimerFactory.ForPhase(nextPhase, state.Settings, state.TurnState.Timer, now);
 
+        // Al zijn gebieden afgesloten (FO §9.2): de rest van de pool vervalt, met een regel in het verloop.
+        if (PoolLapse.For(state, playerId, state.TurnState.ArmiesRemaining) is { } lapsed)
+        {
+            session.Events.Append(gameId, lapsed);
+        }
+
         // Binnen een beurt gaat het altijd Versterken → Aanvallen → Verplaatsen
         // (TurnPhaseTransitions.Next), dus hier wordt nooit een versterkingspool toegekend.
         session.Events.Append(
@@ -124,13 +130,23 @@ public sealed class TurnFlowCommandHandler(
         // hierboven staat beide toe); wat er ná het terugdraaien van de pool overblijft
         // (incl. een eventuele basispool) vervalt gewoon — dat is geen apart event, alleen
         // afwezigheid van een event.
-        foreach (var trade in CardTradeReversal.Resolve(turnState))
+        var reverted = CardTradeReversal.Resolve(turnState);
+
+        foreach (var trade in reverted)
         {
             session.Events.Append(
                 gameId,
                 new CardTradeReverted(
                     gameId, playerId, trade.CardIds, trade.SetValue, trade.OwnedTerritoryBonuses, trade.PreviousTradeValue,
                     trade.PoolBonus));
+        }
+
+        // Al zijn gebieden afgesloten (FO §9.2): wat na het terugdraaien over is, vervalt met een regel.
+        var armiesLeft = turnState.ArmiesRemaining - reverted.Sum(trade => trade.PoolArmies);
+
+        if (PoolLapse.For(state, playerId, armiesLeft) is { } lapsed)
+        {
+            session.Events.Append(gameId, lapsed);
         }
 
         // Naar Verplaatsen: geen versterkingspool, zie EndPhaseAsync.

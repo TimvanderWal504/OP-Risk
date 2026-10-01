@@ -177,6 +177,7 @@ public enum RecentActionKindDto
     AutoPassDisabled,
     HostTransferred,
     AutoTurnPlayed,
+    ArmiesLapsed,
 }
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>

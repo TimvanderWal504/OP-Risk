@@ -234,6 +234,7 @@ export const RecentActionKindDto = {
   AutoPassDisabled: 18,
   HostTransferred: 19,
   AutoTurnPlayed: 20,
+  ArmiesLapsed: 21,
 } as const
 export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
 

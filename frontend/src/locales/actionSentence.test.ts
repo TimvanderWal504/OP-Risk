@@ -63,6 +63,8 @@ describe('actionSentence', () => {
     ['één afgestaan leger', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 1, eventId: 'pensioengolf' }), 'Alice staat een leger af door Pensioengolf'],
     ['meerdere afgestane legers', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 3, eventId: 'epidemie-in-de-steden' }), 'Alice staat 3 legers af door Epidemie in de steden'],
     ['geen legers om af te staan', action({ kind: RecentActionKindDto.ArmiesRemoved, amount: 0, eventId: 'epidemie-in-de-steden' }), 'Alice heeft geen legers om af te staan (Epidemie in de steden)'],
+    ['vervallen legers, alles afgesloten', action({ kind: RecentActionKindDto.ArmiesLapsed, amount: 4, eventId: 'lawines-in-de-oeral' }), 'Alice kon 4 legers nergens kwijt (Lawines in de Oeral)'],
+    ['één vervallen leger', action({ kind: RecentActionKindDto.ArmiesLapsed, amount: 1, eventId: 'lawines-in-de-oeral' }), 'Alice kon een leger nergens kwijt (Lawines in de Oeral)'],
     ['een bonus van meerdere legers', action({ kind: RecentActionKindDto.EventBonusGranted, amount: 2, eventId: 'babyboom' }), 'Alice krijgt 2 extra legers bij de volgende beurt (Babyboom)'],
     ['een bonus van één leger', action({ kind: RecentActionKindDto.EventBonusGranted, amount: 1, eventId: 'bevolkingsgroei' }), 'Alice krijgt een extra leger bij de volgende beurt (Bevolkingsgroei)'],
     ['een bonus voor iedereen', action({ kind: RecentActionKindDto.EventBonusGranted, playerId: null, amount: 2, eventId: 'babyboom' }), 'Iedereen krijgt 2 extra legers bij de volgende beurt (Babyboom)'],

@@ -102,4 +102,10 @@ public enum RecentActionKind
     /// <see cref="RecentAction.Amount"/> is het aantal uit de pool geplaatste legers.
     /// </summary>
     AutoTurnPlayed,
+
+    /// <summary>
+    /// Een speler kon <see cref="RecentAction.Amount"/> versterkingen nergens kwijt: al zijn gebieden
+    /// waren afgesloten door de kaart in <see cref="RecentAction.EventId"/> (FO §9.2).
+    /// </summary>
+    ArmiesLapsed,
 }

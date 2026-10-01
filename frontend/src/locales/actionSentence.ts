@@ -124,6 +124,10 @@ export function actionSentence(
       return t('autoPassDisabled')
     case RecentActionKindDto.HostTransferred:
       return t('hostTransferred')
+    case RecentActionKindDto.ArmiesLapsed: {
+      const event = eventName(action.eventId)
+      return action.amount === 1 ? t('armiesLapsedOne', { event }) : t('armiesLapsed', { count: action.amount, event })
+    }
     case RecentActionKindDto.AutoTurnPlayed:
       // Eén regel voor de hele automatische beurt; een verplichte inleg verandert de inlegwaarde
       // voor iedereen en wordt daarom genoemd (DESIGN.md § Auto-pass).

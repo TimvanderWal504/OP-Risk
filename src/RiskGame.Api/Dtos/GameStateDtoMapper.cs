@@ -231,6 +231,7 @@ public static class GameStateDtoMapper
         RecentActionKind.AutoPassDisabled => RecentActionKindDto.AutoPassDisabled,
         RecentActionKind.HostTransferred => RecentActionKindDto.HostTransferred,
         RecentActionKind.AutoTurnPlayed => RecentActionKindDto.AutoTurnPlayed,
+        RecentActionKind.ArmiesLapsed => RecentActionKindDto.ArmiesLapsed,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
     };
 

@@ -78,6 +78,15 @@ export const actionTicker = {
     nl: 'Niemand heeft legers om af te staan ({{event}})',
     en: 'Nobody has armies to give up ({{event}})',
   },
+  // Al zijn gebieden afgesloten (FO §9.2): de pool vervalt (besluit gebruiker 2026-10-01).
+  armiesLapsedOne: {
+    nl: 'kon een leger nergens kwijt ({{event}})',
+    en: 'had nowhere to place one army ({{event}})',
+  },
+  armiesLapsed: {
+    nl: 'kon {{count}} legers nergens kwijt ({{event}})',
+    en: 'had nowhere to place {{count}} armies ({{event}})',
+  },
   armiesRemovedNone: {
     nl: 'heeft geen legers om af te staan ({{event}})',
     en: 'has no armies to give up ({{event}})',

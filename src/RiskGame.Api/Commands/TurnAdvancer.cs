@@ -324,6 +324,12 @@ public sealed class TurnAdvancer(
                 projection.Apply);
         }
 
+        // Al zijn gebieden afgesloten (FO §9.2): de planner plaatste niets, de pool vervalt met een regel.
+        if (PoolLapse.For(state, playerId, state.TurnState!.ArmiesRemaining) is { } lapsed)
+        {
+            state = ProjectedAppend.Emit(session, state, lapsed, projection.Apply);
+        }
+
         return EndTurn(session, state, playerId, isOwnTurn: false);
     }
 

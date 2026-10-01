@@ -232,6 +232,10 @@ public sealed partial class GameProjection
         return state.WithRecentActions(RecentActionLog.CollapseToEveryone(state.RecentActions, kind, eventId, participantIds));
     }
 
+    private static GameState Record(GameState state, ArmiesLapsed @event) =>
+        Append(state, new RecentAction(
+            RecentActionKind.ArmiesLapsed, PlayerId: @event.PlayerId, Amount: @event.Amount, EventId: @event.EventId));
+
     private static GameState Record(GameState state, EffectExpired @event) =>
         Append(state, new RecentAction(RecentActionKind.EffectExpired, EventId: @event.EventId));
 }
