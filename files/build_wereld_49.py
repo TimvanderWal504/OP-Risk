@@ -26,6 +26,16 @@ WEST_AFRICA_CODES = ["NGA", "NER", "BEN", "TGO", "GHA", "CIV", "LBR", "SLE",
                      "GIN", "GNB", "SEN", "GMB", "MLI", "BFA"]
 WESTERN_CHINA_CODES = ["CN-XJ", "CN-XZ", "CN-QH"]
 
+# Ankerpunten (lon, lat) voor legerschijf en naam op het TV-bord, in plaats van het berekende
+# zwaartepunt (FO §4.5, besluit 2026-10-01). Chili is smal en zijn zwaartepunt lag 89 px van
+# dat van Argentinië, terwijl twee schijven 93 px nodig hebben: schijven en namen overlapten.
+# Deze twee punten zijn doorgerekend met de projectie en markermaten van het TV-bord en staan
+# bij de standaard tekstgrootte volledig vrij. Alleen voor wereld-49; standaard-43 is ongemoeid.
+LABEL_ANCHORS = {
+    "chile": (-70.0, -26.0),
+    "argentina": (-62.0, -38.5),
+}
+
 
 def parts_of(geometry):
     return geometry["coordinates"] if geometry["type"] == "MultiPolygon" else [geometry["coordinates"]]
@@ -63,6 +73,19 @@ def centroid(parts):
 
 def part_centroid(poly):
     return centroid([poly])
+
+
+def contains(geometry, point):
+    """Of point binnen het gebied ligt: in een buitenring en niet in een van diens gaten."""
+    def in_ring(ring):
+        x, y = point
+        inside = False
+        for (x1, y1), (x2, y2) in zip(ring, ring[1:]):
+            if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+                inside = not inside
+        return inside
+
+    return any(in_ring(poly[0]) and not any(in_ring(hole) for hole in poly[1:]) for poly in parts_of(geometry))
 
 
 def side(point, line):
@@ -197,6 +220,11 @@ def main():
                "indonesia", "philippines", "congo", "west-africa", "china", "western-china"}
     for tid in changed:
         meta[tid]["centroid"] = centroid(parts_of(geo[tid]))
+
+    for tid, anchor in LABEL_ANCHORS.items():
+        if not contains(geo[tid], anchor):
+            raise SystemExit(f"Ankerpunt {anchor} ligt niet binnen {tid}")
+        meta[tid]["centroid"] = list(anchor)
 
     os.makedirs(TARGET, exist_ok=True)
     territories = [{k: meta[tid][k] for k in ("id", "name", "continent", "atomicRegions", "centroid")}
