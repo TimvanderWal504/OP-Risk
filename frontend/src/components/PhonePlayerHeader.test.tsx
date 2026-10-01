@@ -431,9 +431,25 @@ describe('PhonePlayerHeader', () => {
   describe('auto-pass (DESIGN.md § Auto-pass)', () => {
     const header = (me = fixtureState.players[0], setAutoPass = vi.fn().mockResolvedValue(undefined)) => (
       <PhonePlayerHeader
-        state={{ ...fixtureState, players: [fixtureState.players[0], fixtureState.players[1]] }}
+        state={{
+          ...fixtureState,
+          phase: GamePhaseDto.InProgress,
+          turnState: {
+            activePlayerId: 'bob',
+            turnPhase: TurnPhaseDto.Attack,
+            armiesRemaining: 0,
+            pendingCombat: null,
+            timer: { remainingMs: 90_000, isPaused: false },
+            reinforcementBreakdown: null,
+            fortifiesRemaining: 1,
+            mustTradeInCards: false,
+            reachableFortifyGroups: [],
+            placeableTerritoryIds: ['alaska'],
+          },
+          players: [fixtureState.players[0], fixtureState.players[1]],
+        }}
         me={me}
-        phase={GamePhaseDto.Claiming}
+        phase={GamePhaseDto.InProgress}
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}

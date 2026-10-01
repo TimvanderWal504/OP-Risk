@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { GameStateDto } from '../types/GameState'
-import { EventDurationDto } from '../types/GameState'
+import { EventDurationDto, GamePhaseDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 import { Badge } from './ui/Badge'
 import { AutoPassButton } from './ui/AutoPassButton'
@@ -85,9 +85,11 @@ export function GameInfoStandings({ state, me, onAutoPassRequest }: GameInfoStan
       {rows.map(({ player, territories, armies, continents }) => {
         const color = state.colors.find((c) => c.id === player.colorId)
         const isMe = player.id === me.id
-        // Alleen de host, alleen bij een ander die nog speelt en er nog niet op staat (DESIGN.md
-        // § Auto-pass, The Invisible Design Rule).
-        const canSetAutoPass = me.isHost && !isMe && !player.isEliminated && !player.isAutoPass
+        // Alleen de host, alleen tijdens het spel zelf (FO §11.2: niet in lobby of opstelling), alleen
+        // bij een ander die nog speelt en er nog niet op staat (DESIGN.md § Auto-pass, The Invisible
+        // Design Rule).
+        const canSetAutoPass =
+          state.phase === GamePhaseDto.InProgress && me.isHost && !isMe && !player.isEliminated && !player.isAutoPass
         // Middle-dot-stat-regel, zelfde idioom als het TV-spelerspaneel; kaarten pas vanaf 1
         // (The Invisible Design Rule, zie DESIGN.md "Player Header / Stat rows").
         const stats = [

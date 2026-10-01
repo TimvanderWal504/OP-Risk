@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { GameInfoStandings } from './GameInfoStandings'
 import { fixtureState } from '../routes/phone/screens/phoneScreenFixture'
-import { EventDurationDto, EventEffectKindDto, type GameStateDto } from '../types/GameState'
+import { EventDurationDto, EventEffectKindDto, GamePhaseDto, type GameStateDto } from '../types/GameState'
 
 const [alice, bob] = fixtureState.players
 const carol = { ...bob, id: 'carol', name: 'Carol', colorId: 'green' }
@@ -110,6 +110,7 @@ describe('GameInfoStandings', () => {
     it('geeft de host de knop alleen bij andere spelers die nog zelf spelen', async () => {
       const onAutoPassRequest = vi.fn()
       const withStates = state({
+        phase: GamePhaseDto.InProgress,
         players: [alice, { ...bob, isAutoPass: true }, { ...carol, isEliminated: true }, { ...bob, id: 'dave', name: 'Dave' }],
       })
       render(<GameInfoStandings state={withStates} me={alice} onAutoPassRequest={onAutoPassRequest} />)
@@ -121,6 +122,12 @@ describe('GameInfoStandings', () => {
 
       await userEvent.click(buttons[0])
       expect(onAutoPassRequest).toHaveBeenCalledWith(expect.objectContaining({ id: 'dave' }))
+    })
+
+    it.each([GamePhaseDto.Claiming, GamePhaseDto.InitialPlacement])('geeft de host buiten het spel zelf geen knop (fase %s)', (phase) => {
+      render(<GameInfoStandings state={state({ phase })} me={alice} onAutoPassRequest={vi.fn()} />)
+
+      expect(screen.queryByRole('button', { name: /op auto-pass zetten$/ })).not.toBeInTheDocument()
     })
 
     it('geeft een speler die geen host is geen knop', () => {
