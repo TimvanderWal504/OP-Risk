@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { tDynamic } from '../../../i18n/useT'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
@@ -13,6 +12,7 @@ import { ColorSymbol } from '../../../components/ui/ColorSymbol'
 import { InstructionKicker } from '../../../components/ui/InstructionKicker'
 import { GlassPanel } from '../../../components/ui/GlassPanel'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
+import { TerritoryNameLabel } from '../../../components/board/TerritoryNameLabel'
 import type { TvScreenProps } from './tvScreens'
 import { ActionTicker } from '../../../components/ActionTicker'
 
@@ -117,6 +117,9 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
 
           return { fillHex, fillOpacity, strokeHex: fillHex, strokeOpacity, strokeWidth, glowPx }
         }}
+        renderLabel={(territory) =>
+          ownership.get(territory.id)?.owned ? <TerritoryNameLabel key={territory.id} territory={territory} marker={marker} /> : null
+        }
         renderMarker={(territory) => {
           const entry = ownership.get(territory.id)
           const owned = entry?.owned
@@ -159,23 +162,6 @@ export function TvInitialPlacementScreen({ state }: TvScreenProps) {
                 }}
               >
                 {owned.armyCount}
-              </text>
-              <text
-                x={territory.centroidPx.x}
-                y={territory.centroidPx.y + marker.nameOffsetY}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={fontFamily.display}
-                fontWeight={700}
-                fontSize={marker.nameFontSize}
-                fill={boardTok.numFg}
-                stroke={boardTok.disc}
-                strokeWidth={marker.nameStrokeWidth}
-                strokeOpacity={marker.nameStrokeOpacity}
-                strokeLinejoin="round"
-                style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
-              >
-                {tDynamic(territory.id, 'territories')}
               </text>
             </g>
           )

@@ -604,6 +604,7 @@ Shaped with `/impeccable shape` on 2026-10-01 (choices by the user). Adds no tok
 - **Do** reserve the glow shadow (`shadow-glow-pitch`) for the single primary CTA on a screen, expressed as its `--glass-shadow` — it's a scarcity signal, not decoration.
 - **Do** let a `GlassPanel` (or glass button) inside another glass surface render unblurred via the nesting context — never force a second `backdrop-filter` pass.
 - **Do** size TV text from the type scale (`text-h1`…, `text-size1`…`size14`) so it follows the host's text-size setting — see **The Scalable Type Rule**.
+- **Do** draw territory names on the TV board in their own layer below every army disc (`TvBoardMap`'s `renderLabel`, `TerritoryNameLabel`), never inside each territory's marker group — drawn per territory, a later territory's name lands on top of an earlier neighbour's army number (user decision 2026-10-01).
 - **Do** read `useTvDisplayScale()` for any TV element that draws its own glass, markers or dice outside `GlassPanel`/`Dice`, and scale it as a whole — including the layout that reserves room for it — so the host's settings reach it and 50% stays exactly the design.
 - **Do** use the on-glass text treatment (`--glass-fg-*` opacity steps + shared text-shadow) for any text on any glass surface, including `overlay`, instead of the standard gray scale — see **The On-Glass Text Rule**.
 - **Do** use tabular numerals (`.tnum` / `font-variant-numeric: tabular-nums`) for any value that updates in place.
