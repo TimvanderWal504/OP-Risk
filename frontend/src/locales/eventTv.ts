@@ -23,5 +23,4 @@ export const eventTv = {
   },
   waiting: { nl: 'Nog {{waiting}} van {{total}} spelers kiezen', en: '{{waiting}} of {{total}} players still choosing' },
   chipKicker: { nl: 'Actief effect', en: 'Active effect' },
-  chipUntil: { nl: 'tot volgende ronde', en: 'until next round' },
 } satisfies LocaleTree
