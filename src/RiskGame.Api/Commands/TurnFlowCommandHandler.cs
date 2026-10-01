@@ -129,7 +129,8 @@ public sealed class TurnFlowCommandHandler(
             session.Events.Append(
                 gameId,
                 new CardTradeReverted(
-                    gameId, playerId, trade.CardIds, trade.SetValue, trade.OwnedTerritoryBonuses, trade.PreviousTradeValue));
+                    gameId, playerId, trade.CardIds, trade.SetValue, trade.OwnedTerritoryBonuses, trade.PreviousTradeValue,
+                    trade.PoolBonus));
         }
 
         // Naar Verplaatsen: geen versterkingspool, zie EndPhaseAsync.

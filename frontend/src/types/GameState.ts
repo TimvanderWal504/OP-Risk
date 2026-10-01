@@ -109,6 +109,13 @@ export interface TurnStateDto {
    * Bereikbaarheid is symmetrisch, dus "bereikbaar vanuit gebied X" is de rest van X's groep.
    */
   reachableFortifyGroups: string[][]
+  /**
+   * De eigen gebieden van de actieve speler waar nu legers bij mogen
+   * (`ReinforceGuards.PlaceableTerritoryIds`): alles behalve wat een gebeurtenis deze ronde
+   * afsluit (FO §9.2). Leeg terwijl hij legers over heeft = hij kan ze nergens kwijt en mag de
+   * fase afronden; ze vervallen. Van de server, zodat de telefoon die regel niet nabouwt.
+   */
+  placeableTerritoryIds: string[]
 }
 
 /** Spiegelt RiskGame.Api.Dtos.OrderRollStateDto — wie er nog mag gooien voor de volgorde. */

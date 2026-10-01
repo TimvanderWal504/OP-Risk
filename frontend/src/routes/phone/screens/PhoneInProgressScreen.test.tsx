@@ -18,6 +18,7 @@ const baseTurnState = {
   fortifiesRemaining: 1,
   mustTradeInCards: false,
   reachableFortifyGroups: [],
+  placeableTerritoryIds: fixtureState.territories.filter((territory) => territory.ownerPlayerId === 'alice').map((territory) => territory.territoryId),
 }
 
 describe('resolvePhoneTurnPhaseScreen', () => {

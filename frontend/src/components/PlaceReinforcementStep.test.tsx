@@ -27,6 +27,7 @@ const defaultProps = (overrides: Partial<PlaceReinforcementStepProps> = {}): Pla
   breakdown: null,
   hand: [],
   hasTradeableCardSet: false,
+  placeableTerritoryIds: myTerritories.map((t) => t.territoryId),
   myTerritoryIds: new Set(myTerritories.map((t) => t.territoryId)),
   mustTradeInCards: false,
   onConfirmPlacements: vi.fn(),
@@ -195,5 +196,32 @@ describe('PlaceReinforcementStep', () => {
     expect(screen.getByText('Leg 3 kaarten in')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Niet inleggen' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sluiten' })).not.toBeInTheDocument()
+  })
+
+  /** FO §9.2 (besluit gebruiker 2026-10-01): op een afgesloten gebied komen geen legers bij. */
+  describe('met een afgesloten eigen gebied', () => {
+    it('laat het afgesloten gebied weg en noemt het in één regel', () => {
+      render(<PlaceReinforcementStep {...defaultProps({ placeableTerritoryIds: ['ukraine'] })} />)
+
+      expect(screen.getByText('Deze ronde afgesloten: Alaska')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Leger plaatsen op Alaska' })).not.toBeInTheDocument()
+    })
+
+    it('laat afronden zonder plaatsen als alles afgesloten is; de legers vervallen', async () => {
+      const onAllPlaced = vi.fn().mockResolvedValue(undefined)
+      render(
+        <PlaceReinforcementStep
+          {...defaultProps({ placeableTerritoryIds: [], armiesLeft: 4, hasTradeableCardSet: true, onAllPlaced })}
+        />,
+      )
+
+      expect(screen.getByText('Al je gebieden zijn deze ronde afgesloten. Je 4 legers vervallen.')).toBeInTheDocument()
+      // Inleggen heeft dan geen zin: de opbrengst zou meteen vervallen.
+      expect(screen.queryByRole('button', { name: 'Leg kaarten in' })).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Versterken afronden' }))
+
+      expect(onAllPlaced).toHaveBeenCalledOnce()
+    })
   })
 })

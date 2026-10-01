@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Roles;
 using RiskGame.Rules.State;
@@ -27,15 +28,23 @@ public static class CardTradeCalculator
         ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
         ArgumentNullException.ThrowIfNull(cards);
 
-        var ownedTerritoryBonuses = cards
+        var ownedTerritoryIds = cards
             .Where(card => card.TerritoryId is not null
                 && state.Territory(card.TerritoryId!).OwnerPlayerId == playerId)
-            .Select(card => new TerritoryBonus(card.TerritoryId!, state.Map.SetRules.OwnedTerritoryBonus))
+            .Select(card => card.TerritoryId!)
             .ToList();
+        var bonus = state.Map.SetRules.OwnedTerritoryBonus;
+
+        // Een afgesloten gebied krijgt geen legers (FO §9.2): die bonus gaat in de vrije pool.
+        var ownedTerritoryBonuses = ownedTerritoryIds
+            .Where(territoryId => !ActiveEffectQueries.IsTerritoryLocked(state, territoryId))
+            .Select(territoryId => new TerritoryBonus(territoryId, bonus))
+            .ToList();
+        var poolBonus = (ownedTerritoryIds.Count - ownedTerritoryBonuses.Count) * bonus;
 
         var roleBonus = RoleEffects.Active<CardTradeBonusEffect>(state, playerId)?.Amount ?? 0;
 
-        return new CardTradeOutcome(state.Deck.NextTradeValue + roleBonus, ownedTerritoryBonuses);
+        return new CardTradeOutcome(state.Deck.NextTradeValue + roleBonus, ownedTerritoryBonuses, poolBonus);
     }
 
     /// <summary>De volgende inlegwaarde na deze inleg: 4, 6, 8, 10, 12, 15, daarna +5.</summary>

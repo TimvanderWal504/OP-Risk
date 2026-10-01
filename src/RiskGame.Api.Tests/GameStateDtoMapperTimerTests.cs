@@ -7,6 +7,7 @@ using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
@@ -55,7 +56,7 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
     private static async Task<string> SetUpInProgressStateAsync(
         WebApplicationFactory<Program> factory, PhaseTimer timer, IReadOnlyCollection<string>? ownedTerritoryIds = null,
         TurnPhase turnPhase = TurnPhase.Reinforce, IReadOnlyList<Card>? hand = null,
-        IReadOnlyList<UnsettledTrade>? unsettledTrades = null)
+        IReadOnlyList<UnsettledTrade>? unsettledTrades = null, IReadOnlyList<ActiveEffect>? activeEffects = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var mapSource = factory.Services.GetRequiredService<IMapDefinitionSource>();
@@ -81,7 +82,7 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
             turnState: new TurnState(
                 "p1", turnPhase, timer, PendingCombat: null, ArmiesRemaining: 0, UnsettledTrades: unsettledTrades),
             deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
-            activeEffects: []);
+            activeEffects: activeEffects ?? []);
 
         var store = factory.Services.GetRequiredService<IDocumentStore>();
 
@@ -232,12 +233,40 @@ public sealed class GameStateDtoMapperTimerTests(PostgresFixture postgres)
         using var client = factory.CreateClient();
         await using var connection = await ConnectAsync(factory, client);
 
+        // Met een eigen gebied: wie nergens legers kwijt kan, hoeft niet in te leggen (FO §9.2).
         var gameId = await SetUpInProgressStateAsync(
-            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()), hand: DummyHand(5));
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()), ownedTerritoryIds: ["alaska"],
+            hand: DummyHand(5));
 
         var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
 
         Assert.True(state.TurnState!.MustTradeInCards);
+    }
+
+    /// <summary>FO §9.2 (besluit gebruiker 2026-10-01): de telefoon krijgt van de server waar legers bij mogen.</summary>
+    [Fact]
+    public async Task PlaceableTerritoryIds_LaatAfgeslotenEigenGebiedenWeg()
+    {
+        var timeProvider = new FakeTimeProvider();
+        await using var factory = CreateFactory(timeProvider);
+        using var client = factory.CreateClient();
+        await using var connection = await ConnectAsync(factory, client);
+
+        var gameId = await SetUpInProgressStateAsync(
+            factory, new PhaseTimer(TimeSpan.FromMinutes(3), timeProvider.GetUtcNow()), ownedTerritoryIds: ["kamchatka", "alaska"],
+            activeEffects: [LockEffect(factory, "vulkaanuitbarsting-op-kamtsjatka")]);
+
+        var state = await connection.InvokeAsync<GameStateDto>("WatchGame", gameId);
+
+        Assert.Equal(["alaska"], state.TurnState!.PlaceableTerritoryIds);
+    }
+
+    /// <summary>Een echte kaart uit de catalogus: de DTO zoekt het effect daar op.</summary>
+    private static ActiveEffect LockEffect(WebApplicationFactory<Program> factory, string eventId)
+    {
+        var map = factory.Services.GetRequiredService<IMapDefinitionSource>().Load("standaard-43");
+
+        return new ActiveEffect(map.Events.Single(definition => definition.Id == eventId).Effect);
     }
 
     [Fact]

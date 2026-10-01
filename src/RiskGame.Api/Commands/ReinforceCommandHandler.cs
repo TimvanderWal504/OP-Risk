@@ -91,7 +91,8 @@ public sealed class ReinforceCommandHandler(IDocumentStore store, TimeProvider t
                 cardIds,
                 outcome.SetValue,
                 outcome.OwnedTerritoryBonuses,
-                CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue)));
+                CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue),
+                outcome.PoolBonus));
 
         await session.SaveChangesAsync();
 

@@ -19,10 +19,15 @@ namespace RiskGame.Persistence.Events;
 /// zijn — daarom apart van <paramref name="SetValue"/>.
 /// </param>
 /// <param name="NextTradeValue">De inlegwaarde die ná deze inleg geldt (FO §4.4).</param>
+/// <param name="PoolBonus">
+/// Bezitsbonussen van afgesloten gebieden (FO §9.2), die in de vrije pool gaan in plaats van op
+/// het gebied. 0 in events van vóór die regel (besluit gebruiker 2026-10-01).
+/// </param>
 public sealed record CardsTraded(
     string GameId,
     string PlayerId,
     IReadOnlyList<string> CardIds,
     int SetValue,
     IReadOnlyList<TerritoryBonus> OwnedTerritoryBonuses,
-    int NextTradeValue);
+    int NextTradeValue,
+    int PoolBonus = 0);

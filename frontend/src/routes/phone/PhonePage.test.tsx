@@ -25,6 +25,7 @@ const inProgress = (players = fixtureState.players): GameStateDto => ({
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: [],
   },
 })
 

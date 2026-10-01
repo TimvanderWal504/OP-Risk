@@ -149,7 +149,7 @@ public sealed class AutoPassResolver(
                 state,
                 new CardTradeReverted(
                     state.GameId, turnState.ActivePlayerId, trade.CardIds, trade.SetValue, trade.OwnedTerritoryBonuses,
-                    trade.PreviousTradeValue),
+                    trade.PreviousTradeValue, trade.PoolBonus),
                 projection.Apply);
         }
 

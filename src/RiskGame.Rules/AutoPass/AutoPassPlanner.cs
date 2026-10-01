@@ -58,10 +58,11 @@ public static class AutoPassPlanner
     /// frontgebied is een eigen gebied met minstens één grens (land of zee) naar een gebied van
     /// een ander (in een lopend spel heeft elk gebied een eigenaar), op de kale graaf — een
     /// tijdelijke zeeblokkade telt niet mee. Per gebied samengevoegd, in de volgorde van de
-    /// kaartdata. De aanroeper legt elke plaatsing nog langs
-    /// <see cref="ReinforceGuards.CanPlaceArmies"/>, zoals voor een speler zelf; dat is een vangnet,
-    /// geen filter — na de verplichte inleg weigert die guard een eigen gebied nooit, dus een
-    /// weigering is een bug.
+    /// kaartdata. Een afgesloten gebied (FO §9.2) krijgt niets: zijn alle frontgebieden dicht, dan
+    /// gaan de legers naar de overige open eigen gebieden, en is er geen enkel open gebied, dan
+    /// vervallen ze — een lege lijst (besluit gebruiker 2026-10-01). De aanroeper legt elke
+    /// plaatsing nog langs <see cref="ReinforceGuards.CanPlaceArmies"/>, zoals voor een speler zelf;
+    /// dat is een vangnet, geen filter — een weigering is een bug.
     /// </summary>
     public static IReadOnlyList<ArmyPlacement> Placements(GameState state, string playerId, int armies)
     {
@@ -74,18 +75,25 @@ public static class AutoPassPlanner
             return [];
         }
 
-        var front = FrontTerritoryIds(state, playerId);
-
-        // Zonder frontgebied bezit de speler de hele (samenhangende) kaart en had hij al gewonnen.
-        if (front.Count == 0)
+        // Zonder eigen gebied is de speler uitgeschakeld en krijgt hij geen beurt meer.
+        if (!state.Territories.Any(territory => territory.OwnerPlayerId == playerId))
         {
             throw new InvalidOperationException(
-                $"Speler '{playerId}' heeft geen frontgebied in spel '{state.GameId}'.");
+                $"Speler '{playerId}' heeft geen gebied in spel '{state.GameId}'.");
         }
 
-        return front
+        var placeable = ReinforceGuards.PlaceableTerritoryIds(state, playerId);
+        var openFront = FrontTerritoryIds(state, playerId).Where(placeable.Contains).ToArray();
+        var targets = openFront.Length > 0 ? openFront : placeable;
+
+        if (targets.Count == 0)
+        {
+            return [];
+        }
+
+        return targets
             .Select((territoryId, index) => new ArmyPlacement(
-                territoryId, (armies / front.Count) + (index < armies % front.Count ? 1 : 0)))
+                territoryId, (armies / targets.Count) + (index < armies % targets.Count ? 1 : 0)))
             .Where(placement => placement.Amount > 0)
             .ToArray();
     }

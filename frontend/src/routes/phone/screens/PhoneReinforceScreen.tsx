@@ -50,6 +50,7 @@ export function PhoneReinforceScreen({
       breakdown={reinforcementBreakdown}
       hand={me.hand}
       hasTradeableCardSet={me.hasTradeableCardSet}
+      placeableTerritoryIds={state.turnState.placeableTerritoryIds}
       myTerritoryIds={myTerritoryIds}
       mustTradeInCards={mustTradeInCards}
       onConfirmPlacements={async (placements) => {

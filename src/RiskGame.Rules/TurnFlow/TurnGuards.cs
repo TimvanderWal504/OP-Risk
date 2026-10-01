@@ -34,7 +34,7 @@ public static class TurnGuards
             // zelfde volgorde als ReinforceGuards.CanPlaceArmies.
             TurnPhase.Reinforce => ReinforceGuards.MustTradeInCards(state, playerId)
                 ? ValidationResult.Failure("reinforce.mustTradeInCardsFirst")
-                : state.TurnState.ArmiesRemaining == 0
+                : PoolSettled(state, playerId)
                     ? ValidationResult.Success()
                     : ValidationResult.Failure("turnFlow.armiesRemaining"),
             // FO §7 (taak 4): dezelfde volgorde als Aanvallen zelf (AttackGuards.CanDeclareAttack)
@@ -44,13 +44,20 @@ public static class TurnGuards
                 ? ValidationResult.Failure("turnFlow.combatInProgress")
                 : ReinforceGuards.MustTradeInCardsDuringAttack(state, playerId)
                     ? ValidationResult.Failure("reinforce.mustTradeInCardsFirst")
-                    : state.TurnState.ArmiesRemaining == 0
+                    : PoolSettled(state, playerId)
                         ? ValidationResult.Success()
                         : ValidationResult.Failure("turnFlow.armiesRemaining"),
             TurnPhase.Fortify => ValidationResult.Failure("turnFlow.useEndTurnInFortify"),
             _ => ValidationResult.Failure("turnFlow.unknownPhase"),
         };
     }
+
+    /// <summary>
+    /// Of de pool af is: alles geplaatst, of de speler kan nergens meer legers kwijt omdat al zijn
+    /// gebieden afgesloten zijn (FO §9.2) — dan vervalt de rest, net als bij een verlopen timer.
+    /// </summary>
+    private static bool PoolSettled(GameState state, string playerId) =>
+        state.TurnState!.ArmiesRemaining == 0 || !ReinforceGuards.HasPlaceableTerritory(state, playerId);
 
     /// <summary>
     /// Of <paramref name="playerId"/> de beurt mag beëindigen. Dat kan alleen vanuit

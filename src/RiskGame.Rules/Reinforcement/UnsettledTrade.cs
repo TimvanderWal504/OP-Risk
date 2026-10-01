@@ -12,8 +12,17 @@ namespace RiskGame.Rules.Reinforcement;
 /// De inlegwaarde die vóór deze inleg gold — wat <see cref="State.DeckState.NextTradeValue"/>
 /// weer wordt als deze inleg teruggedraaid wordt.
 /// </param>
+/// <param name="PoolBonus">
+/// De bezitsbonus van afgesloten gebieden die deze inleg in de pool stopte (FO §9.2) — bij een
+/// terugdraai gaat die er samen met <paramref name="SetValue"/> weer af.
+/// </param>
 public sealed record UnsettledTrade(
     IReadOnlyList<string> CardIds,
     int SetValue,
     IReadOnlyList<TerritoryBonus> OwnedTerritoryBonuses,
-    int PreviousTradeValue);
+    int PreviousTradeValue,
+    int PoolBonus = 0)
+{
+    /// <summary>Wat deze inleg in totaal aan de vrije pool toevoegde.</summary>
+    public int PoolArmies => SetValue + PoolBonus;
+}

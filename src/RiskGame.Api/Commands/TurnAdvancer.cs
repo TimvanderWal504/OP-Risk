@@ -307,7 +307,8 @@ public sealed class TurnAdvancer(
                     cardIds,
                     outcome.SetValue,
                     outcome.OwnedTerritoryBonuses,
-                    CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue)),
+                    CardTradeCalculator.NextTradeValueAfter(state.Deck.NextTradeValue),
+                    outcome.PoolBonus),
                 projection.Apply);
         }
 

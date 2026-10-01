@@ -125,9 +125,12 @@ export function PhonePlayerHeader({
   // vrijwillig. `PhonePlayerHeader` is op elk scherm gemount, dus zonder deze check zou de
   // "Leg 3 kaarten in"-knop hieronder ook buiten Versterken kunnen verschijnen (bv. een
   // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken. En alleen
-  // in de eigen beurt: tijdens de Versterken-fase van een ander weigert de server de inleg ook.
+  // in de eigen beurt: tijdens de Versterken-fase van een ander weigert de server de inleg ook. En
+  // niet als al zijn gebieden afgesloten zijn (FO §9.2): de opbrengst zou dan meteen vervallen.
   const canTradeVoluntarily =
-    state.turnState?.turnPhase === TurnPhaseDto.Reinforce && state.turnState.activePlayerId === me.id
+    state.turnState?.turnPhase === TurnPhaseDto.Reinforce
+    && state.turnState.activePlayerId === me.id
+    && state.turnState.placeableTerritoryIds.length > 0
 
   const actions: PlayerHeaderAction[] = [
     {

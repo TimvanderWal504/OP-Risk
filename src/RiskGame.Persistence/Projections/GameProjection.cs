@@ -247,12 +247,12 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         }
 
         var unsettledTrade = new UnsettledTrade(
-            @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue);
+            @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue, @event.PoolBonus);
 
         return Record(
             state.WithTurnState(state.TurnState! with
             {
-                ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining + unsettledTrade.PoolArmies,
                 UnsettledTrades = [.. state.TurnState.UnsettledTrades, unsettledTrade],
             }),
             @event);
@@ -300,7 +300,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return Record(
             state.WithTurnState(state.TurnState! with
             {
-                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue,
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue - @event.PoolBonus,
                 UnsettledTrades = [.. state.TurnState.UnsettledTrades.Where(trade => !trade.CardIds.SequenceEqual(@event.CardIds))],
             }),
             @event);

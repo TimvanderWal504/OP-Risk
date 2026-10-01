@@ -144,6 +144,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -258,6 +259,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: true,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -313,6 +315,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -369,6 +372,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     })
 
@@ -396,6 +400,19 @@ describe('PhonePlayerHeader', () => {
       await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
 
       expect(screen.getByRole('button', { name: 'Leg 3 kaarten in' })).toBeInTheDocument()
+    })
+
+    it('verbergt de "Leg 3 kaarten in"-knop als al je gebieden afgesloten zijn (FO §9.2)', async () => {
+      const base = stateWithPhase(TurnPhaseDto.Reinforce)
+      const state = { ...base, turnState: { ...base.turnState, placeableTerritoryIds: [] } }
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.queryByRole('button', { name: 'Leg 3 kaarten in' })).not.toBeInTheDocument()
     })
 
     it('verbergt de "Leg 3 kaarten in"-knop tijdens de Versterken-fase van een andere speler', async () => {

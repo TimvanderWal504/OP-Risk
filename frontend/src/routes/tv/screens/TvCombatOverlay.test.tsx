@@ -23,6 +23,7 @@ const baseState = {
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: [],
   },
 }
 

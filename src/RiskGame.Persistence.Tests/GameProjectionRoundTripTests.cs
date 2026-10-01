@@ -653,6 +653,60 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// FO §9.2 (besluit gebruiker 2026-10-01): de bezitsbonus van een afgesloten gebied gaat in de
+    /// vrije pool. De vouwregel telt <c>PoolBonus</c> bij de pool op en neemt hem mee in de
+    /// onvoltooide inleg, zodat een terugdraai hem er samen met de setwaarde weer afhaalt.
+    /// </summary>
+    [Fact]
+    public void CardsTraded_MetPoolbonus_GaatInDePoolEnGaatBijTerugdraaienErWeerAf()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+        var cards = new[]
+        {
+            new Rules.Map.Card("card-alaska", "alaska", "symbol-1"),
+            new Rules.Map.Card("card-siberia", "siberia", "symbol-2"),
+            new Rules.Map.Card("card-brazil", "brazil", "symbol-3"),
+        };
+        var player = new Player("p1", "Alice", "red", Hand: cards, RoleId: null, Mission: null, IsEliminated: false);
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+        var projection = new GameProjection(mapSource);
+        var cardIds = cards.Select(card => card.Id).ToArray();
+
+        var afterTrade = projection.Apply(
+            initialState,
+            new CardsTraded(gameId, "p1", cardIds, SetValue: 4, OwnedTerritoryBonuses: [], NextTradeValue: 6, PoolBonus: 2));
+
+        Assert.Equal(6, afterTrade.TurnState!.ArmiesRemaining);
+        Assert.Equal(1, afterTrade.Territory("alaska").ArmyCount);
+        Assert.Equal(2, afterTrade.TurnState.UnsettledTrades.Single().PoolBonus);
+
+        var afterRevert = projection.Apply(
+            afterTrade,
+            new CardTradeReverted(gameId, "p1", cardIds, SetValue: 4, OwnedTerritoryBonuses: [], RestoredTradeValue: 4, PoolBonus: 2));
+
+        Assert.Equal(0, afterRevert.TurnState!.ArmiesRemaining);
+        Assert.Empty(afterRevert.TurnState.UnsettledTrades);
+    }
+
+    /// <summary>
     /// De invariant hieronder is een eigenschap van de guards van vandaag, geen wet (zie
     /// doc-comment op <see cref="GameProjection.Apply(GameState, CardTradeReverted)"/>) — deze
     /// test bewijst dat een onmogelijke situatie (bonus groter dan het huidige legeraantal)

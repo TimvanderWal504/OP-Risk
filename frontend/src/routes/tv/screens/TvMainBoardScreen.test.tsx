@@ -38,6 +38,7 @@ const stateInProgress = {
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: [],
   },
 }
 

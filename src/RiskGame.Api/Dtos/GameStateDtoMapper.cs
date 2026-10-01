@@ -71,10 +71,11 @@ public static class GameStateDtoMapper
                 state.TurnState.TurnPhase == TurnPhase.Fortify
                     ? FortifyGuards.ReachableComponents(state, state.TurnState.ActivePlayerId)
                     : [],
+                ReinforceGuards.PlaceableTerritoryIds(state, state.TurnState.ActivePlayerId),
                 state.TurnState.TurnPhase == TurnPhase.Reinforce
                     ? ToDto(
                         ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId),
-                        state.TurnState.UnsettledTrades.Sum(trade => trade.SetValue))
+                        state.TurnState.UnsettledTrades.Sum(trade => trade.PoolArmies))
                     : null,
                 Math.Max(0, FortifyGuards.MaxMoves(state, state.TurnState.ActivePlayerId) - state.TurnState.FortifiesUsed),
                 (state.TurnState.TurnPhase == TurnPhase.Reinforce

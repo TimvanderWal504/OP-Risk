@@ -311,6 +311,7 @@ public sealed record TurnStateDto(
     PendingCombatDto? PendingCombat,
     TurnTimerDto? Timer,
     IReadOnlyList<IReadOnlyList<string>> ReachableFortifyGroups,
+    IReadOnlyList<string> PlaceableTerritoryIds,
     ReinforcementBreakdownDto? ReinforcementBreakdown = null,
     int FortifiesRemaining = 0,
     bool MustTradeInCards = false);
@@ -321,7 +322,8 @@ public sealed record TurnStateDto(
 /// plus <see cref="CardTradeBonus"/> voor de "Kaarteninleg"-rij van de opbouw-uitsplitsing.
 /// </summary>
 /// <param name="CardTradeBonus">
-/// Som van <c>SetValue</c> over de nog niet volledig geplaatste inlegs van déze fase
+/// Som van wat de nog niet volledig geplaatste inlegs van déze fase aan de pool toevoegden
+/// (<c>SetValue</c> plus de bezitsbonus van afgesloten gebieden, FO §9.2)
 /// (<see cref="RiskGame.Rules.State.TurnState.UnsettledTrades"/>, taak 4b) — dus niet de
 /// bezitsbonussen (die staan al los op de gebieden zelf) en niet inlegs van een eerdere
 /// fase (die zijn dan al volledig geplaatst of teruggedraaid). 0 zolang er niets ingelegd is.

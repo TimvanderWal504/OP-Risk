@@ -27,6 +27,9 @@ export interface PlaceReinforcementStepProps {
   /** Server-berekend (FO §4.4): of er ergens in `hand` een geldige inlegset zit — bepaalt of de
    *  "Leg kaarten in"-knop verschijnt, niet `hand.length` (frontend/CLAUDE.md). */
   hasTradeableCardSet: boolean
+  /** `TurnStateDto.placeableTerritoryIds`: waar nu legers bij mogen. Een afgesloten eigen gebied
+   *  (FO §9.2) staat er niet in en verdwijnt uit de lijst. */
+  placeableTerritoryIds: string[]
   mustTradeInCards: boolean
   onConfirmPlacements: (placements: { territoryId: string; amount: number }[]) => Promise<void>
   onTradeInCards: (cardIds: string[]) => Promise<void>
@@ -53,6 +56,7 @@ export function PlaceReinforcementStep({
   breakdown,
   hand,
   hasTradeableCardSet,
+  placeableTerritoryIds,
   myTerritoryIds,
   mustTradeInCards,
   onConfirmPlacements,
@@ -109,6 +113,13 @@ export function PlaceReinforcementStep({
   const isDone = armiesLeft === 0 && !mustTradeInCards
   const readyToConfirm = !isDone && remainingToStage === 0 && totalStaged > 0
 
+  // FO §9.2 (besluit gebruiker 2026-10-01): op een afgesloten gebied komen geen legers bij. Zijn ál
+  // je gebieden dicht, dan kun je de pool nergens kwijt; je rondt af en de legers vervallen.
+  const placeable = new Set(placeableTerritoryIds)
+  const lockedTerritories = myTerritories.filter((territory) => !placeable.has(territory.territoryId))
+  const openTerritories = myTerritories.filter((territory) => placeable.has(territory.territoryId))
+  const nowhereToPlace = !isDone && openTerritories.length === 0
+
   // Guard tegen dubbele `onAllPlaced`-calls (React StrictMode dubbelt effects in dev, en
   // `onAllPlaced` vanuit Aanvallen zonder lopend gevecht is óók geldig — een tweede call zou
   // dus niet falen maar in één klap doorschieten naar Verplaatsen, de Aanvalsfase overslaand).
@@ -122,17 +133,21 @@ export function PlaceReinforcementStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDone])
 
-  const buttonLabel = readyToConfirm ? t('confirmLabel') : t('placeAllFirst', { count: remainingToStage })
-  const buttonEnabled = readyToConfirm && !submitting
-  const buttonAction = readyToConfirm ? handleConfirm : undefined
+  const buttonLabel = nowhereToPlace
+    ? t('finishWithoutPlacing')
+    : readyToConfirm
+      ? t('confirmLabel')
+      : t('placeAllFirst', { count: remainingToStage })
+  const buttonEnabled = (nowhereToPlace || readyToConfirm) && !submitting
+  const buttonAction = nowhereToPlace ? onAllPlaced : readyToConfirm ? handleConfirm : undefined
 
   const continentOf = (territoryId: string) =>
     territoryCatalog.find((entry) => entry.id === territoryId)?.continent ?? 'unknown'
 
-  const continentGroups = Array.from(new Set(myTerritories.map((t) => continentOf(t.territoryId)))).map(
+  const continentGroups = Array.from(new Set(openTerritories.map((t) => continentOf(t.territoryId)))).map(
     (continent) => ({
       continent,
-      territoryIds: myTerritories.filter((t) => continentOf(t.territoryId) === continent).map((t) => t.territoryId),
+      territoryIds: openTerritories.filter((t) => continentOf(t.territoryId) === continent).map((t) => t.territoryId),
       totalInContinent: territoryCatalog.filter((entry) => entry.continent === continent).length,
     }),
   )
@@ -166,7 +181,7 @@ export function PlaceReinforcementStep({
           accentColor="pitch"
         />
 
-        {!isDone && hasTradeableCardSet && (
+        {!isDone && hasTradeableCardSet && !nowhereToPlace && (
           <Button
             variant="secondary"
             className="mt-[11px] min-h-0 py-3 text-body"
@@ -177,6 +192,18 @@ export function PlaceReinforcementStep({
         )}
 
         <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
+          {nowhereToPlace ? (
+            <p className="m-0 px-1 font-body text-sm text-fg-muted">{t('noOpenTerritory', { count: armiesLeft })}</p>
+          ) : (
+            lockedTerritories.length > 0 && (
+              <p className="m-0 px-1 font-body text-sm text-fg-muted">
+                {t('lockedNote', {
+                  territories: lockedTerritories.map((territory) => tDynamic(territory.territoryId, 'territories')).join(', '),
+                })}
+              </p>
+            )
+          )}
+
           {breakdown && (
             <GlassPanel elevation="base" context="phone" padding="none" className="rounded-[14px] px-[13px] py-[11px]">
               <div className="mb-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">

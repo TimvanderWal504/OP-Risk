@@ -37,6 +37,7 @@ const attackState = (options: {
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: ['alaska'],
   },
 })
 

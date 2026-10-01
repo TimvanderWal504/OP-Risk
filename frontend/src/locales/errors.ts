@@ -271,6 +271,14 @@ export const errors = {
       nl: "Speler '{{playerId}}' heeft nog maar {{remaining}} leger(s) over om te plaatsen, niet {{requested}}.",
       en: "Player '{{playerId}}' only has {{remaining}} army/armies left to place, not {{requested}}.",
     },
+    territoryLocked: {
+      nl: "Gebied '{{territoryId}}' is deze ronde afgesloten; daar komen geen legers bij.",
+      en: "Territory '{{territoryId}}' is locked this round; no armies can be added there.",
+    },
+    noOpenTerritory: {
+      nl: 'Al je gebieden zijn deze ronde afgesloten; inleggen heeft geen zin, de legers zouden vervallen.',
+      en: 'All your territories are locked this round; trading in is pointless, the armies would be lost.',
+    },
   },
   turnFlow: {
     combatInProgress: {
