@@ -200,6 +200,18 @@ select:focus-visible,
     opacity: 1;
   }
 }
+/* Tegenhanger van atlasOverlayIn (`tvAnimations.overlayOut`). Stond alleen als string in motion.ts:
+   zonder deze regel speelt er geen animatie en vuurt `animationend` nooit, waardoor de
+   gebeurteniskaart (TvEventOverlay) en oude stage-scrimlagen (Tv-/PhoneStageBackground) blijven
+   staan. */
+@keyframes atlasOverlayOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 @keyframes atlasPop {
   0% {
     transform: scale(0.6);
