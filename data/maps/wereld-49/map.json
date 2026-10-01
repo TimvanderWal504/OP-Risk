@@ -1,0 +1,5 @@
+{
+  "_comment": "Lobby-metadata van deze kaartvariant (FO §4.5, §10): of dit de standaardkaart is, en welke startleger-preset bij het kiezen van deze kaart voorgeselecteerd wordt. Niet door de rules engine gebruikt; de weergavenaam staat in frontend/src/locales/maps.ts.",
+  "isDefault": false,
+  "defaultStartingArmiesPresetId": "classic-49"
+}

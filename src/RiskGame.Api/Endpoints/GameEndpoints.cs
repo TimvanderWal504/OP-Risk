@@ -11,12 +11,39 @@ public static class GameEndpoints
 {
     public static IEndpointRouteBuilder MapGameEndpoints(this IEndpointRouteBuilder app, string mapsRoot)
     {
+        // De kiesbare kaartvarianten voor CreateGameForm (FO §4.5, §10). Aantallen komen uit
+        // de geparste kaart, niet uit map.json, zodat ze nooit van de speeldata afwijken.
+        app.MapGet("/maps", (IMapCatalog catalog, IMapDefinitionSource mapSource) =>
+        {
+            var maps = catalog.Variants
+                .Select(variant =>
+                {
+                    var map = mapSource.Load(variant.MapId);
+
+                    return new MapSummaryDto(
+                        variant.MapId,
+                        variant.IsDefault,
+                        map.Territories.Count,
+                        map.Continents.Count,
+                        variant.DefaultStartingArmiesPresetId);
+                })
+                .ToArray();
+
+            return Results.Ok(maps);
+        });
+
         // Statische startlegers-presets (FO §5.1/§10) van een kaartvariant — nodig vóórdat een
         // spel bestaat, zodat de host in CreateGameForm uit Klassiek/Modern/Klassiek-49 kan
         // kiezen (frontend/CLAUDE.md: geen spelregel-berekening in de client, dus de server
-        // levert de tabel, niet alleen het gekozen id).
-        app.MapGet("/maps/{mapId}/starting-armies-presets", (string mapId, IMapDefinitionSource mapSource) =>
+        // levert de tabel, niet alleen het gekozen id). Alleen voor een bekende variant: de
+        // mapId wordt anders ongecontroleerd een pad in MapDefinitionSource.
+        app.MapGet("/maps/{mapId}/starting-armies-presets", (string mapId, IMapCatalog catalog, IMapDefinitionSource mapSource) =>
         {
+            if (!catalog.Contains(mapId))
+            {
+                return Results.NotFound();
+            }
+
             var presets = mapSource.Load(mapId).StartingArmiesPresets
                 .Select(preset => new StartingArmiesPresetDto(preset.Id, preset.ArmiesByPlayerCount))
                 .ToArray();
@@ -30,21 +57,21 @@ public static class GameEndpoints
         // niet vooraf opvraagbaar mogen zijn. Cache-Control: bevroren data, maar geen
         // "immutable"/oneindige waarde, zodat een toekomstige asset-vervanging op dezelfde url
         // binnen het uur doorkomt i.p.v. browser-cache-eeuwig te blijven hangen.
-        // {mapId} wordt eerst tegen mapsRoot gevalideerd (geen "..", geen padscheidingstekens),
-        // anders resolvet Path.Combine hier zonder controle naar willekeurige bestanden buiten
-        // de kaartvariant-map, inclusief de zojuist genoemde missions.json/events.json.
+        // {mapId} moet een variant uit de catalogus zijn (zie ServeMapFile), anders resolvet
+        // Path.Combine hier naar willekeurige bestanden buiten de kaartvariant-map, inclusief de
+        // zojuist genoemde missions.json/events.json.
         //
         // De vroegere `/maps/{mapId}/map-background.png`-route (statische kaartartwork) is op
         // 2026-08-07 verwijderd: de kaart gebruikt sindsdien de gedeelde TV-stage-illustratie +
         // een eigen scrim i.p.v. een per-kaart achtergrondasset (zie TO §7.2).
-        app.MapGet("/maps/{mapId}/territories.geo.json", (string mapId, HttpContext context) =>
-            ServeMapFile(mapsRoot, mapId, "territories.geo.json", context));
+        app.MapGet("/maps/{mapId}/territories.geo.json", (string mapId, IMapCatalog catalog, HttpContext context) =>
+            ServeMapFile(mapsRoot, catalog, mapId, "territories.geo.json", context));
 
         // Grenzen (FO §4.2/§4.3) voor de gestippelde zeeverbindingen op het TV-bord — zelfde
         // verbatim, naam-specifieke kaartlaag-route als hierboven. Geen geheime informatie: de
         // aangrenzing is openbaar speelbord (en staat al in TerritoryCatalogDto.NeighborTerritoryIds).
-        app.MapGet("/maps/{mapId}/adjacency_validated.json", (string mapId, HttpContext context) =>
-            ServeMapFile(mapsRoot, mapId, "adjacency_validated.json", context));
+        app.MapGet("/maps/{mapId}/adjacency_validated.json", (string mapId, IMapCatalog catalog, HttpContext context) =>
+            ServeMapFile(mapsRoot, catalog, mapId, "adjacency_validated.json", context));
 
         var games = app.MapGroup("/games");
 
@@ -83,43 +110,21 @@ public static class GameEndpoints
         return app;
     }
 
-    /// <summary>Eén bevroren kaartlaag-bestand verbatim als JSON, met de gedeelde Cache-Control.</summary>
-    private static IResult ServeMapFile(string mapsRoot, string mapId, string fileName, HttpContext context)
+    /// <summary>
+    /// Eén bevroren kaartlaag-bestand verbatim als JSON, met de gedeelde Cache-Control. Alleen
+    /// voor een variant uit de catalogus: dat is een exact bekende mapnaam, dus het pad kan niet
+    /// buiten <paramref name="mapsRoot"/> uitkomen (geen "..", geen padscheidingstekens).
+    /// </summary>
+    private static IResult ServeMapFile(
+        string mapsRoot, IMapCatalog catalog, string mapId, string fileName, HttpContext context)
     {
-        if (!TryResolveMapFilePath(mapsRoot, mapId, fileName, out var filePath))
+        if (!catalog.Contains(mapId))
         {
             return Results.NotFound();
         }
 
         context.Response.Headers.CacheControl = "public, max-age=3600";
 
-        return Results.File(filePath, contentType: "application/json");
-    }
-
-    /// <summary>
-    /// Bouwt het pad naar <paramref name="fileName"/> binnen de kaartvariant-map
-    /// <paramref name="mapId"/> op, en weigert als het resultaat buiten
-    /// <paramref name="mapsRoot"/> zou vallen (padtraversal via bv. "..") of als de
-    /// kaartvariant-map niet bestaat.
-    /// </summary>
-    private static bool TryResolveMapFilePath(string mapsRoot, string mapId, string fileName, out string filePath)
-    {
-        filePath = "";
-
-        var resolvedMapsRoot = Path.GetFullPath(mapsRoot);
-        var resolvedMapDirectory = Path.GetFullPath(Path.Combine(mapsRoot, mapId));
-
-        if (!resolvedMapDirectory.StartsWith(resolvedMapsRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        if (!Directory.Exists(resolvedMapDirectory))
-        {
-            return false;
-        }
-
-        filePath = Path.Combine(resolvedMapDirectory, fileName);
-        return true;
+        return Results.File(Path.Combine(mapsRoot, mapId, fileName), contentType: "application/json");
     }
 }

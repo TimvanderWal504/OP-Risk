@@ -134,7 +134,7 @@ public static class GameStateDtoMapper
         var recentActions = ToActionLogDto(state).Take(TvRecentActionCount).ToArray();
 
         return new GameStateDto(
-            state.GameId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
+            state.GameId, state.Map.MapId, ToDto(state.Phase), players, availableColorIds, state.TurnOrder, territories, turnState,
             colors, roles, ToDto(state.Settings), state.Winners,
             ToDto(state.TvDisplay), ToDto(TvDisplaySettings.Default),
             continents, events, state.Deck.NextTradeValue, recentActions,

@@ -10,7 +10,7 @@
     niet tegen een kopie.
   -->
   <ItemGroup>
-    <Content Include="..\..\data\maps\standaard-43\*.json" Link="data\maps\standaard-43\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\data\maps\**\*.json" Link="data\maps\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- Kaartachtergrond voor de TV-kaartlaag (TO §7.2); geserveerd via GameEndpoints,
          niet via generieke static-file-hosting (zie de doc-comment daar). -->
     <Content Include="..\..\data\maps\standaard-43\*.png" Link="data\maps\standaard-43\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

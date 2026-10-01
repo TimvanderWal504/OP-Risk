@@ -46,6 +46,9 @@ namespace RiskGame.Api.Dtos;
 /// </param>
 public sealed record GameStateDto(
     string GameId,
+    // De kaartvariant van dit spel (FO §4.5): TV en telefoon laden geometrie en grenzen
+    // hiermee, in plaats van een vaste kaart aan te nemen.
+    string MapId,
     GamePhaseDto Phase,
     IReadOnlyList<PlayerDto> Players,
     IReadOnlyList<string> AvailableColorIds,

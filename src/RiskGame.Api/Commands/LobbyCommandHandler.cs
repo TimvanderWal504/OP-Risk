@@ -21,34 +21,33 @@ public sealed record JoinGameResult(string PlayerId, GameStateDto State, string 
 /// validatie, dan wordt er niets opgeslagen (geen state-wijziging, TO §4-diagram).
 /// </summary>
 public sealed class LobbyCommandHandler(
-    IDocumentStore store, IRandomSource random, IMapDefinitionSource mapSource, TimeProvider timeProvider)
+    IDocumentStore store,
+    IRandomSource random,
+    IMapDefinitionSource mapSource,
+    IMapCatalog mapCatalog,
+    TimeProvider timeProvider)
 {
     public async Task<Result<CreateGameResponse>> CreateGameAsync(CreateGameRequest request)
     {
         var gameId = GameIdGenerator.NewGameId();
         var settings = GameStateDtoMapper.ToDomain(request.Settings);
 
+        // De mapId komt van de client: eerst tegen de bekende varianten, vóórdat er een pad
+        // mee gebouwd wordt (geen "..", geen onbestaande map). Een bekende variant die niet
+        // laadt is daarna geen clientinvoer meer maar een datafout — die mag als exception
+        // naar boven komen (src/CLAUDE.md); de datatests per variant bewaken dat.
+        if (!mapCatalog.Contains(request.MapId))
+        {
+            return Result<CreateGameResponse>.Failure(
+                "lobby.unknownMap",
+                new Dictionary<string, string> { ["mapId"] = request.MapId ?? "" });
+        }
+
         // Er bestaat nog geen GameState om tegen te valideren (dit event ís de eerste), dus
         // rechtstreeks tegen de geladen kaartvariant — zelfde bron als waarmee de engine straks
         // startlegers oplost (StartingArmiesResolver), zodat een onbekende preset-id hier
         // wordt geweigerd in plaats van pas te crashen bij de eerste StartGame/plaatsing.
-        // MapDefinitionSource.Load gooit InvalidOperationException bij een ongeldige (maar
-        // bestaande) kaartvariant, en IOException (o.a. DirectoryNotFoundException,
-        // FileNotFoundException) wanneer de map-submap voor een onbekend MapId niet bestaat —
-        // dat gooit File.ReadAllText al vóór het eigen IsSuccess-resultaat. Beide zijn hier
-        // geen bug maar clientinvoer, dus afvangen en teruggeven via hetzelfde Result-patroon
-        // als de preset-check hieronder, i.p.v. een onbehandelde 500.
-        MapDefinition map;
-        try
-        {
-            map = mapSource.Load(request.MapId);
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or IOException)
-        {
-            return Result<CreateGameResponse>.Failure(
-                "lobby.unknownMap",
-                new Dictionary<string, string> { ["mapId"] = request.MapId });
-        }
+        var map = mapSource.Load(request.MapId);
 
         if (!map.StartingArmiesPresets.Any(preset => preset.Id == settings.StartingArmiesPresetId))
         {

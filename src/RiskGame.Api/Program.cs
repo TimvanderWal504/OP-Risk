@@ -17,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 var mapsRoot = Path.Combine(AppContext.BaseDirectory, "data", "maps");
 
 builder.Services.AddSingleton<IMapDefinitionSource>(new MapDefinitionSource(mapsRoot));
+builder.Services.AddSingleton<IMapCatalog>(new MapCatalog(mapsRoot));
 builder.Services.AddSingleton<IDocumentStore>(sp =>
 {
     // Config pas hier uitlezen, niet vóór builder.Build(): WebApplicationFactory (Api.Tests)

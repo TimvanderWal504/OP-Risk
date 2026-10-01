@@ -74,6 +74,15 @@ public sealed class GameStateDtoMapperGameInfoTests
         Assert.Equal(Map.Continents.Count, dto.Continents.Count);
     }
 
+    /// <summary>TV en telefoon laden geometrie en grenzen van de kaart van dit spel (FO §4.5).</summary>
+    [Fact]
+    public void MapId_IsDeKaartvariantVanHetSpel()
+    {
+        var dto = GameStateDtoMapper.ToDto(State(GamePhase.InProgress), TimeProvider.System);
+
+        Assert.Equal(Map.MapId, dto.MapId);
+    }
+
     [Fact]
     public void Events_LeveertDeHeleCatalogusMetDuur()
     {

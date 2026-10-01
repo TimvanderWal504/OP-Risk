@@ -145,7 +145,7 @@ Drie aanvullende databestanden completeren de spel-dataset:
 
 ### 4.5 Kaartvarianten
 
-Er zijn twee kaartvarianten; de host kiest er één bij het aanmaken van het spel (§10). Elke variant heeft een eigen map `data/maps/{mapId}/` met dezelfde bestanden (§4.1–§4.4, plus rollen, missies en gebeurteniskaarten), aangevuld met een `map.json` met de weergavenaam en de standaard startleger-preset van die kaart.
+Er zijn twee kaartvarianten; de host kiest er één bij het aanmaken van het spel (§10). Elke variant heeft een eigen map `data/maps/{mapId}/` met dezelfde bestanden (§4.1–§4.4, plus rollen, missies en gebeurteniskaarten), aangevuld met een `map.json` die aangeeft of dit de standaardkaart is en welke startleger-preset bij die kaart hoort. De weergavenaam van een kaart staat, net als die van gebieden, in de vertalingen.
 
 | `mapId` | Gebieden | Standaard startlegers |
 |---|---|---|
