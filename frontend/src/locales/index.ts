@@ -29,6 +29,7 @@ import { actionTicker } from './actionTicker'
 import { events } from './events'
 import { eventTv } from './eventTv'
 import { eventPhone } from './eventPhone'
+import { autoPass } from './autoPass'
 import { cards } from './cards'
 import { quotes } from './quotes'
 
@@ -64,6 +65,7 @@ export const trees = {
   events,
   eventTv,
   eventPhone,
+  autoPass,
   cards,
   quotes,
 } as const

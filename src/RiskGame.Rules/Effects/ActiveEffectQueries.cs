@@ -21,6 +21,17 @@ public static class ActiveEffectQueries
             .Any(locking => locking.IsLocked(territoryId));
     }
 
+    /// <summary>De kaart die deze ronde gebieden afsluit, of <c>null</c> als er geen is.</summary>
+    public static string? LockingEffectId(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return state.ActiveEffects
+            .Select(active => active.Effect)
+            .FirstOrDefault(effect => effect is ITerritoryLockingEffect)
+            ?.Id;
+    }
+
     /// <summary>
     /// Of de grens tussen <paramref name="fromTerritoryId"/> en <paramref name="toTerritoryId"/>
     /// door een actief <see cref="ISeaRouteBlockingEffect"/> geblokkeerd is. Geen grens tussen

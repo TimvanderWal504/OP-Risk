@@ -13,14 +13,14 @@ namespace RiskGame.Api.Commands;
 /// gebieden hij legers afstaat, buiten de beurtvolgorde om en tegelijk met de andere wachtende
 /// spelers. De laatste keuze start de beurt van de speler die al bij de trekking vastlag.
 /// </summary>
-public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider timeProvider, GameProjection projection)
+public sealed class AttritionCommandHandler(
+    IDocumentStore store, TimeProvider timeProvider, GameProjection projection, TurnAdvancer turnAdvancer)
 {
     /// <summary>
-    /// Probeert het opnieuw bij een gelijktijdige append (<see cref="ConcurrencyRetry"/>): kiezen
-    /// twee spelers tegelijk als laatsten, dan ziet de tweede poging de keuze van de ander en start
-    /// precies één van beide de volgende beurt. Dat conflict ontstaat alleen omdat de state via
-    /// <see cref="GameStateForWriting"/> geladen wordt — anders zouden beide keuzes op de oude
-    /// wachtlijst beslissen, allebei opslaan, en startte niemand de beurt.
+    /// Kiezen twee spelers tegelijk als laatsten, dan wacht de tweede op de spel-lock
+    /// (<see cref="GameWriteLock"/>) en beslist op de state ná de keuze van de ander: precies één
+    /// van beide start de volgende beurt. <see cref="ConcurrencyRetry"/> blijft het vangnet voor een
+    /// versieconflict dat toch optreedt.
     /// </summary>
     public Task<Result<GameStateDto>> RemoveArmiesAsync(
         string gameId, string playerId, IReadOnlyDictionary<string, int> removalsByTerritory) =>
@@ -30,7 +30,7 @@ public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider t
         string gameId, string playerId, IReadOnlyDictionary<string, int> removalsByTerritory)
     {
         await using var session = store.LightweightSession();
-        var state = await GameStateForWriting.LoadAsync(session, gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -52,8 +52,12 @@ public sealed class AttritionCommandHandler(IDocumentStore store, TimeProvider t
         if (projected.EventRound.PendingAttrition is null)
         {
             // De guard garandeert dat er een PendingAttrition was; zonder wachtenden is dit de laatste keuze.
-            TurnStarter.StartTurn(
-                session, projected, state.EventRound.PendingAttrition!.NextPlayerId, timeProvider.GetUtcNow());
+            var started = turnAdvancer.StartTurn(session, projected, state.EventRound.PendingAttrition!.NextPlayerId);
+
+            if (!started.IsSuccess)
+            {
+                return Result<GameStateDto>.Failure(started.Errors);
+            }
         }
 
         await session.SaveChangesAsync();

@@ -79,7 +79,7 @@ public sealed class LobbyCommandHandler(
     public async Task<Result<JoinGameResult>> JoinGameAsync(string gameId, string playerName)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -111,7 +111,7 @@ public sealed class LobbyCommandHandler(
     public async Task<Result<GameStateDto>> ChooseColorAsync(string gameId, string playerId, string colorId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -140,7 +140,7 @@ public sealed class LobbyCommandHandler(
     public async Task<Result<GameStateDto>> StartGameAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -231,7 +231,7 @@ public sealed class LobbyCommandHandler(
     public async Task<Result<GameStateDto>> RemovePlayerAsync(string gameId, string callerId, string targetPlayerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -260,7 +260,7 @@ public sealed class LobbyCommandHandler(
     public async Task<Result<GameStateDto>> SelectRoleAsync(string gameId, string playerId, string roleId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

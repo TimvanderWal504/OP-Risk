@@ -31,6 +31,10 @@ namespace RiskGame.Api.Dtos;
 /// <see cref="RiskGame.Rules.Combat.AttackGuards.DefenseBoostAvailable"/>). Openbaar, net als
 /// <paramref name="IsRoleActive"/>; de telefoon leidt dit nooit zelf af.
 /// </param>
+/// <param name="IsAutoPass">
+/// Of de server de beurten van deze speler speelt (FO §11.2). Openbaar: de TV en elke telefoon tonen
+/// het, en de host-actie "Auto-pass" verschijnt alleen bij wie er nog niet op staat.
+/// </param>
 public sealed record PlayerDto(
     string Id,
     string Name,
@@ -40,6 +44,7 @@ public sealed record PlayerDto(
     bool DefenseBoostAvailable,
     bool IsHost,
     bool IsEliminated,
+    bool IsAutoPass,
     IReadOnlyList<CardDto> Hand,
     bool HasTradeableCardSet,
     int HandCount,

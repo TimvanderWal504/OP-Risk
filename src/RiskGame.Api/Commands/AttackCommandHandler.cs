@@ -1,7 +1,9 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Persistence.Projections;
 using RiskGame.Rules.Abstractions;
+using RiskGame.Rules.AutoPass;
 using RiskGame.Rules.Combat;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
@@ -10,45 +12,51 @@ using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Commands;
 
-public sealed record DeclareAttackResult(IReadOnlyList<int> AttackerRolls, Guid CorrelationId, GameStateDto State);
+/// <param name="AutoDefense">
+/// Het al afgehandelde gevecht als de verdediger op auto-pass staat en er geen herwerp-keuze open
+/// staat (FO §11.2); <c>null</c> als het gevecht nog op de verdediger wacht.
+/// </param>
+public sealed record DeclareAttackResult(
+    IReadOnlyList<int> AttackerRolls, Guid CorrelationId, DefenseResolution? AutoDefense, GameStateDto State);
 
+/// <param name="AutoDefense">Zie <see cref="DeclareAttackResult.AutoDefense"/>.</param>
 public sealed record RerollAttackDieResult(
     IReadOnlyList<int> PreviousRolls,
     int RerolledDieIndex,
     int NewValue,
     IReadOnlyList<int> Rolls,
     Guid CorrelationId,
+    DefenseResolution? AutoDefense,
     GameStateDto State);
 
-public sealed record ChooseDefenseDiceResult(
-    IReadOnlyList<int> AttackerRolls,
-    IReadOnlyList<int> DefenderRolls,
-    int AttackerLosses,
-    int DefenderLosses,
-    bool Conquered,
-    string AttackerId,
-    string DefenderId,
-    string FromTerritoryId,
-    string ToTerritoryId,
-    string? EliminatedPlayerId,
-    bool DefenseBoostUsed,
-    Guid CorrelationId,
-    GameStateDto State);
+/// <param name="AutoDefense">Zie <see cref="DeclareAttackResult.AutoDefense"/>.</param>
+public sealed record KeepAttackDiceResult(DefenseResolution? AutoDefense, GameStateDto State);
+
+public sealed record ChooseDefenseDiceResult(DefenseResolution Combat, GameStateDto State);
 
 /// <summary>
 /// Voert de TO §4-pijplijn uit voor <c>DeclareAttack</c>, <c>ChooseDefenseDice</c> en
 /// <c>MoveAfterConquest</c> (FO §5.3). De rules-engine (<see cref="AttackGuards"/>,
 /// <see cref="CombatResolver"/>, <see cref="ConquestResolution"/>) bestond al; deze
 /// handler rijgt ze aan elkaar, net als <see cref="ReinforceCommandHandler"/> dat deed
-/// voor Versterken.
+/// voor Versterken. De verdediging zelf zit in <see cref="DefenseStep"/>. Staat de verdediger op
+/// auto-pass (FO §11.2), dan verdedigt de server in hetzelfde commando dat het gevecht bij de
+/// verdediger legt (<c>DeclareAttack</c>, of het sluiten van de herwerp-stap); staat de aanvaller op
+/// auto-pass, dan maakt de keuze van de verdediger zijn afgebroken beurt af.
 /// </summary>
-public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
+public sealed class AttackCommandHandler(
+    IDocumentStore store,
+    IRandomSource random,
+    TimeProvider timeProvider,
+    GameProjection projection,
+    DefenseStep defense,
+    AutoPassResolver autoPass)
 {
     public async Task<Result<DeclareAttackResult>> DeclareAttackAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -89,18 +97,23 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var awaitingRerollDecision = AttackGuards.RerollAvailable(state, playerId, toTerritoryId);
 
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
-        session.Events.Append(
-            gameId,
+        var declared = ProjectedAppend.Emit(
+            session,
+            state,
             new AttackDeclared(
                 gameId, playerId, fromTerritoryId, toTerritoryId, attackDice,
-                attackerRolls, awaitingRerollDecision, remaining, now, correlationId));
+                attackerRolls, awaitingRerollDecision, remaining, now, correlationId),
+            projection.Apply);
+
+        var autoDefense = defense.DefendIfAutoPass(session, declared)?.Combat;
 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<DeclareAttackResult>.Success(new DeclareAttackResult(attackerRolls, correlationId, updatedDto));
+        return Result<DeclareAttackResult>.Success(
+            new DeclareAttackResult(attackerRolls, correlationId, autoDefense, updatedDto));
     }
 
     /// <summary>
@@ -113,7 +126,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         string gameId, string playerId, int dieIndex)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -132,8 +145,14 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var rerollResult = CombatResolver.RerollDie(previousRolls, dieIndex, random);
         var newValue = rerollResult.Rolls[rerollResult.NewDieIndex];
 
-        session.Events.Append(gameId, new AttackDieRerolled(
-            gameId, playerId, pendingCombat.ToTerritoryId, previousRolls, dieIndex, newValue, rerollResult.Rolls));
+        var rerolled = ProjectedAppend.Emit(
+            session,
+            state,
+            new AttackDieRerolled(
+                gameId, playerId, pendingCombat.ToTerritoryId, previousRolls, dieIndex, newValue, rerollResult.Rolls),
+            projection.Apply);
+
+        var autoDefense = defense.DefendIfAutoPass(session, rerolled)?.Combat;
 
         await session.SaveChangesAsync();
 
@@ -141,7 +160,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
         return Result<RerollAttackDieResult>.Success(new RerollAttackDieResult(
-            previousRolls, dieIndex, newValue, rerollResult.Rolls, pendingCombat.CorrelationId, updatedDto));
+            previousRolls, dieIndex, newValue, rerollResult.Rolls, pendingCombat.CorrelationId, autoDefense, updatedDto));
     }
 
     /// <summary>
@@ -149,31 +168,37 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
     /// zonder te herwerpen. Verbruikt het beschikbare herwerp voor dit doelgebied niet — alleen
     /// het daadwerkelijk drukken op "Herwerp" doet dat (<see cref="RerollAttackDieAsync"/>).
     /// </summary>
-    public async Task<Result<GameStateDto>> KeepAttackDiceAsync(string gameId, string playerId)
+    public async Task<Result<KeepAttackDiceResult>> KeepAttackDiceAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+            return Result<KeepAttackDiceResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = AttackGuards.CanKeepAttackDice(state, playerId);
 
         if (!validation.IsSuccess)
         {
-            return Result<GameStateDto>.Failure(validation.Errors);
+            return Result<KeepAttackDiceResult>.Failure(validation.Errors);
         }
 
-        session.Events.Append(gameId, new AttackDiceKept(gameId, playerId, state.TurnState!.PendingCombat!.ToTerritoryId));
+        var kept = ProjectedAppend.Emit(
+            session,
+            state,
+            new AttackDiceKept(gameId, playerId, state.TurnState!.PendingCombat!.ToTerritoryId),
+            projection.Apply);
+
+        var autoDefense = defense.DefendIfAutoPass(session, kept)?.Combat;
 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<GameStateDto>.Success(updatedDto);
+        return Result<KeepAttackDiceResult>.Success(new KeepAttackDiceResult(autoDefense, updatedDto));
     }
 
     /// <param name="useDefenseBoost">
@@ -185,7 +210,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         string gameId, string playerId, int defenseDice, bool useDefenseBoost)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -199,80 +224,14 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             return Result<ChooseDefenseDiceResult>.Failure(validation.Errors);
         }
 
-        var defenseBoostUsed = AttackGuards.DefenseBoostRequired(state, defenseDice);
+        var defended = defense.Resolve(session, state, playerId, defenseDice);
 
-        if (defenseBoostUsed)
+        // Ging de aanvaller midden in dit gevecht op auto-pass, dan maakt de server nu zijn beurt af.
+        var finished = autoPass.AfterCombat(session, defended.State);
+
+        if (!finished.Result.IsSuccess)
         {
-            session.Events.Append(gameId, new DefenseBoostUsed(gameId, playerId));
-        }
-
-        var pendingCombat = state.TurnState!.PendingCombat!;
-        var attackerId = state.TurnState.ActivePlayerId;
-        // C5/C6: PendingCombat.AttackerRolls is leidend, niet de DiceRolled-audittrail — na een
-        // herwerp staat daar nog de oorspronkelijke worp, PendingCombat is al bijgewerkt.
-        var attackerRolls = pendingCombat.AttackerRolls;
-
-        var defenderRolls = CombatResolver.RollDice(defenseDice, random);
-        session.Events.Append(gameId, new DiceRolled(gameId, playerId, defenderRolls));
-
-        var outcome = CombatResolver.Compare(attackerRolls, defenderRolls);
-
-        var fromArmyCount = state.Territory(pendingCombat.FromTerritoryId).ArmyCount;
-        var toArmyCount = state.Territory(pendingCombat.ToTerritoryId).ArmyCount;
-        var conquest = ConquestResolution.Apply(fromArmyCount, toArmyCount, outcome);
-
-        // De timer hervat hier alleen als het gevecht meteen klaar is (geen verovering); bij
-        // een verovering blijft hij gepauzeerd tot ArmiesMovedAfterConquest (FO §5.4).
-        var resumedAtUtc = conquest.Conquered ? (DateTimeOffset?)null : timeProvider.GetUtcNow();
-
-        session.Events.Append(gameId, new CombatResolved(
-            gameId,
-            attackerId,
-            pendingCombat.FromTerritoryId,
-            pendingCombat.ToTerritoryId,
-            attackerRolls,
-            defenderRolls,
-            outcome.AttackerLosses,
-            outcome.DefenderLosses,
-            resumedAtUtc));
-
-        string? eliminatedPlayerId = null;
-
-        if (conquest.Conquered)
-        {
-            var defenderId = playerId;
-
-            session.Events.Append(gameId, new TerritoryConquered(gameId, attackerId, pendingCombat.ToTerritoryId));
-
-            if (state.TerritoriesOf(defenderId).Count() == 1)
-            {
-                session.Events.Append(gameId, new PlayerEliminated(gameId, defenderId, attackerId));
-                eliminatedPlayerId = defenderId;
-
-                // FO §6.1: schakelt een ándere speler dan de missiehouder het doelwit van
-                // diens EliminatePlayer-missie uit, dan vervalt die missie en komt de
-                // missiehouder automatisch op de fallback-missie uit.
-                var eliminatedColorId = state.Player(defenderId).ColorId!;
-                var fallbacks = MissionAssignmentCalculator.ResolveFallbacksAfterElimination(
-                    state.Players, state.Map.Missions, eliminatedColorId, attackerId, random);
-
-                foreach (var (holderId, fallbackMissionId) in fallbacks)
-                {
-                    session.Events.Append(gameId, new MissionAssigned(gameId, holderId, fallbackMissionId));
-                }
-
-                // Werelddominantie kan alleen ontstaan door de laatste tegenstander uit te
-                // schakelen. Lokaal voorspeld i.p.v. herladen: de enige eigendomswijziging in
-                // deze methode is hierboven al bekend (het veroverde gebied), dus geen tweede
-                // save/round-trip nodig om de al-gevouwen state te kunnen controleren.
-                var predictedState = state.WithTerritory(
-                    state.Territory(pendingCombat.ToTerritoryId) with { OwnerPlayerId = attackerId });
-
-                if (WinConditionEvaluator.HasWorldDomination(predictedState, attackerId))
-                {
-                    session.Events.Append(gameId, new GameWon(gameId, [attackerId]));
-                }
-            }
+            return Result<ChooseDefenseDiceResult>.Failure(finished.Result.Errors);
         }
 
         await session.SaveChangesAsync();
@@ -280,20 +239,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(
-            attackerRolls,
-            defenderRolls,
-            outcome.AttackerLosses,
-            outcome.DefenderLosses,
-            conquest.Conquered,
-            attackerId,
-            playerId,
-            pendingCombat.FromTerritoryId,
-            pendingCombat.ToTerritoryId,
-            eliminatedPlayerId,
-            defenseBoostUsed,
-            pendingCombat.CorrelationId,
-            updatedDto));
+        return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(defended.Combat, updatedDto));
     }
 
     /// <summary>
@@ -307,7 +253,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
     public async Task<Result<GameStateDto>> AbandonAttackAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -338,7 +284,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         string gameId, string playerId, int armiesToMove)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

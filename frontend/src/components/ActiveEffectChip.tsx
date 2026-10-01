@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../i18n/useT'
 import type { GameStateDto } from '../types/GameState'
 import { EventEffectKindDto } from '../types/GameState'
-import { Badge } from './ui/Badge'
 import { EventKindIcon } from './ui/EventKindIcon'
 import { GlassPanel } from './ui/GlassPanel'
 
@@ -31,7 +30,6 @@ export function ActiveEffectChip({ state }: ActiveEffectChipProps) {
           {tDynamic(`${effect.eventId}.name`, 'events')}
         </span>
       </div>
-      <Badge>{t('chipUntil')}</Badge>
     </GlassPanel>
   )
 }

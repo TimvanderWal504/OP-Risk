@@ -30,7 +30,7 @@ public sealed class TvDisplayCommandHandler(IDocumentStore store, TimeProvider t
     private async Task<Result<GameStateDto>> TrySetTvDisplayAsync(string gameId, string playerId, TvDisplaySettings settings)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {

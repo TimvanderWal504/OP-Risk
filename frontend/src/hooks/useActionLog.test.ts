@@ -15,7 +15,7 @@ const action = (sequence: number): RecentActionDto => ({
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
-  eventBonus: null,
+  eventBonus: null, cardsTradedInTurn: false,
 })
 
 /** Een loader waarvan de test zelf bepaalt wanneer (en met wat) elk verzoek antwoordt. */

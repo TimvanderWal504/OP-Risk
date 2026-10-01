@@ -29,6 +29,11 @@ namespace RiskGame.Rules.State;
 /// de kaart waar <paramref name="EventBonus"/> vandaan komt.
 /// </param>
 /// <param name="EventBonus">Het deel van de toegekende versterkingen dat uit een gebeurteniskaart komt (FO §9.2); null als er geen is.</param>
+/// <param name="CardsTradedInTurn">
+/// Alleen betekenisvol bij <see cref="RecentActionKind.AutoTurnPlayed"/>: of de server in die automatische
+/// beurt verplicht kaarten inlegde (FO §11.2) — de inleg verandert de inlegwaarde voor iedereen, dus hij
+/// mag niet uit het verloop verdwijnen.
+/// </param>
 public sealed record RecentAction(
     RecentActionKind Kind,
     int Sequence = 0,
@@ -41,7 +46,8 @@ public sealed record RecentAction(
     int? AttackerLosses = null,
     int? DefenderLosses = null,
     string? EventId = null,
-    int? EventBonus = null);
+    int? EventBonus = null,
+    bool CardsTradedInTurn = false);
 
 public enum RecentActionKind
 {
@@ -78,4 +84,28 @@ public enum RecentActionKind
     EventBonusGranted,
     /// <summary>Een ronde-effect is voorbij (FO §9.2); zonder speler.</summary>
     EffectExpired,
+
+    /// <summary>De host zette de speler op auto-pass (FO §11.2).</summary>
+    AutoPassEnabled,
+
+    /// <summary>De host was te lang zonder verbinding en staat nu op auto-pass (FO §11.1).</summary>
+    DisconnectedToAutoPass,
+
+    /// <summary>De speler is terug van auto-pass (FO §11.2).</summary>
+    AutoPassDisabled,
+
+    /// <summary>Het host-schap ging over; de speler is de nieuwe host, de tegenpartij de oude (FO §11.1).</summary>
+    HostTransferred,
+
+    /// <summary>
+    /// De automatische beurt van een speler op auto-pass (FO §11.2), als één regel:
+    /// <see cref="RecentAction.Amount"/> is het aantal uit de pool geplaatste legers.
+    /// </summary>
+    AutoTurnPlayed,
+
+    /// <summary>
+    /// Een speler kon <see cref="RecentAction.Amount"/> versterkingen nergens kwijt: al zijn gebieden
+    /// waren afgesloten door de kaart in <see cref="RecentAction.EventId"/> (FO §9.2).
+    /// </summary>
+    ArmiesLapsed,
 }

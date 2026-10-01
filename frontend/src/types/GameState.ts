@@ -109,6 +109,13 @@ export interface TurnStateDto {
    * Bereikbaarheid is symmetrisch, dus "bereikbaar vanuit gebied X" is de rest van X's groep.
    */
   reachableFortifyGroups: string[][]
+  /**
+   * De eigen gebieden van de actieve speler waar nu legers bij mogen
+   * (`ReinforceGuards.PlaceableTerritoryIds`): alles behalve wat een gebeurtenis deze ronde
+   * afsluit (FO §9.2). Leeg terwijl hij legers over heeft = hij kan ze nergens kwijt en mag de
+   * fase afronden; ze vervallen. Van de server, zodat de telefoon die regel niet nabouwt.
+   */
+  placeableTerritoryIds: string[]
 }
 
 /** Spiegelt RiskGame.Api.Dtos.OrderRollStateDto — wie er nog mag gooien voor de volgorde. */
@@ -222,6 +229,12 @@ export const RecentActionKindDto = {
   ArmiesRemoved: 13,
   EventBonusGranted: 14,
   EffectExpired: 15,
+  AutoPassEnabled: 16,
+  DisconnectedToAutoPass: 17,
+  AutoPassDisabled: 18,
+  HostTransferred: 19,
+  AutoTurnPlayed: 20,
+  ArmiesLapsed: 21,
 } as const
 export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
 
@@ -244,6 +257,8 @@ export interface RecentActionDto {
   eventId: string | null
   /** Het deel van `amount` bij `ReinforcementsGranted` dat uit een gebeurteniskaart komt; `null` als er geen is. */
   eventBonus: number | null
+  /** Alleen bij `AutoTurnPlayed`: of de server in die automatische beurt verplicht kaarten inlegde. */
+  cardsTradedInTurn: boolean
 }
 
 /** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */

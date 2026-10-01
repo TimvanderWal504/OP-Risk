@@ -16,6 +16,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -35,6 +36,7 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -54,6 +56,7 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -75,6 +78,7 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={setTvDisplay}
           skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -95,6 +99,7 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -114,6 +119,7 @@ describe('PhonePlayerHeader', () => {
           tradeInCards={vi.fn()}
           setTvDisplay={vi.fn()}
           skipTvHold={skipTvHold}
+          setAutoPass={vi.fn()}
           loadActionLog={vi.fn()}
         />,
       )
@@ -138,6 +144,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -149,6 +156,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -168,6 +176,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -186,6 +195,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -204,6 +214,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -222,6 +233,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -247,6 +259,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: true,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -258,6 +271,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -277,6 +291,7 @@ describe('PhonePlayerHeader', () => {
         tradeInCards={vi.fn()}
         setTvDisplay={vi.fn()}
         skipTvHold={vi.fn()}
+        setAutoPass={vi.fn()}
         loadActionLog={vi.fn()}
       />,
     )
@@ -300,6 +315,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     }
 
@@ -307,7 +323,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: true }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · actief')).toBeInTheDocument()
@@ -317,7 +333,7 @@ describe('PhonePlayerHeader', () => {
       const state = { ...stateInProgress, players: [{ ...fixtureState.players[0], roleId: 'generaal', isRoleActive: false }, fixtureState.players[1]] }
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen · Generaal · inactief')).toBeInTheDocument()
@@ -325,7 +341,7 @@ describe('PhonePlayerHeader', () => {
 
     it('laat de statusregel ongemoeid zonder rol (rollen uit, of nog niet toegewezen)', () => {
       render(
-        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={stateInProgress} me={stateInProgress.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       expect(screen.getByText('Aanvallen')).toBeInTheDocument()
@@ -339,7 +355,7 @@ describe('PhonePlayerHeader', () => {
       { id: 'c3', territoryId: 'ontario', symbol: 'symbol-1' },
     ]
 
-    const stateWithPhase = (turnPhase: TurnPhaseDto) => ({
+    const stateWithPhase = (turnPhase: TurnPhaseDto, activePlayerId = fixtureState.players[0].id) => ({
       ...fixtureState,
       phase: GamePhaseDto.InProgress,
       players: [
@@ -347,7 +363,7 @@ describe('PhonePlayerHeader', () => {
         fixtureState.players[1],
       ],
       turnState: {
-        activePlayerId: 'bob',
+        activePlayerId,
         turnPhase,
         armiesRemaining: 0,
         pendingCombat: null,
@@ -356,6 +372,7 @@ describe('PhonePlayerHeader', () => {
         fortifiesRemaining: 1,
         mustTradeInCards: false,
         reachableFortifyGroups: [],
+        placeableTerritoryIds: ['alaska'],
       },
     })
 
@@ -363,7 +380,7 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Fortify)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       // `/Mijn kaarten/` i.p.v. exacte match: het handaantal-badge (hier 3, uit `cards`)
@@ -377,12 +394,90 @@ describe('PhonePlayerHeader', () => {
       const state = stateWithPhase(TurnPhaseDto.Reinforce)
 
       render(
-        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} loadActionLog={vi.fn()} />,
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
       )
 
       await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
 
       expect(screen.getByRole('button', { name: 'Leg 3 kaarten in' })).toBeInTheDocument()
+    })
+
+    it('verbergt de "Leg 3 kaarten in"-knop als al je gebieden afgesloten zijn (FO §9.2)', async () => {
+      const base = stateWithPhase(TurnPhaseDto.Reinforce)
+      const state = { ...base, turnState: { ...base.turnState, placeableTerritoryIds: [] } }
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.queryByRole('button', { name: 'Leg 3 kaarten in' })).not.toBeInTheDocument()
+    })
+
+    it('verbergt de "Leg 3 kaarten in"-knop tijdens de Versterken-fase van een andere speler', async () => {
+      const state = stateWithPhase(TurnPhaseDto.Reinforce, fixtureState.players[1].id)
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.queryByRole('button', { name: 'Leg 3 kaarten in' })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('auto-pass (DESIGN.md § Auto-pass)', () => {
+    const header = (me = fixtureState.players[0], setAutoPass = vi.fn().mockResolvedValue(undefined)) => (
+      <PhonePlayerHeader
+        state={{
+          ...fixtureState,
+          phase: GamePhaseDto.InProgress,
+          turnState: {
+            activePlayerId: 'bob',
+            turnPhase: TurnPhaseDto.Attack,
+            armiesRemaining: 0,
+            pendingCombat: null,
+            timer: { remainingMs: 90_000, isPaused: false },
+            reinforcementBreakdown: null,
+            fortifiesRemaining: 1,
+            mustTradeInCards: false,
+            reachableFortifyGroups: [],
+            placeableTerritoryIds: ['alaska'],
+          },
+          players: [fixtureState.players[0], fixtureState.players[1]],
+        }}
+        me={me}
+        phase={GamePhaseDto.InProgress}
+        tradeInCards={vi.fn()}
+        setTvDisplay={vi.fn()}
+        skipTvHold={vi.fn()}
+        setAutoPass={setAutoPass}
+        loadActionLog={vi.fn()}
+      />
+    )
+
+    it('toont "Auto-pass" als enige status van een speler op auto-pass', () => {
+      render(header({ ...fixtureState.players[1], isAutoPass: true }))
+
+      expect(screen.getByText('Auto-pass')).toBeInTheDocument()
+    })
+
+    it('laat de host via Spelinfo › Stand een speler op auto-pass zetten, na bevestiging', async () => {
+      const setAutoPass = vi.fn().mockResolvedValue(undefined)
+      render(header(fixtureState.players[0], setAutoPass))
+
+      await userEvent.click(screen.getByRole('button', { name: 'Spelinfo' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Bob op auto-pass zetten' }))
+
+      expect(screen.getByRole('heading', { name: 'Bob op auto-pass zetten?' })).toBeInTheDocument()
+      expect(setAutoPass).not.toHaveBeenCalled()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Op auto-pass zetten' }))
+
+      expect(setAutoPass).toHaveBeenCalledWith('bob')
+      expect(screen.queryByRole('heading', { name: 'Bob op auto-pass zetten?' })).not.toBeInTheDocument()
     })
   })
 })

@@ -43,6 +43,7 @@ const inProgressState = (overrides: Partial<NonNullable<GameStateDto['turnState'
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: [],
     ...overrides,
   },
 })

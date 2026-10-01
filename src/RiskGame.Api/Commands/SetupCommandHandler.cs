@@ -13,12 +13,12 @@ namespace RiskGame.Api.Commands;
 /// (FO §5.1). Geen dobbelen nodig, dus geen <see cref="RiskGame.Rules.Abstractions.IRandomSource"/>
 /// — alleen guards, event(s) appenden en de nieuwe projectie teruggeven.
 /// </summary>
-public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeProvider)
+public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeProvider, TurnAdvancer turnAdvancer)
 {
     public async Task<Result<GameStateDto>> ClaimTerritoryAsync(string gameId, string playerId, string territoryId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -56,7 +56,7 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
     public async Task<Result<GameStateDto>> PlaceInitialArmyAsync(string gameId, string playerId, string territoryId)
     {
         await using var session = store.LightweightSession();
-        var state = await session.LoadAsync<GameState>(gameId);
+        var state = await session.LoadForWritingAsync(gameId);
 
         if (state is null)
         {
@@ -97,7 +97,12 @@ public sealed class SetupCommandHandler(IDocumentStore store, TimeProvider timeP
             // het laatste startleger plaatste (bij SetupMode.Random kan dat iedereen zijn).
             // Zijn versterkingen horen dus ook voor hém berekend te worden. Het laatste startleger
             // verandert geen eigenaar of continentbezit, dus de al geladen state volstaat.
-            TurnStarter.StartTurn(session, state, state.TurnOrder[0], timeProvider.GetUtcNow());
+            var started = turnAdvancer.StartTurn(session, state, state.TurnOrder[0]);
+
+            if (!started.IsSuccess)
+            {
+                return Result<GameStateDto>.Failure(started.Errors);
+            }
         }
 
         await session.SaveChangesAsync();

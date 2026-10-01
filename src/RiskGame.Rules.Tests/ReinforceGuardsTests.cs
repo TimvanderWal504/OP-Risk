@@ -76,7 +76,8 @@ public class ReinforceGuardsTests
         var hand = Enumerable.Range(0, 5).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
 
-        var state = TestGame.InProgress(players: players);
+        var state = TestGame.InProgress(players: players)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         Assert.True(ReinforceGuards.MustTradeInCards(state, "p1"));
     }
@@ -103,7 +104,8 @@ public class ReinforceGuardsTests
         };
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
 
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "c3"]);
 
@@ -116,7 +118,8 @@ public class ReinforceGuardsTests
         var hand = new[] { Card("c1", "alaska", "symbol-1"), Card("c2", "alberta", "symbol-1") };
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
 
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "onbekend"]);
 
@@ -153,7 +156,8 @@ public class ReinforceGuardsTests
         };
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
 
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c1", "c1"]);
 
@@ -193,7 +197,8 @@ public class ReinforceGuardsTests
     public void MustTradeInCardsDuringAttack_MetZesOfMeerKaartenEnGeenLopendGevecht_IsWaar()
     {
         var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         Assert.True(ReinforceGuards.MustTradeInCardsDuringAttack(state, "p1"));
     }
@@ -234,7 +239,8 @@ public class ReinforceGuardsTests
     public void CanTradeInCards_InAanvallenMetZesOfMeerKaarten_IsGeldig()
     {
         var players = new[] { TestGame.Player("p1", "red", hand: SixCardHand()), TestGame.Player("p2", "blue") };
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = ReinforceGuards.CanTradeInCards(state, "p1", ["c1", "c2", "c3"]);
 

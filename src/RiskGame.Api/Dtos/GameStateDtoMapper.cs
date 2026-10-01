@@ -49,6 +49,7 @@ public static class GameStateDtoMapper
                 AttackGuards.DefenseBoostAvailable(state, player.Id),
                 player.IsHost,
                 player.IsEliminated,
+            player.IsAutoPass,
                 player.Hand.Select(ToDto).ToArray(),
                 CardSetEvaluator.HasTradeableSet(state.Map.SetRules, player.Hand),
                 player.Hand.Count,
@@ -70,10 +71,11 @@ public static class GameStateDtoMapper
                 state.TurnState.TurnPhase == TurnPhase.Fortify
                     ? FortifyGuards.ReachableComponents(state, state.TurnState.ActivePlayerId)
                     : [],
+                ReinforceGuards.PlaceableTerritoryIds(state, state.TurnState.ActivePlayerId),
                 state.TurnState.TurnPhase == TurnPhase.Reinforce
                     ? ToDto(
                         ReinforcementCalculator.CalculateBreakdown(state, state.TurnState.ActivePlayerId),
-                        state.TurnState.UnsettledTrades.Sum(trade => trade.SetValue))
+                        state.TurnState.UnsettledTrades.Sum(trade => trade.PoolArmies))
                     : null,
                 Math.Max(0, FortifyGuards.MaxMoves(state, state.TurnState.ActivePlayerId) - state.TurnState.FortifiesUsed),
                 (state.TurnState.TurnPhase == TurnPhase.Reinforce
@@ -203,7 +205,8 @@ public static class GameStateDtoMapper
             action.AttackerLosses,
             action.DefenderLosses,
             action.EventId,
-            action.EventBonus);
+            action.EventBonus,
+            action.CardsTradedInTurn);
 
     private static RecentActionKindDto ToDto(RecentActionKind kind) => kind switch
     {
@@ -223,6 +226,12 @@ public static class GameStateDtoMapper
         RecentActionKind.ArmiesRemoved => RecentActionKindDto.ArmiesRemoved,
         RecentActionKind.EventBonusGranted => RecentActionKindDto.EventBonusGranted,
         RecentActionKind.EffectExpired => RecentActionKindDto.EffectExpired,
+        RecentActionKind.AutoPassEnabled => RecentActionKindDto.AutoPassEnabled,
+        RecentActionKind.DisconnectedToAutoPass => RecentActionKindDto.DisconnectedToAutoPass,
+        RecentActionKind.AutoPassDisabled => RecentActionKindDto.AutoPassDisabled,
+        RecentActionKind.HostTransferred => RecentActionKindDto.HostTransferred,
+        RecentActionKind.AutoTurnPlayed => RecentActionKindDto.AutoTurnPlayed,
+        RecentActionKind.ArmiesLapsed => RecentActionKindDto.ArmiesLapsed,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
     };
 

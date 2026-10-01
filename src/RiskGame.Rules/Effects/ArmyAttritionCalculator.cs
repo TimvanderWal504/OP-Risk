@@ -46,6 +46,52 @@ public static class ArmyAttritionCalculator
     }
 
     /// <summary>
+    /// De keuze die de server maakt voor een speler op auto-pass (FO §9.2/§11.2): telkens 1 leger
+    /// van het gebied met de meeste legers (bij gelijkstand het eerste in de volgorde van de
+    /// kaartdata), nooit onder 1, tot <paramref name="amount"/> bereikt is. Kan de speler minder
+    /// missen, dan is dit gelijk aan <see cref="AutoMaxRemovals"/>. Zelfde vorm als
+    /// <see cref="AutoMaxRemovals"/>: per gebied het aantal áfgestane legers; gebieden die niets
+    /// afstaan ontbreken.
+    /// </summary>
+    public static IReadOnlyDictionary<string, int> AutoPassRemovals(GameState state, string playerId, int amount)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+
+        if (!HasChoice(state, playerId, amount))
+        {
+            return AutoMaxRemovals(state, playerId);
+        }
+
+        var owned = state.Map.Territories
+            .Select(territory => state.Territory(territory.Id))
+            .Where(territory => territory.OwnerPlayerId == playerId)
+            .ToArray();
+        var armies = owned.Select(territory => territory.ArmyCount).ToArray();
+        var removals = new Dictionary<string, int>();
+
+        for (var removed = 0; removed < amount; removed++)
+        {
+            // Strikt groter: bij gelijkstand blijft het eerste gebied in de kaartdata staan.
+            var largest = 0;
+
+            for (var index = 1; index < armies.Length; index++)
+            {
+                if (armies[index] > armies[largest])
+                {
+                    largest = index;
+                }
+            }
+
+            armies[largest]--;
+            removals[owned[largest].TerritoryId] = removals.GetValueOrDefault(owned[largest].TerritoryId) + 1;
+        }
+
+        return removals;
+    }
+
+    /// <summary>
     /// Of een spelerkeuze geldig is: elk genoemd gebied is van de speler en staat een positief
     /// aantal af, geen gebied komt
     /// onder 1 leger, en de som van de verwijderingen komt exact overeen met wat er

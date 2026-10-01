@@ -57,6 +57,37 @@ public class ArmyAttritionCalculatorTests
         Assert.Equal(ArmyAttritionCalculator.MaxRemovableArmies(state, "p1"), removals.Values.Sum());
     }
 
+    /// <summary>FO §9.2/§11.2: telkens 1 van de grootste stapel, bij gelijkstand het eerste gebied in de kaartdata.</summary>
+    [Fact]
+    public void AutoPassRemovals_HaaltTelkensEenLegerVanDeGrootsteStapel()
+    {
+        var state = TweeGebiedenVoorP1(alaskaArmies: 4, albertaArmies: 4);
+
+        var removals = ArmyAttritionCalculator.AutoPassRemovals(state, "p1", amount: 3);
+
+        // 4/4 → Alaska (gelijk, eerst in de kaartdata); 3/4 → Alberta; 3/3 → Alaska.
+        Assert.Equal(new Dictionary<string, int> { ["alaska"] = 2, ["alberta"] = 1 }, removals);
+        Assert.True(ArmyAttritionCalculator.CanApply(state, "p1", removals, amount: 3).IsSuccess);
+    }
+
+    [Fact]
+    public void AutoPassRemovals_MetTeWeinigAfstaanbareLegers_IsHetAutomatischeMaximum()
+    {
+        var state = TweeGebiedenVoorP1(alaskaArmies: 2, albertaArmies: 1);
+
+        var removals = ArmyAttritionCalculator.AutoPassRemovals(state, "p1", amount: 3);
+
+        Assert.Equal(ArmyAttritionCalculator.AutoMaxRemovals(state, "p1"), removals);
+    }
+
+    [Fact]
+    public void AutoPassRemovals_MetNegatiefAantal_IsEenBugInDeAanroeper()
+    {
+        var state = TweeGebiedenVoorP1(alaskaArmies: 4, albertaArmies: 4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => ArmyAttritionCalculator.AutoPassRemovals(state, "p1", amount: -1));
+    }
+
     [Fact]
     public void CanApply_MetJuisteVerdeling_IsGeldig()
     {

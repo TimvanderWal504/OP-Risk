@@ -30,13 +30,13 @@ public static class CardTradeReversal
         {
             var trade = turnState.UnsettledTrades[i];
 
-            if (remaining < trade.SetValue)
+            if (remaining < trade.PoolArmies)
             {
                 break;
             }
 
             toRevert.Add(trade);
-            remaining -= trade.SetValue;
+            remaining -= trade.PoolArmies;
         }
 
         return toRevert;

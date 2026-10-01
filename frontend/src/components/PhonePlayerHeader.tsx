@@ -7,6 +7,7 @@ import { MissionChangedNotice } from './ui/MissionChangedNotice'
 import { CardsPanel } from './CardsPanel'
 import { TvDisplayPanel } from './TvDisplayPanel'
 import { GameInfoPanel } from './GameInfoPanel'
+import { AutoPassConfirm } from './AutoPassConfirm'
 import { CardsIcon, InfoIcon, MissionIcon, SkipForwardIcon, TvIcon } from './ui/icons'
 import { useMissionPanel } from '../hooks/useMissionPanel'
 import { usePhoneHeaderTimer } from '../hooks/usePhoneHeaderTimer'
@@ -30,6 +31,8 @@ export interface PhonePlayerHeaderProps {
   setTvDisplay: (settings: TvDisplaySettingsDto) => Promise<boolean>
   /** "Verder op TV" (FO §2.2), alleen voor de host: laat de wachttijden op de TV eindigen. */
   skipTvHold: () => Promise<void>
+  /** Host-actie "Auto-pass" vanuit Spelinfo › Stand (DESIGN.md § Auto-pass). */
+  setAutoPass: (targetPlayerId: string) => Promise<void>
   /** Het volledige verloop voor het tabblad Spelverloop in spelinfo. */
   loadActionLog: () => Promise<RecentActionDto[]>
 }
@@ -59,6 +62,7 @@ export function PhonePlayerHeader({
   tradeInCards,
   setTvDisplay,
   skipTvHold,
+  setAutoPass,
   loadActionLog,
 }: PhonePlayerHeaderProps) {
   const { t } = useTranslation(['setup', 'reinforce', 'attack', 'fortify', 'common', 'tvDisplay', 'eventPhone'])
@@ -68,6 +72,7 @@ export function PhonePlayerHeader({
   const [cardsOpen, setCardsOpen] = useState(false)
   const [tvDisplayOpen, setTvDisplayOpen] = useState(false)
   const [gameInfoOpen, setGameInfoOpen] = useState(false)
+  const [autoPassTarget, setAutoPassTarget] = useState<PlayerDto | null>(null)
 
   const statusId = resolvePhoneHeaderStatus(phase, state.turnState?.turnPhase ?? null, state.pendingAttrition !== null)
 
@@ -105,7 +110,9 @@ export function PhonePlayerHeader({
   // rol-status zouden suggereren dat hij nog meedoet, dus alleen "Uitgeschakeld".
   const statusWithRole = me.isEliminated
     ? t('common:playerHeader.eliminated')
-    : me.roleId
+    : me.isAutoPass
+      ? t('common:playerHeader.autoPass')
+      : me.roleId
       ? `${status} · ${tDynamic(`${me.roleId}.name`, 'roles')} · ${t(me.isRoleActive ? 'common:playerHeader.roleActive' : 'common:playerHeader.roleInactive')}`
       : status
 
@@ -117,8 +124,13 @@ export function PhonePlayerHeader({
   // fase-check) — de Aanvallen-≥6-inleg (taak 6) loopt altijd via `mustTradeInCards`, nooit
   // vrijwillig. `PhonePlayerHeader` is op elk scherm gemount, dus zonder deze check zou de
   // "Leg 3 kaarten in"-knop hieronder ook buiten Versterken kunnen verschijnen (bv. een
-  // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken.
-  const canTradeVoluntarily = state.turnState?.turnPhase === TurnPhaseDto.Reinforce
+  // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken. En alleen
+  // in de eigen beurt: tijdens de Versterken-fase van een ander weigert de server de inleg ook. En
+  // niet als al zijn gebieden afgesloten zijn (FO §9.2): de opbrengst zou dan meteen vervallen.
+  const canTradeVoluntarily =
+    state.turnState?.turnPhase === TurnPhaseDto.Reinforce
+    && state.turnState.activePlayerId === me.id
+    && state.turnState.placeableTerritoryIds.length > 0
 
   const actions: PlayerHeaderAction[] = [
     {
@@ -189,7 +201,27 @@ export function PhonePlayerHeader({
         />
       )}
       {gameInfoOpen && (
-        <GameInfoPanel state={state} me={me} loadActionLog={loadActionLog} onClose={() => setGameInfoOpen(false)} />
+        <GameInfoPanel
+          state={state}
+          me={me}
+          loadActionLog={loadActionLog}
+          onAutoPassRequest={setAutoPassTarget}
+          onClose={() => setGameInfoOpen(false)}
+        />
+      )}
+      {/* Naast Spelinfo, niet erin: een ModalShell in een ModalShell verliest door de
+          No-Nested-Blur-guard zijn vervaging. */}
+      {me.isHost && autoPassTarget && (
+        <AutoPassConfirm
+          playerName={autoPassTarget.name}
+          onConfirm={async () => {
+            // Ook bij een weigering dicht: de fout-toast (boven alle modals) zegt waarom, en de
+            // knop staat nog in Stand — een open bevestiging lokt alleen een kansloze herhaling uit.
+            await setAutoPass(autoPassTarget.id)
+            setAutoPassTarget(null)
+          }}
+          onCancel={() => setAutoPassTarget(null)}
+        />
       )}
       {me.isHost && tvDisplayOpen && (
         <TvDisplayPanel

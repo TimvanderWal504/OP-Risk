@@ -63,4 +63,21 @@ public sealed class ConcurrencyRetryTests
 
         Assert.Equal(1, attempts);
     }
+
+    /// <summary>
+    /// <c>RejoinGame</c> vangt een blijvend conflict met <see cref="ConcurrencyRetry.IsConflict"/>
+    /// op (TO §6.3: herverbinden mag nooit stuklopen) — dus moet die beide botsingssoorten herkennen.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Conflicts))]
+    public void IsConflict_HerkentEenBotsendeAppend(Func<Exception> conflict)
+    {
+        Assert.True(ConcurrencyRetry.IsConflict(conflict()));
+    }
+
+    [Fact]
+    public void IsConflict_EenAndereFoutIsGeenConflict()
+    {
+        Assert.False(ConcurrencyRetry.IsConflict(new InvalidOperationException("bug")));
+    }
 }

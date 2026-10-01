@@ -23,6 +23,11 @@ interface TvBoardMapProps {
   filterId: string
   getTerritoryVisual: (territory: TerritoryGeometry) => TerritoryFillVisual
   renderMarker: (territory: TerritoryGeometry) => ReactNode
+  /**
+   * Gebiedsnamen, in een eigen laag ónder alle markers: een naam die over de schijf van een
+   * buurgebied valt, verdwijnt eronder in plaats van het legergetal te bedekken.
+   */
+  renderLabel?: (territory: TerritoryGeometry) => ReactNode
   /** Gestippelde zeeverbindingen (FO §4.3), tussen de gebieden- en de markerlaag. */
   seaRoutes?: SeaRouteSegment[]
   /**
@@ -64,6 +69,7 @@ export function TvBoardMap({
   filterId,
   getTerritoryVisual,
   renderMarker,
+  renderLabel,
   seaRoutes = [],
   markerRadius,
   extraOverlay,
@@ -173,6 +179,8 @@ export function TvBoardMap({
             )
           })}
         </g>
+
+        {renderLabel && <g data-testid="territory-labels">{geometry?.map((territory) => renderLabel(territory))}</g>}
 
         {geometry?.map((territory) => renderMarker(territory))}
 

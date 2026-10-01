@@ -653,6 +653,60 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// FO §9.2 (besluit gebruiker 2026-10-01): de bezitsbonus van een afgesloten gebied gaat in de
+    /// vrije pool. De vouwregel telt <c>PoolBonus</c> bij de pool op en neemt hem mee in de
+    /// onvoltooide inleg, zodat een terugdraai hem er samen met de setwaarde weer afhaalt.
+    /// </summary>
+    [Fact]
+    public void CardsTraded_MetPoolbonus_GaatInDePoolEnGaatBijTerugdraaienErWeerAf()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+        var map = mapSource.Load("standaard-43");
+        var cards = new[]
+        {
+            new Rules.Map.Card("card-alaska", "alaska", "symbol-1"),
+            new Rules.Map.Card("card-siberia", "siberia", "symbol-2"),
+            new Rules.Map.Card("card-brazil", "brazil", "symbol-3"),
+        };
+        var player = new Player("p1", "Alice", "red", Hand: cards, RoleId: null, Mission: null, IsEliminated: false);
+        var territories = map.Territories
+            .Select(territory => new TerritoryOwnership(
+                territory.Id,
+                OwnerPlayerId: territory.Id == "alaska" ? "p1" : null,
+                ArmyCount: territory.Id == "alaska" ? 1 : 0))
+            .ToArray();
+        var initialState = new GameState(
+            gameId,
+            map,
+            GamePhase.InProgress,
+            Settings,
+            players: [player],
+            territories,
+            turnOrder: ["p1"],
+            turnState: new TurnState("p1", TurnPhase.Reinforce, new PhaseTimer(Settings.TurnTimer, DateTimeOffset.UtcNow), PendingCombat: null),
+            deck: new DeckState(DrawPile: [], DiscardPile: [], NextTradeValue: 4),
+            activeEffects: []);
+        var projection = new GameProjection(mapSource);
+        var cardIds = cards.Select(card => card.Id).ToArray();
+
+        var afterTrade = projection.Apply(
+            initialState,
+            new CardsTraded(gameId, "p1", cardIds, SetValue: 4, OwnedTerritoryBonuses: [], NextTradeValue: 6, PoolBonus: 2));
+
+        Assert.Equal(6, afterTrade.TurnState!.ArmiesRemaining);
+        Assert.Equal(1, afterTrade.Territory("alaska").ArmyCount);
+        Assert.Equal(2, afterTrade.TurnState.UnsettledTrades.Single().PoolBonus);
+
+        var afterRevert = projection.Apply(
+            afterTrade,
+            new CardTradeReverted(gameId, "p1", cardIds, SetValue: 4, OwnedTerritoryBonuses: [], RestoredTradeValue: 4, PoolBonus: 2));
+
+        Assert.Equal(0, afterRevert.TurnState!.ArmiesRemaining);
+        Assert.Empty(afterRevert.TurnState.UnsettledTrades);
+    }
+
+    /// <summary>
     /// De invariant hieronder is een eigenschap van de guards van vandaag, geen wet (zie
     /// doc-comment op <see cref="GameProjection.Apply(GameState, CardTradeReverted)"/>) — deze
     /// test bewijst dat een onmogelijke situatie (bonus groter dan het huidige legeraantal)
@@ -928,6 +982,48 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
         Assert.Equal([discardedCard2, discardedCard1], result.Deck.DrawPile);
         Assert.Empty(result.Deck.DiscardPile);
         Assert.Equal([handCard], result.Player("p1").Hand);
+    }
+
+    /// <summary>
+    /// Auto-pass en host-overdracht (FO §11.1/§11.2): de host zet p2 op auto-pass, valt daarna zelf
+    /// weg (auto-pass + overdracht naar p3) en p2 komt terug. Live projectie en replay moeten
+    /// identiek zijn, en de document-opslag moet beide vlaggen bewaren. De stream slaat de spelstart
+    /// bewust over: auto-pass kan alleen in een lopend spel, maar de vouwregels kijken niet naar de fase.
+    /// </summary>
+    [Fact]
+    public async Task AutoPassEnHostOverdracht_LiveProjectieEnReplay_LeverenIdentiekeGameStateOp()
+    {
+        var gameId = $"game-{Guid.NewGuid()}";
+        var mapSource = new MapDefinitionSource(MapsRoot);
+
+        await using var store = GameStoreFactory.Create(postgres.ConnectionString, mapSource);
+        await using var session = store.LightweightSession();
+
+        session.Events.StartStream<GameState>(
+            gameId,
+            new GameCreated(gameId, "standaard-43", Settings),
+            new PlayerJoined(gameId, "p1", "Alice", IsHost: true),
+            new PlayerJoined(gameId, "p2", "Bob", IsHost: false),
+            new PlayerJoined(gameId, "p3", "Carol", IsHost: false),
+            new TurnOrderDetermined(gameId, ["p1", "p2", "p3"]),
+            new AutoPassEnabled(gameId, "p2", AutoPassReason.Host),
+            new AutoPassEnabled(gameId, "p1", AutoPassReason.Disconnected),
+            new HostTransferred(gameId, "p1", "p3"),
+            new AutoPassDisabled(gameId, "p2"));
+
+        await session.SaveChangesAsync();
+
+        var live = await session.LoadAsync<GameState>(gameId);
+        var replayed = await ReplayFromRawEventsAsync(session, gameId, mapSource);
+
+        Assert.NotNull(live);
+        Assert.True(live!.Player("p1").IsAutoPass);
+        Assert.False(live.Player("p1").IsHost);
+        Assert.False(live.Player("p2").IsAutoPass);
+        Assert.True(live.Player("p3").IsHost);
+        Assert.False(live.Player("p3").IsAutoPass);
+
+        AssertIdenticalGameState(live, replayed!);
     }
 
     /// <summary>
@@ -1366,6 +1462,9 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
                 PendingWinBroken pendingWinBroken => projection.Apply(state!, pendingWinBroken),
                 GameWon gameWon => projection.Apply(state!, gameWon),
                 TvDisplaySettingsChanged tvDisplayChanged => projection.Apply(state!, tvDisplayChanged),
+                AutoPassEnabled autoPassEnabled => projection.Apply(state!, autoPassEnabled),
+                AutoPassDisabled autoPassDisabled => projection.Apply(state!, autoPassDisabled),
+                HostTransferred hostTransferred => projection.Apply(state!, hostTransferred),
                 var unexpected => throw new InvalidOperationException(
                     $"Onbekend event-type in de teststream: {unexpected.GetType()}"),
             };
@@ -1415,6 +1514,8 @@ public sealed class GameProjectionRoundTripTests(PostgresFixture postgres)
             Assert.Equal(expectedPlayer.IsEliminated, actualPlayer.IsEliminated);
             Assert.Equal(expectedPlayer.EliminatedByPlayerId, actualPlayer.EliminatedByPlayerId);
             Assert.Equal(expectedPlayer.PendingEventBonus, actualPlayer.PendingEventBonus);
+            Assert.Equal(expectedPlayer.IsHost, actualPlayer.IsHost);
+            Assert.Equal(expectedPlayer.IsAutoPass, actualPlayer.IsAutoPass);
         }
 
         Assert.Equal(expected.EventRound.CurrentEventId, actual.EventRound.CurrentEventId);

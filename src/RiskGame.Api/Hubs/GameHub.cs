@@ -150,8 +150,11 @@ public sealed class GameHub(
     TurnFlowCommandHandler turnFlowCommands,
     AttritionCommandHandler attritionCommands,
     TvDisplayCommandHandler tvDisplayCommands,
+    AutoPassCommandHandler autoPassCommands,
     TvPairingRegistry tvPairings,
-    TimeProvider timeProvider) : Hub<IGameClient>
+    PlayerPresenceRegistry presence,
+    TimeProvider timeProvider,
+    ILogger<GameHub> logger) : Hub<IGameClient>
 {
     /// <summary>
     /// "TV koppelen": geeft deze connectie een koppelcode die de TV als QR toont. De host-telefoon
@@ -187,6 +190,7 @@ public sealed class GameHub(
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         tvPairings.Remove(Context.ConnectionId);
+        presence.Unregister(Context.ConnectionId);
 
         return base.OnDisconnectedAsync(exception);
     }
@@ -245,6 +249,7 @@ public sealed class GameHub(
             // anders dan bij RejoinGame vóórdat het een sessietoken vereiste, is er hier niets
             // te impersoneren: de identiteit (én het token) ontstaan pas in dit moment.
             await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, result.Value.PlayerId));
+            presence.Register(Context.ConnectionId, gameId, result.Value.PlayerId);
 
             // De telefoon roept vóór het joinen WatchGame aan (voor het kleurenpalet op de
             // join-stap) en zit daardoor ook in de tv-groep. Een connectie die speler wordt
@@ -301,11 +306,52 @@ public sealed class GameHub(
         if (stored is not null && sessionToken.Length > 0 && TokensMatch(stored.Token, sessionToken))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, playerId));
+            presence.Register(Context.ConnectionId, gameId, playerId);
 
-            return GameStateDtoMapper.RedactForPlayer(dto, playerId);
+            var returned = state.Phase == GamePhase.InProgress && state.Player(playerId).IsAutoPass
+                ? await ReturnFromAutoPassAsync(gameId, playerId)
+                : null;
+
+            return GameStateDtoMapper.RedactForPlayer(returned ?? dto, playerId);
         }
 
         return GameStateDtoMapper.RedactForTv(dto);
+    }
+
+    /// <summary>
+    /// De speler is terug (FO §11.2): auto-pass vervalt en iedereen krijgt de nieuwe state. Levert die
+    /// state op, of <c>null</c> als er niets veranderde. Herverbinden mag hier nooit op stuklopen
+    /// (TO §6.3): botst het opheffen ook na de herhaalpogingen nog, dan wordt dat gelogd en krijgt de
+    /// telefoon gewoon de state zoals hij was — de speler blijft dan op auto-pass tot zijn volgende
+    /// herverbinding.
+    /// </summary>
+    private async Task<GameStateDto?> ReturnFromAutoPassAsync(string gameId, string playerId)
+    {
+        Result<GameStateDto?> result;
+
+        try
+        {
+            result = await autoPassCommands.PlayerReturnedAsync(gameId, playerId);
+        }
+        catch (Exception ex) when (ConcurrencyRetry.IsConflict(ex))
+        {
+            logger.LogWarning(
+                ex, "Auto-pass van speler {PlayerId} in spel {GameId} niet opgeheven bij herverbinden.", playerId, gameId);
+            return null;
+        }
+
+        // Een failure kan hier alleen "onbekend spel" zijn, en het spel is al geladen; null = niets veranderd.
+        if (!result.IsSuccess || result.Value is null)
+        {
+            return null;
+        }
+
+        await using var session = store.QuerySession();
+        var versionedState = result.Value with { StateVersion = await FetchStateVersionAsync(session, gameId) };
+
+        await GameStatePush.BroadcastAsync(Clients, gameId, versionedState);
+
+        return versionedState;
     }
 
     public async Task<GameStateDto> ChooseColor(string gameId, string playerId, string colorId)
@@ -414,6 +460,7 @@ public sealed class GameHub(
         {
             await Clients.Group(GameGroups.All(gameId)).DiceRolled(
                 new DiceRolledMessage(playerId, result.Value.AttackerRolls, "attack", result.Value.CorrelationId));
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -435,42 +482,18 @@ public sealed class GameHub(
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
-                playerId,
-                result.Value.DefenderRolls,
-                result.Value.DefenseBoostUsed ? "defenseBoost" : "defense",
-                result.Value.CorrelationId));
-
-            await using var versionSession = store.QuerySession();
-
-            await Clients.Group(GameGroups.All(gameId)).CombatNarrated(new CombatNarratedMessage(
-                result.Value.CorrelationId,
-                result.Value.AttackerId,
-                result.Value.DefenderId,
-                result.Value.FromTerritoryId,
-                result.Value.ToTerritoryId,
-                result.Value.AttackerLosses,
-                result.Value.DefenderLosses,
-                result.Value.Conquered,
-                result.Value.EliminatedPlayerId,
-                await FetchStateVersionAsync(versionSession, gameId)));
-
-            if (result.Value.State.Winners.Count > 0)
-            {
-                await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
-                    result.Value.State.Winners, await FetchStateVersionAsync(versionSession, gameId)));
-            }
+            await NarrateCombatAsync(gameId, result.Value.Combat, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
             gameId,
             result,
             combatResult => new CombatResultResponse(
-                combatResult.AttackerRolls,
-                combatResult.DefenderRolls,
-                combatResult.AttackerLosses,
-                combatResult.DefenderLosses,
-                combatResult.Conquered,
+                combatResult.Combat.AttackerRolls,
+                combatResult.Combat.DefenderRolls,
+                combatResult.Combat.AttackerLosses,
+                combatResult.Combat.DefenderLosses,
+                combatResult.Combat.Conquered,
                 combatResult.State),
             r => r.State,
             (r, s) => r with { State = s },
@@ -494,6 +517,7 @@ public sealed class GameHub(
                 result.Value.PreviousRolls,
                 result.Value.RerolledDieIndex,
                 result.Value.NewValue));
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -512,7 +536,58 @@ public sealed class GameHub(
     {
         var result = await attackCommands.KeepAttackDiceAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
+        if (result.IsSuccess)
+        {
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
+        }
+
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, keepResult => keepResult.State, state => state, (_, s) => s, _ => playerId);
+    }
+
+    /// <summary>
+    /// De narratieve broadcast van een afgehandeld gevecht (FO §5.3 stap 5): de verdedigingsworp,
+    /// de uitkomst en zo nodig de winnaar. Na een eigen keuze van de verdediger én na een
+    /// automatische verdediging (FO §11.2), zodat de TV beide hetzelfde toont.
+    /// </summary>
+    private async Task NarrateCombatAsync(string gameId, DefenseResolution combat, GameStateDto state)
+    {
+        await using var versionSession = store.QuerySession();
+        var versionedState = state with { StateVersion = await FetchStateVersionAsync(versionSession, gameId) };
+
+        await CombatNarration.BroadcastAsync(Clients, gameId, combat, versionedState);
+    }
+
+    private Task NarrateAutoDefenseAsync(string gameId, DefenseResolution? autoDefense, GameStateDto state) =>
+        autoDefense is null ? Task.CompletedTask : NarrateCombatAsync(gameId, autoDefense, state);
+
+    /// <summary>
+    /// De host zet een afwezige speler op auto-pass (FO §11.2, TO §4.1). Anders dan de andere
+    /// commando's vertrouwt dit de meegestuurde <paramref name="playerId"/> niet: de aanroepende
+    /// verbinding moet zich als die speler bewezen hebben (<see cref="PlayerPresenceRegistry"/>) —
+    /// het host-id is publiek, en auto-pass laat een ander automatisch verdedigen en zijn beurten
+    /// verliezen. Wat er op de doelspeler wachtte, wordt meteen afgehandeld en verteld op de TV.
+    /// </summary>
+    public async Task<GameStateDto> SetAutoPass(string gameId, string playerId, string targetPlayerId)
+    {
+        if (!presence.IsConnectionOf(Context.ConnectionId, gameId, playerId))
+        {
+            throw new HubException(HubErrorSerializer.Serialize(
+                new ValidationError("common.notYourConnection", new Dictionary<string, string> { ["playerId"] = playerId })));
+        }
+
+        var result = await autoPassCommands.SetAutoPassAsync(gameId, playerId, targetPlayerId);
+
+        if (result.IsSuccess)
+        {
+            foreach (var combat in result.Value.Combats)
+            {
+                await NarrateCombatAsync(gameId, combat, result.Value.State);
+            }
+        }
+
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, changeResult => changeResult.State, state => state, (_, s) => s, _ => playerId);
     }
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)

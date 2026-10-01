@@ -5,7 +5,7 @@ import { fixtureState } from '../routes/tv/screens/tvScreenFixture'
 import { ActiveEffectChip } from './ActiveEffectChip'
 
 describe('ActiveEffectChip', () => {
-  it('toont kicker, naam en "tot volgende ronde" van het lopende effect', () => {
+  it('toont kicker en naam van het lopende effect, zonder duur-badge', () => {
     render(
       <ActiveEffectChip
         state={{
@@ -18,7 +18,8 @@ describe('ActiveEffectChip', () => {
 
     expect(screen.getByText('Actief effect')).toBeInTheDocument()
     expect(screen.getByText('Stormachtige zeeën')).toBeInTheDocument()
-    expect(screen.getByText('tot volgende ronde')).toBeInTheDocument()
+    // De duur-badge "tot volgende ronde" is weggehaald (besluit gebruiker 2026-10-01).
+    expect(screen.queryByText('tot volgende ronde')).not.toBeInTheDocument()
   })
 
   it('rendert niets zonder lopend effect', () => {

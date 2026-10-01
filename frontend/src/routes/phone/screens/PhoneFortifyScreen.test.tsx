@@ -20,6 +20,7 @@ const fortifyState = {
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [['alaska', 'ontario']],
+    placeableTerritoryIds: [],
   },
 }
 

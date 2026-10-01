@@ -216,7 +216,9 @@ export function AttackFlowStep({
                         gebaseerd wordt, geen meta-label. Zelfde trede als de subtitel erboven. */}
                     <div className="font-body text-sm text-fg-muted">
                       {territory.armyCount} {t('armiesWord')} ·{' '}
-                      {neighborsOf(territory.territoryId).filter((n) => ownerOf(n) !== null && ownerOf(n) !== playerId).length}{' '}
+                      {/* Dezelfde filter als de doelkeuze: een afgesloten gebied of een dichte
+                          zeeroute telt niet als doel (FO §9.2). */}
+                      {attackableNeighborsOf(territory.territoryId).length}{' '}
                       {t('targetsWord')}
                     </div>
                   </div>

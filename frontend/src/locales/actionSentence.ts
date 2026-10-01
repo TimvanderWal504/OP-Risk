@@ -116,5 +116,26 @@ export function actionSentence(
     }
     case RecentActionKindDto.EffectExpired:
       return t(expiredKey(state, action.eventId), { event: eventName(action.eventId) })
+    case RecentActionKindDto.AutoPassEnabled:
+      return t('autoPassEnabled')
+    case RecentActionKindDto.DisconnectedToAutoPass:
+      return t('disconnectedToAutoPass')
+    case RecentActionKindDto.AutoPassDisabled:
+      return t('autoPassDisabled')
+    case RecentActionKindDto.HostTransferred:
+      return t('hostTransferred')
+    case RecentActionKindDto.ArmiesLapsed: {
+      const event = eventName(action.eventId)
+      return action.amount === 1 ? t('armiesLapsedOne', { event }) : t('armiesLapsed', { count: action.amount, event })
+    }
+    case RecentActionKindDto.AutoTurnPlayed:
+      // Eén regel voor de hele automatische beurt; een verplichte inleg verandert de inlegwaarde
+      // voor iedereen en wordt daarom genoemd (DESIGN.md § Auto-pass).
+      if (action.cardsTradedInTurn) {
+        return action.amount === 1
+          ? t('autoTurnPlayedWithTradeOne')
+          : t('autoTurnPlayedWithTrade', { count: action.amount })
+      }
+      return action.amount === 1 ? t('autoTurnPlayedOne') : t('autoTurnPlayed', { count: action.amount })
   }
 }

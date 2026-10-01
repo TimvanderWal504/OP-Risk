@@ -67,6 +67,10 @@ internal static class ApiTestHost
                     services.Remove(TurnTimerDescriptor(services));
                 }
 
+                // De host-uitval draait in tests nooit vanzelf: hij leest de gedeelde
+                // aanwezigheid van alle spellen. Tests roepen HostAbsenceMonitor direct aan.
+                services.Remove(HostedServiceDescriptor<HostAbsenceBackgroundService>(services));
+
                 configureServices?.Invoke(services);
             });
 
@@ -100,10 +104,12 @@ internal static class ApiTestHost
     }
 
     private static ServiceDescriptor TurnTimerDescriptor(IServiceCollection services) =>
-        services.SingleOrDefault(
-            descriptor => descriptor.ImplementationType == typeof(TurnTimerBackgroundService))
+        HostedServiceDescriptor<TurnTimerBackgroundService>(services);
+
+    private static ServiceDescriptor HostedServiceDescriptor<TService>(IServiceCollection services) =>
+        services.SingleOrDefault(descriptor => descriptor.ImplementationType == typeof(TService))
         ?? throw new InvalidOperationException(
-            $"Geen IHostedService-descriptor voor {nameof(TurnTimerBackgroundService)} gevonden. "
+            $"Geen IHostedService-descriptor voor {typeof(TService).Name} gevonden. "
             + "Twee mogelijke oorzaken: (a) de registratie in Program.cs is een factory-overload "
             + "geworden — dan is ImplementationType null en moet dit filter mee veranderen; (b) deze "
             + "callback draait vóór Program.cs, controleer dat hij via ConfigureTestServices loopt.");

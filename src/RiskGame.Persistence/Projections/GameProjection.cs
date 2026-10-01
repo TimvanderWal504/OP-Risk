@@ -247,12 +247,12 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         }
 
         var unsettledTrade = new UnsettledTrade(
-            @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue);
+            @event.CardIds, @event.SetValue, @event.OwnedTerritoryBonuses, previousTradeValue, @event.PoolBonus);
 
         return Record(
             state.WithTurnState(state.TurnState! with
             {
-                ArmiesRemaining = state.TurnState!.ArmiesRemaining + @event.SetValue,
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining + unsettledTrade.PoolArmies,
                 UnsettledTrades = [.. state.TurnState.UnsettledTrades, unsettledTrade],
             }),
             @event);
@@ -300,7 +300,7 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
         return Record(
             state.WithTurnState(state.TurnState! with
             {
-                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue,
+                ArmiesRemaining = state.TurnState!.ArmiesRemaining - @event.SetValue - @event.PoolBonus,
                 UnsettledTrades = [.. state.TurnState.UnsettledTrades.Where(trade => !trade.CardIds.SequenceEqual(@event.CardIds))],
             }),
             @event);
@@ -632,6 +632,10 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
             @event);
     }
 
+    /// <summary>Zet de pool op 0: de speler kon hem nergens kwijt (FO §9.2).</summary>
+    public GameState Apply(GameState state, ArmiesLapsed @event) =>
+        Record(state.WithTurnState(state.TurnState! with { ArmiesRemaining = 0 }), @event);
+
     /// <summary>Haalt het verlopen effect uit <see cref="GameState.ActiveEffects"/> (FO §9.2).</summary>
     public GameState Apply(GameState state, EffectExpired @event) =>
         Record(
@@ -669,6 +673,36 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
     /// <summary>Laat het laatste-kans-venster vervallen (FO §6.2) — zie doc-comment op <see cref="PendingWinBroken"/>.</summary>
     public GameState Apply(GameState state, PendingWinBroken @event) =>
         Record(state.WithPendingWin(null), @event);
+
+    /// <summary>Zet de speler op auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassEnabled"/>.</summary>
+    public GameState Apply(GameState state, AutoPassEnabled @event) =>
+        Record(state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = true }), @event);
+
+    /// <summary>Haalt de speler van auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassDisabled"/>.</summary>
+    public GameState Apply(GameState state, AutoPassDisabled @event) =>
+        Record(state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = false }), @event);
+
+    /// <summary>
+    /// Verplaatst het host-schap (FO §11.1) — zie doc-comment op <see cref="HostTransferred"/>. Was
+    /// <see cref="HostTransferred.FromPlayerId"/> geen host, dan zou dit stil twee hosts opleveren:
+    /// een onmogelijke toestand, dus een exception in plaats van een fout die pas later opvalt.
+    /// </summary>
+    public GameState Apply(GameState state, HostTransferred @event)
+    {
+        var previousHost = state.Player(@event.FromPlayerId);
+
+        if (!previousHost.IsHost)
+        {
+            throw new InvalidOperationException(
+                $"HostTransferred van '{@event.FromPlayerId}', maar die is geen host in spel '{@event.GameId}'.");
+        }
+
+        return Record(
+            state
+                .WithPlayer(previousHost with { IsHost = false })
+                .WithPlayer(state.Player(@event.ToPlayerId) with { IsHost = true }),
+            @event);
+    }
 
     /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>
     public GameState Apply(GameState state, TvDisplaySettingsChanged @event) =>

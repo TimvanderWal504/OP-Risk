@@ -11,8 +11,11 @@ namespace RiskGame.Api.Commands;
 /// mislukte poging heeft niets opgeslagen.
 /// </summary>
 /// <remarks>
-/// Nodig waar spelers bewust tegelijk handelen (FO §9.2: de attrition-keuzes, en het beurteinde
-/// dat een trekking kan starten) en voor de host die naast de beurt de TV bijstelt.
+/// Een vangnet, niet meer de primaire bescherming: commando's op hetzelfde spel lopen sinds
+/// <see cref="GameWriteLock"/> na elkaar, dus een botsende append hoort niet meer voor te komen. Blijft
+/// staan waar spelers bewust tegelijk handelen (FO §9.2: de attrition-keuzes, het beurteinde dat een
+/// trekking kan starten, auto-pass) — goedkoop, en een onverwachte botsing wordt zo een herhaling in
+/// plaats van een foutmelding.
 /// </remarks>
 public static class ConcurrencyRetry
 {
@@ -35,6 +38,10 @@ public static class ConcurrencyRetry
         }
     }
 
-    private static bool IsConflict(Exception ex) =>
+    /// <summary>
+    /// Of <paramref name="ex"/> een botsende gelijktijdige append is — ook voor een aanroeper die na
+    /// de laatste poging nog iets anders wil doen dan falen (<c>RejoinGame</c>).
+    /// </summary>
+    public static bool IsConflict(Exception ex) =>
         ex is ConcurrencyException or EventStreamUnexpectedMaxEventIdException;
 }

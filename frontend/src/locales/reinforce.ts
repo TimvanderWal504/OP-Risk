@@ -18,6 +18,18 @@ export const reinforce = {
   cardTradeBonusRow: { nl: 'Kaarteninleg', en: 'Card trade-in' },
   placeAllFirst: { nl: 'Verdeel eerst alle {{count}} legers', en: 'Place all {{count}} armies first' },
   tradeCardsButton: { nl: 'Leg kaarten in', en: 'Trade in cards' },
+  /** Eigen gebieden die een gebeurtenis deze ronde afsluit (FO §9.2): daar komen geen legers bij. */
+  lockedNote: { nl: 'Deze ronde afgesloten: {{territories}}', en: 'Locked this round: {{territories}}' },
+  /** Alle eigen gebieden afgesloten (FO §9.2, besluit gebruiker 2026-10-01): de pool vervalt. */
+  noOpenTerritory_one: {
+    nl: 'Al je gebieden zijn deze ronde afgesloten. Je {{count}} leger vervalt.',
+    en: 'All your territories are locked this round. Your {{count}} army is lost.',
+  },
+  noOpenTerritory_other: {
+    nl: 'Al je gebieden zijn deze ronde afgesloten. Je {{count}} legers vervallen.',
+    en: 'All your territories are locked this round. Your {{count}} armies are lost.',
+  },
+  finishWithoutPlacing: { nl: 'Versterken afronden', en: 'Finish reinforcing' },
   /**
    * Niet in de export: die kent maar twee knopstaten (verdelen/klaar), want de demo plaatst
    * lokaal zonder server-round-trip. Onze server-round-trip (stage-then-confirm, zie het

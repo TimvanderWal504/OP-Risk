@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { tDynamic } from '../../../i18n/useT'
 import { TurnStatusHeader } from '../../../components/board/TurnStatusHeader'
 import { TvBoardMap } from '../../../components/board/TvBoardMap'
+import { TerritoryNameLabel } from '../../../components/board/TerritoryNameLabel'
 import { useTerritoryGeometry } from '../../../hooks/useTerritoryGeometry'
 import { useSeaRoutes } from '../../../hooks/useSeaRoutes'
 import { useTerritoryOwnership } from '../../../hooks/useTerritoryOwnership'
@@ -34,7 +35,7 @@ import { withoutBlockedRoutes } from '../../../map/seaRoutes'
  * territorium- én legertotaal per speler (`state.territories` is al client-side beschikbaar).
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
-  const { t } = useTranslation('board')
+  const { t } = useTranslation(['board', 'autoPass'])
   const { data: geometry } = useTerritoryGeometry()
   const seaRoutes = withoutBlockedRoutes(useSeaRoutes(geometry), state.activeEffect?.blockedBorders ?? [])
   const lockedTerritoryIds = new Set(state.activeEffect?.lockedTerritoryIds ?? [])
@@ -108,6 +109,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
 
           return { fillHex, fillOpacity, strokeHex: fillHex, strokeOpacity, strokeWidth, glowPx }
         }}
+        renderLabel={(territory) =>
+          ownership.get(territory.id)?.owned ? <TerritoryNameLabel key={territory.id} territory={territory} marker={marker} /> : null
+        }
         renderMarker={(territory) => {
           const entry = ownership.get(territory.id)
           const owned = entry?.owned
@@ -150,23 +154,6 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                 }}
               >
                 {owned.armyCount}
-              </text>
-              <text
-                x={territory.centroidPx.x}
-                y={territory.centroidPx.y + marker.nameOffsetY}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={fontFamily.display}
-                fontWeight={700}
-                fontSize={marker.nameFontSize}
-                fill={boardTok.numFg}
-                stroke={boardTok.disc}
-                strokeWidth={marker.nameStrokeWidth}
-                strokeOpacity={marker.nameStrokeOpacity}
-                strokeLinejoin="round"
-                style={{ paintOrder: 'stroke', letterSpacing: '.01em' }}
-              >
-                {tDynamic(territory.id, 'territories')}
               </text>
             </g>
           )
@@ -220,6 +207,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                         {tDynamic(`${player.roleId}.name`, 'roles')}
                       </Badge>
                     )}
+                    {/* Auto-pass (DESIGN.md § Auto-pass): na een eventuele rolbadge; de naam kapt af,
+                        de badges nooit — die dragen status. */}
+                    {player.isAutoPass && <Badge>{t('autoPass:badge')}</Badge>}
                   </div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">
                     {t('territoriesCount', { count: territoryCountByPlayer[playerId] ?? 0 })}

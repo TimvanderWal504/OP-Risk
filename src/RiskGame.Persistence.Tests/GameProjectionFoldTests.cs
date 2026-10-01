@@ -227,4 +227,45 @@ public sealed class GameProjectionFoldTests
         Assert.Equal(1, folded.Territory("alberta").ArmyCount);
         Assert.Equal(["p1"], folded.EventRound.PendingAttrition!.AwaitingPlayerIds);
     }
+
+    [Fact]
+    public void AutoPassEnabled_ZetAlleenDieSpelerOpAutoPass()
+    {
+        var folded = Projection.Apply(BuildState(AttackTurnState()), new AutoPassEnabled("game-1", "p2", AutoPassReason.Host));
+
+        Assert.True(folded.Player("p2").IsAutoPass);
+        Assert.False(folded.Player("p1").IsAutoPass);
+    }
+
+    [Fact]
+    public void AutoPassDisabled_HaaltDeSpelerVanAutoPass()
+    {
+        var state = Projection.Apply(BuildState(AttackTurnState()), new AutoPassEnabled("game-1", "p2", AutoPassReason.Host));
+
+        var folded = Projection.Apply(state, new AutoPassDisabled("game-1", "p2"));
+
+        Assert.False(folded.Player("p2").IsAutoPass);
+    }
+
+    /// <summary>FO §11.1: het host-schap gaat over; er is daarna precies één host.</summary>
+    [Fact]
+    public void HostTransferred_VerplaatstHetHostSchap()
+    {
+        var state = BuildState(AttackTurnState());
+        state = state.WithPlayer(state.Player("p1") with { IsHost = true });
+
+        var folded = Projection.Apply(state, new HostTransferred("game-1", "p1", "p2"));
+
+        Assert.False(folded.Player("p1").IsHost);
+        Assert.True(folded.Player("p2").IsHost);
+    }
+
+    [Fact]
+    public void HostTransferred_VanEenSpelerDieGeenHostIs_IsEenOnmogelijkeToestand()
+    {
+        var state = BuildState(AttackTurnState());
+
+        Assert.Throws<InvalidOperationException>(
+            () => Projection.Apply(state, new HostTransferred("game-1", "p1", "p2")));
+    }
 }

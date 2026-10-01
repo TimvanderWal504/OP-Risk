@@ -17,10 +17,14 @@ namespace RiskGame.Persistence.Events;
 /// <param name="RestoredTradeValue">
 /// De inlegwaarde die vóór de teruggedraaide inleg gold (<see cref="UnsettledTrade.PreviousTradeValue"/>).
 /// </param>
+/// <param name="PoolBonus">
+/// De bezitsbonus die de teruggedraaide inleg in de pool stopte (<see cref="UnsettledTrade.PoolBonus"/>).
+/// </param>
 public sealed record CardTradeReverted(
     string GameId,
     string PlayerId,
     IReadOnlyList<string> CardIds,
     int SetValue,
     IReadOnlyList<TerritoryBonus> OwnedTerritoryBonuses,
-    int RestoredTradeValue);
+    int RestoredTradeValue,
+    int PoolBonus = 0);

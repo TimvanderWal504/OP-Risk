@@ -27,7 +27,8 @@ public class TurnGuardsTests
     {
         var hand = Enumerable.Range(0, 5).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce, armiesRemaining: 0);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Reinforce, armiesRemaining: 0)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = TurnGuards.CanEndPhase(state, "p1");
 
@@ -38,7 +39,8 @@ public class TurnGuardsTests
     [Fact]
     public void EndPhase_VanuitVersterkenMetOngeplaatsteLegers_IsOngeldig()
     {
-        var state = TestGame.InProgress(turnPhase: TurnPhase.Reinforce, armiesRemaining: 3);
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Reinforce, armiesRemaining: 3)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = TurnGuards.CanEndPhase(state, "p1");
 
@@ -75,7 +77,8 @@ public class TurnGuardsTests
     {
         var hand = Enumerable.Range(0, 6).Select(i => Card($"c{i}", "alaska", "symbol-1")).ToArray();
         var players = new[] { TestGame.Player("p1", "red", hand: hand), TestGame.Player("p2", "blue") };
-        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack);
+        var state = TestGame.InProgress(players: players, turnPhase: TurnPhase.Attack)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = TurnGuards.CanEndPhase(state, "p1");
 
@@ -86,7 +89,8 @@ public class TurnGuardsTests
     [Fact]
     public void EndPhase_VanuitAanvallenMetOngeplaatsteInlegpool_IsOngeldig()
     {
-        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 4);
+        var state = TestGame.InProgress(turnPhase: TurnPhase.Attack, armiesRemaining: 4)
+            .WithTerritory(new TerritoryOwnership("alaska", "p1", 1));
 
         var result = TurnGuards.CanEndPhase(state, "p1");
 

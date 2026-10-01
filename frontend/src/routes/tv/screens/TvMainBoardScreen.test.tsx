@@ -38,6 +38,7 @@ const stateInProgress = {
     fortifiesRemaining: 1,
     mustTradeInCards: false,
     reachableFortifyGroups: [],
+    placeableTerritoryIds: [],
   },
 }
 
@@ -158,8 +159,23 @@ describe('TvMainBoardScreen', () => {
     expect(within(svg).getByText('Alaska').getAttribute('font-size')).toBe(String(marker.nameFontSize * 2))
   })
 
+  /** Een naam die over de schijf van een buurgebied valt, hoort eronder te verdwijnen (2026-10-01). */
+  it('tekent alle gebiedsnamen vóór alle legerschijven, zodat geen naam een schijf bedekt', async () => {
+    const { container } = render(
+      <TvMainBoardScreen state={stateInProgress} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />,
+    )
+    const svg = container.querySelector('svg')! as unknown as HTMLElement
+    await waitFor(() => expect(within(svg).getByText('Alaska')).toBeInTheDocument())
+
+    const labels = within(svg).getByTestId('territory-labels')
+    expect(labels).toContainElement(within(svg).getByText('Alaska'))
+    for (const disc of Array.from(svg.querySelectorAll('circle'))) {
+      expect(labels.compareDocumentPosition(disc) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+  })
+
   it('toont het verloop onder de kaart zodra er acties zijn (plan-testronde-tv punt 4)', () => {
-    render(<TvMainBoardScreen state={{ ...stateInProgress, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null, eventBonus: null }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+    render(<TvMainBoardScreen state={{ ...stateInProgress, recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null, eventBonus: null, cardsTradedInTurn: false }] }} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 
     expect(screen.getByText('Verloop')).toBeInTheDocument()
     expect(screen.getAllByText('claimt Alaska').length).toBeGreaterThan(0)
@@ -250,6 +266,18 @@ describe('TvMainBoardScreen', () => {
 
     const bobRow = screen.getByText('Bob').closest('div[style*="opacity"]')
     expect(bobRow).toHaveStyle({ opacity: '0.5' })
+  })
+
+  /** DESIGN.md § Auto-pass: silver-outline badge na de naam; de rij blijft op volle sterkte. */
+  it('toont "Auto-pass" bij een speler op auto-pass, zonder de rij te dimmen', () => {
+    const stateWithAutoPass = {
+      ...stateInProgress,
+      players: stateInProgress.players.map((player) => (player.id === 'bob' ? { ...player, isAutoPass: true } : player)),
+    }
+    render(<TvMainBoardScreen state={stateWithAutoPass} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Auto-pass')).toHaveClass('border-silver-700')
+    expect(screen.getByText('Bob').closest('div[style*="opacity"]')).toHaveStyle({ opacity: '1' })
   })
 
   it('begrenst de tekstschaal in de kop en de zijkolom: de kaart houdt zijn formaat (besluit 2026-09-26)', () => {

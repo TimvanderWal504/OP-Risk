@@ -16,7 +16,7 @@ const claimed = (sequence: number, territoryId: string, playerId = 'alice'): Rec
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
-  eventBonus: null,
+  eventBonus: null, cardsTradedInTurn: false,
 })
 
 const state = (...newestFirst: RecentActionDto[]): GameStateDto => ({ ...fixtureState, recentActions: newestFirst })
@@ -35,14 +35,14 @@ describe('ActionTicker', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('zet de nieuwste links en de oudere rechts ervan, alleen de nieuwste gemarkeerd als laatste', () => {
+  it('zet de nieuwste links en de oudere rechts ervan, met één vaste "Laatste"-kicker vóór de rij', () => {
     render(<ActionTicker state={state(claimed(2, 'peru', 'bob'), claimed(1, 'brazil'))} />)
 
     expect(screen.getByText('Verloop')).toBeInTheDocument()
     expect(items()).toEqual(['Bob claimt Peru', 'Alice claimt Brazilië'])
-    const [newest, older] = screen.getAllByTestId('action-ticker-item')
-    expect(newest).toHaveTextContent('Laatste')
-    expect(older).not.toHaveTextContent('Laatste')
+    expect(screen.getAllByText('Laatste')).toHaveLength(1)
+    // Buiten de regels: een kicker die meeverhuist, laat de vorige regel krimpen en de rij springen.
+    for (const item of screen.getAllByTestId('action-ticker-item')) expect(item).not.toHaveTextContent('Laatste')
   })
 
   it('rendert elke regel één keer, zonder tweede kopie voor een lus', () => {
@@ -73,7 +73,7 @@ describe('ActionTicker', () => {
       expect(animate).not.toHaveBeenCalled()
     })
 
-    it('schuift de rij over de breedte van de nieuwe regel en laat die invervagen', () => {
+    it('schuift de rij rustig over de breedte van de nieuwe regel, zonder invervagen', () => {
       stubAnimations()
       const { rerender } = render(<ActionTicker state={state(claimed(1, 'brazil'))} />)
 
@@ -81,9 +81,9 @@ describe('ActionTicker', () => {
 
       expect(animate).toHaveBeenCalledWith(
         [{ transform: 'translateX(-200px)' }, { transform: 'none' }],
-        expect.objectContaining({ duration: 500 }),
+        expect.objectContaining({ duration: 700 }),
       )
-      expect(animate).toHaveBeenCalledWith([{ opacity: 0 }, { opacity: 1 }], expect.objectContaining({ duration: 500 }))
+      expect(animate).toHaveBeenCalledTimes(1)
     })
 
     it('animeert niet als alleen de bovenste regel bijwerkt', () => {

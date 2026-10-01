@@ -110,19 +110,6 @@ en worden niet meer gemeld als afwijking.
 | design-tokens.ts (`boardMarkerTok`) | Gebiedsnaam-labels op de kaart (`nameFontSize`) van 14.5 naar 20 design-eenheden, contourrand (`nameStrokeWidth`) evenredig van 3.2 naar 4.4 | "uit het oorspronkelijke TV-design" (14.5/3.2) | bewuste, expliciet opgedragen tv-leesbaarheidswijziging (2026-09-22, zie de `--glass-bg`-rij hierboven, zelfde aanleiding): op 3m kijkafstand niet leesbaar naast de 26px-legerteller op hetzelfde bord. Zichtbaar op elk bordscherm (Claiming/InitialPlacement/Hoofdscherm) |
 | ArmyStepperRow.tsx (beide `+`-knoppen) en PlaceReinforcementStep.tsx (`Klaar`/`Aanvallen`-knop) | Tekstkleur op de `+`/CTA-knop volgt nu de achtergrond (`canIncrement`/`buttonEnabled` ? `var(--on-pitch)` : `var(--fg-muted)`) i.p.v. altijd hardcoded `var(--on-pitch)` | Geen exportwaarde — de export kende geen conditionele achtergrondwissel op deze knoppen | bevinding, gebruiker gescreenshot 2026-08-11 (Versterken-scherm, uitgeschakelde `+`-knoppen): `--on-pitch` (bijna zwart, `#04060b`) is getuned voor tekst op de volledig dekkende `pitch-500`-groenvulling; deze knoppen wisselen bij uitgeschakeld naar `var(--border-strong)` (`#33425a`, donker blauwgrijs) als achtergrond maar behielden de bijna-zwarte tekst erop — vrijwel onleesbaar. Zelfde categorie bug als de eerder opgeloste `Button.tsx`-bevinding (2026-08-07), hier gemist omdat deze knoppen die styling los herhalen i.p.v. `Button` te hergebruiken. Overige `var(--on-pitch)`-knoppen in de codebase (`AttackFlowStep`/`TurnStatusHeader`/`ConquestMoveStep`/`LobbyQrPanel`/`Stepper`) dimmen uitsluitend via `disabled:opacity-*` op een statische `bg-pitch-500` — achtergrond én tekst faden samen, dus geen vergelijkbaar contrastprobleem, niet aangepast |
 
-## Bevinding: TO §4.1 belooft `SetAutoPass`, backend levert het niet
-
-`docs/technisch-ontwerp-risk.md` §4.1 noemt `SetAutoPass` (host-command voor een
-afwezige speler) en een `isAutoPass`-veld op de speler-schets — maar `PlayerDto.cs`
-heeft dat veld niet en er bestaat geen `SetAutoPass`-hub-method in `GameHub.cs`.
-Gecombineerd met de bewust gepauzeerde beurttimer tijdens een gevecht (FO §5.4, want
-`ChooseDefenseDice` pauzeert tot een gevecht volledig is afgehandeld): **een
-verdediger die nooit reageert blokkeert het spel voor iedereen**, zonder vangnet.
-Niet opgelost in deze taak (bestaand gat, niet door Attack geïntroduceerd) — voor het
-eerst met echte spelers bereikbaar zodra deze taak live gaat. Vervolgtaak: ofwel
-`SetAutoPass` alsnog bouwen, ofwel de TO bijwerken als dit bewust nooit komt.
-
-
 ## Animatie
 
 - Alle beweging komt uit het design en staat in `motion.ts`. Er wordt geen timing,

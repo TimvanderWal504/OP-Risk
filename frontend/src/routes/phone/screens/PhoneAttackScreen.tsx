@@ -181,7 +181,11 @@ export function PhoneAttackScreen({
     // dus per constructie nooit. Hergebruikt `PlaceReinforcementStep` (dezelfde component als
     // Versterken): eerst de verplichte inleg (via zijn eigen `CardsPanel`, mandatory zodra
     // `mustTradeInCards`), dan de plaatsing van de verkregen legers.
-    if (state.turnState.mustTradeInCards || state.turnState.armiesRemaining > 0) {
+    // Kan hij nergens legers kwijt (al zijn gebieden afgesloten, FO §9.2), dan vervalt de pool en
+    // gaat hij gewoon door met Aanvallen — waar hij vanuit een afgesloten gebied toch niets kan.
+    const canPlaceAnywhere = state.turnState.placeableTerritoryIds.length > 0
+
+    if ((state.turnState.mustTradeInCards || state.turnState.armiesRemaining > 0) && canPlaceAnywhere) {
       const myTerritoryIds = new Set(myTerritories.map((territory) => territory.territoryId))
 
       return (
@@ -198,6 +202,7 @@ export function PhoneAttackScreen({
           // kaarten in"-knop, die anders een kansloze server-aanroep zou uitlokken. De
           // verplichte flow zelf loopt via `mustTradeInCards` hieronder, ongewijzigd.
           hasTradeableCardSet={false}
+          placeableTerritoryIds={state.turnState.placeableTerritoryIds}
           myTerritoryIds={myTerritoryIds}
           mustTradeInCards={state.turnState.mustTradeInCards}
           onConfirmPlacements={async (placements) => {

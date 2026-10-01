@@ -48,6 +48,11 @@
 - Projecties bevatten geen spellogica: ze vouwen events tot state, meer niet.
   Beslissingen (mag dit? wat gebeurt er?) horen in de rules engine, vóór het
   event ontstaat.
+- Een command handler laadt een bestaand spel altijd via
+  `GameWriteLock.LoadForWritingAsync`, nooit via `session.LoadAsync<GameState>`
+  (TO §5.2): alleen zo lopen commando's op hetzelfde spel na elkaar en beslist
+  geen enkel commando op een verouderde state. Lezen zonder te schrijven (hub,
+  timer-service) mag zonder lock.
 
 ## Foutafhandeling
 

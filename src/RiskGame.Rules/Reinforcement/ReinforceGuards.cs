@@ -1,3 +1,4 @@
+using RiskGame.Rules.Effects;
 using RiskGame.Rules.Map;
 using RiskGame.Rules.State;
 using RiskGame.Rules.Validation;
@@ -39,6 +40,14 @@ public static class ReinforceGuards
         if (!preconditions.IsSuccess)
         {
             return preconditions;
+        }
+
+        // FO §9.2 (besluit gebruiker 2026-10-01): op een afgesloten gebied komen geen legers bij —
+        // ook niet uit de ≥6-inlegpool in Aanvallen of bij de automatische beurt (FO §11.2).
+        if (ActiveEffectQueries.IsTerritoryLocked(state, territoryId))
+        {
+            return ValidationResult.Failure(
+                "reinforce.territoryLocked", new Dictionary<string, string> { ["territoryId"] = territoryId });
         }
 
         // FO §5.2: bij 5+ kaarten gaat inleggen vóór elke andere actie in Versterken —
@@ -83,15 +92,41 @@ public static class ReinforceGuards
     }
 
     /// <summary>
+    /// De eigen gebieden waar nu legers bij mogen: alles behalve wat een gebeurtenis deze ronde
+    /// afsluit (FO §9.2). In de volgorde van de kaartdata.
+    /// </summary>
+    public static IReadOnlyList<string> PlaceableTerritoryIds(GameState state, string playerId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
+
+        return state.Map.Territories
+            .Select(territory => territory.Id)
+            .Where(territoryId => state.Territory(territoryId).OwnerPlayerId == playerId
+                && !ActiveEffectQueries.IsTerritoryLocked(state, territoryId))
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Of de speler ergens legers kwijt kan. Zo niet — al zijn gebieden zijn afgesloten (FO §9.2) —
+    /// dan vervalt zijn pool: hij mag de fase met legers over afsluiten, en inleggen (vrijwillig én
+    /// verplicht) staat stil, want de opbrengst zou meteen vervallen (besluit gebruiker 2026-10-01).
+    /// </summary>
+    public static bool HasPlaceableTerritory(GameState state, string playerId) =>
+        PlaceableTerritoryIds(state, playerId).Count > 0;
+
+    /// <summary>
     /// Of inleg verplicht is aan het begin van Versterken: bij 5 of meer kaarten in de
-    /// hand (FO §5.2). Een pure predicate, geen state-overgang.
+    /// hand (FO §5.2), tenzij de speler nergens legers kwijt kan (FO §9.2) — dan wordt de
+    /// verplichting overgeslagen. Een pure predicate, geen state-overgang.
     /// </summary>
     public static bool MustTradeInCards(GameState state, string playerId)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
 
-        return state.Player(playerId).Hand.Count >= MinHandSizeForMandatoryTrade;
+        return state.Player(playerId).Hand.Count >= MinHandSizeForMandatoryTrade
+            && HasPlaceableTerritory(state, playerId);
     }
 
     /// <summary>
@@ -100,6 +135,7 @@ public static class ReinforceGuards
     /// de hand. Anders dan <see cref="MustTradeInCards"/> draagt deze predicate de
     /// fase-/gevecht-voorwaarde zelf, zodat de DTO-mapper 'm rechtstreeks kan aanroepen
     /// zonder eerst zelf de fase te controleren (taak 3-plan: "fase-bewust vanaf dag één").
+    /// Net als <see cref="MustTradeInCards"/> overgeslagen als de speler nergens legers kwijt kan.
     /// </summary>
     public static bool MustTradeInCardsDuringAttack(GameState state, string playerId)
     {
@@ -107,7 +143,8 @@ public static class ReinforceGuards
         ArgumentException.ThrowIfNullOrWhiteSpace(playerId);
 
         return state.TurnState is { TurnPhase: TurnPhase.Attack, PendingCombat: null }
-            && state.Player(playerId).Hand.Count >= MinHandSizeForMandatoryAttackTrade;
+            && state.Player(playerId).Hand.Count >= MinHandSizeForMandatoryAttackTrade
+            && HasPlaceableTerritory(state, playerId);
     }
 
     /// <summary>
@@ -143,6 +180,13 @@ public static class ReinforceGuards
                     ["expected"] = TurnPhase.Reinforce.ToString(),
                     ["actual"] = state.TurnState.TurnPhase.ToString(),
                 });
+        }
+
+        // Zonder open gebied zou de opbrengst meteen vervallen en de kaarten voor niets weg zijn
+        // (FO §9.2, besluit gebruiker 2026-10-01).
+        if (!HasPlaceableTerritory(state, playerId))
+        {
+            return ValidationResult.Failure("reinforce.noOpenTerritory");
         }
 
         if (cardIds.Distinct(StringComparer.Ordinal).Count() != cardIds.Count)

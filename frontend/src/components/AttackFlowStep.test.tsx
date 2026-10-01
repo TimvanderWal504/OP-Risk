@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { AttackFlowStep } from './AttackFlowStep'
 
 const players = [
-  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
-  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, isAutoPass: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
+  { id: 'bob', name: 'Bob', colorId: 'blue', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: false, isEliminated: false, isAutoPass: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },
 ]
 
 const colors = [
@@ -522,6 +522,12 @@ describe('AttackFlowStep', () => {
       renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['alaska'], blockedBorders: [] })
 
       expect(screen.queryByText('Alaska')).not.toBeInTheDocument()
+    })
+
+    it('telt een afgesloten doel of een doel over een dichte zeeroute niet mee in "doelen"', () => {
+      renderFlow({ eventId: 'zandstorm', lockedTerritoryIds: ['kamchatka'], blockedBorders: [] })
+
+      expect(screen.getByText(/1\s+doelen/)).toBeInTheDocument()
     })
 
     it('biedt een afgesloten vijandelijk gebied niet als doel aan', async () => {
