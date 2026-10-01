@@ -16,6 +16,7 @@ import type { PhoneScreenProps } from './phoneScreens'
  */
 export const fixtureState: GameStateDto = {
   gameId: 'ABCD',
+  mapId: 'standaard-43',
   phase: GamePhaseDto.Lobby,
   players: [
     { id: 'alice', name: 'Alice', colorId: 'red', roleId: null, isRoleActive: false, defenseBoostAvailable: false, isHost: true, isEliminated: false, isAutoPass: false, hand: [], hasTradeableCardSet: false, handCount: 0, missionId: null },

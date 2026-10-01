@@ -15,6 +15,8 @@ import { PhoneScreen } from './ui/PhoneScreen'
 import { toastAnchor } from '../hooks/useToastAnchorInset'
 
 export interface PlaceReinforcementStepProps {
+  /** Kaartvariant van het spel (`GameStateDto.mapId`), voor de kaart-tegels in `CardsPanel`. */
+  mapId: string
   myTerritories: TerritoryDto[]
   myColor: PlayerColorDto | null
   territoryCatalog: TerritoryCatalogDto[]
@@ -49,6 +51,7 @@ export interface PlaceReinforcementStepProps {
  * Reinforce-plan).
  */
 export function PlaceReinforcementStep({
+  mapId,
   myTerritories,
   myColor,
   territoryCatalog,
@@ -291,6 +294,7 @@ export function PlaceReinforcementStep({
 
       {cardsOpen && (
         <CardsPanel
+          mapId={mapId}
           hand={hand}
           myTerritoryIds={myTerritoryIds}
           hasTradeableCardSet={hasTradeableCardSet}

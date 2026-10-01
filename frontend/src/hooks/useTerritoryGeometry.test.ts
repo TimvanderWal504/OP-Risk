@@ -37,7 +37,7 @@ describe('useTerritoryGeometry', () => {
     vi.stubGlobal('fetch', fetchMock)
     const useTerritoryGeometry = await importFreshHook()
 
-    const { result } = renderHook(() => useTerritoryGeometry())
+    const { result } = renderHook(() => useTerritoryGeometry('standaard-43'))
 
     expect(result.current.loading).toBe(true)
     expect(result.current.data).toBeNull()
@@ -49,6 +49,21 @@ describe('useTerritoryGeometry', () => {
     expect(result.current.error).toBe(false)
   })
 
+  it('haalt de geometrie van de opgegeven kaartvariant op', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(featureCollection),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const useTerritoryGeometry = await importFreshHook()
+
+    const { result } = renderHook(() => useTerritoryGeometry('wereld-49'))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(fetchMock).toHaveBeenCalledWith('/maps/wereld-49/territories.geo.json')
+  })
+
   it('een tweede hook-instantie hergebruikt de module-scope cache zonder opnieuw te fetchen', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -58,10 +73,10 @@ describe('useTerritoryGeometry', () => {
     vi.stubGlobal('fetch', fetchMock)
     const useTerritoryGeometry = await importFreshHook()
 
-    const first = renderHook(() => useTerritoryGeometry())
+    const first = renderHook(() => useTerritoryGeometry('standaard-43'))
     await waitFor(() => expect(first.result.current.loading).toBe(false))
 
-    const second = renderHook(() => useTerritoryGeometry())
+    const second = renderHook(() => useTerritoryGeometry('standaard-43'))
 
     expect(second.result.current.loading).toBe(false)
     expect(second.result.current.data).toHaveLength(1)
@@ -75,7 +90,7 @@ describe('useTerritoryGeometry', () => {
     )
     const useTerritoryGeometry = await importFreshHook()
 
-    const { result } = renderHook(() => useTerritoryGeometry())
+    const { result } = renderHook(() => useTerritoryGeometry('standaard-43'))
 
     await waitFor(() => expect(result.current.error).toBe(true))
 

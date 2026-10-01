@@ -31,13 +31,13 @@ describe('loadSeaRoutes', () => {
       }),
     )
 
-    await expect(loadSeaRoutes()).resolves.toEqual([{ from: 'iceland', to: 'greenland' }])
+    await expect(loadSeaRoutes('standaard-43')).resolves.toEqual([{ from: 'iceland', to: 'greenland' }])
   })
 
   it('faalt expliciet bij een niet-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
 
-    await expect(loadSeaRoutes()).rejects.toThrow('404')
+    await expect(loadSeaRoutes('standaard-43')).rejects.toThrow('404')
   })
 })
 
@@ -142,9 +142,9 @@ describe('zeeroutes op de echte kaartdata (standaard-43)', () => {
 
   it('levert 27 lijnstukken (23 routes + 2×2 stompjes), allemaal eindig en binnen de kaart', async () => {
     stubFetchWith(readMapFile('territories.geo.json'))
-    const geometry = await loadTerritoryGeometry()
+    const geometry = await loadTerritoryGeometry('standaard-43')
     stubFetchWith(readMapFile('adjacency_validated.json'))
-    const routes = await loadSeaRoutes()
+    const routes = await loadSeaRoutes('standaard-43')
 
     const segments = toSeaRouteSegments(routes, geometry)
 

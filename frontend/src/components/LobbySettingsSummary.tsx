@@ -13,6 +13,10 @@ import { GlassPanel } from './ui/GlassPanel'
 
 export interface LobbySettingsSummaryProps {
   settings: GameSettingsDto
+  /** Kaartvariant van het spel (`GameStateDto.mapId`, FO §4.5). */
+  mapId: string
+  /** Aantal gebieden op die kaart, uit de server-state (`GameStateDto.territories`). */
+  territoryCount: number
 }
 
 /**
@@ -22,7 +26,7 @@ export interface LobbySettingsSummaryProps {
  * Toont geen aparte fortify-timer-rij, alleen "Beurttimer" — `fortifyTimerSeconds` wordt hier
  * niet getoond (wel elders, in `CreateGameForm`).
  */
-export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
+export function LobbySettingsSummary({ settings, mapId, territoryCount }: LobbySettingsSummaryProps) {
   const { t } = useTranslation('lobby')
 
   const winConditionLabels: Record<WinConditionDto, string> = {
@@ -52,7 +56,11 @@ export function LobbySettingsSummary({ settings }: LobbySettingsSummaryProps) {
   }
 
   const rows: [string, string, string][] = [
-    [t('settings.map'), t('settings.mapValue'), 'var(--fg1)'],
+    [
+      t('settings.map'),
+      t('settings.mapValue', { map: tDynamic(`${mapId}.name`, 'maps'), territoryCount }),
+      'var(--fg1)',
+    ],
     [t('settings.winCondition'), winConditionLabels[settings.winCondition], 'var(--color-silver-400)'],
     // Alleen relevant bij Geheime missies (FO §6.2) — betekenisloos bij Werelddominantie.
     ...(settings.winCondition === WinConditionDto.SecretMissions

@@ -124,7 +124,7 @@
     {
       "name": "Selectable Option",
       "kind": "custom",
-      "description": "Card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Defaults to role=\"radio\" for mutually-exclusive groups (color pickers, role lists, territory/army selection); role=\"checkbox\" switches the same visual pattern to independent multi-select (e.g. choosing cards to trade in) without changing the border/background language.",
+      "description": "Card whose border color alone carries selected/unselected/disabled state — no checkmark or icon overlay. Defaults to role=\"radio\" for mutually-exclusive groups (color pickers, role lists, territory/army selection, and the settings form's map and starting-army choices — a title + muted description card holding a vertical stack of name-over-description options); role=\"checkbox\" switches the same visual pattern to independent multi-select (e.g. choosing cards to trade in) without changing the border/background language.",
       "html": "<button class=\"ds-selectable\" role=\"radio\" aria-checked=\"true\">GROEN</button>",
       "css": ".ds-selectable { position: relative; border-radius: 16px; border-width: 2px; border-style: solid; border-color: #84ad28; padding: 16px; color: #eef2f8; font-family: 'Lexend', sans-serif; font-weight: 700; background: transparent; } .ds-selectable[aria-checked=\"false\"] { border-color: #33425a; } .ds-selectable:disabled { border-color: #243246; opacity: 0.5; cursor: not-allowed; }"
     },

@@ -11,6 +11,8 @@ import { LockIcon } from './ui/icons'
 import { useTerritoryOutlines } from '../hooks/useTerritoryOutlines'
 
 export interface CardsPanelProps {
+  /** Kaartvariant van het spel (`GameStateDto.mapId`): de tegel-omlijningen komen uit diens geometrie. */
+  mapId: string
   hand: CardDto[]
   myTerritoryIds: Set<string>
   /** Server-berekend (FO §4.4, `CardSetEvaluator.HasTradeableSet`): of er ergens in `hand` een
@@ -48,6 +50,7 @@ const TRADE_SET_SIZE = 3
  * volgende `GameStateUpdated` brengt de geslonken hand toch al mee.
  */
 export function CardsPanel({
+  mapId,
   hand,
   myTerritoryIds,
   hasTradeableCardSet,
@@ -60,7 +63,7 @@ export function CardsPanel({
   const [mode, setMode] = useState<'browse' | 'trade'>(initialMode)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const outlines = useTerritoryOutlines()
+  const outlines = useTerritoryOutlines(mapId)
 
   const isOwned = (card: CardDto) => card.territoryId !== null && myTerritoryIds.has(card.territoryId)
   const outlineFor = (card: CardDto) => (card.territoryId ? (outlines?.[card.territoryId] ?? null) : null)

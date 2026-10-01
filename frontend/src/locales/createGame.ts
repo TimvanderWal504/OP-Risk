@@ -9,11 +9,17 @@ export const createGame = {
     rules: { nl: 'Spelregels', en: 'Game rules' },
     extras: { nl: 'Extra spelelementen', en: 'Extra game elements' },
   },
-  /** Vaste kaart: `HomePage` levert altijd `standaard-43`, er is geen kaartkeuze. */
+  /** Kaartkeuze (FO §4.5, §10). Naam en omschrijving per kaart staan in `locales/maps.ts`. */
   map: {
+    title: { nl: 'Kaart', en: 'Map' },
+    description: {
+      nl: 'Bepaalt hoeveel gebieden er te veroveren zijn.',
+      en: 'Decides how many territories there are to conquer.',
+    },
+    /** Kopregel; aantallen komen van `GET /maps`, niet uit deze tekst. */
     summary: {
-      nl: 'Standaard · 43 gebieden · 6 continenten',
-      en: 'Standard · 43 territories · 6 continents',
+      nl: '{{map}} · {{territoryCount}} gebieden · {{continentCount}} continenten',
+      en: '{{map}} · {{territoryCount}} territories · {{continentCount}} continents',
     },
   },
   winCondition: {

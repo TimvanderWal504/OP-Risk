@@ -23,7 +23,8 @@ export const lobby = {
   settings: {
     title: { nl: 'Instellingen', en: 'Settings' },
     map: { nl: 'Kaart', en: 'Map' },
-    mapValue: { nl: 'Standaard · 43 gebieden', en: 'Standard · 43 territories' },
+    /** Naam uit `locales/maps.ts`, aantal uit de server-state. */
+    mapValue: { nl: '{{map}} · {{territoryCount}} gebieden', en: '{{map}} · {{territoryCount}} territories' },
     winCondition: { nl: 'Winconditie', en: 'Win condition' },
     /** Alleen getoond wanneer winCondition === SecretMissions (FO §6.2). */
     missionWinTiming: { nl: 'Missietiming', en: 'Mission timing' },

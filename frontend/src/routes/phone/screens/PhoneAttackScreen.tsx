@@ -190,6 +190,7 @@ export function PhoneAttackScreen({
 
       return (
         <PlaceReinforcementStep
+          mapId={state.mapId}
           myTerritories={myTerritories}
           myColor={myColor}
           territoryCatalog={territoryCatalog}

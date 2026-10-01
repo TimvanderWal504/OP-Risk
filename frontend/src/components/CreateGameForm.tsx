@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -10,7 +10,6 @@ import {
   type CreateGameRequest,
   type CreateGameResponse,
   type GameSettingsDto,
-  type StartingArmiesPresetDto,
 } from '../types/GameSettings'
 import { ToggleRow } from './ui/ToggleRow'
 import { Stepper } from './ui/Stepper'
@@ -22,14 +21,15 @@ import { GlassPanel } from './ui/GlassPanel'
 import type { ValidationError } from '../types/ValidationError'
 import { translateValidationErrors } from '../i18n/hubError'
 import { useToast } from '../hooks/useToast'
+import { useMapChoice } from '../hooks/useMapChoice'
 import { tDynamic } from '../i18n/useT'
 import { apiUrl } from '../config/apiConfig'
 import { readRememberedTvDisplay } from '../storage/rememberedTvDisplay'
 
 /** FO §10-standaardwaarden. Roltoewijzing en verplaatsen-timer hebben geen bediening
  * in het design (Instellingen-scherm) en blijven daarom op hun default staan — geen
- * invulruimte, zie CLAUDE.md. `startingArmiesPresetId` valt terug op "classic" totdat
- * `/maps/{mapId}/starting-armies-presets` teruggekomen is. */
+ * invulruimte, zie CLAUDE.md. `startingArmiesPresetId` wordt overschreven met de standaard
+ * van de standaardkaart zodra `GET /maps` binnen is (FO §10: de preset volgt de kaart). */
 const DEFAULT_SETTINGS: GameSettingsDto = {
   winCondition: WinConditionDto.SecretMissions,
   setupMode: SetupModeDto.Random,
@@ -57,39 +57,29 @@ function formatTimer(seconds: number): string {
 }
 
 export interface CreateGameFormProps {
-  mapId: string
   onCreated: (gameId: string) => void | Promise<void>
 }
 
 // Een nieuwe aanmaakpoging ruimt de fouttoast van de vorige op.
 const createGameToastSource = 'createGame'
 
-export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
+export function CreateGameForm({ onCreated }: CreateGameFormProps) {
   const { t } = useTranslation('createGame')
   const [settings, setSettings] = useState<GameSettingsDto>(DEFAULT_SETTINGS)
-  const [presets, setPresets] = useState<StartingArmiesPresetDto[]>([])
   const [submitting, setSubmitting] = useState(false)
   const { showError, clearSource } = useToast()
-
-  useEffect(() => {
-    let cancelled = false
-
-    fetch(apiUrl(`/maps/${mapId}/starting-armies-presets`))
-      .then((response) => (response.ok ? (response.json() as Promise<StartingArmiesPresetDto[]>) : []))
-      .then((loaded) => {
-        if (!cancelled) {
-          setPresets(loaded)
-        }
-      })
-      .catch(() => {})
-
-    return () => {
-      cancelled = true
-    }
-  }, [mapId])
+  // FO §10: een andere kaart zet de startlegers op de standaard van die kaart; daarna kiest de
+  // host ze zelf.
+  const { maps, selectedMap, presets, selectMap } = useMapChoice({
+    onMapChosen: (map) => setSettings((s) => ({ ...s, startingArmiesPresetId: map.defaultStartingArmiesPresetId })),
+    toastSource: createGameToastSource,
+  })
+  const mapId = selectedMap?.mapId ?? null
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    if (!mapId) return
+
     setSubmitting(true)
     clearSource(createGameToastSource)
 
@@ -144,7 +134,17 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
     <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col text-fg">
       <GlassPanel elevation="base" context="phone" padding="none" className="mx-gutter mt-gutter flex-none rounded-2xl px-4 py-3">
         <h1 className="font-display text-h1 font-black">{t('header.title')}</h1>
-        <p className="mt-1 text-sm text-fg-muted">{t('map.summary')}</p>
+        {/* Altijd gerenderd: een harde spatie houdt de regelhoogte vast zolang de kaarten
+            laden, zodat de rest van het formulier niet verspringt. */}
+        <p className="mt-1 text-sm text-fg-muted">
+          {selectedMap
+            ? t('map.summary', {
+                map: tDynamic(`${selectedMap.mapId}.name`, 'maps'),
+                territoryCount: selectedMap.territoryCount,
+                continentCount: selectedMap.continentCount,
+              })
+            : ' '}
+        </p>
       </GlassPanel>
 
       {/* Geen `PhoneScreen`: dit scherm is een `<form>` met een vaste kop, een scrollend
@@ -163,6 +163,26 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
             </span>
           </GlassPanel>
           <div className="flex flex-col gap-2.5">
+            <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
+              <div className="mb-0.5 font-display text-base font-extrabold">{t('map.title')}</div>
+              <div className="mb-2.5 text-xs text-fg-muted">{t('map.description')}</div>
+              <div role="radiogroup" aria-label={t('map.title')} className="flex flex-col gap-2">
+                {maps.map((map) => (
+                  <SelectableOption
+                    key={map.mapId}
+                    selected={mapId === map.mapId}
+                    onSelect={() => selectMap(map)}
+                    className="flex flex-col gap-1 px-3 py-2.5 text-left"
+                  >
+                    <span className="font-display font-bold">{tDynamic(`${map.mapId}.name`, 'maps')}</span>
+                    <p className="text-xs text-fg-muted">
+                      {tDynamic(`${map.mapId}.description`, 'maps', { territoryCount: map.territoryCount })}
+                    </p>
+                  </SelectableOption>
+                ))}
+              </div>
+            </GlassPanel>
+
             <GlassPanel elevation="base" context="phone" padding="none" className="rounded-card px-3.5 py-3">
               <div className="mb-2 font-display text-base font-extrabold">{t('winCondition.title')}</div>
               <SegmentedControl
@@ -299,7 +319,7 @@ export function CreateGameForm({ mapId, onCreated }: CreateGameFormProps) {
       </div>
 
       <Footer variant="gradient">
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting || !mapId}>
           {submitting ? t('submit.busy') : t('submit.idle')}
         </Button>
       </Footer>

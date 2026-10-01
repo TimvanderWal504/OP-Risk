@@ -30,7 +30,7 @@ export interface SeaRouteSegment {
 const FULL_TURN_PX = (360 / (LON_MAX - LON_MIN)) * MAP_WIDTH_PX
 
 /** Alleen de zeeverbindingen; landgrenzen krijgen bewust geen lijn (FO §4.3, zie DESIGN.md). */
-export async function loadSeaRoutes(mapId = 'standaard-43'): Promise<SeaRoute[]> {
+export async function loadSeaRoutes(mapId: string): Promise<SeaRoute[]> {
   const response = await fetch(apiUrl(`/maps/${mapId}/adjacency_validated.json`))
   if (!response.ok) {
     throw new Error(`Grenzen voor '${mapId}' konden niet geladen worden (${response.status}).`)

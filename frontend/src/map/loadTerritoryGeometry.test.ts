@@ -29,7 +29,7 @@ describe('loadTerritoryGeometry', () => {
       ],
     })
 
-    const [geometry] = await loadTerritoryGeometry()
+    const [geometry] = await loadTerritoryGeometry('standaard-43')
 
     expect(geometry.id).toBe('ukraine')
     expect(geometry.continent).toBe('europe')
@@ -54,7 +54,7 @@ describe('loadTerritoryGeometry', () => {
       ],
     })
 
-    const [geometry] = await loadTerritoryGeometry()
+    const [geometry] = await loadTerritoryGeometry('standaard-43')
 
     expect(geometry.pathD).toBe(
       `M 0.0,0.0 L ${MAP_WIDTH_PX.toFixed(1)},0.0 Z M 0.0,${MAP_HEIGHT_PX.toFixed(1)} L ${MAP_WIDTH_PX.toFixed(1)},${MAP_HEIGHT_PX.toFixed(1)} Z`,
@@ -75,7 +75,7 @@ describe('loadTerritoryGeometry', () => {
       ],
     })
 
-    const [geometry] = await loadTerritoryGeometry()
+    const [geometry] = await loadTerritoryGeometry('standaard-43')
 
     // -178 + 360 = 182° en -179 + 360 = 181°: beide overgeklapte punten liggen ná de vouw
     // rechts van 178°, dus de ring loopt door i.p.v. terug te springen naar de westrand.
@@ -96,7 +96,7 @@ describe('loadTerritoryGeometry', () => {
       ],
     })
 
-    const [geometry] = await loadTerritoryGeometry()
+    const [geometry] = await loadTerritoryGeometry('standaard-43')
 
     // Brondata-centroïden zijn al post-vouw (zie loadTerritoryGeometry.ts): geen +360 erbij.
     expect(geometry.centroidPx.x).toBeCloseTo(((164.55 - LON_MIN) / (LON_MAX - LON_MIN)) * MAP_WIDTH_PX, 5)
@@ -106,10 +106,10 @@ describe('loadTerritoryGeometry', () => {
   it('gooit een fout als de kaartgeometrie niet opgehaald kan worden', async () => {
     mockFetchOnce(undefined, false, 404)
 
-    await expect(loadTerritoryGeometry()).rejects.toThrow(/404/)
+    await expect(loadTerritoryGeometry('standaard-43')).rejects.toThrow(/404/)
   })
 
-  it('gebruikt standaard-43 als er geen mapId wordt meegegeven', async () => {
+  it('haalt de geometrie van de opgegeven kaartvariant op', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -117,8 +117,8 @@ describe('loadTerritoryGeometry', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    await loadTerritoryGeometry()
+    await loadTerritoryGeometry('wereld-49')
 
-    expect(fetchMock).toHaveBeenCalledWith('/maps/standaard-43/territories.geo.json')
+    expect(fetchMock).toHaveBeenCalledWith('/maps/wereld-49/territories.geo.json')
   })
 })

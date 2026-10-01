@@ -1,8 +1,8 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * Gekeyed op TerritoryDto.territoryId / territories.json `id` (kaartvariant
- * standaard-43). Data blijft bron van waarheid voor welke gebieden bestaan en
+ * Gekeyed op TerritoryDto.territoryId / territories.json `id`, over alle
+ * kaartvarianten heen (FO §4.5). Data blijft bron van waarheid voor welke gebieden bestaan en
  * hun continent/geometrie; alleen de weergavenaam wordt hier vertaald, via
  * `tDynamic(territory.id, 'territories')` — nooit het `name`-veld uit
  * territories.json rechtstreeks renderen.
@@ -15,16 +15,19 @@ export const territories = {
   ontario: { nl: 'Ontario', en: 'Ontario' },
   quebec: { nl: 'Quebec', en: 'Quebec' },
   'western-united-states': { nl: 'West-VS', en: 'Western United States' },
+  hawaii: { nl: 'Hawaï', en: 'Hawaii' },
   'eastern-united-states': { nl: 'Oost-VS', en: 'Eastern United States' },
   'central-america': { nl: 'Centraal-Amerika', en: 'Central America' },
   venezuela: { nl: 'Venezuela', en: 'Venezuela' },
   peru: { nl: 'Peru', en: 'Peru' },
+  chile: { nl: 'Chili', en: 'Chile' },
   brazil: { nl: 'Brazilië', en: 'Brazil' },
   argentina: { nl: 'Argentinië', en: 'Argentina' },
   iceland: { nl: 'IJsland', en: 'Iceland' },
   'great-britain': { nl: 'Groot-Brittannië', en: 'Great Britain' },
   scandinavia: { nl: 'Scandinavië', en: 'Scandinavia' },
   'western-europe': { nl: 'West-Europa', en: 'Western Europe' },
+  azores: { nl: 'Azoren', en: 'Azores' },
   'northern-europe': { nl: 'Noord-Europa', en: 'Northern Europe' },
   'southern-europe': { nl: 'Zuid-Europa', en: 'Southern Europe' },
   ukraine: { nl: 'Oekraïne', en: 'Ukraine' },
@@ -32,6 +35,7 @@ export const territories = {
   egypt: { nl: 'Egypte', en: 'Egypt' },
   'east-africa': { nl: 'Oost-Afrika', en: 'East Africa' },
   congo: { nl: 'Congo', en: 'Congo' },
+  'west-africa': { nl: 'West-Afrika', en: 'West Africa' },
   'south-africa': { nl: 'Zuid-Afrika', en: 'South Africa' },
   madagascar: { nl: 'Madagaskar', en: 'Madagascar' },
   ural: { nl: 'Oeral', en: 'Ural' },
@@ -41,12 +45,14 @@ export const territories = {
   kamchatka: { nl: 'Kamtsjatka', en: 'Kamchatka' },
   mongolia: { nl: 'Mongolië', en: 'Mongolia' },
   china: { nl: 'China', en: 'China' },
+  'western-china': { nl: 'West-China', en: 'Western China' },
   japan: { nl: 'Japan', en: 'Japan' },
   'middle-east': { nl: 'Midden-Oosten', en: 'Middle East' },
   india: { nl: 'India', en: 'India' },
   siam: { nl: 'Siam', en: 'Siam' },
   afghanistan: { nl: 'Afghanistan', en: 'Afghanistan' },
   indonesia: { nl: 'Indonesië', en: 'Indonesia' },
+  philippines: { nl: 'Filipijnen', en: 'Philippines' },
   'new-guinea': { nl: 'Nieuw-Guinea', en: 'New Guinea' },
   'western-australia': { nl: 'West-Australië', en: 'Western Australia' },
   'eastern-australia': { nl: 'Oost-Australië', en: 'Eastern Australia' },

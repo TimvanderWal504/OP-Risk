@@ -1,8 +1,8 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * Gekeyed op ContinentDto.id / continents.json `id` (kaartvariant
- * standaard-43). Data blijft bron van waarheid voor welke continenten
+ * Gekeyed op ContinentDto.id / continents.json `id`, over alle kaartvarianten
+ * heen (FO §4.5). Data blijft bron van waarheid voor welke continenten
  * bestaan en hun bonus; alleen de weergavenaam wordt hier vertaald, via
  * `tDynamic(continent.id, 'continents')` — nooit het `name`-veld uit
  * continents.json rechtstreeks renderen.

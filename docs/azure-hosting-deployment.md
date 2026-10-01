@@ -227,6 +227,20 @@ dan klopt het `subject` niet — vergelijk het letterlijk (inclusief hoofdletter
    na de eerste deploy of een directe URL naar een niet-root-route (bv.
    `/tv`) ook zonder eerst via `/` te navigeren laadt.
 
+### Volgorde bij een wijziging in het API-contract
+
+Een push naar `main` rolt de backend (GitHub Actions, §3a) en de frontend (Vercel) tegelijk
+uit, zonder vaste volgorde. Dat gaat goed zolang de frontend niets nodig heeft wat de API nog
+niet levert. Heeft een wijziging een nieuw endpoint of DTO-veld waar de frontend van afhangt,
+dan **eerst de backend live, daarna de frontend**: een oude frontend negeert een extra veld,
+maar een nieuwe frontend tegen een oude API breekt.
+
+Voorbeeld (kaartkeuze, 2026-10-01): de frontend vraagt `GET /maps` op en laadt de kaart via
+`GameStateDto.mapId`. Komt die frontend eerder live dan de API, dan blijft "Spel aanmaken"
+uitgeschakeld (404 op `/maps`) en vraagt het TV-bord van een lopend spel
+`/maps/undefined/territories.geo.json` op. Wacht in dat geval met de Vercel-deploy (of zet
+die even op pauze) tot `deploy-backend` groen is en `GET /maps` een lijst teruggeeft.
+
 ---
 
 ## 5. Verificatie na deploy

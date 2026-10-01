@@ -20,6 +20,7 @@ const myTerritories = [
 
 /** Basisprops; elke test overschrijft alleen wat zijn gedrag stuurt. */
 const defaultProps = (overrides: Partial<PlaceReinforcementStepProps> = {}): PlaceReinforcementStepProps => ({
+  mapId: 'standaard-43',
   myTerritories,
   myColor,
   territoryCatalog,

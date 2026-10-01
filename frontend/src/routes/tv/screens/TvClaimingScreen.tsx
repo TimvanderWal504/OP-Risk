@@ -44,8 +44,8 @@ export function TvClaimingScreen({ state, lastClaimedTerritoryId }: TvScreenProp
   // 'board' erbij voor `turnOf` — dezelfde tekst als op het Hoofdscherm, geen dubbele sleutel
   // in twee namespaces (bouwplan Belangrijk 7).
   const { t } = useTranslation(['setupTv', 'board'])
-  const { data: geometry } = useTerritoryGeometry()
-  const seaRoutes = useSeaRoutes(geometry)
+  const { data: geometry } = useTerritoryGeometry(state.mapId)
+  const seaRoutes = useSeaRoutes(state.mapId, geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Claim-markers (schijf, symbool, flare) schalen mee met de TV-tekstschaal (plan-testronde-tv punt 2).
   const textScale = useTvDisplayScale().text

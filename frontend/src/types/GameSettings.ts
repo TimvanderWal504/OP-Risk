@@ -62,6 +62,15 @@ export interface GameSettingsDto {
   defenseDiceRule: DefenseDiceRuleDto
 }
 
+/** Spiegelt RiskGame.Api.Dtos.MapSummaryDto: één kiesbare kaartvariant (FO §4.5, §10), van `GET /maps`. */
+export interface MapSummaryDto {
+  mapId: string
+  isDefault: boolean
+  territoryCount: number
+  continentCount: number
+  defaultStartingArmiesPresetId: string
+}
+
 /** Spiegelt RiskGame.Api.Dtos.StartingArmiesPresetDto (src/RiskGame.Api/Dtos/GameSettingsDto.cs). */
 export interface StartingArmiesPresetDto {
   id: string

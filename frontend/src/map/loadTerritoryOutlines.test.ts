@@ -44,7 +44,7 @@ describe('loadTerritoryOutlines', () => {
       ],
     })
 
-    const outlines = await loadTerritoryOutlines()
+    const outlines = await loadTerritoryOutlines('standaard-43')
 
     // drawableSize = 64 - 2*4 = 56; scale = 56/100 = 0.56; offsetX = (64-56)/2 = 4;
     // offsetY = (64-28)/2 = 18 (scaledHeight = 50*0.56 = 28).
@@ -67,7 +67,7 @@ describe('loadTerritoryOutlines', () => {
       ],
     })
 
-    const outlines = await loadTerritoryOutlines()
+    const outlines = await loadTerritoryOutlines('standaard-43')
 
     expect(outlines.iceland.viewBox).toBe('0 0 64 64')
     expect(outlines.russia.viewBox).toBe('0 0 64 64')
@@ -93,7 +93,7 @@ describe('loadTerritoryOutlines', () => {
       ],
     })
 
-    const outlines = await loadTerritoryOutlines()
+    const outlines = await loadTerritoryOutlines('standaard-43')
 
     expect(outlines.indonesia.pathD).toBe('M 4.0,18.0 L 9.6,23.6 Z M 54.4,40.4 L 60.0,46.0 Z')
   })
@@ -112,7 +112,7 @@ describe('loadTerritoryOutlines', () => {
       ],
     })
 
-    const outlines = await loadTerritoryOutlines()
+    const outlines = await loadTerritoryOutlines('standaard-43')
 
     // Zonder de vouw zou -178/-179 een veel bredere (onjuiste) bounding box opleveren die de
     // ring uit elkaar trekt i.p.v. een aaneengesloten oostrand; met de vouw blijft de breedte
@@ -121,7 +121,7 @@ describe('loadTerritoryOutlines', () => {
     expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(56)
   })
 
-  it('gebruikt standaard-43 als er geen mapId wordt meegegeven', async () => {
+  it('haalt de omlijningen van de opgegeven kaartvariant op', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -129,8 +129,8 @@ describe('loadTerritoryOutlines', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    await loadTerritoryOutlines()
+    await loadTerritoryOutlines('wereld-49')
 
-    expect(fetchMock).toHaveBeenCalledWith('/maps/standaard-43/territories.geo.json')
+    expect(fetchMock).toHaveBeenCalledWith('/maps/wereld-49/territories.geo.json')
   })
 })

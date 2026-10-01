@@ -191,6 +191,7 @@ export function PhonePlayerHeader({
       {me.missionId && mission.open && <MissionPanel missionId={me.missionId} onClose={mission.closePanel} />}
       {cardsOpen && (
         <CardsPanel
+          mapId={state.mapId}
           hand={me.hand}
           myTerritoryIds={myTerritoryIds}
           hasTradeableCardSet={me.hasTradeableCardSet && canTradeVoluntarily}

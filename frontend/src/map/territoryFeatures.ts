@@ -1,7 +1,7 @@
 import type { LonLat } from './projection'
 import { apiUrl } from '../config/apiConfig'
 
-/** `data/maps/standaard-43/territories.geo.json` — GeoJSON-subset die deze taak nodig heeft. */
+/** `data/maps/{mapId}/territories.geo.json` — GeoJSON-subset die deze taak nodig heeft. */
 export interface TerritoryFeature {
   properties: {
     id: string
@@ -28,7 +28,7 @@ export function ringsOf(geometry: TerritoryFeature['geometry']): LonLat[][] {
  * schaal-coördinaten) als `loadTerritoryOutlines` (genormaliseerde kaart-tegel-omlijningen) —
  * beide lezen dezelfde bron-GeoJSON, geen tweede fetch-implementatie (DRY, src/CLAUDE.md).
  */
-export async function loadTerritoryFeatures(mapId = 'standaard-43'): Promise<TerritoryFeatureCollection> {
+export async function loadTerritoryFeatures(mapId: string): Promise<TerritoryFeatureCollection> {
   const response = await fetch(apiUrl(`/maps/${mapId}/territories.geo.json`))
   if (!response.ok) {
     throw new Error(`Kaartgeometrie voor '${mapId}' kon niet geladen worden (${response.status}).`)

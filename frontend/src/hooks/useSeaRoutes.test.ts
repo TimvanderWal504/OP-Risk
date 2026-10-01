@@ -40,7 +40,7 @@ describe('useSeaRoutes', () => {
     mockFetch({ ok: true, status: 200, json: () => Promise.resolve(adjacency) })
     const useSeaRoutes = await importFreshHook()
 
-    const { result } = renderHook(() => useSeaRoutes(geometry))
+    const { result } = renderHook(() => useSeaRoutes('standaard-43', geometry))
 
     await waitFor(() => expect(result.current).toHaveLength(1))
     expect(result.current[0]).toEqual({
@@ -57,7 +57,7 @@ describe('useSeaRoutes', () => {
     mockFetch({ ok: true, status: 200, json })
     const useSeaRoutes = await importFreshHook()
 
-    const { result, rerender } = renderHook(({ g }) => useSeaRoutes(g), {
+    const { result, rerender } = renderHook(({ g }) => useSeaRoutes('standaard-43', g), {
       initialProps: { g: null as TerritoryGeometry[] | null },
     })
 
@@ -74,11 +74,11 @@ describe('useSeaRoutes', () => {
     const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve(adjacency) })
     const useSeaRoutes = await importFreshHook()
 
-    const first = renderHook(() => useSeaRoutes(geometry))
+    const first = renderHook(() => useSeaRoutes('standaard-43', geometry))
     await waitFor(() => expect(first.result.current).toHaveLength(1))
     first.unmount()
 
-    const second = renderHook(() => useSeaRoutes(geometry))
+    const second = renderHook(() => useSeaRoutes('standaard-43', geometry))
     expect(second.result.current).toHaveLength(1)
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
@@ -87,7 +87,7 @@ describe('useSeaRoutes', () => {
     const fetchMock = mockFetch({ ok: false, status: 500 })
     const useSeaRoutes = await importFreshHook()
 
-    const { result } = renderHook(() => useSeaRoutes(geometry))
+    const { result } = renderHook(() => useSeaRoutes('standaard-43', geometry))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     expect(result.current).toEqual([])

@@ -7,45 +7,58 @@ export interface SessionResourceState<T> {
 }
 
 /**
- * Maakt een hook die `load` hoogstens één keer per sessie uitvoert en het resultaat in een
- * closure-cache bewaart — voor statische kaartdata (geometrie, grenzen) die binnen een sessie
- * nooit verandert, zodat een remount van het TV-bord (fasewissel) niet opnieuw fetcht. Mislukt
- * het laden, dan staat `error` op true voor die mount en probeert de volgende mount het opnieuw.
+ * Maakt een hook die `load(key)` hoogstens één keer per sessie per sleutel uitvoert en het
+ * resultaat in een closure-cache bewaart — voor statische kaartdata (geometrie, grenzen) die
+ * binnen een sessie nooit verandert, zodat een remount van het TV-bord (fasewissel) niet
+ * opnieuw fetcht. De sleutel is de kaartvariant (`GameStateDto.mapId`, FO §4.5): elke kaart
+ * heeft zijn eigen cache-ingang. Mislukt het laden, dan staat `error` op true voor die mount en
+ * die sleutel, en probeert de volgende mount het opnieuw.
  */
-export function createSessionResource<T>(load: () => Promise<T>): () => SessionResourceState<T> {
-  let cached: T | null = null
-  let inFlight: Promise<T> | null = null
+export function createSessionResource<T>(load: (key: string) => Promise<T>): (key: string) => SessionResourceState<T> {
+  const cache = new Map<string, T>()
+  const inFlight = new Map<string, Promise<T>>()
 
-  return function useSessionResource(): SessionResourceState<T> {
-    const [data, setData] = useState<T | null>(cached)
-    const [error, setError] = useState(false)
+  return function useSessionResource(key: string): SessionResourceState<T> {
+    // Het geladen resultaat onthoudt bij welke sleutel het hoort: wisselt de sleutel, dan
+    // telt een resultaat van de vorige sleutel niet meer mee.
+    const [loaded, setLoaded] = useState<{ key: string; data: T } | null>(null)
+    const [failedKey, setFailedKey] = useState<string | null>(null)
 
     useEffect(() => {
-      // Geen synchrone setData(cached) hier: de useState-initializer hierboven leest de cache
-      // al bij mount, en tussen die render en dit effect kan hij niet alsnog gevuld raken
-      // (single-threaded, geen await ertussen) — een extra set zou alleen
-      // react-hooks/set-state-in-effect triggeren zonder nut.
-      if (cached) return
+      // Geen synchrone setLoaded(cache) hier: de render leest de cache al rechtstreeks
+      // (hieronder) — een extra set zou alleen react-hooks/set-state-in-effect triggeren.
+      if (cache.has(key)) return
 
       let cancelled = false
 
-      inFlight ??= load()
+      let request = inFlight.get(key)
+      if (!request) {
+        request = load(key)
+        inFlight.set(key, request)
+      }
 
-      inFlight
-        .then((loaded) => {
-          cached = loaded
-          if (!cancelled) setData(loaded)
+      request
+        .then((data) => {
+          cache.set(key, data)
+          if (!cancelled) setLoaded({ key, data })
         })
         .catch(() => {
-          inFlight = null
-          if (!cancelled) setError(true)
+          inFlight.delete(key)
+          if (!cancelled) setFailedKey(key)
         })
 
       return () => {
         cancelled = true
       }
-    }, [])
+    }, [key])
 
-    return { data, loading: !data && !error, error }
+    // Op aanwezigheid in de cache, niet op truthiness: ook een geladen `0`, `''` of `false` telt
+    // als geladen.
+    const isCached = cache.has(key)
+    const isLoaded = isCached || loaded?.key === key
+    const data = isCached ? (cache.get(key) as T) : loaded?.key === key ? loaded.data : null
+    const error = !isLoaded && failedKey === key
+
+    return { data, loading: !isLoaded && !error, error }
   }
 }

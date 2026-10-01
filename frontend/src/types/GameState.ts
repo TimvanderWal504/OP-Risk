@@ -141,6 +141,8 @@ export interface SetupStateDto {
 
 export interface GameStateDto {
   gameId: string
+  /** Kaartvariant van dit spel (FO §4.5): bepaalt welke geometrie en grenzen TV en telefoon laden. */
+  mapId: string
   phase: GamePhaseDto
   players: PlayerDto[]
   availableColorIds: string[]

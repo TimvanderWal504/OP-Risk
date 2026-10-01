@@ -33,7 +33,7 @@ function toTerritoryGeometry(feature: TerritoryFeature): TerritoryGeometry {
   }
 }
 
-export async function loadTerritoryGeometry(mapId = 'standaard-43'): Promise<TerritoryGeometry[]> {
+export async function loadTerritoryGeometry(mapId: string): Promise<TerritoryGeometry[]> {
   const collection = await loadTerritoryFeatures(mapId)
   return collection.features.map(toTerritoryGeometry)
 }

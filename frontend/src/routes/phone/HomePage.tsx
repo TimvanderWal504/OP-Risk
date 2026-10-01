@@ -13,8 +13,6 @@ import { useSendGameToTv } from '../../hooks/useSendGameToTv'
 import { canScanQr } from '../../hooks/useQrScanner'
 import { JoinQrScanner } from './JoinQrScanner'
 
-const MAP_ID = 'standaard-43'
-
 type Mode = 'choose' | 'create' | 'join' | 'scan' | 'pairTv' | 'retry'
 
 interface CodeFormOptions {
@@ -58,7 +56,7 @@ export function HomePage() {
   if (mode === 'create') {
     return (
       <PhoneShell>
-        <CreateGameForm mapId={MAP_ID} onCreated={sendAndContinue} />
+        <CreateGameForm onCreated={sendAndContinue} />
       </PhoneShell>
     )
   }

@@ -32,6 +32,7 @@ describe('CardsPanel', () => {
   it('toont de leeg-tekst wanneer de hand leeg is (browse-modus)', () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={[]}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={false}
@@ -50,6 +51,7 @@ describe('CardsPanel', () => {
   it('houdt het raster boven-uitgelijnd (content-start) zodat tegels niet uitrekken bij weinig kaarten', () => {
     const { container } = render(
       <CardsPanel
+        mapId="standaard-43"
         hand={[hand[0]]}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={false}
@@ -67,6 +69,7 @@ describe('CardsPanel', () => {
   it('toont alle handkaarten in browse-modus en markeert een eigen gebied', () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set(['alaska'])}
         hasTradeableCardSet={true}
@@ -84,6 +87,7 @@ describe('CardsPanel', () => {
   it('schakelt van browse naar trade via de "Leg 3 kaarten in"-knop', async () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -102,6 +106,7 @@ describe('CardsPanel', () => {
   it('staat de bevestigknop pas toe bij precies 3 geselecteerde kaarten', async () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -126,6 +131,7 @@ describe('CardsPanel', () => {
   it('blokkeert verdere selectie zodra er al 3 gekozen zijn, geselecteerde tegels blijven togglebaar', async () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -154,6 +160,7 @@ describe('CardsPanel', () => {
     const onClose = vi.fn()
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -176,6 +183,7 @@ describe('CardsPanel', () => {
   it('toont geen sluit-/overslaanknop en de verplicht-copy zolang mustTradeInCards waar is', () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -195,6 +203,7 @@ describe('CardsPanel', () => {
     const onClose = vi.fn()
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -213,6 +222,7 @@ describe('CardsPanel', () => {
   it('toont de setregel en een selectieteller die meetelt in trade-modus (impeccable-kritiek 2026-09-21)', async () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}
@@ -239,6 +249,7 @@ describe('CardsPanel', () => {
   it('toont geen selectieteller of setregel in browse-modus', () => {
     render(
       <CardsPanel
+        mapId="standaard-43"
         hand={hand}
         myTerritoryIds={new Set()}
         hasTradeableCardSet={true}

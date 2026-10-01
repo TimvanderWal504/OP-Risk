@@ -60,7 +60,7 @@ function toOutline(feature: TerritoryFeature): TerritoryOutline {
  * krijgen alle ringen binnen dezelfde bounding box/schaal, zodat de relatieve positie/grootte
  * van de eilanden onderling klopt.
  */
-export async function loadTerritoryOutlines(mapId = 'standaard-43'): Promise<Record<string, TerritoryOutline>> {
+export async function loadTerritoryOutlines(mapId: string): Promise<Record<string, TerritoryOutline>> {
   const collection = await loadTerritoryFeatures(mapId)
   const outlines: Record<string, TerritoryOutline> = {}
 

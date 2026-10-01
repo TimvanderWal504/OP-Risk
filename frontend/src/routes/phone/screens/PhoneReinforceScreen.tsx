@@ -43,6 +43,7 @@ export function PhoneReinforceScreen({
   return (
     <PlaceReinforcementStep
       key={state.stateVersion}
+      mapId={state.mapId}
       myTerritories={myTerritories}
       myColor={myColor}
       territoryCatalog={territoryCatalog}

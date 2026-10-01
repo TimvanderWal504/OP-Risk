@@ -39,7 +39,7 @@ describe('useTerritoryOutlines', () => {
 
     expect(fetchMock).not.toHaveBeenCalled()
 
-    const { result } = renderHook(() => useTerritoryOutlines())
+    const { result } = renderHook(() => useTerritoryOutlines('standaard-43'))
 
     expect(result.current).toBeNull()
 
@@ -58,10 +58,10 @@ describe('useTerritoryOutlines', () => {
     vi.stubGlobal('fetch', fetchMock)
     const useTerritoryOutlines = await importFreshHook()
 
-    const first = renderHook(() => useTerritoryOutlines())
+    const first = renderHook(() => useTerritoryOutlines('standaard-43'))
     await waitFor(() => expect(first.result.current).not.toBeNull())
 
-    const second = renderHook(() => useTerritoryOutlines())
+    const second = renderHook(() => useTerritoryOutlines('standaard-43'))
 
     expect(second.result.current).not.toBeNull()
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -74,7 +74,7 @@ describe('useTerritoryOutlines', () => {
     )
     const useTerritoryOutlines = await importFreshHook()
 
-    const { result } = renderHook(() => useTerritoryOutlines())
+    const { result } = renderHook(() => useTerritoryOutlines('standaard-43'))
 
     await new Promise((resolve) => setTimeout(resolve, 0))
 

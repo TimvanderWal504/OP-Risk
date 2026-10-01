@@ -36,8 +36,8 @@ import { withoutBlockedRoutes } from '../../../map/seaRoutes'
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
   const { t } = useTranslation(['board', 'autoPass'])
-  const { data: geometry } = useTerritoryGeometry()
-  const seaRoutes = withoutBlockedRoutes(useSeaRoutes(geometry), state.activeEffect?.blockedBorders ?? [])
+  const { data: geometry } = useTerritoryGeometry(state.mapId)
+  const seaRoutes = withoutBlockedRoutes(useSeaRoutes(state.mapId, geometry), state.activeEffect?.blockedBorders ?? [])
   const lockedTerritoryIds = new Set(state.activeEffect?.lockedTerritoryIds ?? [])
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).

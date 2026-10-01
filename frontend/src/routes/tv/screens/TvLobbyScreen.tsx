@@ -25,7 +25,11 @@ export function TvLobbyScreen({ state }: TvScreenProps) {
         roles={state.roles}
         maxPlayers={state.colors.length}
       />
-      <LobbySettingsSummary settings={state.settings} />
+      <LobbySettingsSummary
+        settings={state.settings}
+        mapId={state.mapId}
+        territoryCount={state.territories.length}
+      />
     </TvWaitingLayout>
   )
 }

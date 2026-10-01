@@ -19,6 +19,7 @@ import { colors } from './colors'
 import { roles } from './roles'
 import { territories } from './territories'
 import { continents } from './continents'
+import { maps } from './maps'
 import { missions } from './missions'
 import { missionPanel } from './missionPanel'
 import { cardsPanel } from './cardsPanel'
@@ -55,6 +56,7 @@ export const trees = {
   roles,
   territories,
   continents,
+  maps,
   missions,
   missionPanel,
   cardsPanel,

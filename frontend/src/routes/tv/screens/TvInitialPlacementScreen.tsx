@@ -34,8 +34,8 @@ import { ActionTicker } from '../../../components/ActionTicker'
 export function TvInitialPlacementScreen({ state }: TvScreenProps) {
   // 'board' erbij voor `turnOf`, zelfde hergebruik als TvClaimingScreen.
   const { t } = useTranslation(['setupTv', 'board'])
-  const { data: geometry } = useTerritoryGeometry()
-  const seaRoutes = useSeaRoutes(geometry)
+  const { data: geometry } = useTerritoryGeometry(state.mapId)
+  const seaRoutes = useSeaRoutes(state.mapId, geometry)
   const ownership = useTerritoryOwnership(state.territories, state.players, state.colors)
   // Kaartmarkers schalen als geheel mee met de TV-tekstschaal (plan-testronde-tv punt 2).
   const textScale = useTvDisplayScale().text
