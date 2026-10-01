@@ -1,0 +1,33 @@
+{
+  "_comment": "Set-regels en weergavethema's voor het territoriumkaarten-deck. Het deck zelf staat hier niet: het wordt door de rules engine afgeleid uit de territoria van deze kaartvariant (1 kaart per gebied, alfabetisch op territoryId cyclisch symbol-1/2/3, plus de jokers hieronder). Zo kan een kaartvariant geen deck hebben dat niet bij zijn eigen gebieden past.",
+  "themes": {
+    "classic": {
+      "symbol-1": "Infanterie",
+      "symbol-2": "Cavalerie",
+      "symbol-3": "Artillerie",
+      "joker": "Joker"
+    },
+    "modern": {
+      "symbol-1": "Infanterie",
+      "symbol-2": "Pantser",
+      "symbol-3": "Drone",
+      "joker": "Joker"
+    }
+  },
+  "setRules": {
+    "validSets": [
+      "three-of-a-kind",
+      "one-of-each"
+    ],
+    "jokerIsWild": true,
+    "ownedTerritoryBonus": 2
+  },
+  "deck": {
+    "symbols": [
+      "symbol-1",
+      "symbol-2",
+      "symbol-3"
+    ],
+    "jokerCount": 2
+  }
+}

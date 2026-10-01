@@ -25,8 +25,8 @@
     voorkomt dat tests het pad naar de repo-root moeten raden.
   -->
   <ItemGroup>
-    <Content Include="..\..\data\maps\standaard-43\*.json"
-             Link="data\%(Filename)%(Extension)"
+    <Content Include="..\..\data\maps\**\*.json"
+             Link="data\maps\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <!-- colors.json en starting-armies-presets.json zijn gedeeld over kaartvarianten en
          staan in data/, niet data/maps/{mapId}/. -->
@@ -37,5 +37,21 @@
              Link="data\starting-armies-presets.json"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <!--
+    De kaartvarianten waar de datatests over lopen, bepaald uit de bronmap en niet uit
+    bin/: CopyToOutputDirectory ruimt een hernoemde of verwijderde variant nooit op, en
+    die zou anders lokaal als spookkaart blijven meetesten. Eén regel per variant met
+    een territories.json.
+  -->
+  <Target Name="WriteMapVariantList" AfterTargets="Build">
+    <ItemGroup>
+      <_MapVariantTerritories Include="..\..\data\maps\**\territories.json" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(OutDir)data\map-variants.txt"
+                      Lines="@(_MapVariantTerritories->'%(RecursiveDir)')"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+  </Target>
 
 </Project>

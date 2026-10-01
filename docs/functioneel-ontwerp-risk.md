@@ -167,9 +167,10 @@ Er zijn twee kaartvarianten; de host kiest er één bij het aanmaken van het spe
 - **Landverbindingen** van de gesplitste gebieden volgen dezelfde regel als in §4.2: elke landgrens raakt geometrisch, en elk rakend paar is een landgrens. Alle bestaande zeeroutes blijven op hun huidige gebieden uitkomen; `new-zealand–peru` blijft op `peru`.
 - **Afgeleid uit de geometrie van `standaard-43`, niet uit nieuwe brondata** (besloten 2026-10-01). West-Afrika en West-China worden afgesneden met **één rechte lijn** in plaats van de echte lands- of provinciegrenzen; de landen en provincies hierboven zijn dus bij benadering, niet exact. Hawaï, de Azoren-groep en de Filipijnen zijn losse eilanden en worden op ligging verplaatst; Chili komt uit `territories_extended.geo.json`.
 - **Azoren:** omdat de geometrie van `standaard-43` het uitgangspunt is, ontbreken de westelijke en centrale Azoren (de exclave-regel van `build_map.py` liet ze weg). Het gebied `azores` bestaat uit São Miguel, Santa Maria, Madeira en de Canarische eilanden — bewust geaccepteerd.
+- **Grenzen van `wereld-49`:** 99 (68 land + 31 zee). Gevolg van de West-China-snede: `china` grenst niet meer aan `afghanistan`, `india` en `siberia` — die grenzen lopen nu via `western-china`, dat daarnaast aan `china`, `mongolia` en `siam` grenst. `china` houdt `mongolia`, `irkutsk`, `siam` en de zeeroute naar `japan`.
 - **`hawaii–japan`** ligt over de datumgrens en wordt volgens de regel in §4.3 als twee stompjes naar de kaartrand getekend.
 - **Continentbonussen** zijn gelijk aan die van `standaard-43` (§4.4), ondanks de extra gebieden — bewuste keuze.
-- **Kaartendeck:** 49 gebiedskaarten + 2 jokers = 51, symboolverdeling 17/17/17.
+- **Kaartendeck:** 49 gebiedskaarten + 2 jokers = 51, symboolverdeling 17/16/16.
 - **Rollen en gebeurteniskaarten** zijn gelijk aan die van `standaard-43`. **Missies** ook, op de twee gebiedsaantal-missies na: `territory-30` (Bezit 30 gebieden, `minPlayers: 3`) en `territory-24-min2` (Bezit 24 gebieden met elk ≥ 2 legers, `minPlayers: 4`) in plaats van `territory-24` en `territory-18-min2`.
 
 ---

@@ -93,7 +93,7 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 
 **Kaartkeuze (FO §10):** `GET /maps` geeft per variant `mapId`, naam en `defaultStartingArmiesPresetId` uit `map.json`. `CreateGameForm` kiest daaruit in plaats van de vaste `MAP_ID` in `HomePage`; `CreateGameRequest.MapId` bestaat al en verandert niet.
 
-**Validatie per variant:** dezelfde datatests draaien voor elke map onder `data/maps/`: graaf volledig verbonden, landgrenzen consistent met de geometrie, alle `TerritoryLocked`-/`SeaRoutesBlocked`-verwijzingen en rol-herkomstlanden bestaan op die kaart, en het afgeleide deck klopt (51 kaarten, 17/17/17 voor `wereld-49`).
+**Validatie per variant:** dezelfde datatests draaien voor elke map onder `data/maps/`: graaf volledig verbonden, landgrenzen consistent met de geometrie, alle `TerritoryLocked`-/`SeaRoutesBlocked`-verwijzingen en rol-herkomstlanden bestaan op die kaart, en het afgeleide deck klopt (51 kaarten, 17/16/16 voor `wereld-49`).
 
 **Missieteksten (FO §6.1):** de speler-DTO draagt naast `missionId` ook de parameters van de eigen missie (`count`, `minArmies`). De frontend vertaalt `TerritoryCount`/`TerritoryCountMinArmies` per missietype met die waarden ingevuld, in plaats van per missie-ID met een vast getal.
 

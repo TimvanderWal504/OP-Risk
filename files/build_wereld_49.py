@@ -95,24 +95,37 @@ def clip_ring(ring, line, keep_left):
     return out + [out[0]]
 
 
+def crossings(ring, line):
+    return sum(1 for p, q in zip(ring, ring[1:]) if (side(p, line) > 0) != (side(q, line) > 0))
+
+
+def ring_area(ring):
+    return abs(ring_area_centroid(ring)[0])
+
+
 def split_by_line(geometry, line, island_rule):
-    """Verdeelt een gebied over (links, rechts). Delen die de lijn kruisen worden
-    geknipt; delen die dat niet doen gaan als geheel naar links als island_rule
-    (centroid) waar is."""
+    """Verdeelt een gebied over (links, rechts). Alleen het grootste deel (het vasteland)
+    wordt geknipt; elk ander deel (eilanden) gaat als geheel naar links als island_rule
+    (centroid) waar is, ook als de lijn het toevallig kruist.
+
+    Sutherland–Hodgman geeft alleen een correcte vorm als de lijn de buitenring precies
+    twee keer kruist en geen gat doorsnijdt; anders stopt het script in plaats van stil
+    een kapotte polygon te schrijven."""
+    parts = parts_of(geometry)
+    mainland = max(parts, key=lambda poly: ring_area(poly[0]))
     left, right = [], []
-    for poly in parts_of(geometry):
-        outer = poly[0]
-        crosses = any((side(p, line) > 0) != (side(q, line) > 0) for p, q in zip(outer, outer[1:]))
-        if not crosses:
+    for poly in parts:
+        if poly is not mainland:
             (left if island_rule(part_centroid(poly)) else right).append(poly)
             continue
+        outer, holes = poly[0], poly[1:]
+        if crossings(outer, line) != 2:
+            raise SystemExit(f"Snijlijn {line} kruist het vasteland {crossings(outer, line)}x, verwacht 2")
+        if any(crossings(hole, line) for hole in holes):
+            raise SystemExit(f"Snijlijn {line} doorsnijdt een gat in het vasteland")
         for keep_left, target in ((True, left), (False, right)):
-            clipped_outer = clip_ring(outer, line, keep_left)
-            if clipped_outer is None:
-                continue
-            holes = [hole for hole in poly[1:]
-                     if (side(part_centroid([hole]), line) > 0) == keep_left]
-            target.append([clipped_outer] + holes)
+            kept_holes = [hole for hole in holes if (side(hole[0], line) > 0) == keep_left]
+            target.append([clip_ring(outer, line, keep_left)] + kept_holes)
     return left, right
 
 
@@ -138,6 +151,11 @@ def main():
             (move if predicate(part_centroid(poly)) else stay).append(poly)
         if not move:
             raise SystemExit(f"Geen polygonen gevonden voor {new_id}")
+        # Het vasteland van het bron-gebied mag nooit meeverhuizen: dan klopt het
+        # ligging-criterium niet meer met de data.
+        mainland = max(parts_of(geo[source_id]), key=lambda poly: ring_area(poly[0]))
+        if any(poly is mainland for poly in move):
+            raise SystemExit(f"{new_id}: het criterium pakt het vasteland van {source_id}")
         geo[source_id] = multipolygon(stay)
         geo[new_id] = multipolygon(move)
 

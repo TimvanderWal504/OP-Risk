@@ -8,16 +8,19 @@ namespace RiskGame.Rules.Tests;
 /// </summary>
 public class KaartDekkingTests
 {
+    public static TheoryData<string> MapIds() => MapTestData.MapIds();
+
     [Fact]
     public void Deck_Bevat_VijfenveertigKaarten()
     {
         Assert.Equal(45, Standaard43Data.Load().Deck.Count);
     }
 
-    [Fact]
-    public void ElkGebied_HeeftPreciesEenKaart()
+    [Theory]
+    [MemberData(nameof(MapIds))]
+    public void ElkGebied_HeeftPreciesEenKaart(string mapId)
     {
-        var map = Standaard43Data.Load();
+        var map = MapTestData.Load(mapId);
 
         var territoryIds = map.Territories.Select(territory => territory.Id).ToList();
         var cardTerritoryIds = map.Deck
@@ -32,33 +35,57 @@ public class KaartDekkingTests
     }
 
     [Fact]
-    public void Deck_Bevat_TweeJokersZonderGebied()
+    public void Standaard43_HeeftTweeJokers()
     {
-        var jokers = Standaard43Data.Load().Deck.Where(card => card.IsJoker).ToList();
+        Assert.Equal(2, Standaard43Data.Load().Deck.Count(card => card.IsJoker));
+    }
 
-        Assert.Equal(2, jokers.Count);
+    [Theory]
+    [MemberData(nameof(MapIds))]
+    public void Jokers_HebbenGeenGebied_EnHetJokersymbool(string mapId)
+    {
+        var map = MapTestData.Load(mapId);
+        var jokers = map.Deck.Where(card => card.IsJoker).ToList();
+
+        Assert.Equal(map.Deck.Count - map.Territories.Count, jokers.Count);
         Assert.All(jokers, joker => Assert.Null(joker.TerritoryId));
         Assert.All(jokers, joker => Assert.Equal(CardDeckBuilder.JokerSymbol, joker.Symbol));
     }
 
-    [Fact]
-    public void Symbolen_ZijnZoGelijkMogelijkVerdeeld()
+    [Theory]
+    [MemberData(nameof(MapIds))]
+    public void Symbolen_ZijnZoGelijkMogelijkVerdeeld(string mapId)
     {
-        var perSymbol = Standaard43Data.Load().Deck
+        var map = MapTestData.Load(mapId);
+        var perSymbol = map.Deck
             .Where(card => !card.IsJoker)
             .GroupBy(card => card.Symbol, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Count());
 
-        // 43 gebieden over 3 symbolen: één symbool krijgt er onvermijdelijk één extra.
+        // Is het aantal gebieden niet deelbaar door 3, dan krijgt een symbool er één extra.
         Assert.Equal(3, perSymbol.Count);
-        Assert.Equal(43, perSymbol.Values.Sum());
-        Assert.Equal(1, perSymbol.Values.Max() - perSymbol.Values.Min());
+        Assert.Equal(map.Territories.Count, perSymbol.Values.Sum());
+        Assert.InRange(perSymbol.Values.Max() - perSymbol.Values.Min(), 0, 1);
     }
 
     [Fact]
-    public void KaartIds_ZijnUniek()
+    public void Standaard43_HeeftEenSymboolMetEenExtraKaart()
     {
-        var deck = Standaard43Data.Load().Deck;
+        var perSymbol = Standaard43Data.Load().Deck
+            .Where(card => !card.IsJoker)
+            .GroupBy(card => card.Symbol, StringComparer.Ordinal)
+            .Select(group => group.Count())
+            .Order()
+            .ToList();
+
+        Assert.Equal([14, 14, 15], perSymbol);
+    }
+
+    [Theory]
+    [MemberData(nameof(MapIds))]
+    public void KaartIds_ZijnUniek(string mapId)
+    {
+        var deck = MapTestData.Load(mapId).Deck;
 
         Assert.Equal(deck.Count, deck.Select(card => card.Id).Distinct(StringComparer.Ordinal).Count());
     }
