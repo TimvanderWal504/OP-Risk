@@ -51,6 +51,8 @@ export const common = {
     // ("Aanvallen · Generaal · actief") — kleine letters, geen kicker-hoofdlettergebruik,
     // zodat het aansluit bij de omringende zin-stijl status-tekst i.p.v. de uppercase badge.
     roleActive: { nl: 'actief', en: 'active' },
+    /** De enige status van een speler op auto-pass (DESIGN.md § Auto-pass, Player Header). */
+    autoPass: { nl: 'Auto-pass', en: 'Auto-pass' },
     roleInactive: { nl: 'inactief', en: 'inactive' },
     // Statusregel van een uitgeschakelde speler (spelinfo, plan-testronde-tv punt 3) — ook het
     // label bij een uitgeschakelde speler in de stand van `GameInfoPanel`.

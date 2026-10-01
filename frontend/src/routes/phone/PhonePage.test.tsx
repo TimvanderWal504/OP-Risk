@@ -67,4 +67,30 @@ describe('PhonePage — uitgeschakelde speler (plan-testronde-tv punt 3)', () =>
 
     expect(screen.getAllByRole('button', { name: 'TV-weergave' })).toHaveLength(1)
   })
+
+describe('PhonePage — auto-pass (DESIGN.md § Auto-pass)', () => {
+  beforeEach(() => {
+    vi.mocked(useGameState).mockReset()
+  })
+
+  it('toont een speler op auto-pass zijn eigen scherm, met de header erboven', () => {
+    renderPage(inProgress([alice, { ...bob, isAutoPass: true }]), 'bob')
+
+    expect(screen.getByRole('heading', { name: 'Je staat op auto-pass' })).toBeInTheDocument()
+    expect(screen.getByText('Auto-pass')).toBeInTheDocument()
+  })
+
+  it('laat uitgeschakeld voorgaan op auto-pass', () => {
+    renderPage(inProgress([alice, { ...bob, isAutoPass: true, isEliminated: true }]), 'bob')
+
+    expect(screen.getByText('Je bent uitgeschakeld')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Je staat op auto-pass' })).not.toBeInTheDocument()
+  })
+
+  it('laat het eindscherm voorgaan: ook wie op auto-pass staat ziet de winnaar', () => {
+    renderPage({ ...inProgress([alice, { ...bob, isAutoPass: true }]), phase: GamePhaseDto.Finished, turnState: null, winners: ['alice'] }, 'bob')
+
+    expect(screen.queryByRole('heading', { name: 'Je staat op auto-pass' })).not.toBeInTheDocument()
+  })
+})
 })

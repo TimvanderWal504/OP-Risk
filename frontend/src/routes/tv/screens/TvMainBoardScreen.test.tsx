@@ -252,6 +252,18 @@ describe('TvMainBoardScreen', () => {
     expect(bobRow).toHaveStyle({ opacity: '0.5' })
   })
 
+  /** DESIGN.md § Auto-pass: silver-outline badge na de naam; de rij blijft op volle sterkte. */
+  it('toont "Auto-pass" bij een speler op auto-pass, zonder de rij te dimmen', () => {
+    const stateWithAutoPass = {
+      ...stateInProgress,
+      players: stateInProgress.players.map((player) => (player.id === 'bob' ? { ...player, isAutoPass: true } : player)),
+    }
+    render(<TvMainBoardScreen state={stateWithAutoPass} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
+
+    expect(screen.getByText('Auto-pass')).toHaveClass('border-silver-700')
+    expect(screen.getByText('Bob').closest('div[style*="opacity"]')).toHaveStyle({ opacity: '1' })
+  })
+
   it('begrenst de tekstschaal in de kop en de zijkolom: de kaart houdt zijn formaat (besluit 2026-09-26)', () => {
     render(
       <TvShell display={{ ...stateInProgress.tvDisplay, textScale: 100 }}>

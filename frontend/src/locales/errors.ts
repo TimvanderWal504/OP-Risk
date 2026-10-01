@@ -30,6 +30,10 @@ export const errors = {
       nl: "Speler '{{playerId}}' is uitgeschakeld.",
       en: "Player '{{playerId}}' has been eliminated.",
     },
+    notYourConnection: {
+      nl: 'Je verbinding is niet meer bekend. Open de app opnieuw.',
+      en: 'Your connection is no longer recognised. Open the app again.',
+    },
     wrongPhase: {
       nl: 'Dit kan alleen in fase {{expected}}; het spel staat in {{actual}}.',
       en: 'This is only possible during {{expected}}; the game is in {{actual}}.',
@@ -56,6 +60,12 @@ export const errors = {
       nl: 'Te veel pogingen om te joinen; probeer het over een paar minuten opnieuw.',
       en: 'Too many attempts to join; try again in a few minutes.',
     },
+  },
+  autoPass: {
+    cannotTargetHost: { nl: 'Je kunt jezelf niet op auto-pass zetten.', en: "You can't put yourself on auto-pass." },
+    // De server stuurt hier een playerId mee, geen naam: daarom zonder naam.
+    alreadyAutoPass: { nl: 'Deze speler staat al op auto-pass.', en: 'This player is already on auto-pass.' },
+    noPlayerLeft: { nl: 'Dan speelt er niemand meer zelf mee.', en: 'Then nobody would be playing themselves.' },
   },
   tvDisplay: {
     invalidValue: {

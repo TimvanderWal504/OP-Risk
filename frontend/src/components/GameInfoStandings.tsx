@@ -3,6 +3,7 @@ import type { GameStateDto } from '../types/GameState'
 import { EventDurationDto } from '../types/GameState'
 import type { PlayerDto } from '../types/Player'
 import { Badge } from './ui/Badge'
+import { AutoPassButton } from './ui/AutoPassButton'
 import { ColorAvatar } from './ui/ColorAvatar'
 import { PanelSection } from './ui/PanelSection'
 import { GlassPanel } from './ui/GlassPanel'
@@ -12,6 +13,8 @@ import { tDynamic } from '../i18n/useT'
 export interface GameInfoStandingsProps {
   state: GameStateDto
   me: PlayerDto
+  /** De host kiest een speler om op auto-pass te zetten (DESIGN.md § Auto-pass); de bevestiging volgt elders. */
+  onAutoPassRequest: (player: PlayerDto) => void
 }
 
 interface StandingRow {
@@ -34,8 +37,8 @@ interface StandingRow {
  * Bovenaan de laatst getrokken gebeurteniskaart, tot de volgende trekking (FO §2.2 punt 3, DESIGN.md
  * § Event Round) — in dezelfde vorm als de catalogus onder Regels. Vóór de eerste trekking niets.
  */
-export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
-  const { t } = useTranslation(['gameInfo', 'common', 'eventPhone'])
+export function GameInfoStandings({ state, me, onAutoPassRequest }: GameInfoStandingsProps) {
+  const { t } = useTranslation(['gameInfo', 'common', 'eventPhone', 'autoPass'])
   const currentEvent = state.events.find((event) => event.id === state.currentEventId)
 
   const rows: StandingRow[] = state.players.map((player) => {
@@ -82,6 +85,9 @@ export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
       {rows.map(({ player, territories, armies, continents }) => {
         const color = state.colors.find((c) => c.id === player.colorId)
         const isMe = player.id === me.id
+        // Alleen de host, alleen bij een ander die nog speelt en er nog niet op staat (DESIGN.md
+        // § Auto-pass, The Invisible Design Rule).
+        const canSetAutoPass = me.isHost && !isMe && !player.isEliminated && !player.isAutoPass
         // Middle-dot-stat-regel, zelfde idioom als het TV-spelerspaneel; kaarten pas vanaf 1
         // (The Invisible Design Rule, zie DESIGN.md "Player Header / Stat rows").
         const stats = [
@@ -105,9 +111,12 @@ export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
           >
             <ColorAvatar color={color} variant="row" />
             <div className="min-w-0 flex-1">
-              <div className="font-display text-h3 font-extrabold text-fg">
-                {player.name}{' '}
-                {isMe && <span className="text-xs text-pitch-300">{`(${t('standings.you')})`}</span>}
+              <div className="flex min-w-0 items-center gap-2 font-display text-h3 font-extrabold text-fg">
+                <span className="truncate">
+                  {player.name}{' '}
+                  {isMe && <span className="text-xs text-pitch-300">{`(${t('standings.you')})`}</span>}
+                </span>
+                {player.isAutoPass && <Badge>{t('autoPass:badge')}</Badge>}
               </div>
               <div className="font-body text-sm text-fg-secondary tabular-nums">
                 {player.isEliminated ? t('common:playerHeader.eliminated') : stats}
@@ -122,6 +131,13 @@ export function GameInfoStandings({ state, me }: GameInfoStandingsProps) {
                 </div>
               )}
             </div>
+            {canSetAutoPass && (
+              <AutoPassButton
+                label={t('autoPass:button')}
+                accessibleLabel={t('autoPass:buttonFor', { name: player.name })}
+                onClick={() => onAutoPassRequest(player)}
+              />
+            )}
           </GlassPanel>
         )
       })}

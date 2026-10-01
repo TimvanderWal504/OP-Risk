@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 import { GameInfoStandings } from './GameInfoStandings'
 import { fixtureState } from '../routes/phone/screens/phoneScreenFixture'
 import { EventDurationDto, EventEffectKindDto, type GameStateDto } from '../types/GameState'
@@ -26,7 +27,7 @@ const order = () => screen.getAllByText(/^(Alice|Bob|Carol)/).map((element) => e
 
 describe('GameInfoStandings', () => {
   it('sorteert op gebieden, bij gelijke stand op legers, en toont gebieden en legers per speler', () => {
-    render(<GameInfoStandings state={state()} me={alice} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={state()} me={alice} />)
 
     // Bob en Carol hebben allebei 2 gebieden; Bob heeft meer legers (4 tegen 2).
     expect(order()).toEqual(['Bob', 'Carol', 'Alice'])
@@ -43,7 +44,7 @@ describe('GameInfoStandings', () => {
       ],
       turnOrder: ['carol', 'alice', 'bob'],
     })
-    render(<GameInfoStandings state={tied} me={alice} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={tied} me={alice} />)
 
     expect(order()).toEqual(['Carol', 'Alice', 'Bob'])
   })
@@ -56,7 +57,7 @@ describe('GameInfoStandings', () => {
         { id: 'asia', bonus: 7, ownerPlayerId: null },
       ],
     })
-    render(<GameInfoStandings state={withExtras} me={alice} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={withExtras} me={alice} />)
 
     expect(screen.getByText('2 gebieden · 4 legers · 3 kaarten')).toBeInTheDocument()
     expect(screen.queryByText(/0 kaarten/)).not.toBeInTheDocument()
@@ -66,7 +67,7 @@ describe('GameInfoStandings', () => {
 
   it('zet een uitgeschakelde speler gedimd onderaan met "Uitgeschakeld"', () => {
     const withEliminated = state({ players: [alice, { ...bob, isEliminated: true }, carol] })
-    render(<GameInfoStandings state={withEliminated} me={alice} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={withEliminated} me={alice} />)
 
     expect(order().at(-1)).toBe('Bob')
     expect(screen.getByText('Uitgeschakeld')).toBeInTheDocument()
@@ -75,7 +76,7 @@ describe('GameInfoStandings', () => {
 
   it('markeert de eigen rij en toont nooit een missie', () => {
     const withMission = state({ players: [{ ...alice, missionId: 'territory-24' }, bob, carol] })
-    render(<GameInfoStandings state={withMission} me={withMission.players[0]} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={withMission} me={withMission.players[0]} />)
 
     expect(screen.getByText('(Jij)')).toBeInTheDocument()
     expect(screen.queryByText(/territory-24|24 gebieden/i)).not.toBeInTheDocument()
@@ -85,6 +86,7 @@ describe('GameInfoStandings', () => {
   it('toont de laatst getrokken gebeurteniskaart bovenaan', () => {
     render(
       <GameInfoStandings
+        onAutoPassRequest={vi.fn()}
         state={state({
           events: [{ id: 'stormachtige-zeeen', duration: EventDurationDto.OneRound, effectKind: EventEffectKindDto.SeaBlockade, amount: null }],
           currentEventId: 'stormachtige-zeeen',
@@ -99,8 +101,38 @@ describe('GameInfoStandings', () => {
   })
 
   it('toont geen kaart vóór de eerste trekking', () => {
-    render(<GameInfoStandings state={state()} me={alice} />)
+    render(<GameInfoStandings onAutoPassRequest={vi.fn()} state={state()} me={alice} />)
 
     expect(screen.queryByText('Gebeurteniskaart')).not.toBeInTheDocument()
+  })
+
+  describe('auto-pass (DESIGN.md § Auto-pass)', () => {
+    it('geeft de host de knop alleen bij andere spelers die nog zelf spelen', async () => {
+      const onAutoPassRequest = vi.fn()
+      const withStates = state({
+        players: [alice, { ...bob, isAutoPass: true }, { ...carol, isEliminated: true }, { ...bob, id: 'dave', name: 'Dave' }],
+      })
+      render(<GameInfoStandings state={withStates} me={alice} onAutoPassRequest={onAutoPassRequest} />)
+
+      // Alice is host (fixture): niet bij zichzelf, niet bij Bob (al op auto-pass), niet bij Carol (uitgeschakeld).
+      const buttons = screen.getAllByRole('button', { name: /op auto-pass zetten$/ })
+      expect(buttons).toHaveLength(1)
+      expect(buttons[0]).toHaveAccessibleName('Dave op auto-pass zetten')
+
+      await userEvent.click(buttons[0])
+      expect(onAutoPassRequest).toHaveBeenCalledWith(expect.objectContaining({ id: 'dave' }))
+    })
+
+    it('geeft een speler die geen host is geen knop', () => {
+      render(<GameInfoStandings state={state()} me={bob} onAutoPassRequest={vi.fn()} />)
+
+      expect(screen.queryByRole('button', { name: /op auto-pass zetten$/ })).not.toBeInTheDocument()
+    })
+
+    it('toont het kenmerk "Auto-pass" na de naam, en de rij blijft op volle sterkte', () => {
+      render(<GameInfoStandings state={state({ players: [alice, { ...bob, isAutoPass: true }, carol] })} me={carol} onAutoPassRequest={vi.fn()} />)
+
+      expect(screen.getByText('Auto-pass')).toBeInTheDocument()
+    })
   })
 })

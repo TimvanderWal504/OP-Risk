@@ -4,6 +4,7 @@ import { HubConnectionState } from '@microsoft/signalr'
 import { useSignalR } from './useSignalR'
 import { useToast } from './useToast'
 import { useEventDrawNotice } from './useEventDrawNotice'
+import { useHostTransferNotice } from './useHostTransferNotice'
 import { useReportOnce } from './useReportOnce'
 import { ActionLogOfflineError } from './useActionLog'
 import { useCombatBroadcast } from './useCombatBroadcast'
@@ -173,6 +174,14 @@ export function useGameState(gameId: string) {
     }
   }, [gameId, catalogLoaded, stateVersion, catalogReport, t])
 
+  // Opnieuw melden bij het spel met het eigen sessietoken. Herstelt de group-membership en haalt
+  // de speler van auto-pass af (FO §11.2) — gedeeld door de effect hieronder en "Ik ben terug".
+  const requestRejoin = useCallback(
+    (): Promise<GameStateDto> =>
+      connection!.invoke<GameStateDto>('RejoinGame', gameId, playerId!, sessionStorage.getItem(sessionTokenKey(gameId)) ?? ''),
+    [connection, gameId, playerId],
+  )
+
   // Herstelt group-membership na elke (re)connect zodra er een bekende playerId is —
   // dekt zowel automatic-reconnect als een page refresh met sessionStorage-hit.
   useEffect(() => {
@@ -180,8 +189,7 @@ export function useGameState(gameId: string) {
 
     let cancelled = false
 
-    connection
-      .invoke<GameStateDto>('RejoinGame', gameId, playerId, sessionStorage.getItem(sessionTokenKey(gameId)) ?? '')
+    requestRejoin()
       .then((fresh) => {
         if (!cancelled) {
           applyState(fresh)
@@ -195,7 +203,24 @@ export function useGameState(gameId: string) {
     return () => {
       cancelled = true
     }
-  }, [connection, connectionState, gameId, playerId, showError, clearSource])
+  }, [connection, connectionState, playerId, requestRejoin, showError, clearSource])
+
+  /**
+   * "Ik ben terug" (DESIGN.md § Auto-pass): dezelfde herverbinding als hierboven, op verzoek. Zonder
+   * verbinding doet dit bewust niets: zodra de verbinding terugkomt, meldt de effect hierboven de
+   * speler vanzelf opnieuw aan en vervalt auto-pass alsnog — de app toont het ontbreken van een
+   * verbinding al zelf.
+   */
+  const rejoin = useCallback(async () => {
+    if (!connection || connectionState !== HubConnectionState.Connected || !playerId) return
+
+    try {
+      applyState(await requestRejoin())
+      clearSource(hubToastSource)
+    } catch (rejoinError: unknown) {
+      showError(hubErrorMessage(rejoinError), hubToastSource)
+    }
+  }, [connection, connectionState, playerId, requestRejoin, showError, clearSource])
 
   const invoke = useCallback(
     async <T,>(methodName: string, ...args: unknown[]): Promise<T | undefined> => {
@@ -343,6 +368,18 @@ export function useGameState(gameId: string) {
 
     await invoke('SkipTvHold', gameId, playerId)
   }, [invoke, gameId, playerId])
+
+  /** De host zet een andere speler op auto-pass (FO §11.2); de server valideert opnieuw. */
+  const setAutoPass = useCallback(
+    async (targetPlayerId: string) => {
+      if (!playerId) return
+
+      const updated = await invoke<GameStateDto>('SetAutoPass', gameId, playerId, targetPlayerId)
+
+      if (updated) applyState(updated)
+    },
+    [invoke, gameId, playerId],
+  )
 
   /** "Legers verwijderen" (FO §9.2): gebied → aantal áfgestane legers; de server valideert opnieuw. */
   const removeArmies = useCallback(
@@ -523,6 +560,7 @@ export function useGameState(gameId: string) {
   // Korte melding bij elke getrokken gebeurteniskaart (FO §9.2) — hier, naast de fouttoasts van
   // de telefoon, zodat elke telefoonroute hem krijgt.
   useEventDrawNotice(state, playerId)
+  useHostTransferNotice(state, playerId)
 
   return {
     state,
@@ -549,6 +587,8 @@ export function useGameState(gameId: string) {
     keepAttackDice,
     endPhase,
     removeArmies,
+    setAutoPass,
+    rejoin,
     skipTvHold,
     skipSignal,
     fortify,

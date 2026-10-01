@@ -16,6 +16,8 @@ export interface GameInfoPanelProps {
   me: PlayerDto
   /** Het volledige verloop voor het tabblad Spelverloop (`useGameState.loadActionLog`). */
   loadActionLog: () => Promise<RecentActionDto[]>
+  /** De host koos in Stand een speler om op auto-pass te zetten; de bevestiging hoort bij de aanroeper. */
+  onAutoPassRequest: (player: PlayerDto) => void
   onClose: () => void
 }
 
@@ -28,7 +30,7 @@ type GameInfoTab = 'standings' | 'history' | 'rules' | 'roles'
  * altijd boven komen. Gebeurtenissen horen bij de regels (besluit gebruiker) en staan daar als
  * sectie, niet als eigen tabblad.
  */
-export function GameInfoPanel({ state, me, loadActionLog, onClose }: GameInfoPanelProps) {
+export function GameInfoPanel({ state, me, loadActionLog, onAutoPassRequest, onClose }: GameInfoPanelProps) {
   const { t } = useTranslation('gameInfo')
   const [tab, setTab] = useState<GameInfoTab>('standings')
 
@@ -50,7 +52,7 @@ export function GameInfoPanel({ state, me, loadActionLog, onClose }: GameInfoPan
       <SegmentedControl options={tabs} value={tab} onChange={setTab} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-        {tab === 'standings' && <GameInfoStandings state={state} me={me} />}
+        {tab === 'standings' && <GameInfoStandings state={state} me={me} onAutoPassRequest={onAutoPassRequest} />}
         {tab === 'history' && <GameInfoHistory state={state} loadActionLog={loadActionLog} />}
         {tab === 'rules' && <GameInfoRules state={state} />}
         {tab === 'roles' && state.settings.rolesEnabled && <GameInfoRoles state={state} me={me} />}

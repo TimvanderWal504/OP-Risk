@@ -5,6 +5,7 @@ import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
+import { AutoPassScreen } from '../../components/AutoPassScreen'
 import { PhonePlayerHeader } from '../../components/PhonePlayerHeader'
 import { PhoneShell } from '../../components/ui/PhoneShell'
 import { GamePhaseDto } from '../../types/GameState'
@@ -36,6 +37,8 @@ export function PhonePage() {
     tradeInCards,
     endPhase,
     removeArmies,
+    setAutoPass,
+    rejoin,
     skipTvHold,
     skipSignal,
     combat,
@@ -89,6 +92,9 @@ export function PhonePage() {
   // `displayPhase` (niet `state.phase`) om consistent te blijven met `resolvePhoneScreen`
   // hieronder — dezelfde `useHeldPhase`-vertraging geldt dan ook hier.
   const isEliminatedView = me.isEliminated && displayPhase !== GamePhaseDto.Finished
+  // Auto-pass (DESIGN.md § Auto-pass): na uitgeschakeld, en alleen tijdens het spel — het eindscherm
+  // wint, want een speler op auto-pass hoort de winnaar en de stemknop net zo goed te zien.
+  const isAutoPassView = !isEliminatedView && me.isAutoPass && displayPhase === GamePhaseDto.InProgress
 
   // Eén return, met de header als vaste eerste child van `PhoneShell` boven zowel het
   // uitgeschakeld-scherm als het faseschem (plan-testronde-tv punt 3): bij uitschakeling blijft het
@@ -108,11 +114,14 @@ export function PhonePage() {
           tradeInCards={tradeInCards}
           setTvDisplay={setTvDisplay}
           skipTvHold={skipTvHold}
+          setAutoPass={setAutoPass}
           loadActionLog={loadActionLog}
         />
       )}
       {isEliminatedView ? (
         <PlayerEliminatedScreen myColor={state.colors.find((color) => color.id === me.colorId) ?? null} />
+      ) : isAutoPassView ? (
+        <AutoPassScreen onReturn={rejoin} />
       ) : (
         createElement(resolvePhoneScreen(displayPhase), {
           state,

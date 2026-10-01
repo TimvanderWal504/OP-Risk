@@ -34,7 +34,7 @@ import { withoutBlockedRoutes } from '../../../map/seaRoutes'
  * territorium- én legertotaal per speler (`state.territories` is al client-side beschikbaar).
  */
 export function TvMainBoardScreen({ state }: TvScreenProps) {
-  const { t } = useTranslation('board')
+  const { t } = useTranslation(['board', 'autoPass'])
   const { data: geometry } = useTerritoryGeometry()
   const seaRoutes = withoutBlockedRoutes(useSeaRoutes(geometry), state.activeEffect?.blockedBorders ?? [])
   const lockedTerritoryIds = new Set(state.activeEffect?.lockedTerritoryIds ?? [])
@@ -220,6 +220,9 @@ export function TvMainBoardScreen({ state }: TvScreenProps) {
                         {tDynamic(`${player.roleId}.name`, 'roles')}
                       </Badge>
                     )}
+                    {/* Auto-pass (DESIGN.md § Auto-pass): na een eventuele rolbadge; de naam kapt af,
+                        de badges nooit — die dragen status. */}
+                    {player.isAutoPass && <Badge>{t('autoPass:badge')}</Badge>}
                   </div>
                   <div className="mt-0.75 font-body text-body text-fg-secondary">
                     {t('territoriesCount', { count: territoryCountByPlayer[playerId] ?? 0 })}
