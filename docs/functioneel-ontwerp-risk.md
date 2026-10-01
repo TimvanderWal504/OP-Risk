@@ -143,6 +143,34 @@ Drie aanvullende databestanden completeren de spel-dataset:
 - **`colors.json`** — de 7 spelerskleuren uit het Claude Design-ontwerp: Rood `#C0392B`, Blauw `#215C9C`, Groen `#4F7A2E`, Geel `#E0A81C`, Paars `#8E4585`, Oranje `#D97A1A`, Turquoise `#158F8A`, elk met een kleurenblind-vriendelijk symbool. Missies verwijzen naar deze kleur-ID's.
 - **`cards.json`** — de **regels** van het territoriumkaarten-deck, niet het deck zelf. Het deck wordt door de rules engine **afgeleid** uit de gebieden van de actieve kaartvariant: één kaart per gebied, alfabetisch op `territoryId` met de symbolen cyclisch verdeeld, plus het aantal jokers uit `deck.jokerCount`. Voor de standaard-43-kaart geeft dat 43 gebiedskaarten + 2 jokers = 45, met symboolverdeling 15/14/14 (43 is niet deelbaar door 3, dus één symbool krijgt er één extra). Reden voor afleiden in plaats van opsommen: een kaartvariant kan zo geen deck hebben dat niet bij zijn eigen gebieden past, en een gebied toevoegen vereist geen tweede handmatige wijziging. Het bestand bevat wél `deck.symbols` en `deck.jokerCount` (zodat aantallen niet in code staan) en de set-regels. Symbolen zijn thema-neutrale ID's met twee weergavethema's: **klassiek** (Infanterie / Cavalerie / Artillerie) en **modern** (Infanterie / Pantser / Drone). Geldige sets: 3× hetzelfde symbool of 1 van elk; een joker vervangt elk symbool. Het deck bevat ook de regel **`ownedTerritoryBonus: 2`**: leg je een kaart in van een gebied dat je op dat moment bezit, dan plaats je direct 2 extra legers op dat gebied (klassieke regel; per spel aanpasbaar in de data). **Lege trekstapel:** is de trekstapel leeg op het moment dat een kaart getrokken moet worden, dan wordt de aflegstapel geschud tot de nieuwe trekstapel (klassiek); dit kan zich pas voordoen nadat het deck een aantal ronden heeft gedraaid. **Weergavethema:** staat vandaag vast op `classic`; het is de bedoeling dat dit een lobby-instelling wordt (§10), maar dat is nog niet gebouwd.
 
+### 4.5 Kaartvarianten
+
+Er zijn twee kaartvarianten; de host kiest er één bij het aanmaken van het spel (§10). Elke variant heeft een eigen map `data/maps/{mapId}/` met dezelfde bestanden (§4.1–§4.4, plus rollen, missies en gebeurteniskaarten), aangevuld met een `map.json` met de weergavenaam en de standaard startleger-preset van die kaart.
+
+| `mapId` | Gebieden | Standaard startlegers |
+|---|---|---|
+| `standaard-43` | 43 (§4.1–§4.4) | Klassiek |
+| `wereld-49` | 49 | Klassiek-49 |
+
+**`wereld-49`** is `standaard-43` plus zes gebieden, elk afgesplitst van een bestaand gebied (besloten 2026-10-01). Alle 43 bestaande gebieds-ID's blijven bestaan, zodat rollen, gebeurteniskaarten en zeeroute-verwijzingen ongewijzigd blijven kloppen:
+
+| Nieuw gebied | Afgesplitst van | Continent | Verbindingen |
+|---|---|---|---|
+| `chile` — Chili (`CHL`) | `peru` | Zuid-Amerika | land, volgt uit de geometrie |
+| `hawaii` — Hawaï (`US-HI`) | `western-united-states` | Noord-Amerika | zee: `western-united-states`, `japan` |
+| `azores` — Azoren (Azoren, Madeira en de Canarische eilanden) | `western-europe` | Europa | zee: `western-europe`, `north-africa` |
+| `west-africa` — West-Afrika (`NGA`, `NER`, `BEN`, `TGO`, `GHA`, `CIV`, `LBR`, `SLE`, `GIN`, `GNB`, `SEN`, `GMB`, `MLI`, `BFA`) | `congo` | Afrika | land, volgt uit de geometrie |
+| `western-china` — West-China (Xinjiang, Tibet, Qinghai) | `china` | Azië | land, volgt uit de geometrie |
+| `philippines` — Filipijnen (`PHL`) | `indonesia` | Australië | zee: `siam`, `indonesia` |
+
+- **China:** het oostelijke deel (de overige provincies plus Korea en Taiwan) houdt het ID `china`, zodat de rol `generaal`, de gebeurtenis `aardbeving-in-china` en de zeeroute `china–japan` er ongewijzigd aan blijven hangen.
+- **Landverbindingen** van de gesplitste gebieden volgen dezelfde regel als in §4.2: elke landgrens raakt geometrisch, en elk rakend paar is een landgrens. Alle bestaande zeeroutes blijven op hun huidige gebieden uitkomen; `new-zealand–peru` blijft op `peru`.
+- **Eilandengroepen zonder eigen atomaire regio:** de Azoren, Madeira en de Canarische eilanden zijn in Natural Earth onderdeel van Portugal en Spanje, niet een eigen land of provincie. Het generatiescript splitst ze voor deze variant op ligging uit `PRT`/`ESP`. Op `standaard-43` vallen de westelijke Azoren door de exclave-regel van het script buiten de kaart; op `wereld-49` horen alle eilanden van de groep bij `azores`.
+- **`hawaii–japan`** ligt over de datumgrens en wordt volgens de regel in §4.3 als twee stompjes naar de kaartrand getekend.
+- **Continentbonussen** zijn gelijk aan die van `standaard-43` (§4.4), ondanks de extra gebieden — bewuste keuze.
+- **Kaartendeck:** 49 gebiedskaarten + 2 jokers = 51, symboolverdeling 17/17/17.
+- **Rollen en gebeurteniskaarten** zijn gelijk aan die van `standaard-43`. **Missies** ook, op de twee gebiedsaantal-missies na: `territory-30` (Bezit 30 gebieden, `minPlayers: 3`) en `territory-24-min2` (Bezit 24 gebieden met elk ≥ 2 legers, `minPlayers: 4`) in plaats van `territory-24` en `territory-18-min2`.
+
 ---
 
 ## 5. Spelverloop
@@ -216,7 +244,13 @@ Missies staan in JSON en zijn zelf uit te breiden. Ondersteunde missietypes (rul
 Elk missietype kent daarnaast een optioneel, missie-breed veld `minPlayers`: het minimale
 spelersaantal waarbij de missie mag worden toegewezen. Ontbreekt het veld, dan geldt geen
 minimum. `territory-18-min2` ("Bezit 18 gebieden met elk ≥ 2 legers") heeft `minPlayers: 4`,
-`territory-24` heeft `minPlayers: 3`: bij een lager spelersaantal worden ze niet toegewezen.
+`territory-24` heeft `minPlayers: 3`: bij een lager spelersaantal worden ze niet toegewezen. Op
+`wereld-49` zijn dat `territory-24-min2` en `territory-30`, met dezelfde `minPlayers` (§4.5).
+
+**De drempel staat alleen in de data.** Naam en omschrijving die een speler ziet, volgen uit
+het missietype plus de parameters (`count`, `minArmies`) van de missie. Een andere drempel
+of een nieuwe gebiedsaantal-missie vraagt dus alleen een wijziging in `missions.json`, geen
+nieuwe tekst per getal.
 
 ```json
 {
@@ -374,9 +408,10 @@ moeten maken voordat het spel verdergaat:
 
 | Instelling | Opties | Standaard |
 |---|---|---|
+| Kaart | Standaard (43 gebieden) / Wereld (49 gebieden) (§4.5) | Standaard |
 | Winconditie | Werelddominantie / Geheime missies | Missies |
 | Startopstelling | Random / Claimen | Random |
-| Startlegers | Preset: Klassiek / Modern / Klassiek-49 | Klassiek (40/35/30/25/20/18) |
+| Startlegers | Preset: Klassiek / Modern / Klassiek-49 | Volgt de kaart: Klassiek (40/35/30/25/20/18) bij Standaard, Klassiek-49 bij Wereld |
 | Dobbelregel | Huisregel / Klassiek | Huisregel |
 | Beurttimer (Versterken + Aanvallen) | Aanpasbaar | 3 min |
 | Verplaatsen-timer | Aanpasbaar | 1 min |
@@ -393,6 +428,10 @@ verdedigen, tenzij hij een actieve `DefenseBoost`-rol inzet (§8.1). **Klassiek:
 mag altijd met 2 gooien vanaf 2 legers, ongeacht het aantal aanvalsdobbelstenen — de officiële
 regel. Bij Klassiek vallen de drie `DefenseBoost`-rollen uit de roltoewijzingspool (niet
 uitgedeeld, niet kiesbaar); alleen relevant als Rollen = Aan.
+
+**Kaart.** Wordt gekozen bij het aanmaken van het spel en ligt daarna vast. Kiest de host een
+andere kaart, dan springt de startleger-preset naar de standaard van die kaart; daarna kan hij
+de preset zoals altijd zelf aanpassen.
 
 ---
 
@@ -436,7 +475,7 @@ De server valideert elke actie (juiste speler, juiste fase, geldige gebieden, vo
 
 ## 13. Content-status rollen, missies en gebeurtenissen
 
-Deze content was oorspronkelijk als "later in te vullen" gemarkeerd; inmiddels staat ze in `data/maps/standaard-43/` en is ze onderdeel van de gevalideerde speeldata:
+Deze content was oorspronkelijk als "later in te vullen" gemarkeerd; inmiddels staat ze in `data/maps/standaard-43/` en is ze onderdeel van de gevalideerde speeldata. `wereld-49` neemt deze content over, met alleen andere drempels voor de twee gebiedsaantal-missies (§4.5):
 
 1. **Rollenset** (`roles.json`) — 18 rollen ingevuld (waarvan 3 `DefenseBoost`-rollen die bij Dobbelregel = Klassiek uit de pool vallen, §10), ruim boven het maximum van 7 spelers, elk met een uniek herkomstland (validatie-eis §8) en een effect-type uit de vaste set (§8.1). Let op één kaart-specifieke restrictie: de rol `maori` heeft `new-zealand` als herkomstland, een gebied dat alleen bestaat op kaartvarianten die Nieuw-Zeeland bevatten (de huidige 43-gebieden-set). Op een kaartvariant zonder Nieuw-Zeeland moet `maori` uitgesloten worden van de toewijzingspool, anders faalt de spelstart-validatie.
 2. **Missieset** (`missions.json`) — dekkend voor 7 kleuren: per kleur een `EliminatePlayer`-missie, aangevuld met `ConquerContinents`- en `TerritoryCount(MinArmies)`-missies die tevens als `fallbackMissionId` dienen (§6.1).

@@ -87,6 +87,16 @@ Deze bestanden zijn de gevalideerde output uit het ontwerp-traject en worden bij
 | `cards.json` | Set-regels, inleg-thema's, `ownedTerritoryBonus`, `deck.symbols` en `deck.jokerCount` — het deck zelf wordt afgeleid uit de gebieden (FO §4.4) |
 | `roles.json` / `missions.json` / `events.json` | Rollen, missies en gebeurteniskaarten — datamodel én content ingevuld (FO §13) |
 
+| `map.json` | Weergavenaam van de variant en `defaultStartingArmiesPresetId` — voor de kaartkeuze in de lobby, niet door de rules engine gebruikt |
+
+**Tweede variant: `wereld-49`** (FO §4.5) — dezelfde bestanden, met 49 gebieden. De zes extra gebieden zijn afgesplitst van bestaande; alle 43 ID's van `standaard-43` bestaan ook hier, zodat `roles.json`, `events.json` en `cards.json` letterlijke kopieën zijn. Alleen `missions.json` verschilt (`territory-30` en `territory-24-min2`). `territories.json` en `territories.geo.json` komen uit `files/build_map.py`, dat per variant een eigen indeling krijgt; omdat de Azoren, Madeira en de Canarische eilanden geen eigen atomaire regio zijn, splitst het script die op ligging uit `PRT`/`ESP`. `adjacency_validated.json` wordt, net als bij `standaard-43`, met de hand vastgesteld en geautomatiseerd tegen de geometrie gecontroleerd.
+
+**Kaartkeuze (FO §10):** `GET /maps` geeft per variant `mapId`, naam en `defaultStartingArmiesPresetId` uit `map.json`. `CreateGameForm` kiest daaruit in plaats van de vaste `MAP_ID` in `HomePage`; `CreateGameRequest.MapId` bestaat al en verandert niet.
+
+**Validatie per variant:** dezelfde datatests draaien voor elke map onder `data/maps/`: graaf volledig verbonden, landgrenzen consistent met de geometrie, alle `TerritoryLocked`-/`SeaRoutesBlocked`-verwijzingen en rol-herkomstlanden bestaan op die kaart, en het afgeleide deck klopt (51 kaarten, 17/17/17 voor `wereld-49`).
+
+**Missieteksten (FO §6.1):** de speler-DTO draagt naast `missionId` ook de parameters van de eigen missie (`count`, `minArmies`). De frontend vertaalt `TerritoryCount`/`TerritoryCountMinArmies` per missietype met die waarden ingevuld, in plaats van per missie-ID met een vast getal.
+
 De engine bevat **geen** kaart-, kleur- of kaartkennis in code; alles komt uit deze bestanden. Dat is de kern van "data-driven" uit het FO: een nieuwe kaart of extra gebied = andere data, geen codewijziging.
 
 `MapDefinitionParser.Parse(mapId, sources)` levert per aanroep een nieuwe, onafhankelijke `MapDefinition`; er is geen static of gedeelde cache, zodat twee gelijktijdige spellen met verschillende varianten elkaar niet kunnen beïnvloeden. De parser neemt **JSON-tekst** aan, geen paden: het lezen van bestanden gebeurt buiten `RiskGame.Rules`, dat daarmee vrij van I/O blijft.
@@ -330,7 +340,6 @@ extra talen, of een externe vertaalworkflow), niet vooruitlopend erop.
 2. ~~**Delta- vs. full-state-push.**~~ **Besloten: full-state.** `IGameClient.GameStateUpdated(GameStateDto state)` pusht de volledige projectie na elk commando; `DiceRolled`/`CombatNarrated` zijn losse, gerichte pushes voor animatie-timing (TV-narratie). Nog geen delta's — voor 43 gebieden + ≤7 spelers blijkt dit in de praktijk klein genoeg.
 3. ~~**Rollen/missies/events-content**~~ **Ingevuld**, zie FO §13: `roles.json` (15 rollen), `missions.json` (dekkend voor 7 kleuren), `events.json` (incl. `TerritoryLocked`/`ArmyAttrition`).
 4. ~~**44- vs. 42-gebieden** (Nieuw-Zeeland/Chili)~~ **Besloten: 43 gebieden.** Alleen Nieuw-Zeeland is toegevoegd (continent Australië); Chili blijft onderdeel van `peru`. Verwerkt in de data: 84 grenzen (twee nieuwe zeeroutes, zie FO §4.2; sinds de herziening van 2026-09-26 86), continentbonus Australië van 2 naar 3, en een 43e territoriumkaart met `symbol-1` (deck 45). `territories_extended.*` blijft ongewijzigd als uitbreidbaarheidsbewijs en is géén speeldata.
-
 ### 10.2 Nog open
 
 1. **Timer-synchronisatie-precisie.** Hoe strak moeten client- en serverklok lopen? Voor een informeel spel volstaat vermoedelijk "server handhaaft, client toont benadering" — nog niet apart getest tegen een trage/instabiele verbinding (relevant voor Azure App Service/Vercel, zie project-overzicht §2.3).
