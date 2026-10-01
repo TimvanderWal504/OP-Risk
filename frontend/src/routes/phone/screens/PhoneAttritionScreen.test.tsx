@@ -62,7 +62,7 @@ describe('PhoneInProgressScreen tijdens "Legers verwijderen"', () => {
             attackerLosses: null,
             defenderLosses: null,
             eventId: 'griepgolf',
-            eventBonus: null,
+            eventBonus: null, cardsTradedInTurn: false,
           },
         ],
       }),

@@ -21,7 +21,7 @@ const action = (overrides: Partial<RecentActionDto> & Pick<RecentActionDto, 'kin
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
-  eventBonus: null,
+  eventBonus: null, cardsTradedInTurn: false,
   ...overrides,
 })
 

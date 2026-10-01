@@ -16,6 +16,8 @@ export interface PlayerDto {
   defenseBoostAvailable: boolean
   isHost: boolean
   isEliminated: boolean
+  /** Of de server de beurten van deze speler speelt (FO §11.2). Openbaar; spiegelt `PlayerDto.IsAutoPass`. */
+  isAutoPass: boolean
   /** Alleen gevuld voor de ontvangende speler zelf (TO §6.1); voor elke andere speler/de TV
    *  komt hier een lege array over de draad, ongeacht de werkelijke handgrootte. */
   hand: CardDto[]

@@ -273,4 +273,77 @@ public sealed class GameProjectionRecentActionsTests
 
         Assert.Equal(["p2", "p1"], chosen.RecentActions.Select(action => action.PlayerId));
     }
+
+    private static GameState WithAutoPass(GameState state, string playerId) =>
+        state.WithPlayer(state.Player(playerId) with { IsAutoPass = true });
+
+    private static PhaseChanged ReinforceFor(string playerId, int armiesGranted) =>
+        new("game-1", playerId, TurnPhase.Reinforce, TimeSpan.FromMinutes(3), Now, armiesGranted);
+
+    /// <summary>FO §11.2 / DESIGN.md § Auto-pass: een automatische beurt is één regel met de som van de plaatsingen.</summary>
+    [Fact]
+    public void AutomatischeBeurt_IsEenRegelMetHetAantalGeplaatsteLegers()
+    {
+        var state = WithAutoPass(BuildState(), "p2");
+        state = Projection.Apply(state, ReinforceFor("p2", 5));
+        state = Projection.Apply(state, new ArmiesReinforced("game-1", "p2", "peru", 3));
+        state = Projection.Apply(state, new ArmiesReinforced("game-1", "p2", "venezuela", 2));
+
+        Assert.Equal(
+            new RecentAction(RecentActionKind.AutoTurnPlayed, Sequence: 1, PlayerId: "p2", Amount: 5),
+            Assert.Single(state.RecentActions));
+    }
+
+    /// <summary>De inleg verandert de inlegwaarde voor iedereen: hij verdwijnt niet, maar komt in dezelfde regel.</summary>
+    [Fact]
+    public void AutomatischeBeurt_MetVerplichteInleg_NoemtDeInlegInDezelfdeRegel()
+    {
+        var cards = MapSource.Load("standaard-43").Deck.Where(card => !card.IsJoker).Take(3).ToArray();
+        var state = WithAutoPass(BuildState(), "p2");
+        state = state.WithPlayer(state.Player("p2") with { Hand = cards });
+
+        state = Projection.Apply(state, ReinforceFor("p2", 3));
+        state = Projection.Apply(state, new CardsTraded(
+            "game-1", "p2", [.. cards.Select(card => card.Id)], SetValue: 4, OwnedTerritoryBonuses: [], NextTradeValue: 6));
+        state = Projection.Apply(state, new ArmiesReinforced("game-1", "p2", "peru", 7));
+
+        var line = Assert.Single(state.RecentActions);
+        Assert.Equal(RecentActionKind.AutoTurnPlayed, line.Kind);
+        Assert.Equal(7, line.Amount);
+        Assert.True(line.CardsTradedInTurn);
+    }
+
+    /// <summary>Een beurt die de speler zelf begon, houdt gewone regels — ook nadat hij op auto-pass ging.</summary>
+    [Fact]
+    public void EenBeurtDieDeSpelerZelfBegon_HoudtGewoneRegels()
+    {
+        var state = Projection.Apply(BuildState(), ReinforceFor("p1", 3));
+        state = Projection.Apply(state, new AutoPassEnabled("game-1", "p1", AutoPassReason.Host));
+
+        Assert.Equal(
+            [RecentActionKind.AutoPassEnabled, RecentActionKind.ReinforcementsGranted],
+            state.RecentActions.Select(action => action.Kind));
+    }
+
+    [Fact]
+    public void AutoPassEnHostOverdracht_LeverenElkHunEigenRegel()
+    {
+        var state = BuildState();
+        state = state.WithPlayer(state.Player("p1") with { IsHost = true });
+
+        state = Projection.Apply(state, new AutoPassEnabled("game-1", "p2", AutoPassReason.Host));
+        state = Projection.Apply(state, new AutoPassDisabled("game-1", "p2"));
+        state = Projection.Apply(state, new AutoPassEnabled("game-1", "p1", AutoPassReason.Disconnected));
+        state = Projection.Apply(state, new HostTransferred("game-1", "p1", "p2"));
+
+        Assert.Equal(
+            new RecentAction[]
+            {
+                new(RecentActionKind.HostTransferred, Sequence: 4, PlayerId: "p2", OtherPlayerId: "p1"),
+                new(RecentActionKind.DisconnectedToAutoPass, Sequence: 3, PlayerId: "p1"),
+                new(RecentActionKind.AutoPassDisabled, Sequence: 2, PlayerId: "p2"),
+                new(RecentActionKind.AutoPassEnabled, Sequence: 1, PlayerId: "p2"),
+            },
+            state.RecentActions);
+    }
 }

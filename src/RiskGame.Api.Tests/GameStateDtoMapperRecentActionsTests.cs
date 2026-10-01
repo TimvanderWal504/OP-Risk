@@ -66,6 +66,11 @@ public sealed class GameStateDtoMapperRecentActionsTests
         new(RecentActionKind.PlayerEliminated, 10, PlayerId: "alice", OtherPlayerId: "bob"),
         new(RecentActionKind.LastChanceOpened, 11, PlayerId: "alice"),
         new(RecentActionKind.LastChanceBroken, 12, PlayerId: "bob", OtherPlayerId: "alice"),
+        new(RecentActionKind.AutoPassEnabled, 13, PlayerId: "bob"),
+        new(RecentActionKind.DisconnectedToAutoPass, 14, PlayerId: "alice"),
+        new(RecentActionKind.AutoPassDisabled, 15, PlayerId: "bob"),
+        new(RecentActionKind.HostTransferred, 16, PlayerId: "bob", OtherPlayerId: "alice"),
+        new(RecentActionKind.AutoTurnPlayed, 17, PlayerId: "bob", Amount: 13, CardsTradedInTurn: true),
     ];
 
     [Theory]
@@ -78,9 +83,22 @@ public sealed class GameStateDtoMapperRecentActionsTests
         Assert.Equal(action.Kind.ToString(), mapped.Kind.ToString());
         Assert.Equal(
             (action.Sequence, action.PlayerId, action.OtherPlayerId, action.TerritoryId, action.FromTerritoryId,
-                action.Amount, action.Total, action.AttackerLosses, action.DefenderLosses),
+                action.Amount, action.Total, action.AttackerLosses, action.DefenderLosses, action.CardsTradedInTurn),
             (mapped.Sequence, mapped.PlayerId, mapped.OtherPlayerId, mapped.TerritoryId, mapped.FromTerritoryId,
-                mapped.Amount, mapped.Total, mapped.AttackerLosses, mapped.DefenderLosses));
+                mapped.Amount, mapped.Total, mapped.AttackerLosses, mapped.DefenderLosses, mapped.CardsTradedInTurn));
+    }
+
+    /// <summary>FO §11.2: auto-pass is openbaar; de mapper zet het per speler over.</summary>
+    [Fact]
+    public void AutoPass_WordtPerSpelerOvergezet()
+    {
+        var state = State(MissionWinTiming.EndOfTurn);
+        state = state.WithPlayer(state.Player("bob") with { IsAutoPass = true });
+
+        var dto = GameStateDtoMapper.ToDto(state, TimeProvider.System);
+
+        Assert.False(dto.Players.Single(player => player.Id == "alice").IsAutoPass);
+        Assert.True(dto.Players.Single(player => player.Id == "bob").IsAutoPass);
     }
 
     [Fact]

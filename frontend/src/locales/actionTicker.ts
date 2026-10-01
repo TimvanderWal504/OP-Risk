@@ -107,4 +107,28 @@ export const actionTicker = {
     nl: '{{event}} is voorbij: de afgesloten gebieden zijn weer open',
     en: '{{event}} is over: the closed territories are open again',
   },
+  // Auto-pass (FO §11.1/§11.2, DESIGN.md § Auto-pass).
+  autoPassEnabled: { nl: 'staat op auto-pass', en: 'is on auto-pass' },
+  disconnectedToAutoPass: {
+    nl: 'is weggevallen en staat op auto-pass',
+    en: 'dropped out and is on auto-pass',
+  },
+  autoPassDisabled: { nl: 'is terug', en: 'is back' },
+  hostTransferred: { nl: 'is nu host', en: 'is now the host' },
+  autoTurnPlayedOne: {
+    nl: 'speelde automatisch: een leger aan het front',
+    en: 'played automatically: one army to the front',
+  },
+  autoTurnPlayed: {
+    nl: 'speelde automatisch: {{count}} legers aan het front',
+    en: 'played automatically: {{count}} armies to the front',
+  },
+  autoTurnPlayedWithTradeOne: {
+    nl: 'speelde automatisch: legde kaarten in en zette een leger aan het front',
+    en: 'played automatically: traded cards and put one army on the front',
+  },
+  autoTurnPlayedWithTrade: {
+    nl: 'speelde automatisch: legde kaarten in en zette {{count}} legers aan het front',
+    en: 'played automatically: traded cards and put {{count}} armies on the front',
+  },
 } satisfies LocaleTree

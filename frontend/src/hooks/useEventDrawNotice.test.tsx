@@ -18,7 +18,7 @@ const drawn = (eventId: string, sequence: number): RecentActionDto => ({
   attackerLosses: null,
   defenderLosses: null,
   eventId,
-  eventBonus: null,
+  eventBonus: null, cardsTradedInTurn: false,
 })
 
 const withLog = (recentActions: RecentActionDto[], overrides: Partial<GameStateDto> = {}): GameStateDto => ({

@@ -40,6 +40,13 @@ public sealed partial class GameProjection
             return state;
         }
 
+        // De automatische beurt van een speler op auto-pass (FO §11.2) is één regel; zijn plaatsingen
+        // en een eventuele inleg werken die bij (zie IsAutoTurnOf). Ook dit is een beurtgrens.
+        if (state.Player(@event.PlayerId).IsAutoPass)
+        {
+            return Append(state, new RecentAction(RecentActionKind.AutoTurnPlayed, PlayerId: @event.PlayerId, Amount: 0));
+        }
+
         var eventBonus = state.Player(@event.PlayerId).PendingEventBonus;
 
         return Append(state, new RecentAction(
@@ -54,11 +61,46 @@ public sealed partial class GameProjection
         RecordPlacement(state, @event.PlayerId, @event.TerritoryId, amount: 1);
 
     private static GameState Record(GameState state, ArmiesReinforced @event) =>
-        RecordPlacement(state, @event.PlayerId, @event.TerritoryId, @event.Amount);
+        IsAutoTurnOf(state, @event.PlayerId)
+            ? UpdateHead(state, head => head with { Amount = head.Amount + @event.Amount })
+            : RecordPlacement(state, @event.PlayerId, @event.TerritoryId, @event.Amount);
 
     private static GameState Record(GameState state, CardsTraded @event) =>
+        IsAutoTurnOf(state, @event.PlayerId)
+            ? UpdateHead(state, head => head with { CardsTradedInTurn = true })
+            : Append(state, new RecentAction(
+                RecentActionKind.CardsTraded, PlayerId: @event.PlayerId, Amount: @event.SetValue));
+
+    /// <summary>
+    /// Of een plaatsing of inleg bij de lopende automatische beurt hoort: de speler staat op auto-pass
+    /// en de bovenste regel is zijn <see cref="RecentActionKind.AutoTurnPlayed"/>. Een beurt die hij deels
+    /// zelf speelde voordat hij op auto-pass ging, begon met een gewone regel en houdt gewone regels.
+    /// Aanname: binnen een automatische beurt schrijft niets anders een regel tussen de beurtstart en
+    /// de plaatsingen. Doet een toekomstig event dat wel, dan krijgen de plaatsingen daarna gewone
+    /// regels — de veilige kant, nooit een optelling bij een verkeerde regel.
+    /// </summary>
+    private static bool IsAutoTurnOf(GameState state, string playerId) =>
+        state.Player(playerId).IsAutoPass
+        && state.RecentActions is [{ Kind: RecentActionKind.AutoTurnPlayed } head, ..]
+        && head.PlayerId == playerId;
+
+    private static GameState UpdateHead(GameState state, Func<RecentAction, RecentAction> change) =>
+        Update(state, action => action.Sequence == state.RecentActions[0].Sequence, change);
+
+    private static GameState Record(GameState state, AutoPassEnabled @event) =>
         Append(state, new RecentAction(
-            RecentActionKind.CardsTraded, PlayerId: @event.PlayerId, Amount: @event.SetValue));
+            @event.Reason == AutoPassReason.Disconnected
+                ? RecentActionKind.DisconnectedToAutoPass
+                : RecentActionKind.AutoPassEnabled,
+            PlayerId: @event.PlayerId));
+
+    private static GameState Record(GameState state, AutoPassDisabled @event) =>
+        Append(state, new RecentAction(RecentActionKind.AutoPassDisabled, PlayerId: @event.PlayerId));
+
+    /// <summary>De regel staat op naam van de nieuwe host; de oude is de tegenpartij.</summary>
+    private static GameState Record(GameState state, HostTransferred @event) =>
+        Append(state, new RecentAction(
+            RecentActionKind.HostTransferred, PlayerId: @event.ToPlayerId, OtherPlayerId: @event.FromPlayerId));
 
     private static GameState Record(GameState state, CardTradeReverted @event) =>
         Append(state, new RecentAction(

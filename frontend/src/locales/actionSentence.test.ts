@@ -15,7 +15,7 @@ const action = (overrides: Partial<RecentActionDto> & Pick<RecentActionDto, 'kin
   attackerLosses: null,
   defenderLosses: null,
   eventId: null,
-  eventBonus: null,
+  eventBonus: null, cardsTradedInTurn: false,
   ...overrides,
 })
 
@@ -69,6 +69,14 @@ describe('actionSentence', () => {
     ['iedereen staat automatisch een leger af', action({ kind: RecentActionKindDto.ArmiesRemoved, playerId: null, amount: 1, eventId: 'pensioengolf' }), 'Iedereen staat een leger af door Pensioengolf'],
     ['niemand kan iets missen', action({ kind: RecentActionKindDto.ArmiesRemoved, playerId: null, amount: 0, eventId: 'griepgolf' }), 'Niemand heeft legers om af te staan (Griepgolf)'],
     ['een beurtstart met bonus', action({ kind: RecentActionKindDto.ReinforcementsGranted, amount: 5, eventBonus: 2, eventId: 'babyboom' }), 'Alice krijgt 5 legers om te plaatsen, waarvan 2 door Babyboom'],
+    ['auto-pass door de host', action({ kind: RecentActionKindDto.AutoPassEnabled, playerId: 'bob' }), 'Bob staat op auto-pass'],
+    ['een weggevallen host', action({ kind: RecentActionKindDto.DisconnectedToAutoPass }), 'Alice is weggevallen en staat op auto-pass'],
+    ['terug van auto-pass', action({ kind: RecentActionKindDto.AutoPassDisabled, playerId: 'bob' }), 'Bob is terug'],
+    ['een nieuwe host', action({ kind: RecentActionKindDto.HostTransferred, playerId: 'bob', otherPlayerId: 'alice' }), 'Bob is nu host'],
+    ['een automatische beurt', action({ kind: RecentActionKindDto.AutoTurnPlayed, playerId: 'bob', amount: 5 }), 'Bob speelde automatisch: 5 legers aan het front'],
+    ['een automatische beurt met één leger', action({ kind: RecentActionKindDto.AutoTurnPlayed, playerId: 'bob', amount: 1 }), 'Bob speelde automatisch: een leger aan het front'],
+    ['een automatische beurt met inleg en één leger', action({ kind: RecentActionKindDto.AutoTurnPlayed, playerId: 'bob', amount: 1, cardsTradedInTurn: true }), 'Bob speelde automatisch: legde kaarten in en zette een leger aan het front'],
+    ['een automatische beurt met inleg', action({ kind: RecentActionKindDto.AutoTurnPlayed, playerId: 'bob', amount: 13, cardsTradedInTurn: true }), 'Bob speelde automatisch: legde kaarten in en zette 13 legers aan het front'],
   ])('beschrijft %s', (_, recentAction, expected) => {
     expect(line(recentAction)).toBe(expected)
   })

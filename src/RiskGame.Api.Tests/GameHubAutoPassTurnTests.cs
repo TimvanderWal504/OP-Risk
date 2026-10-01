@@ -199,6 +199,7 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
 
         var gameId = await SetUpAsync(
             factory, activePlayerId: "p3", autoPassPlayerIds: ["p1"], eventsEnabled: true, eventDrawPile: ["babyboom"]);
+        var withoutBonus = ReinforcementCalculator.CalculateArmies(await LoadAsync(factory, gameId), "p1");
 
         await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p3");
 
@@ -207,9 +208,11 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         Assert.Equal("p2", state.TurnState!.ActivePlayerId);
         Assert.Equal(0, state.Player("p1").PendingEventBonus);
 
-        var granted = state.RecentActions.Single(action =>
-            action.Kind == RecentActionKind.ReinforcementsGranted && action.PlayerId == "p1");
-        Assert.Equal(2, granted.EventBonus);
+        // De automatische beurt is één regel (DESIGN.md § Auto-pass); Babyboom geeft 2 extra, en die
+        // zijn mee geplaatst.
+        var autoTurn = state.RecentActions.Single(action =>
+            action.Kind == RecentActionKind.AutoTurnPlayed && action.PlayerId == "p1");
+        Assert.Equal(withoutBonus + 2, autoTurn.Amount);
     }
 
     /// <summary>FO §6.2: wie op auto-pass staat, telt in een lopend venster als "al geweest".</summary>

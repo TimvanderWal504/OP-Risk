@@ -61,7 +61,7 @@ describe('TvInitialPlacementScreen', () => {
     const state = {
       ...baseState,
       setupState: { activePlayerId: 'alice', remainingArmiesByPlayer: {}, claimableTerritoryIdsByPlayer: {} },
-      recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null, eventBonus: null }],
+      recentActions: [{ sequence: 1, kind: RecentActionKindDto.TerritoryClaimed, playerId: 'alice', otherPlayerId: null, territoryId: 'alaska', fromTerritoryId: null, amount: null, total: null, attackerLosses: null, defenderLosses: null, eventId: null, eventBonus: null, cardsTradedInTurn: false }],
     }
     render(<TvInitialPlacementScreen state={state} orderRollThrows={{}} lastClaimedTerritoryId={null} combat={null} />)
 

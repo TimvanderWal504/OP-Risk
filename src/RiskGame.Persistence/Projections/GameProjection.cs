@@ -672,11 +672,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
 
     /// <summary>Zet de speler op auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassEnabled"/>.</summary>
     public GameState Apply(GameState state, AutoPassEnabled @event) =>
-        state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = true });
+        Record(state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = true }), @event);
 
     /// <summary>Haalt de speler van auto-pass (FO §11.2) — zie doc-comment op <see cref="AutoPassDisabled"/>.</summary>
     public GameState Apply(GameState state, AutoPassDisabled @event) =>
-        state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = false });
+        Record(state.WithPlayer(state.Player(@event.PlayerId) with { IsAutoPass = false }), @event);
 
     /// <summary>
     /// Verplaatst het host-schap (FO §11.1) — zie doc-comment op <see cref="HostTransferred"/>. Was
@@ -693,9 +693,11 @@ public sealed partial class GameProjection(IMapDefinitionSource mapSource) : Sin
                 $"HostTransferred van '{@event.FromPlayerId}', maar die is geen host in spel '{@event.GameId}'.");
         }
 
-        return state
-            .WithPlayer(previousHost with { IsHost = false })
-            .WithPlayer(state.Player(@event.ToPlayerId) with { IsHost = true });
+        return Record(
+            state
+                .WithPlayer(previousHost with { IsHost = false })
+                .WithPlayer(state.Player(@event.ToPlayerId) with { IsHost = true }),
+            @event);
     }
 
     /// <summary>Vervangt de TV-weergave in z'n geheel (plan-testronde-tv punt 2).</summary>

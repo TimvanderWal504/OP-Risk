@@ -222,6 +222,11 @@ export const RecentActionKindDto = {
   ArmiesRemoved: 13,
   EventBonusGranted: 14,
   EffectExpired: 15,
+  AutoPassEnabled: 16,
+  DisconnectedToAutoPass: 17,
+  AutoPassDisabled: 18,
+  HostTransferred: 19,
+  AutoTurnPlayed: 20,
 } as const
 export type RecentActionKindDto = (typeof RecentActionKindDto)[keyof typeof RecentActionKindDto]
 
@@ -244,6 +249,8 @@ export interface RecentActionDto {
   eventId: string | null
   /** Het deel van `amount` bij `ReinforcementsGranted` dat uit een gebeurteniskaart komt; `null` als er geen is. */
   eventBonus: number | null
+  /** Alleen bij `AutoTurnPlayed`: of de server in die automatische beurt verplicht kaarten inlegde. */
+  cardsTradedInTurn: boolean
 }
 
 /** Spiegelt RiskGame.Api.Dtos.EventSummaryDto. */

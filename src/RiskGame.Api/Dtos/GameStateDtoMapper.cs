@@ -49,6 +49,7 @@ public static class GameStateDtoMapper
                 AttackGuards.DefenseBoostAvailable(state, player.Id),
                 player.IsHost,
                 player.IsEliminated,
+            player.IsAutoPass,
                 player.Hand.Select(ToDto).ToArray(),
                 CardSetEvaluator.HasTradeableSet(state.Map.SetRules, player.Hand),
                 player.Hand.Count,
@@ -203,7 +204,8 @@ public static class GameStateDtoMapper
             action.AttackerLosses,
             action.DefenderLosses,
             action.EventId,
-            action.EventBonus);
+            action.EventBonus,
+            action.CardsTradedInTurn);
 
     private static RecentActionKindDto ToDto(RecentActionKind kind) => kind switch
     {
@@ -223,6 +225,11 @@ public static class GameStateDtoMapper
         RecentActionKind.ArmiesRemoved => RecentActionKindDto.ArmiesRemoved,
         RecentActionKind.EventBonusGranted => RecentActionKindDto.EventBonusGranted,
         RecentActionKind.EffectExpired => RecentActionKindDto.EffectExpired,
+        RecentActionKind.AutoPassEnabled => RecentActionKindDto.AutoPassEnabled,
+        RecentActionKind.DisconnectedToAutoPass => RecentActionKindDto.DisconnectedToAutoPass,
+        RecentActionKind.AutoPassDisabled => RecentActionKindDto.AutoPassDisabled,
+        RecentActionKind.HostTransferred => RecentActionKindDto.HostTransferred,
+        RecentActionKind.AutoTurnPlayed => RecentActionKindDto.AutoTurnPlayed,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Onbekende verloop-actie."),
     };
 

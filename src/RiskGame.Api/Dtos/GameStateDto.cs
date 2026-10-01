@@ -150,7 +150,8 @@ public sealed record RecentActionDto(
     int? AttackerLosses,
     int? DefenderLosses,
     string? EventId,
-    int? EventBonus);
+    int? EventBonus,
+    bool CardsTradedInTurn);
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.State.RecentActionKind"/>.</summary>
 public enum RecentActionKindDto
@@ -171,6 +172,11 @@ public enum RecentActionKindDto
     ArmiesRemoved,
     EventBonusGranted,
     EffectExpired,
+    AutoPassEnabled,
+    DisconnectedToAutoPass,
+    AutoPassDisabled,
+    HostTransferred,
+    AutoTurnPlayed,
 }
 
 /// <summary>Draad-representatie van <see cref="RiskGame.Rules.Effects.EffectDuration"/>.</summary>
