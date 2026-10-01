@@ -414,6 +414,7 @@ public sealed class GameHub(
         {
             await Clients.Group(GameGroups.All(gameId)).DiceRolled(
                 new DiceRolledMessage(playerId, result.Value.AttackerRolls, "attack", result.Value.CorrelationId));
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -435,42 +436,18 @@ public sealed class GameHub(
 
         if (result.IsSuccess)
         {
-            await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
-                playerId,
-                result.Value.DefenderRolls,
-                result.Value.DefenseBoostUsed ? "defenseBoost" : "defense",
-                result.Value.CorrelationId));
-
-            await using var versionSession = store.QuerySession();
-
-            await Clients.Group(GameGroups.All(gameId)).CombatNarrated(new CombatNarratedMessage(
-                result.Value.CorrelationId,
-                result.Value.AttackerId,
-                result.Value.DefenderId,
-                result.Value.FromTerritoryId,
-                result.Value.ToTerritoryId,
-                result.Value.AttackerLosses,
-                result.Value.DefenderLosses,
-                result.Value.Conquered,
-                result.Value.EliminatedPlayerId,
-                await FetchStateVersionAsync(versionSession, gameId)));
-
-            if (result.Value.State.Winners.Count > 0)
-            {
-                await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(
-                    result.Value.State.Winners, await FetchStateVersionAsync(versionSession, gameId)));
-            }
+            await NarrateCombatAsync(gameId, result.Value.Combat, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
             gameId,
             result,
             combatResult => new CombatResultResponse(
-                combatResult.AttackerRolls,
-                combatResult.DefenderRolls,
-                combatResult.AttackerLosses,
-                combatResult.DefenderLosses,
-                combatResult.Conquered,
+                combatResult.Combat.AttackerRolls,
+                combatResult.Combat.DefenderRolls,
+                combatResult.Combat.AttackerLosses,
+                combatResult.Combat.DefenderLosses,
+                combatResult.Combat.Conquered,
                 combatResult.State),
             r => r.State,
             (r, s) => r with { State = s },
@@ -494,6 +471,7 @@ public sealed class GameHub(
                 result.Value.PreviousRolls,
                 result.Value.RerolledDieIndex,
                 result.Value.NewValue));
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
         }
 
         return await UnwrapAndBroadcastAsync(
@@ -512,8 +490,51 @@ public sealed class GameHub(
     {
         var result = await attackCommands.KeepAttackDiceAsync(gameId, playerId);
 
-        return await UnwrapAndBroadcastAsync(gameId, result, state => state, state => state, (_, s) => s, _ => playerId);
+        if (result.IsSuccess)
+        {
+            await NarrateAutoDefenseAsync(gameId, result.Value.AutoDefense, result.Value.State);
+        }
+
+        return await UnwrapAndBroadcastAsync(
+            gameId, result, keepResult => keepResult.State, state => state, (_, s) => s, _ => playerId);
     }
+
+    /// <summary>
+    /// De narratieve broadcast van een afgehandeld gevecht (FO §5.3 stap 5): de verdedigingsworp,
+    /// de uitkomst en zo nodig de winnaar. Na een eigen keuze van de verdediger én na een
+    /// automatische verdediging (FO §11.2), zodat de TV beide hetzelfde toont.
+    /// </summary>
+    private async Task NarrateCombatAsync(string gameId, DefenseResolution combat, GameStateDto state)
+    {
+        await Clients.Group(GameGroups.All(gameId)).DiceRolled(new DiceRolledMessage(
+            combat.DefenderId,
+            combat.DefenderRolls,
+            combat.DefenseBoostUsed ? "defenseBoost" : "defense",
+            combat.CorrelationId));
+
+        await using var versionSession = store.QuerySession();
+        var stateVersion = await FetchStateVersionAsync(versionSession, gameId);
+
+        await Clients.Group(GameGroups.All(gameId)).CombatNarrated(new CombatNarratedMessage(
+            combat.CorrelationId,
+            combat.AttackerId,
+            combat.DefenderId,
+            combat.FromTerritoryId,
+            combat.ToTerritoryId,
+            combat.AttackerLosses,
+            combat.DefenderLosses,
+            combat.Conquered,
+            combat.EliminatedPlayerId,
+            stateVersion));
+
+        if (state.Winners.Count > 0)
+        {
+            await Clients.Group(GameGroups.All(gameId)).GameWon(new GameWonMessage(state.Winners, stateVersion));
+        }
+    }
+
+    private Task NarrateAutoDefenseAsync(string gameId, DefenseResolution? autoDefense, GameStateDto state) =>
+        autoDefense is null ? Task.CompletedTask : NarrateCombatAsync(gameId, autoDefense, state);
 
     public async Task<GameStateDto> MoveAfterConquest(string gameId, string playerId, int armiesToMove)
     {

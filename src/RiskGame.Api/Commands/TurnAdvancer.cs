@@ -20,7 +20,10 @@ namespace RiskGame.Api.Commands;
 /// <remarks>
 /// Appendt alleen; opslaan doet de aanroeper, in dezelfde sessie als zijn eigen events. Rekent elke
 /// volgende stap op de state zoals de projectie hem op dat moment ziet (<see cref="GameProjection"/>
-/// in het geheugen), net als <see cref="EventRoundStep"/>.
+/// in het geheugen), net als <see cref="EventRoundStep"/>. De automatische keten is recursief
+/// (<see cref="StartTurn"/> → <c>PlayAutomaticTurn</c> → <c>EndTurn</c> → <see cref="StartTurn"/>) en
+/// eindigt bij de eerste speler zonder auto-pass, bij <c>GameWon</c>, of bij een attrition-keuze die
+/// op een mens wacht — hooguit één ronde diep.
 /// </remarks>
 public sealed class TurnAdvancer(GameProjection projection, EventRoundStep eventRound, TimeProvider timeProvider)
 {
@@ -97,8 +100,10 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
         var ownTurnPlayerId = isOwnTurn ? playerId : null;
         var directWinners = WinConditionEvaluator.DirectWinners(state, ownTurnPlayerId);
 
-        var turnEnded = new TurnEnded(gameId, playerId);
-        session.Events.Append(gameId, turnEnded);
+        // Vanaf hier rekent elke stap op de state zoals de projectie hem ziet, inclusief de net
+        // ge-appende venster-events: de automatische keten beoordeelt het laatste-kans-venster bij
+        // het volgende beurteinde opnieuw, en mag dat niet op een verouderd venster doen.
+        var projected = ProjectedAppend.Emit(session, state, new TurnEnded(gameId, playerId), projection.Apply);
 
         if (directWinners.Count > 0)
         {
@@ -106,26 +111,24 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
             return ValidationResult.Success();
         }
 
-        if (ResolveLastChance(session, state, playerId, ownTurnPlayerId) is { } winners)
+        (projected, var winners) = ResolveLastChance(session, projected, playerId, ownTurnPlayerId);
+
+        if (winners is not null)
         {
             session.Events.Append(gameId, new GameWon(gameId, winners));
             return ValidationResult.Success();
         }
 
-        var nextPlayerId = TurnOrderCalculator.NextActivePlayerId(state);
+        var nextPlayerId = TurnOrderCalculator.NextActivePlayerId(projected);
 
         if (nextPlayerId is null)
         {
             return ValidationResult.Failure("turnFlow.noNextPlayer");
         }
 
-        // Voor de ínkomende speler rekenen, niet voor de uitgaande, en op de state zoals de
-        // projectie hem straks ziet: na TurnEnded en na een eventuele gebeurtenisronde, zodat
-        // een net getrokken bonus in ArmiesGranted meetelt (FO §9.2). CardDrawn en de
-        // laatste-kans-events hierboven raken de versterkingen niet.
-        var projected = projection.Apply(state, turnEnded);
-
-        if (EventRoundCalculator.DrawsEventCard(state, nextPlayerId))
+        // De versterkingen van de inkomende speler worden berekend op de state na een eventuele
+        // gebeurtenisronde, zodat een net getrokken bonus in ArmiesGranted meetelt (FO §9.2).
+        if (EventRoundCalculator.DrawsEventCard(projected, nextPlayerId))
         {
             var outcome = eventRound.Resolve(session, projected, nextPlayerId);
 
@@ -143,10 +146,12 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
     }
 
     /// <summary>
-    /// Het laatste-kans-venster bij een beurteinde (FO §6.2, TO §5.2). Levert de winnaar(s) op als
-    /// het spel daarmee gewonnen is, anders <c>null</c> (en zijn de venster-events al ge-appendt).
+    /// Het laatste-kans-venster bij een beurteinde (FO §6.2, TO §5.2). Levert de state na de
+    /// venster-events op, en de winnaar(s) als het spel daarmee gewonnen is (anders <c>null</c>).
+    /// <paramref name="state"/> is de state direct na <c>TurnEnded</c>; die vouwregel raakt niets
+    /// waar een missie naar kijkt.
     /// </summary>
-    private static IReadOnlyList<string>? ResolveLastChance(
+    private (GameState State, IReadOnlyList<string>? Winners) ResolveLastChance(
         IDocumentSession session, GameState state, string playerId, string? ownTurnPlayerId)
     {
         var gameId = state.GameId;
@@ -158,9 +163,8 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
             // Doorbroken tijdens een laatste-kans-beurt: het venster vervalt.
             if (pendingWin.RemainingPlayerIds.Contains(playerId) && !holds)
             {
-                session.Events.Append(
-                    gameId, new PendingWinBroken(gameId, pendingWin.AchieverPlayerId, pendingWin.MissionId, playerId));
-                return null;
+                return (ProjectedAppend.Emit(
+                    session, state, new PendingWinBroken(gameId, pendingWin.AchieverPlayerId, pendingWin.MissionId, playerId), projection.Apply), null);
             }
 
             // Bij élk beurteinde opnieuw bepaald: wie tijdens het venster op auto-pass ging of werd
@@ -171,28 +175,30 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
             {
                 if (holds)
                 {
-                    return [pendingWin.AchieverPlayerId];
+                    return (state, [pendingWin.AchieverPlayerId]);
                 }
 
-                session.Events.Append(
-                    gameId, new PendingWinBroken(gameId, pendingWin.AchieverPlayerId, pendingWin.MissionId, playerId));
-                return null;
+                // Niemand meer om een laatste kans te geven en de missie geldt niet meer: het venster
+                // vervalt. Deze beurt was geen laatste-kans-beurt (die tak staat hierboven), dus er is
+                // geen aanwijsbare dader.
+                return (ProjectedAppend.Emit(
+                    session,
+                    state,
+                    new PendingWinBroken(gameId, pendingWin.AchieverPlayerId, pendingWin.MissionId, BrokenByPlayerId: null),
+                    projection.Apply), null);
             }
 
-            if (remaining.Count < pendingWin.RemainingPlayerIds.Count)
-            {
-                session.Events.Append(
-                    gameId, new PendingWinNarrowed(gameId, pendingWin.AchieverPlayerId, playerId, remaining));
-            }
-
-            return null;
+            return remaining.Count < pendingWin.RemainingPlayerIds.Count
+                ? (ProjectedAppend.Emit(
+                    session, state, new PendingWinNarrowed(gameId, pendingWin.AchieverPlayerId, playerId, remaining), projection.Apply), null)
+                : (state, null);
         }
 
         var lastChanceWinners = WinConditionEvaluator.LastChanceEligibleWinners(state, ownTurnPlayerId);
 
         if (lastChanceWinners.Count == 0)
         {
-            return null;
+            return (state, null);
         }
 
         // Vereenvoudiging (FO §6.2): vervullen meerdere spelers in dezelfde beurt tegelijk
@@ -205,13 +211,14 @@ public sealed class TurnAdvancer(GameProjection projection, EventRoundStep event
         // kans te geven en wint de missiehouder meteen (FO §6.2).
         if (opponents.Count == 0)
         {
-            return [achieverId];
+            return (state, [achieverId]);
         }
 
-        session.Events.Append(
-            gameId, new PendingWinOpened(gameId, achieverId, state.Player(achieverId).Mission!.Id, opponents));
-
-        return null;
+        return (ProjectedAppend.Emit(
+            session,
+            state,
+            new PendingWinOpened(gameId, achieverId, state.Player(achieverId).Mission!.Id, opponents),
+            projection.Apply), null);
     }
 
     /// <summary>

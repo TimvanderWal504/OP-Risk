@@ -122,11 +122,14 @@ public sealed partial class GameProjection
     private static GameState Record(GameState state, PendingWinOpened @event) =>
         Append(state, new RecentAction(RecentActionKind.LastChanceOpened, PlayerId: @event.AchieverPlayerId));
 
+    /// <summary>Zonder dader (zie <see cref="PendingWinBroken.BrokenByPlayerId"/>) vervalt het venster zonder regel.</summary>
     private static GameState Record(GameState state, PendingWinBroken @event) =>
-        Append(state, new RecentAction(
-            RecentActionKind.LastChanceBroken,
-            PlayerId: @event.BrokenByPlayerId,
-            OtherPlayerId: @event.AchieverPlayerId));
+        @event.BrokenByPlayerId is null
+            ? state
+            : Append(state, new RecentAction(
+                RecentActionKind.LastChanceBroken,
+                PlayerId: @event.BrokenByPlayerId,
+                OtherPlayerId: @event.AchieverPlayerId));
 
     private static GameState RecordPlacement(GameState state, string playerId, string territoryId, int amount) =>
         Append(state, new RecentAction(

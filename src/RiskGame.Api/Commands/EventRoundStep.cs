@@ -64,8 +64,9 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
 
     /// <summary>
     /// Wie precies zoveel of meer kan afstaan dan gevraagd, kiest zelf (FO §9.2, ook bij precies
-    /// genoeg); de rest staat automatisch zijn maximum af. Spelers in beurtvolgorde, zodat de
-    /// wachtlijst een vaste volgorde heeft.
+    /// genoeg); de rest staat automatisch zijn maximum af. Voor een speler op auto-pass kiest de
+    /// server meteen (FO §11.2, <see cref="ArmyAttritionCalculator.AutoPassRemovals"/>). Spelers in
+    /// beurtvolgorde, zodat de wachtlijst een vaste volgorde heeft.
     /// </summary>
     private EventRoundOutcome StartAttrition(
         IDocumentSession session, GameState state, string eventId, int amount, string nextPlayerId)
@@ -76,6 +77,13 @@ public sealed class EventRoundStep(GameProjection projection, IRandomSource rand
 
         foreach (var playerId in participantIds)
         {
+            if (state.Player(playerId).IsAutoPass)
+            {
+                var chosen = ArmyAttritionCalculator.AutoPassRemovals(state, playerId, amount);
+                state = ProjectedAppend.Emit(session, state, new ArmiesRemoved(gameId, playerId, chosen), projection.Apply);
+                continue;
+            }
+
             if (ArmyAttritionCalculator.HasChoice(state, playerId, amount))
             {
                 choosers.Add(playerId);

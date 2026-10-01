@@ -6,6 +6,7 @@ using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Map;
 using RiskGame.Rules.Abstractions;
 using RiskGame.Rules.Map;
+using RiskGame.Rules.Reinforcement;
 using RiskGame.Rules.State;
 
 namespace RiskGame.Api.Tests;
@@ -45,7 +46,10 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         MissionWinTiming missionWinTiming = MissionWinTiming.EndOfTurn,
         string? p3MissionId = null,
         PendingWin? pendingWin = null,
-        Func<MapDefinition, IReadOnlyList<Card>>? p2Hand = null)
+        Func<MapDefinition, IReadOnlyList<Card>>? p2Hand = null,
+        IReadOnlyDictionary<string, int>? armies = null,
+        IReadOnlyDictionary<string, string>? owners = null,
+        string? p2MissionId = null)
     {
         var gameId = $"game-{Guid.NewGuid()}";
         var map = factory.Services.GetRequiredService<IMapDefinitionSource>().Load("standaard-43");
@@ -70,8 +74,9 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         var territories = map.Territories
             .Select(territory => new TerritoryOwnership(
                 territory.Id,
-                NorthAmerica.Contains(territory.Id) ? "p1" : SouthAmerica.Contains(territory.Id) ? "p2" : "p3",
-                ArmyCount: 1))
+                owners?.GetValueOrDefault(territory.Id)
+                    ?? (NorthAmerica.Contains(territory.Id) ? "p1" : SouthAmerica.Contains(territory.Id) ? "p2" : "p3"),
+                ArmyCount: armies?.GetValueOrDefault(territory.Id, 1) ?? 1))
             .ToArray();
 
         var state = new GameState(
@@ -82,7 +87,7 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
             players:
             [
                 PlayerFor("p1", "Alice", "red", [], null),
-                PlayerFor("p2", "Bob", "blue", p2Hand?.Invoke(map) ?? [], null),
+                PlayerFor("p2", "Bob", "blue", p2Hand?.Invoke(map) ?? [], p2MissionId),
                 PlayerFor("p3", "Carol", "green", [], p3MissionId),
             ],
             territories,
@@ -141,6 +146,8 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         await using var connection = await ApiTestHost.ConnectAsync(factory, client);
 
         var gameId = await SetUpAsync(factory, autoPassPlayerIds: ["p2", "p3"]);
+        var before = await LoadAsync(factory, gameId);
+        var p3Reinforcement = ReinforcementCalculator.CalculateArmies(before, "p3");
 
         await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
 
@@ -148,7 +155,9 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         Assert.Equal("p1", state.TurnState!.ActivePlayerId);
         Assert.Equal(TurnPhase.Reinforce, state.TurnState.TurnPhase);
         Assert.Equal(3, Armies(state, "venezuela"));
-        Assert.True(state.TerritoriesOf("p3").Sum(territory => territory.ArmyCount) > 30);
+        Assert.Equal(
+            before.TerritoriesOf("p3").Sum(territory => territory.ArmyCount) + p3Reinforcement,
+            state.TerritoriesOf("p3").Sum(territory => territory.ArmyCount));
     }
 
     /// <summary>FO §11.2: bij 5 of meer kaarten legt de server in, anders dan bij een verlopen timer.</summary>
@@ -266,5 +275,105 @@ public sealed class GameHubAutoPassTurnTests(PostgresFixture postgres)
         var state = await LoadAsync(factory, gameId);
         Assert.Equal(GamePhase.InProgress, state.Phase);
         Assert.Equal(["p1", "p2"], state.PendingWin!.RemainingPlayerIds);
+    }
+
+    /// <summary>
+    /// FO §9.2/§11.2: bij een legerverlies-kaart kiest de server meteen voor de speler op auto-pass
+    /// (telkens 1 van de grootste stapel); alleen de mens met keuzevrijheid komt op de wachtlijst.
+    /// Na diens keuze speelt de server de beurt van de auto-pass-speler en is de mens aan de beurt.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_LegerverliesKaart_KiestMeteenVoorDeAutoPassSpelerEnWachtAlleenOpDeMens()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ApiTestHost.ConnectAsync(factory, client);
+
+        var gameId = await SetUpAsync(
+            factory,
+            activePlayerId: "p3",
+            autoPassPlayerIds: ["p1"],
+            eventsEnabled: true,
+            eventDrawPile: ["griepgolf"],
+            armies: new Dictionary<string, int> { ["alaska"] = 6, ["venezuela"] = 5 });
+
+        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p3");
+
+        var waiting = await LoadAsync(factory, gameId);
+        Assert.Equal(4, Armies(waiting, "alaska"));
+        Assert.Equal(["p2"], waiting.EventRound.PendingAttrition!.ChooserPlayerIds);
+        Assert.Null(waiting.TurnState);
+
+        await connection.InvokeAsync<GameStateDto>(
+            "RemoveArmies", gameId, "p2", new Dictionary<string, int> { ["venezuela"] = 2 });
+
+        var state = await LoadAsync(factory, gameId);
+        Assert.Null(state.EventRound.PendingAttrition);
+        Assert.Equal("p2", state.TurnState!.ActivePlayerId);
+        Assert.Equal(TurnPhase.Reinforce, state.TurnState.TurnPhase);
+    }
+
+    /// <summary>
+    /// FO §6.1/§11.2: een auto-pass-speler kan op zijn eigen plek winnen met een missie zonder
+    /// <c>requiresOwnTurn</c>; de automatische keten stopt dan en start geen volgende beurt.
+    /// Bob bezit 18 gebieden, alle met 2 legers behalve Venezuela (1) — zijn automatische
+    /// versterking maakt "18 gebieden met elk ≥ 2 legers" waar.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_AutoPassSpelerVervultZijnMissieInZijnAutomatischeBeurt_Wint()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ApiTestHost.ConnectAsync(factory, client);
+
+        string[] bobsTerritories =
+        [
+            "venezuela", "peru", "brazil", "argentina",
+            "north-africa", "egypt", "east-africa", "congo", "south-africa", "madagascar",
+            "iceland", "great-britain", "scandinavia", "western-europe", "northern-europe", "southern-europe", "ukraine",
+            "middle-east",
+        ];
+
+        var gameId = await SetUpAsync(
+            factory,
+            autoPassPlayerIds: ["p2"],
+            p2MissionId: "territory-18-min2",
+            owners: bobsTerritories.ToDictionary(id => id, _ => "p2"),
+            armies: bobsTerritories.Where(id => id != "venezuela").ToDictionary(id => id, _ => 2));
+
+        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var state = await LoadAsync(factory, gameId);
+        Assert.Equal(GamePhase.Finished, state.Phase);
+        Assert.Equal(["p2"], state.Winners);
+        Assert.True(Armies(state, "venezuela") >= 2);
+    }
+
+    /// <summary>
+    /// FO §6.2/§11.2: staat de laatste resterende tegenstander op auto-pass en geldt de missie niet
+    /// meer, dan vervalt het venster zonder aanwijsbare dader — zonder verloopregel.
+    /// </summary>
+    [Fact]
+    public async Task EndTurn_VensterZonderResterendeSpelersEnMissieGeldtNietMeer_VervaltZonderDader()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ApiTestHost.ConnectAsync(factory, client);
+
+        // Carol bezit Azië maar niet Zuid-Amerika: haar missie geldt niet. Alice stond niet (meer) in
+        // het venster; Bob wel, maar staat op auto-pass.
+        var gameId = await SetUpAsync(
+            factory,
+            autoPassPlayerIds: ["p2"],
+            missionWinTiming: MissionWinTiming.StartOfNextTurn,
+            p3MissionId: "conquer-asia-south-america",
+            pendingWin: new PendingWin("p3", "conquer-asia-south-america", ["p2"]));
+
+        await connection.InvokeAsync<GameStateDto>("EndTurn", gameId, "p1");
+
+        var state = await LoadAsync(factory, gameId);
+        Assert.Equal(GamePhase.InProgress, state.Phase);
+        Assert.Null(state.PendingWin);
+        Assert.DoesNotContain(state.RecentActions, action => action.Kind == RecentActionKind.LastChanceBroken);
     }
 }

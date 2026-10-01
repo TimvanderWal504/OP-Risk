@@ -1,7 +1,9 @@
 using Marten;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
+using RiskGame.Persistence.Projections;
 using RiskGame.Rules.Abstractions;
+using RiskGame.Rules.AutoPass;
 using RiskGame.Rules.Combat;
 using RiskGame.Rules.Missions;
 using RiskGame.Rules.Results;
@@ -10,17 +12,28 @@ using RiskGame.Rules.Validation;
 
 namespace RiskGame.Api.Commands;
 
-public sealed record DeclareAttackResult(IReadOnlyList<int> AttackerRolls, Guid CorrelationId, GameStateDto State);
+/// <param name="AutoDefense">
+/// Het al afgehandelde gevecht als de verdediger op auto-pass staat en er geen herwerp-keuze open
+/// staat (FO §11.2); <c>null</c> als het gevecht nog op de verdediger wacht.
+/// </param>
+public sealed record DeclareAttackResult(
+    IReadOnlyList<int> AttackerRolls, Guid CorrelationId, DefenseResolution? AutoDefense, GameStateDto State);
 
+/// <param name="AutoDefense">Zie <see cref="DeclareAttackResult.AutoDefense"/>.</param>
 public sealed record RerollAttackDieResult(
     IReadOnlyList<int> PreviousRolls,
     int RerolledDieIndex,
     int NewValue,
     IReadOnlyList<int> Rolls,
     Guid CorrelationId,
+    DefenseResolution? AutoDefense,
     GameStateDto State);
 
-public sealed record ChooseDefenseDiceResult(
+/// <param name="AutoDefense">Zie <see cref="DeclareAttackResult.AutoDefense"/>.</param>
+public sealed record KeepAttackDiceResult(DefenseResolution? AutoDefense, GameStateDto State);
+
+/// <summary>De uitkomst van één verdedigingsworp (FO §5.3 stap 4–6), voor de narratieve broadcast.</summary>
+public sealed record DefenseResolution(
     IReadOnlyList<int> AttackerRolls,
     IReadOnlyList<int> DefenderRolls,
     int AttackerLosses,
@@ -32,17 +45,21 @@ public sealed record ChooseDefenseDiceResult(
     string ToTerritoryId,
     string? EliminatedPlayerId,
     bool DefenseBoostUsed,
-    Guid CorrelationId,
-    GameStateDto State);
+    Guid CorrelationId);
+
+public sealed record ChooseDefenseDiceResult(DefenseResolution Combat, GameStateDto State);
 
 /// <summary>
 /// Voert de TO §4-pijplijn uit voor <c>DeclareAttack</c>, <c>ChooseDefenseDice</c> en
 /// <c>MoveAfterConquest</c> (FO §5.3). De rules-engine (<see cref="AttackGuards"/>,
 /// <see cref="CombatResolver"/>, <see cref="ConquestResolution"/>) bestond al; deze
 /// handler rijgt ze aan elkaar, net als <see cref="ReinforceCommandHandler"/> dat deed
-/// voor Versterken.
+/// voor Versterken. Staat de verdediger op auto-pass (FO §11.2), dan verdedigt de server in
+/// hetzelfde commando dat het gevecht bij de verdediger legt (<c>DeclareAttack</c>, of het sluiten
+/// van de herwerp-stap), met <see cref="AutoPassPlanner.DefenseDice"/>.
 /// </summary>
-public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource random, TimeProvider timeProvider)
+public sealed class AttackCommandHandler(
+    IDocumentStore store, IRandomSource random, TimeProvider timeProvider, GameProjection projection)
 {
     public async Task<Result<DeclareAttackResult>> DeclareAttackAsync(
         string gameId, string playerId, string fromTerritoryId, string toTerritoryId, int attackDice)
@@ -89,18 +106,23 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var awaitingRerollDecision = AttackGuards.RerollAvailable(state, playerId, toTerritoryId);
 
         session.Events.Append(gameId, new DiceRolled(gameId, playerId, attackerRolls));
-        session.Events.Append(
-            gameId,
+        var declared = ProjectedAppend.Emit(
+            session,
+            state,
             new AttackDeclared(
                 gameId, playerId, fromTerritoryId, toTerritoryId, attackDice,
-                attackerRolls, awaitingRerollDecision, remaining, now, correlationId));
+                attackerRolls, awaitingRerollDecision, remaining, now, correlationId),
+            projection.Apply);
+
+        var autoDefense = DefendIfAutoPass(session, declared);
 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<DeclareAttackResult>.Success(new DeclareAttackResult(attackerRolls, correlationId, updatedDto));
+        return Result<DeclareAttackResult>.Success(
+            new DeclareAttackResult(attackerRolls, correlationId, autoDefense, updatedDto));
     }
 
     /// <summary>
@@ -132,8 +154,14 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var rerollResult = CombatResolver.RerollDie(previousRolls, dieIndex, random);
         var newValue = rerollResult.Rolls[rerollResult.NewDieIndex];
 
-        session.Events.Append(gameId, new AttackDieRerolled(
-            gameId, playerId, pendingCombat.ToTerritoryId, previousRolls, dieIndex, newValue, rerollResult.Rolls));
+        var rerolled = ProjectedAppend.Emit(
+            session,
+            state,
+            new AttackDieRerolled(
+                gameId, playerId, pendingCombat.ToTerritoryId, previousRolls, dieIndex, newValue, rerollResult.Rolls),
+            projection.Apply);
+
+        var autoDefense = DefendIfAutoPass(session, rerolled);
 
         await session.SaveChangesAsync();
 
@@ -141,7 +169,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
         return Result<RerollAttackDieResult>.Success(new RerollAttackDieResult(
-            previousRolls, dieIndex, newValue, rerollResult.Rolls, pendingCombat.CorrelationId, updatedDto));
+            previousRolls, dieIndex, newValue, rerollResult.Rolls, pendingCombat.CorrelationId, autoDefense, updatedDto));
     }
 
     /// <summary>
@@ -149,31 +177,37 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
     /// zonder te herwerpen. Verbruikt het beschikbare herwerp voor dit doelgebied niet — alleen
     /// het daadwerkelijk drukken op "Herwerp" doet dat (<see cref="RerollAttackDieAsync"/>).
     /// </summary>
-    public async Task<Result<GameStateDto>> KeepAttackDiceAsync(string gameId, string playerId)
+    public async Task<Result<KeepAttackDiceResult>> KeepAttackDiceAsync(string gameId, string playerId)
     {
         await using var session = store.LightweightSession();
         var state = await session.LoadAsync<GameState>(gameId);
 
         if (state is null)
         {
-            return Result<GameStateDto>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
+            return Result<KeepAttackDiceResult>.Failure("common.unknownGame", new Dictionary<string, string> { ["gameId"] = gameId });
         }
 
         var validation = AttackGuards.CanKeepAttackDice(state, playerId);
 
         if (!validation.IsSuccess)
         {
-            return Result<GameStateDto>.Failure(validation.Errors);
+            return Result<KeepAttackDiceResult>.Failure(validation.Errors);
         }
 
-        session.Events.Append(gameId, new AttackDiceKept(gameId, playerId, state.TurnState!.PendingCombat!.ToTerritoryId));
+        var kept = ProjectedAppend.Emit(
+            session,
+            state,
+            new AttackDiceKept(gameId, playerId, state.TurnState!.PendingCombat!.ToTerritoryId),
+            projection.Apply);
+
+        var autoDefense = DefendIfAutoPass(session, kept);
 
         await session.SaveChangesAsync();
 
         var updated = await session.LoadAsync<GameState>(gameId);
         var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
 
-        return Result<GameStateDto>.Success(updatedDto);
+        return Result<KeepAttackDiceResult>.Success(new KeepAttackDiceResult(autoDefense, updatedDto));
     }
 
     /// <param name="useDefenseBoost">
@@ -198,6 +232,45 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
         {
             return Result<ChooseDefenseDiceResult>.Failure(validation.Errors);
         }
+
+        var combat = ResolveDefense(session, state, playerId, defenseDice);
+
+        await session.SaveChangesAsync();
+
+        var updated = await session.LoadAsync<GameState>(gameId);
+        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
+
+        return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(combat, updatedDto));
+    }
+
+    /// <summary>
+    /// Verdedigt meteen voor een verdediger op auto-pass (FO §11.2), zodra het gevecht bij hem ligt:
+    /// er loopt een gevecht en de aanvaller heeft geen herwerp-keuze meer open. Anders <c>null</c>.
+    /// <paramref name="state"/> is de state na het event dat het gevecht bij de verdediger legde.
+    /// </summary>
+    private DefenseResolution? DefendIfAutoPass(IDocumentSession session, GameState state)
+    {
+        if (state.TurnState?.PendingCombat is not { AwaitingRerollDecision: false } pendingCombat)
+        {
+            return null;
+        }
+
+        var defenderId = state.Territory(pendingCombat.ToTerritoryId).OwnerPlayerId!;
+
+        return state.Player(defenderId).IsAutoPass
+            ? ResolveDefense(session, state, defenderId, AutoPassPlanner.DefenseDice(state, defenderId))
+            : null;
+    }
+
+    /// <summary>
+    /// De verdedigingsworp en alles wat eruit volgt (FO §5.3 stap 4–6, §7): gevechtsuitkomst,
+    /// verovering, uitschakeling, fallback-missies en werelddominantie. Appendt alleen; opslaan doet
+    /// de aanroeper. De keuze is al gevalideerd: door <see cref="AttackGuards.CanChooseDefenseDice"/>,
+    /// of bij auto-pass door <see cref="AutoPassPlanner.DefenseDice"/>, die op dezelfde guard leunt.
+    /// </summary>
+    private DefenseResolution ResolveDefense(IDocumentSession session, GameState state, string playerId, int defenseDice)
+    {
+        var gameId = state.GameId;
 
         var defenseBoostUsed = AttackGuards.DefenseBoostRequired(state, defenseDice);
 
@@ -275,12 +348,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             }
         }
 
-        await session.SaveChangesAsync();
-
-        var updated = await session.LoadAsync<GameState>(gameId);
-        var updatedDto = GameStateDtoMapper.ToDto(updated!, timeProvider);
-
-        return Result<ChooseDefenseDiceResult>.Success(new ChooseDefenseDiceResult(
+        return new DefenseResolution(
             attackerRolls,
             defenderRolls,
             outcome.AttackerLosses,
@@ -292,8 +360,7 @@ public sealed class AttackCommandHandler(IDocumentStore store, IRandomSource ran
             pendingCombat.ToTerritoryId,
             eliminatedPlayerId,
             defenseBoostUsed,
-            pendingCombat.CorrelationId,
-            updatedDto));
+            pendingCombat.CorrelationId);
     }
 
     /// <summary>
