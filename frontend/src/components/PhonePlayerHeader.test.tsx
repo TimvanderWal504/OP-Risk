@@ -352,7 +352,7 @@ describe('PhonePlayerHeader', () => {
       { id: 'c3', territoryId: 'ontario', symbol: 'symbol-1' },
     ]
 
-    const stateWithPhase = (turnPhase: TurnPhaseDto) => ({
+    const stateWithPhase = (turnPhase: TurnPhaseDto, activePlayerId = fixtureState.players[0].id) => ({
       ...fixtureState,
       phase: GamePhaseDto.InProgress,
       players: [
@@ -360,7 +360,7 @@ describe('PhonePlayerHeader', () => {
         fixtureState.players[1],
       ],
       turnState: {
-        activePlayerId: 'bob',
+        activePlayerId,
         turnPhase,
         armiesRemaining: 0,
         pendingCombat: null,
@@ -396,6 +396,18 @@ describe('PhonePlayerHeader', () => {
       await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
 
       expect(screen.getByRole('button', { name: 'Leg 3 kaarten in' })).toBeInTheDocument()
+    })
+
+    it('verbergt de "Leg 3 kaarten in"-knop tijdens de Versterken-fase van een andere speler', async () => {
+      const state = stateWithPhase(TurnPhaseDto.Reinforce, fixtureState.players[1].id)
+
+      render(
+        <PhonePlayerHeader state={state} me={state.players[0]} phase={GamePhaseDto.InProgress} tradeInCards={vi.fn()} setTvDisplay={vi.fn()} skipTvHold={vi.fn()} setAutoPass={vi.fn()} loadActionLog={vi.fn()} />,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: /Mijn kaarten/ }))
+
+      expect(screen.queryByRole('button', { name: 'Leg 3 kaarten in' })).not.toBeInTheDocument()
     })
   })
 

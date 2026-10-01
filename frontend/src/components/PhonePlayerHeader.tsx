@@ -124,8 +124,10 @@ export function PhonePlayerHeader({
   // fase-check) — de Aanvallen-≥6-inleg (taak 6) loopt altijd via `mustTradeInCards`, nooit
   // vrijwillig. `PhonePlayerHeader` is op elk scherm gemount, dus zonder deze check zou de
   // "Leg 3 kaarten in"-knop hieronder ook buiten Versterken kunnen verschijnen (bv. een
-  // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken.
-  const canTradeVoluntarily = state.turnState?.turnPhase === TurnPhaseDto.Reinforce
+  // toevallig geldige set tijdens Verplaatsen) en een kansloze server-aanroep uitlokken. En alleen
+  // in de eigen beurt: tijdens de Versterken-fase van een ander weigert de server de inleg ook.
+  const canTradeVoluntarily =
+    state.turnState?.turnPhase === TurnPhaseDto.Reinforce && state.turnState.activePlayerId === me.id
 
   const actions: PlayerHeaderAction[] = [
     {
