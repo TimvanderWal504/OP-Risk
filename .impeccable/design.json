@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-29T12:00:00.000Z",
+  "generatedAt": "2026-10-01T12:00:00.000Z",
   "title": "Design System: Operatie Atlas",
   "extensions": {
     "colorMeta": {
@@ -202,6 +202,14 @@
       "description": "News, not a failure (first use: \"Gebeurteniskaart: Babyboom\" on the phone). Same opaque raised panel, place and timing as the error toast, with a silver-400 border and an \"i\" icon, text in the on-glass color, in a separate polite role=\"status\" region below the error region.",
       "html": "<div class=\"ds-toast-info\" role=\"status\"><p class=\"ds-toast-info-text\">Gebeurteniskaart: Babyboom</p><button class=\"ds-toast-info-close\" aria-label=\"Sluiten\">×</button></div>",
       "css": ".ds-toast-info { display: flex; align-items: flex-start; gap: 12px; border-radius: 16px; padding: 16px; background: #243246; border: 1px solid #9cb0ca; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.16); font-family: 'Gilroy', sans-serif; animation: phRise .3s both; } .ds-toast-info-text { flex: 1; margin: 0; color: #eef2f8; } .ds-toast-info-close { flex: none; margin: -8px; padding: 8px; background: none; border: 0; color: color-mix(in srgb, #eef2f8 90%, transparent); }"
+    },
+    {
+      "name": "Auto-pass Row Action",
+      "kind": "button",
+      "refersTo": "badge-silver-outline",
+      "description": "Host-only action at the right end of another player's Stand row (DESIGN.md § Auto-pass): the clickable form of the silver-outline badge, with a touch target of at least 44x44px and the --atlas-row-2 tonal fill when pressed. It opens a full-screen ModalShell confirmation one layer above Spelinfo.",
+      "html": "<button class=\"ds-autopass-action\" aria-label=\"Bob op auto-pass zetten\">Auto-pass</button>",
+      "css": ".ds-autopass-action { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 16px; border-radius: 9999px; border: 1px solid #4f607d; background: transparent; color: #9cb0ca; font-family: 'Gilroy', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; } .ds-autopass-action:active { background: rgba(255,255,255,.06); }"
     }
   ],
   "narrative": {
