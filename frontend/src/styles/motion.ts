@@ -162,11 +162,12 @@ export const tvAnimations = {
   /** C12 — rechterspelerspaneel en feed-strip framen in terwijl het bord blijft staan; feed start .06s later (L371/L407). */
   panelFrameIn: 'atlasFrameIn .5s cubic-bezier(.2,.7,.3,1) both',
   feedFrameIn: 'atlasFrameIn .5s .06s cubic-bezier(.2,.7,.3,1) both',
-  /** Verloop-ticker (plan-testronde-tv punt 4; besluit gebruiker 2026-09-29): een stilstaande rij
-   *  waar een nieuwe regel links binnenkomt. De rij schuift over de breedte van die regel naar
-   *  rechts en de regel vervaagt in. De afstand is gemeten, dus dit is de Web Animations API-timing
-   *  in plaats van een keyframe-string; duur en easing zijn die van `panelFrameIn`/`feedFrameIn`. */
-  tickerEnter: { durationMs: 500, easing: 'cubic-bezier(.2,.7,.3,1)' },
+  /** Verloop-ticker (plan-testronde-tv punt 4; besluiten gebruiker 2026-09-29 en 2026-10-01): een
+   *  stilstaande rij waar een nieuwe regel links binnenkomt. De rij schuift over de breedte van die
+   *  regel naar rechts; de regel zelf schuift zichtbaar mee, zonder invervagen. Rustig: 700ms met een
+   *  zachte ease-in-out — de eerdere 500ms met snelle start sprong er te hard in om te lezen. De
+   *  afstand is gemeten, dus dit is de Web Animations API-timing in plaats van een keyframe-string. */
+  tickerEnter: { durationMs: 700, easing: 'cubic-bezier(.4,0,.2,1)' },
   /** Fouttoast op de TV (2026-09-26, bewuste wijziging op verzoek): hij staat onderaan, boven de
    *  verlooprij, dus komt hij van onder binnen — `phRise`, net als de telefoon-`toastIn`.
    *  Alleen transform/opacity. */

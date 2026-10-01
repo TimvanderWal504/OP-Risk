@@ -15,12 +15,15 @@ export interface ActionTickerProps {
 
 /**
  * Het verloop op de TV (plan-testronde-tv punt 4, DESIGN.md § Action Ticker): de laatste acties
- * als één stilstaande rij, nieuwste links met een "Laatste"-kicker en oudere regels rechts ervan. Wat
- * rechts niet meer past, valt buiten beeld. De state levert er hoogstens `TvRecentActionCount` (10), nieuwste
+ * als één stilstaande rij, nieuwste links en oudere regels rechts ervan. Wat rechts niet meer past,
+ * valt buiten beeld. De "Laatste"-kicker staat vast vóór de rij, niet in de nieuwste regel: in de regel
+ * verhuisde hij bij elke nieuwe actie, en dan kromp de vorige regel in één frame en sprong de hele rij
+ * (besluit gebruiker 2026-10-01). De state levert er hoogstens `TvRecentActionCount` (10), nieuwste
  * eerst.
  *
  * Een nieuwe regel komt links binnen (besluit gebruiker 2026-09-29, eerder rechts): de rij schuift
- * over de breedte van de nieuwe regel(s) naar rechts en de nieuwe regel vervaagt in (`tickerEnter`). Alleen
+ * rustig over de breedte van de nieuwe regel(s) naar rechts (`tickerEnter`), en de nieuwe regel schuift
+ * zichtbaar mee onder de kicker vandaan — geen invervagen, het bericht komt binnen (2026-10-01). Alleen
  * als het volgnummer van de bovenste regel verandert: niet bij het eerste renderen of een
  * reconnect, en niet bij een regel die alleen bijwerkt (een volgende plaatsing op hetzelfde gebied,
  * een belegering die een verovering wordt — die houden hun volgnummer). Komt er een nieuwe regel
@@ -62,7 +65,6 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
       [{ transform: `translateX(${stillToTravel - enteringWidth}px)` }, { transform: 'none' }],
       { duration: durationMs, easing },
     )
-    entering.forEach((item) => item.animate([{ opacity: 0 }, { opacity: 1 }], { duration: durationMs, easing }))
   }, [headSequence])
 
   if (headSequence === undefined) return null
@@ -78,28 +80,33 @@ export function ActionTicker({ state, className }: ActionTickerProps) {
       <div className="mb-2 font-body text-label font-extrabold uppercase tracking-[.1em] text-fg-muted">
         {t('title')}
       </div>
-      <div className="min-w-0 overflow-hidden">
-        <div ref={rowRef} data-testid="action-ticker-row" className="flex gap-3">
-          {newestFirst.map((action) => {
-            const { actor, color } = actionActor(action, state)
+      <div className="flex min-w-0 items-center gap-3">
+        {/* De rij hieronder knipt links af tegen de kicker, dus een nieuwe regel schuift er onderuit. */}
+        <div className="flex-none">
+          <Badge>{t('latest')}</Badge>
+        </div>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div ref={rowRef} data-testid="action-ticker-row" className="flex gap-3">
+            {newestFirst.map((action) => {
+              const { actor, color } = actionActor(action, state)
 
-            return (
-              <div
-                key={action.sequence}
-                data-sequence={action.sequence}
-                data-testid="action-ticker-item"
-                className="flex flex-none items-center gap-[11px] rounded-xl border px-[13px] py-[11px]"
-                style={{ background: 'var(--atlas-row)', borderColor: 'var(--border)' }}
-              >
-                {action.sequence === headSequence && <Badge>{t('latest')}</Badge>}
-                <ColorAvatar color={color} variant="row" />
-                <span className="whitespace-nowrap font-body text-h3 leading-[1.25] text-fg">
-                  {actor && <b className="font-extrabold">{actor.name} </b>}
-                  {actionSentence(action, state, t)}
-                </span>
-              </div>
-            )
-          })}
+              return (
+                <div
+                  key={action.sequence}
+                  data-sequence={action.sequence}
+                  data-testid="action-ticker-item"
+                  className="flex flex-none items-center gap-[11px] rounded-xl border px-[13px] py-[11px]"
+                  style={{ background: 'var(--atlas-row)', borderColor: 'var(--border)' }}
+                >
+                  <ColorAvatar color={color} variant="row" />
+                  <span className="whitespace-nowrap font-body text-h3 leading-[1.25] text-fg">
+                    {actor && <b className="font-extrabold">{actor.name} </b>}
+                    {actionSentence(action, state, t)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     </GlassPanel>
