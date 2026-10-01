@@ -1,5 +1,5 @@
 {
-  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. Is het doelwit van een EliminatePlayer-missie de speler zelf, of doet die kleur niet mee, dan kiest MissionAssignmentCalculator zelf een nog ongebruikte ConquerContinents-missie als fallback (geen 'fallbackMissionId' meer nodig in de data) — dat voorkomt dat twee spelers dezelfde fallback-missie krijgen. 'territory-24-min2' en 'territory-30' hebben elk een 'minPlayers': bij minder spelers tellen ze niet mee in de trekpool; ze spelen geen rol meer als fallback-doel.",
+  "_comment": "Geheime missies (FO §6.1). Dekkend voor 7 kleuren: elke kleur heeft een eigen eliminate-<kleur>-missie, zodat bij elk aantal spelers (2-7) een geldige EliminatePlayer-missie bestaat voor elke aanwezige tegenstander. Is het doelwit van een EliminatePlayer-missie de speler zelf, of doet die kleur niet mee, dan kiest MissionAssignmentCalculator zelf een nog ongebruikte ConquerContinents-missie als fallback (geen 'fallbackMissionId' meer nodig in de data) — dat voorkomt dat twee spelers dezelfde fallback-missie krijgen. 'territory-26-min2' en 'territory-32' hebben elk een 'minPlayers': bij minder spelers tellen ze niet mee in de trekpool; ze spelen geen rol meer als fallback-doel.",
   "missions": [
     {
       "id": "conquer-asia-south-america",
@@ -44,20 +44,20 @@
       "description": "Verover alle gebieden van Noord-Amerika en Australië."
     },
     {
-      "id": "territory-30",
+      "id": "territory-32",
       "type": "TerritoryCount",
-      "params": { "count": 30 },
+      "params": { "count": 32 },
       "minPlayers": 3,
-      "name": "Bezit 30 gebieden",
-      "description": "Bezit op enig moment 30 gebieden, ongeacht welke."
+      "name": "Bezit 32 gebieden",
+      "description": "Bezit op enig moment 32 gebieden, ongeacht welke."
     },
     {
-      "id": "territory-24-min2",
+      "id": "territory-26-min2",
       "type": "TerritoryCountMinArmies",
-      "params": { "count": 24, "minArmies": 2 },
+      "params": { "count": 26, "minArmies": 2 },
       "minPlayers": 4,
-      "name": "Bezit 24 gebieden met elk minstens 2 legers",
-      "description": "Bezit op enig moment 24 gebieden, elk bezet met minstens 2 legers."
+      "name": "Bezit 26 gebieden met elk minstens 2 legers",
+      "description": "Bezit op enig moment 26 gebieden, elk bezet met minstens 2 legers."
     },
     {
       "id": "eliminate-red",

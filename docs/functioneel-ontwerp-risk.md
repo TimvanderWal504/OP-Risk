@@ -171,7 +171,7 @@ Er zijn twee kaartvarianten; de host kiest er één bij het aanmaken van het spe
 - **`hawaii–japan`** ligt over de datumgrens en wordt volgens de regel in §4.3 als twee stompjes naar de kaartrand getekend.
 - **Continentbonussen** zijn gelijk aan die van `standaard-43` (§4.4), ondanks de extra gebieden — bewuste keuze.
 - **Kaartendeck:** 49 gebiedskaarten + 2 jokers = 51, symboolverdeling 17/16/16.
-- **Rollen en gebeurteniskaarten** zijn gelijk aan die van `standaard-43`. **Missies** ook, op de twee gebiedsaantal-missies na: `territory-30` (Bezit 30 gebieden, `minPlayers: 3`) en `territory-24-min2` (Bezit 24 gebieden met elk ≥ 2 legers, `minPlayers: 4`) in plaats van `territory-24` en `territory-18-min2`.
+- **Rollen en gebeurteniskaarten** zijn gelijk aan die van `standaard-43`. **Missies** ook, op de twee gebiedsaantal-missies na: `territory-32` (Bezit 32 gebieden, `minPlayers: 3`) en `territory-26-min2` (Bezit 26 gebieden met elk ≥ 2 legers, `minPlayers: 4`) in plaats van `territory-24` en `territory-18-min2`.
 
 ---
 
@@ -247,12 +247,13 @@ Elk missietype kent daarnaast een optioneel, missie-breed veld `minPlayers`: het
 spelersaantal waarbij de missie mag worden toegewezen. Ontbreekt het veld, dan geldt geen
 minimum. `territory-18-min2` ("Bezit 18 gebieden met elk ≥ 2 legers") heeft `minPlayers: 4`,
 `territory-24` heeft `minPlayers: 3`: bij een lager spelersaantal worden ze niet toegewezen. Op
-`wereld-49` zijn dat `territory-24-min2` en `territory-30`, met dezelfde `minPlayers` (§4.5).
+`wereld-49` zijn dat `territory-26-min2` en `territory-32`, met dezelfde `minPlayers` (§4.5).
 
-**De drempel staat alleen in de data.** Naam en omschrijving die een speler ziet, volgen uit
-het missietype plus de parameters (`count`, `minArmies`) van de missie. Een andere drempel
-of een nieuwe gebiedsaantal-missie vraagt dus alleen een wijziging in `missions.json`, geen
-nieuwe tekst per getal.
+**Drempels per kaart.** Elke kaartvariant heeft een eigen `missions.json` (§4.5), dus een
+andere drempel is een andere missie met een eigen ID in de data van die kaart. De tekst die
+een speler ziet, hoort per missie-ID bij de vertalingen; een geautomatiseerde controle
+bewaakt dat elke missie op elke kaart een tekst heeft en dat het getal uit de data in die
+tekst staat.
 
 ```json
 {

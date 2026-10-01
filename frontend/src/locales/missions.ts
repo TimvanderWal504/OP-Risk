@@ -1,8 +1,9 @@
 import type { LocaleTree } from '../i18n/types'
 
 /**
- * Gekeyed op MissionSummaryDto.id / missions.json `id` (FO §6.1, kaartvariant
- * standaard-43). Data blijft bron van waarheid voor welke missies bestaan en
+ * Gekeyed op MissionSummaryDto.id / missions.json `id` (FO §6.1), over alle
+ * kaartvarianten heen: een missie die op meerdere kaarten voorkomt heeft één
+ * sleutel. Data blijft bron van waarheid voor welke missies bestaan en
  * hun type/params/fallback; alleen naam en omschrijving worden hier vertaald,
  * via `tDynamic(`${mission.id}.name`, 'missions')` /
  * `tDynamic(`${mission.id}.description`, 'missions')` — nooit
@@ -72,6 +73,24 @@ export const missions = {
     description: {
       nl: 'Bezit op enig moment 18 gebieden, elk bezet met minstens 2 legers.',
       en: 'Hold 18 territories at once, each occupied by at least 2 armies.',
+    },
+  },
+  // wereld-49 (FO §4.5): zelfde typen als hierboven, hogere drempels.
+  'territory-32': {
+    name: { nl: 'Bezit 32 gebieden', en: 'Hold 32 territories' },
+    description: {
+      nl: 'Bezit op enig moment 32 gebieden, ongeacht welke.',
+      en: 'Hold 32 territories at once, regardless of which ones.',
+    },
+  },
+  'territory-26-min2': {
+    name: {
+      nl: 'Bezit 26 gebieden met elk minstens 2 legers',
+      en: 'Hold 26 territories with at least 2 armies each',
+    },
+    description: {
+      nl: 'Bezit op enig moment 26 gebieden, elk bezet met minstens 2 legers.',
+      en: 'Hold 26 territories at once, each occupied by at least 2 armies.',
     },
   },
   'eliminate-red': {

@@ -110,12 +110,12 @@ public class Wereld49Tests
     {
         var missions = Load().Missions;
 
-        var territoryCount = Assert.IsType<TerritoryCountMission>(missions.Single(mission => mission.Id == "territory-30"));
-        Assert.Equal(30, territoryCount.Count);
+        var territoryCount = Assert.IsType<TerritoryCountMission>(missions.Single(mission => mission.Id == "territory-32"));
+        Assert.Equal(32, territoryCount.Count);
         Assert.Equal(3, territoryCount.MinPlayers);
 
-        var withArmies = Assert.IsType<TerritoryCountMinArmiesMission>(missions.Single(mission => mission.Id == "territory-24-min2"));
-        Assert.Equal(24, withArmies.Count);
+        var withArmies = Assert.IsType<TerritoryCountMinArmiesMission>(missions.Single(mission => mission.Id == "territory-26-min2"));
+        Assert.Equal(26, withArmies.Count);
         Assert.Equal(2, withArmies.MinArmies);
         Assert.Equal(4, withArmies.MinPlayers);
     }
@@ -123,7 +123,7 @@ public class Wereld49Tests
     [Fact]
     public void OverigeMissies_ZijnGelijkAanStandaard43()
     {
-        string[] countMissions = ["territory-24", "territory-18-min2", "territory-30", "territory-24-min2"];
+        string[] countMissions = ["territory-24", "territory-18-min2", "territory-32", "territory-26-min2"];
 
         static IEnumerable<string> OtherIds(MapDefinition map, string[] excluded) =>
             map.Missions.Select(mission => mission.Id).Where(id => !excluded.Contains(id)).Order(StringComparer.Ordinal);
