@@ -76,11 +76,14 @@ describe('GameInfoRules', () => {
     expect(screen.getByText(/heb je 2:30 min, voor verplaatsen 1 min/)).toBeInTheDocument()
   })
 
-  it('versterken: voorbeeld met het ruimste continent en de inlegwaarde van de server', () => {
+  it('versterken: alle continenten met hun bonus en de inlegwaarde van de server', () => {
     render(<GameInfoRules state={state()} />)
 
     expect(screen.getByText(/Voorbeeld: met 14 gebieden krijg je 4 legers/)).toBeInTheDocument()
-    expect(screen.getByText(/Voorbeeld: Azië levert 7 extra op/)).toBeInTheDocument()
+    expect(screen.getByText('Azië')).toBeInTheDocument()
+    expect(screen.getByText('+7 legers')).toBeInTheDocument()
+    expect(screen.getByText('Australië')).toBeInTheDocument()
+    expect(screen.getByText('+2 legers')).toBeInTheDocument()
     expect(screen.getByText(/de volgende set levert nu 8 legers op/)).toBeInTheDocument()
   })
 

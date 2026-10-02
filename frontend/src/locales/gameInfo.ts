@@ -91,8 +91,12 @@ export const gameInfo = {
         en: 'You get a third of your territories in armies, rounded down, but always at least 3. Example: 14 territories give 4 armies, 7 territories give 3.',
       },
       continents: {
-        nl: 'Bezit je een heel continent, dan krijg je daar elke beurt extra legers voor. Voorbeeld: {{continent}} levert {{bonus}} extra op.',
-        en: 'Hold an entire continent and you get extra armies for it every turn. Example: {{continent}} gives {{bonus}} extra.',
+        nl: 'Bezit je een heel continent, dan krijg je daar elke beurt extra legers voor:',
+        en: 'Hold an entire continent and you get extra armies for it every turn:',
+      },
+      continentBonus: {
+        nl: '+{{bonus}} legers',
+        en: '+{{bonus}} armies',
       },
       roles: {
         nl: 'Met een actieve rol kun je er legers bij krijgen; zie het tabblad Rollen.',
