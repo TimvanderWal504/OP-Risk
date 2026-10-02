@@ -60,6 +60,18 @@ export const errors = {
       nl: 'Te veel pogingen om te joinen; probeer het over een paar minuten opnieuw.',
       en: 'Too many attempts to join; try again in a few minutes.',
     },
+    unknownPlayerName: {
+      nl: "Er is geen speler met de naam '{{name}}' in dit spel.",
+      en: "There is no player named '{{name}}' in this game.",
+    },
+    ambiguousPlayerName: {
+      nl: "Meer dan één speler heet '{{name}}'; opnieuw verbinden via de naam kan niet.",
+      en: "More than one player is named '{{name}}'; reconnecting by name isn't possible.",
+    },
+    tooManyReclaimAttempts: {
+      nl: 'Te veel pogingen om opnieuw te verbinden; probeer het over een paar minuten opnieuw.',
+      en: 'Too many attempts to reconnect; try again in a few minutes.',
+    },
   },
   autoPass: {
     cannotTargetHost: { nl: 'Je kunt jezelf niet op auto-pass zetten.', en: "You can't put yourself on auto-pass." },

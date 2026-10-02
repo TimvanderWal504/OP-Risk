@@ -20,6 +20,8 @@ export interface JoinNameColorStepProps {
   /** Naam ligt al vast (bv. terug-navigatie vanaf de rolstap): alleen de kleur is nog aanpasbaar. */
   fixedName?: string
   submitting?: boolean
+  /** Ingang voor een speler die al meedoet op een ander tabblad of apparaat (TO §6.3). */
+  onReclaim?: () => void
 }
 
 /**
@@ -35,6 +37,7 @@ export function JoinNameColorStep({
   stepCount,
   fixedName,
   submitting = false,
+  onReclaim,
 }: JoinNameColorStepProps) {
   const { t } = useTranslation(['join', 'common'])
   const [name, setName] = useState(fixedName ?? '')
@@ -111,6 +114,11 @@ export function JoinNameColorStep({
         >
           {t('common:actions.next')}
         </Button>
+        {onReclaim && (
+          <Button variant="secondary" onClick={onReclaim}>
+            {t('join:reclaim.open')}
+          </Button>
+        )}
       </Footer>
     </PhoneScreen>
   )

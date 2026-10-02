@@ -83,6 +83,41 @@ public sealed class PlayerPresenceRegistryTests
     }
 
     [Fact]
+    public void Register_GeeftDeVorigeSpelerVanDeConnectieTerug()
+    {
+        var registry = new PlayerPresenceRegistry(_clock);
+
+        Assert.Null(registry.Register("c1", "game-1", "p1"));
+        Assert.Equal(("game-1", "p1"), registry.Register("c1", "game-1", "p2")!.Value);
+    }
+
+    [Fact]
+    public void ConnectionsOf_GeeftAlleConnectiesVanDeSpelerEnNietDieVanAnderen()
+    {
+        var registry = new PlayerPresenceRegistry(_clock);
+        registry.Register("c1", "game-1", "p1");
+        registry.Register("c2", "game-1", "p1");
+        registry.Register("c3", "game-1", "p2");
+
+        Assert.Equal(["c1", "c2"], registry.ConnectionsOf("game-1", "p1").Order());
+        Assert.Empty(registry.ConnectionsOf("game-1", "p9"));
+    }
+
+    /// <summary>Een kopie: de aanroeper kan de registry niet via het resultaat wijzigen of er door worden verrast.</summary>
+    [Fact]
+    public void ConnectionsOf_IsEenKopieDieNietMeeverandert()
+    {
+        var registry = new PlayerPresenceRegistry(_clock);
+        registry.Register("c1", "game-1", "p1");
+        var snapshot = registry.ConnectionsOf("game-1", "p1");
+
+        registry.Unregister("c1");
+
+        Assert.Equal(["c1"], snapshot);
+        Assert.Empty(registry.ConnectionsOf("game-1", "p1"));
+    }
+
+    [Fact]
     public void Unregister_EenOnbekendeConnectie_DoetNiets()
     {
         var registry = new PlayerPresenceRegistry(_clock);

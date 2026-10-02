@@ -96,6 +96,18 @@ ModelState-berichten), niet foutcodes. Zie §3.
 | `join:name.placeholder` | "Jouw naam" |
 | `common:actions.next` | "Volgende ›" |
 
+### `components/ReclaimPlayerStep.tsx` (+ ingang in `JoinNameColorStep.tsx`)
+| Key | Tekst |
+|---|---|
+| `join:reclaim.open` | "Al speler? Opnieuw verbinden" (secundaire knop in `JoinNameColorStep`) |
+| `join:reclaim.title` | "Opnieuw verbinden" |
+| `join:reclaim.body` | "Vul de naam in waarmee je meedoet. Dit apparaat neemt je plek over." |
+| `join:reclaim.submit` | "Verbind opnieuw" |
+| `join:reclaim.back` | "Terug" |
+| `join:name.placeholder` / `join:name.title` | hergebruikt als placeholder en aria-label van het naamveld |
+
+Foutcodes uit de hub (`errors:common.*`): `unknownPlayerName`, `ambiguousPlayerName`, `tooManyReclaimAttempts`.
+
 ### `components/JoinColorStep.tsx`
 | Key | Tekst |
 |---|---|
