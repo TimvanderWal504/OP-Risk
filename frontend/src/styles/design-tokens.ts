@@ -183,7 +183,7 @@ export const symbolGlyph: Record<PlayerSymbolId, string> = {
 export const playerColors: Record<PlayerColorId, { hex: string; onHex: string; symbol: PlayerSymbolId; name: string }> = {
   red: { hex: '#800020', onHex: '#f9a8a8', symbol: 'circle', name: 'Rood' },
   blue: { hex: '#1d5da8', onHex: '#e6f0fa', symbol: 'square', name: 'Blauw' },
-  green: { hex: '#1e3b1e', onHex: '#e8f2e3', symbol: 'triangle', name: 'Groen' },
+  green: { hex: '#2f9e44', onHex: '#ffffff', symbol: 'triangle', name: 'Groen' },
   yellow: { hex: '#fcdb32', onHex: '#141d38', symbol: 'diamond', name: 'Geel' },
   purple: { hex: '#7900b0', onHex: '#e6e6fa', symbol: 'star', name: 'Paars' },
   orange: { hex: '#e58423', onHex: '#1b1716', symbol: 'line', name: 'Oranje' },
