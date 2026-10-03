@@ -95,3 +95,55 @@ describe('PhonePage — auto-pass (DESIGN.md § Auto-pass)', () => {
   })
 })
 })
+
+describe('PhonePage — opnieuw verbinden op een nieuw tabblad (TO §6.3)', () => {
+  beforeEach(() => {
+    vi.mocked(useGameState).mockReset()
+  })
+
+  function renderWithoutPlayer(reclaimPlayer = vi.fn().mockResolvedValue(undefined)) {
+    vi.mocked(useGameState).mockReturnValue({
+      ...fixtureProps(),
+      state: inProgress(),
+      playerId: null,
+      connectionState: undefined,
+      joinGameWithColor: vi.fn(),
+      reclaimPlayer,
+    } as unknown as ReturnType<typeof useGameState>)
+
+    render(
+      <MemoryRouter initialEntries={['/play/ABCD']}>
+        <Routes>
+          <Route path="/play/:gameId" element={<PhonePage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    return reclaimPlayer
+  }
+
+  it('biedt op de joinstap een ingang om opnieuw te verbinden', () => {
+    renderWithoutPlayer()
+
+    expect(screen.getByRole('button', { name: 'Al speler? Opnieuw verbinden' })).toBeInTheDocument()
+  })
+
+  it('neemt de plek over met de ingevoerde naam', async () => {
+    const reclaimPlayer = renderWithoutPlayer()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Al speler? Opnieuw verbinden' }))
+    await userEvent.type(screen.getByPlaceholderText('Jouw naam'), 'Alice')
+    await userEvent.click(screen.getByRole('button', { name: 'Verbind opnieuw' }))
+
+    expect(reclaimPlayer).toHaveBeenCalledWith('Alice')
+  })
+
+  it('keert met Terug terug naar de joinstap', async () => {
+    renderWithoutPlayer()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Al speler? Opnieuw verbinden' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Terug' }))
+
+    expect(screen.getByRole('button', { name: 'Al speler? Opnieuw verbinden' })).toBeInTheDocument()
+  })
+})

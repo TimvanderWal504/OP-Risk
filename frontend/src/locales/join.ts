@@ -23,6 +23,16 @@ export const join = {
     back: { nl: 'Naam & kleur aanpassen', en: 'Edit name & colour' },
     pickFirst: { nl: 'Kies eerst een rol', en: 'Pick a role first' },
   },
+  reclaim: {
+    open: { nl: 'Al speler? Opnieuw verbinden', en: 'Already a player? Reconnect' },
+    title: { nl: 'Opnieuw verbinden', en: 'Reconnect' },
+    body: {
+      nl: 'Vul de naam in waarmee je meedoet. Dit apparaat neemt je plek over.',
+      en: 'Enter the name you are playing under. This device takes over your seat.',
+    },
+    submit: { nl: 'Verbind opnieuw', en: 'Reconnect' },
+    back: { nl: 'Terug', en: 'Back' },
+  },
   wait: {
     title: { nl: 'Je zit in de lobby', en: "You're in the lobby" },
     noColor: { nl: 'geen kleur', en: 'no color' },

@@ -74,6 +74,38 @@ public sealed class JoinGameRateLimitFilterTests(PostgresFixture postgres)
         Assert.Contains("common.tooManyJoinAttempts", exception.Message);
     }
 
+    /// <summary>
+    /// <c>RejoinAsPlayer</c> vraagt alleen een spelcode en een publieke naam, dus is het een tweede
+    /// ingang voor het brute-forcen van de spelcode; het heeft een eigen teller zodat een herstelstorm
+    /// echte joiners vanaf hetzelfde IP niet blokkeert.
+    /// </summary>
+    [Fact]
+    public async Task RejoinAsPlayer_MeerDanDeDrempelVanuitHetzelfdeIp_WordtGeweigerdMaarJoinGameNiet()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await using var connection = await ApiTestHost.ConnectAsync(factory, client);
+        var gameId = await CreateGameAsync(client);
+
+        // 30 pogingen op een onbekende naam: elke weigert op zichzelf (unknownPlayerName), maar telt mee.
+        for (var i = 0; i < 30; i++)
+        {
+            var attempt = await Assert.ThrowsAsync<HubException>(() =>
+                connection.InvokeAsync<JoinGameResponse>("RejoinAsPlayer", gameId, $"Niemand {i}"));
+
+            Assert.Contains("common.unknownPlayerName", attempt.Message);
+        }
+
+        var overflow = await Assert.ThrowsAsync<HubException>(() =>
+            connection.InvokeAsync<JoinGameResponse>("RejoinAsPlayer", gameId, "Niemand te veel"));
+
+        Assert.Contains("common.tooManyReclaimAttempts", overflow.Message);
+
+        var joined = await connection.InvokeAsync<JoinGameResponse>("JoinGame", gameId, "Alice");
+
+        Assert.False(string.IsNullOrEmpty(joined.PlayerId));
+    }
+
     [Fact]
     public async Task JoinGame_NaHetVerstrijkenVanHetVenster_TeltOpnieuwVanafNul()
     {

@@ -5,12 +5,14 @@ using RiskGame.Rules.Validation;
 namespace RiskGame.Api.Hubs;
 
 /// <summary>
-/// Begrenst <see cref="GameHub.JoinGame"/>-aanroepen per IP (TO §8: "rate limiting... tegen
-/// brute-forcen van de 6-teken gamecode"). Joinen loopt uitsluitend via deze hub-methode, geen
-/// HTTP-endpoint — vandaar een <see cref="IHubFilter"/> i.p.v. ASP.NET Core's HTTP-
-/// rate-limiting-middleware, die hier niet aangrijpt. Alleen op <c>JoinGame</c> gericht: elke
-/// andere hub-methode vereist al een geldige, 122-bit-Guid <c>playerId</c> — niet raadbaar zoals
-/// de 6-teken gamecode, dus buiten dit specifieke gat.
+/// Begrenst <see cref="GameHub.JoinGame"/>- en <see cref="GameHub.RejoinAsPlayer"/>-aanroepen per IP
+/// (TO §8: "rate limiting... tegen brute-forcen van de 6-teken gamecode"). Joinen loopt uitsluitend via
+/// hub-methodes, geen HTTP-endpoint — vandaar een <see cref="IHubFilter"/> i.p.v. ASP.NET Core's HTTP-
+/// rate-limiting-middleware, die hier niet aangrijpt. Elke andere hub-methode vereist al een geldige,
+/// 122-bit-Guid <c>playerId</c> — niet raadbaar zoals de 6-teken gamecode, dus buiten dit specifieke gat.
+/// <c>RejoinAsPlayer</c> vraagt alleen een spelcode en een (publieke) naam en is daarmee een tweede
+/// ingang voor hetzelfde gat. Elke methode telt in een eigen venster, zodat een groep spelers die zich
+/// na een verbindingsstoring tegelijk herstelt, echte joiners vanaf hetzelfde IP niet blokkeert.
 /// </summary>
 public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFilter
 {
@@ -21,6 +23,13 @@ public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFil
     // binnen een redelijke tijd — bewust ruim, geen krappe drempel die echte spelers kan raken.
     private const int MaxAttemptsPerWindow = 30;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(5);
+
+    /// <summary>Welke hub-methodes worden begrensd, en de foutcode waarmee een overschrijding wordt geweigerd.</summary>
+    private static readonly Dictionary<string, string> LimitedMethods = new(StringComparer.Ordinal)
+    {
+        [nameof(GameHub.JoinGame)] = "common.tooManyJoinAttempts",
+        [nameof(GameHub.RejoinAsPlayer)] = "common.tooManyReclaimAttempts",
+    };
 
     private sealed record WindowState(DateTimeOffset WindowStart, int Count);
 
@@ -34,7 +43,9 @@ public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFil
     public async ValueTask<object?> InvokeMethodAsync(
         HubInvocationContext invocationContext, Func<HubInvocationContext, ValueTask<object?>> next)
     {
-        if (invocationContext.HubMethodName != nameof(GameHub.JoinGame))
+        var method = invocationContext.HubMethodName;
+
+        if (!LimitedMethods.TryGetValue(method, out var errorCode))
         {
             return await next(invocationContext);
         }
@@ -43,7 +54,7 @@ public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFil
         var now = timeProvider.GetUtcNow();
 
         var window = _windows.AddOrUpdate(
-            ip,
+            $"{method}|{ip}",
             _ => new WindowState(now, 1),
             (_, existing) => now - existing.WindowStart > Window
                 ? new WindowState(now, 1)
@@ -53,7 +64,7 @@ public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFil
 
         if (window.Count > MaxAttemptsPerWindow)
         {
-            throw new HubException(HubErrorSerializer.Serialize(new ValidationError("common.tooManyJoinAttempts")));
+            throw new HubException(HubErrorSerializer.Serialize(new ValidationError(errorCode)));
         }
 
         return await next(invocationContext);

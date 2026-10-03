@@ -151,6 +151,7 @@ public sealed class GameHub(
     AttritionCommandHandler attritionCommands,
     TvDisplayCommandHandler tvDisplayCommands,
     AutoPassCommandHandler autoPassCommands,
+    PlayerSessionCommandHandler playerSessions,
     TvPairingRegistry tvPairings,
     PlayerPresenceRegistry presence,
     TimeProvider timeProvider,
@@ -207,14 +208,20 @@ public sealed class GameHub(
         await using var session = store.QuerySession();
         var state = await LoadGameOrThrowAsync(session, gameId);
 
-        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with
+        return GameStateDtoMapper.RedactForTv(await BuildStateDtoAsync(session, state));
+    }
+
+    /// <summary>
+    /// De ongeredacte state voor een leesaanroep (<see cref="WatchGame"/>, <see cref="RejoinGame"/>,
+    /// <see cref="RejoinAsPlayer"/>): inclusief stream-versie en volgorde-dobbelvoortgang, die niet in het
+    /// document zelf leven.
+    /// </summary>
+    private async Task<GameStateDto> BuildStateDtoAsync(IQuerySession session, GameState state) =>
+        GameStateDtoMapper.ToDto(state, timeProvider) with
         {
-            StateVersion = await FetchStateVersionAsync(session, gameId),
+            StateVersion = await FetchStateVersionAsync(session, state.GameId),
             OrderRollState = await OrderRollProgressReader.ReadStateAsync(session, state),
         };
-
-        return GameStateDtoMapper.RedactForTv(dto);
-    }
 
     /// <summary>
     /// Het volledige verloop voor het tabblad Spelverloop op de telefoon, nieuwste eerst. Los van
@@ -295,18 +302,24 @@ public sealed class GameHub(
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
 
-        var dto = GameStateDtoMapper.ToDto(state, timeProvider) with
-        {
-            StateVersion = await FetchStateVersionAsync(session, gameId),
-            OrderRollState = await OrderRollProgressReader.ReadStateAsync(session, state),
-        };
+        var dto = await BuildStateDtoAsync(session, state);
 
-        var stored = await session.LoadAsync<PlayerSessionToken>(playerId);
-
-        if (stored is not null && sessionToken.Length > 0 && TokensMatch(stored.Token, sessionToken))
+        if (await TokenIsValidAsync(playerId, sessionToken))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, playerId));
             presence.Register(Context.ConnectionId, gameId, playerId);
+
+            // Een overname (RejoinAsPlayer) kan tússen de controle hierboven en de koppeling zijn gelopen:
+            // dan heeft hij deze connectie nog niet gezien en wordt hij ook niet meer geëvict. Na de
+            // registratie opnieuw toetsen sluit dat gat — loopt de overname hierna pas, dan ziet hij
+            // deze connectie wél in de registry.
+            if (!await TokenIsValidAsync(playerId, sessionToken))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, playerId));
+                presence.Unregister(Context.ConnectionId);
+
+                return GameStateDtoMapper.RedactForTv(dto);
+            }
 
             var returned = state.Phase == GamePhase.InProgress && state.Player(playerId).IsAutoPass
                 ? await ReturnFromAutoPassAsync(gameId, playerId)
@@ -316,6 +329,80 @@ public sealed class GameHub(
         }
 
         return GameStateDtoMapper.RedactForTv(dto);
+    }
+
+    /// <summary>
+    /// Een speler neemt zijn positie over op een ander tabblad of apparaat (TO §6.3): met de spelcode en
+    /// zijn naam, zonder dat dit tabblad het sessietoken kent. Geeft een nieuw token uit en maakt het oude
+    /// ongeldig voor <see cref="RejoinGame"/>; de eerdere connecties van deze speler verliezen zijn
+    /// player-groep (geen pushes met Hand/Mission meer) en zijn presence. Het token blijft een
+    /// rejoin-bewijs, geen autorisatie van andere hub-commando's. Een naam is publiek: wie de spelcode en
+    /// een naam kent, neemt die speler over, ook als hij nog verbonden is.
+    /// </summary>
+    public async Task<JoinGameResponse> RejoinAsPlayer(string gameId, string playerName)
+    {
+        var result = await playerSessions.ReclaimPlayerAsync(gameId, playerName);
+
+        if (!result.IsSuccess)
+        {
+            throw new HubException(HubErrorSerializer.Serialize(result.Errors));
+        }
+
+        var reclaimed = result.Value;
+
+        // Pas ná het opslaan van het nieuwe token lezen, vóór de eigen registratie: een connectie die
+        // ná het opslaan nog met het oude token rejoint, ziet RejoinGame zelf weer verwijderen.
+        var previousConnections = presence.ConnectionsOf(gameId, reclaimed.PlayerId)
+            .Where(connectionId => connectionId != Context.ConnectionId)
+            .ToList();
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.All(gameId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, GameGroups.Player(gameId, reclaimed.PlayerId));
+        var previous = presence.Register(Context.ConnectionId, gameId, reclaimed.PlayerId);
+
+        // Zoals bij JoinGame: een connectie die speler wordt, hoort niet meer in de tv-groep.
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Tv(gameId));
+
+        // Was dit tabblad al een andere speler, dan mag het diens Hand niet blijven ontvangen.
+        if (previous is { } earlier && (earlier.GameId != gameId || earlier.PlayerId != reclaimed.PlayerId))
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Player(earlier.GameId, earlier.PlayerId));
+        }
+
+        // Eerst de nieuwe connectie geregistreerd, dan pas de oude weg: zo is de speler geen moment afwezig
+        // (HostAbsenceMonitor, FO §11.1).
+        foreach (var connectionId in previousConnections)
+        {
+            await Groups.RemoveFromGroupAsync(connectionId, GameGroups.Player(gameId, reclaimed.PlayerId));
+            presence.Unregister(connectionId);
+        }
+
+        await using var session = store.QuerySession();
+        var state = await LoadGameOrThrowAsync(session, gameId);
+        var dto = await BuildStateDtoAsync(session, state);
+
+        var returned = state.Phase == GamePhase.InProgress && state.Player(reclaimed.PlayerId).IsAutoPass
+            ? await ReturnFromAutoPassAsync(gameId, reclaimed.PlayerId)
+            : null;
+
+        return new JoinGameResponse(
+            reclaimed.PlayerId,
+            GameStateDtoMapper.RedactForPlayer(returned ?? dto, reclaimed.PlayerId),
+            reclaimed.SessionToken);
+    }
+
+    /// <summary>Of <paramref name="sessionToken"/> het huidige token van <paramref name="playerId"/> is (TO §6.3).</summary>
+    private async Task<bool> TokenIsValidAsync(string playerId, string sessionToken)
+    {
+        if (sessionToken.Length == 0)
+        {
+            return false;
+        }
+
+        await using var session = store.QuerySession();
+        var stored = await session.LoadAsync<PlayerSessionToken>(playerId);
+
+        return stored is not null && TokensMatch(stored.Token, sessionToken);
     }
 
     /// <summary>

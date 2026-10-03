@@ -1,9 +1,10 @@
-import { createElement } from 'react'
+import { createElement, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGameState } from '../../hooks/useGameState'
 import { useHeldPhase } from '../../hooks/useHeldPhase'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { JoinNameColorStep } from '../../components/JoinNameColorStep'
+import { ReclaimPlayerStep } from '../../components/ReclaimPlayerStep'
 import { PlayerEliminatedScreen } from '../../components/PlayerEliminatedScreen'
 import { AutoPassScreen } from '../../components/AutoPassScreen'
 import { PhonePlayerHeader } from '../../components/PhonePlayerHeader'
@@ -26,6 +27,7 @@ export function PhonePage() {
     orderRollThrows,
     territoryCatalog,
     joinGameWithColor,
+    reclaimPlayer,
     chooseColor,
     removePlayer,
     selectRole,
@@ -54,6 +56,9 @@ export function PhonePage() {
     loadActionLog,
   } = useGameState(gameId!)
   const displayPhase = useHeldPhase(state?.phase, skipSignal)
+  // Alleen relevant vóór er een speler is: een bestaande speler op een nieuw tabblad kiest hier
+  // "Opnieuw verbinden" (TO §6.3) i.p.v. een nieuwe join.
+  const [isReclaiming, setIsReclaiming] = useState(false)
   useDocumentTitle('player')
 
   const me = state?.players.find((player) => player.id === playerId)
@@ -64,13 +69,18 @@ export function PhonePage() {
   if (!state || !playerId || !me) {
     return (
       <PhoneShell scrimLevel={scrimLevel}>
-        <JoinNameColorStep
-          onSubmit={joinGameWithColor}
-          colors={state?.colors ?? []}
-          takenColorIds={state ? takenColorIds(state) : []}
-          stepIndex={0}
-          stepCount={3}
-        />
+        {isReclaiming ? (
+          <ReclaimPlayerStep onSubmit={reclaimPlayer} onBack={() => setIsReclaiming(false)} />
+        ) : (
+          <JoinNameColorStep
+            onSubmit={joinGameWithColor}
+            onReclaim={() => setIsReclaiming(true)}
+            colors={state?.colors ?? []}
+            takenColorIds={state ? takenColorIds(state) : []}
+            stepIndex={0}
+            stepCount={3}
+          />
+        )}
       </PhoneShell>
     )
   }

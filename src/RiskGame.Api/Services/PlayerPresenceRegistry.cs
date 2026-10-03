@@ -23,9 +23,9 @@ public sealed class PlayerPresenceRegistry(TimeProvider timeProvider)
 
     /// <summary>
     /// Koppelt de connectie aan de speler. Hing de connectie al aan een andere speler, dan wordt die
-    /// koppeling eerst opgeheven.
+    /// koppeling eerst opgeheven en teruggegeven, zodat de aanroeper ook diens groepen kan verlaten.
     /// </summary>
-    public void Register(string connectionId, string gameId, string playerId)
+    public (string GameId, string PlayerId)? Register(string connectionId, string gameId, string playerId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionId);
         ArgumentException.ThrowIfNullOrWhiteSpace(gameId);
@@ -35,6 +35,9 @@ public sealed class PlayerPresenceRegistry(TimeProvider timeProvider)
 
         lock (_lock)
         {
+            (string GameId, string PlayerId)? previous =
+                _playerByConnection.TryGetValue(connectionId, out var existing) ? (existing.GameId, existing.PlayerId) : null;
+
             UnregisterLocked(connectionId);
 
             _playerByConnection[connectionId] = player;
@@ -47,6 +50,19 @@ public sealed class PlayerPresenceRegistry(TimeProvider timeProvider)
 
             connections.Add(connectionId);
             _absentSince.Remove(player);
+
+            return previous;
+        }
+    }
+
+    /// <summary>De connecties die nu bewezen bij deze speler horen (een kopie; leeg als hij niet verbonden is).</summary>
+    public IReadOnlyList<string> ConnectionsOf(string gameId, string playerId)
+    {
+        lock (_lock)
+        {
+            return _connectionsByPlayer.TryGetValue(new PlayerKey(gameId, playerId), out var connections)
+                ? [.. connections]
+                : [];
         }
     }
 

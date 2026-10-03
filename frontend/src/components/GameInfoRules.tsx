@@ -33,8 +33,6 @@ export function GameInfoRules({ state }: GameInfoRulesProps) {
     [MissionWinTimingDto.FullRoundRevealed]: 'rules.goal.missionTiming.fullRoundRevealed',
   } as const
 
-  // Het ruimste continent als voorbeeld: dan leest de bonus het duidelijkst.
-  const exampleContinent = [...state.continents].sort((a, b) => b.bonus - a.bonus)[0]
   const isHouseRule = settings.defenseDiceRule === DefenseDiceRuleDto.HouseRule
 
   return (
@@ -74,13 +72,20 @@ export function GameInfoRules({ state }: GameInfoRulesProps) {
 
       <PanelSection label={t('rules.reinforce.title')}>
         <Rule>{t('rules.reinforce.base')}</Rule>
-        {exampleContinent && (
-          <Rule>
-            {t('rules.reinforce.continents', {
-              continent: tDynamic(exampleContinent.id, 'continents'),
-              bonus: exampleContinent.bonus,
-            })}
-          </Rule>
+        {state.continents.length > 0 && (
+          <>
+            <Rule>{t('rules.reinforce.continents')}</Rule>
+            <ul className="flex flex-col gap-1">
+              {state.continents.map((continent) => (
+                <li key={continent.id} className="flex items-center justify-between gap-2">
+                  <span className="font-body text-body text-fg">{tDynamic(continent.id, 'continents')}</span>
+                  <span className="font-body text-body font-semibold tabular-nums text-fg-secondary">
+                    {t('rules.reinforce.continentBonus', { bonus: continent.bonus })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         {settings.rolesEnabled && <Rule>{t('rules.reinforce.roles')}</Rule>}
         <Rule>{t('rules.reinforce.cards', { count: state.nextCardTradeValue })}</Rule>

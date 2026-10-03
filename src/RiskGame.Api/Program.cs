@@ -46,6 +46,7 @@ builder.Services.AddScoped<TurnAdvancer>();
 builder.Services.AddSingleton(sp => new GameProjection(sp.GetRequiredService<IMapDefinitionSource>()));
 builder.Services.AddScoped<TvDisplayCommandHandler>();
 builder.Services.AddScoped<AutoPassCommandHandler>();
+builder.Services.AddScoped<PlayerSessionCommandHandler>();
 builder.Services.AddScoped<AutoPassResolver>();
 builder.Services.AddScoped<DefenseStep>();
 builder.Services.AddScoped<HostAbsenceMonitor>();

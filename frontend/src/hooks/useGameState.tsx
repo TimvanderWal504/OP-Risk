@@ -272,6 +272,25 @@ export function useGameState(gameId: string) {
     [invoke, gameId, persistPlayerId],
   )
 
+  // Een speler neemt zijn plek over op dit tabblad (TO §6.3, `RejoinAsPlayer`). Anders dan bij een
+  // join verandert de spelstate hier niet: de respons heeft dezelfde `stateVersion` als de publieke
+  // state die `WatchGame` al leverde, en `applyState` zou 'm dan als "niet nieuwer" negeren — precies
+  // de eigen Hand/MissionId die dit antwoord toevoegt. Daarom een gelijke versie wél doorlaten.
+  const reclaimPlayer = useCallback(
+    async (playerName: string) => {
+      const reclaimed = await invoke<JoinGameResponse>('RejoinAsPlayer', gameId, playerName)
+
+      if (!reclaimed) return
+
+      sessionStorage.setItem(sessionTokenKey(gameId), reclaimed.sessionToken)
+      persistPlayerId(reclaimed.playerId)
+      setState((current) =>
+        current && reclaimed.state.stateVersion < current.stateVersion ? current : reclaimed.state,
+      )
+    },
+    [invoke, gameId, persistPlayerId],
+  )
+
   const removePlayer = useCallback(
     async (targetPlayerId: string) => {
       if (!playerId) return
@@ -570,6 +589,7 @@ export function useGameState(gameId: string) {
     territoryCatalog: territoryCatalog ?? [],
     combat,
     joinGameWithColor,
+    reclaimPlayer,
     chooseColor,
     removePlayer,
     selectRole,

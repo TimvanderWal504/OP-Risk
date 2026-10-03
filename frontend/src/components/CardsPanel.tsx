@@ -125,7 +125,7 @@ export function CardsPanel({
               {t('empty')}
             </GlassPanel>
           ) : (
-            <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto">
+            <div className="grid min-h-0 flex-1 auto-rows-max grid-cols-2 content-start gap-3 overflow-y-auto">
               {hand.map((card) => (
                 <TerritoryCardTile key={card.id} card={card} owned={isOwned(card)} outline={outlineFor(card)} />
               ))}
@@ -133,7 +133,7 @@ export function CardsPanel({
           ))}
 
         {mode === 'trade' && (
-          <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto" role="group">
+          <div className="grid min-h-0 flex-1 auto-rows-max grid-cols-2 content-start gap-3 overflow-y-auto" role="group">
             {hand.map((card) => {
               const selected = selectedIds.includes(card.id)
 
