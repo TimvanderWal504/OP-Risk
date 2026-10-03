@@ -11,9 +11,6 @@
   -->
   <ItemGroup>
     <Content Include="..\..\data\maps\**\*.json" Link="data\maps\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- Kaartachtergrond voor de TV-kaartlaag (TO §7.2); geserveerd via GameEndpoints,
-         niet via generieke static-file-hosting (zie de doc-comment daar). -->
-    <Content Include="..\..\data\maps\standaard-43\*.png" Link="data\maps\standaard-43\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <!-- colors.json en starting-armies-presets.json zijn gedeeld over kaartvarianten en
          staan in data/, niet data/maps/{mapId}/. -->
     <Content Include="..\..\data\colors.json" Link="data\colors.json" CopyToOutputDirectory="PreserveNewest" />
