@@ -1,4 +1,5 @@
 using Marten;
+using PartyLink.Server.Presence;
 using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Hubs;
@@ -34,7 +35,7 @@ public sealed class HostAbsenceMonitor(
         var cutoff = timeProvider.GetUtcNow() - GracePeriod;
         var absent = presence.AbsentPlayers(cutoff);
 
-        foreach (var game in absent.GroupBy(entry => entry.GameId, entry => entry.PlayerId))
+        foreach (var game in absent.GroupBy(entry => entry.RoomId, entry => entry.PlayerId))
         {
             cancellationToken.ThrowIfCancellationRequested();
 

@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using Marten;
+using PartyLink.Server.Pairing;
+using PartyLink.Server.Presence;
 using Microsoft.AspNetCore.SignalR;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Dtos;
@@ -152,7 +154,7 @@ public sealed class GameHub(
     TvDisplayCommandHandler tvDisplayCommands,
     AutoPassCommandHandler autoPassCommands,
     PlayerSessionCommandHandler playerSessions,
-    TvPairingRegistry tvPairings,
+    DisplayPairingRegistry tvPairings,
     PlayerPresenceRegistry presence,
     TimeProvider timeProvider,
     ILogger<GameHub> logger) : Hub<IGameClient>
@@ -364,9 +366,9 @@ public sealed class GameHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Tv(gameId));
 
         // Was dit tabblad al een andere speler, dan mag het diens Hand niet blijven ontvangen.
-        if (previous is { } earlier && (earlier.GameId != gameId || earlier.PlayerId != reclaimed.PlayerId))
+        if (previous is { } earlier && (earlier.RoomId != gameId || earlier.PlayerId != reclaimed.PlayerId))
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Player(earlier.GameId, earlier.PlayerId));
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GameGroups.Player(earlier.RoomId, earlier.PlayerId));
         }
 
         // Eerst de nieuwe connectie geregistreerd, dan pas de oude weg: zo is de speler geen moment afwezig

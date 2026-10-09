@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using PartyLink.Server.Hubs;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
 

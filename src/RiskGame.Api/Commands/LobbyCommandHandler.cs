@@ -1,4 +1,5 @@
 using Marten;
+using PartyLink.Server.Rooms;
 using RiskGame.Api.Dtos;
 using RiskGame.Persistence.Events;
 using RiskGame.Persistence.Map;
@@ -29,7 +30,7 @@ public sealed class LobbyCommandHandler(
 {
     public async Task<Result<CreateGameResponse>> CreateGameAsync(CreateGameRequest request)
     {
-        var gameId = GameIdGenerator.NewGameId();
+        var gameId = RoomCodeGenerator.NewCode();
         var settings = GameStateDtoMapper.ToDomain(request.Settings);
 
         // De mapId komt van de client: eerst tegen de bekende varianten, vóórdat er een pad

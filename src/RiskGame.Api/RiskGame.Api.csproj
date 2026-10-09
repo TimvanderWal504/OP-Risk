@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RiskGame.Rules\RiskGame.Rules.csproj" />
     <ProjectReference Include="..\RiskGame.Persistence\RiskGame.Persistence.csproj" />
+    <ProjectReference Include="..\PartyLink.Server\PartyLink.Server.csproj" />
   </ItemGroup>
 
   <!--

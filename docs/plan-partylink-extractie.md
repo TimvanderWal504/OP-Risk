@@ -1,5 +1,5 @@
 <!-- Werkplan, geen changelog: git-commits blijven de enige wijzigingslog (CLAUDE.md). -->
-<!-- Oorsprong: onderzoekssessie 2026-10-06 op main (na merge van feat/kaart-wereld-49 en RejoinAsPlayer); herzien na twee elite-code-reviews dezelfde dag, met beslissingen B1–B15 van de gebruiker. Status: VASTGESTELD. -->
+<!-- Oorsprong: onderzoekssessie 2026-10-06 op main (na merge van feat/kaart-wereld-49 en RejoinAsPlayer); herzien na twee elite-code-reviews dezelfde dag, met beslissingen B1–B17 van de gebruiker. Status: VASTGESTELD. -->
 
 # Plan: TV↔telefoon-laag loskoppelen van Risk ("PartyLink")
 
@@ -41,6 +41,8 @@ eindigt met dezelfde werking als ervoor.
 | **B13** | **Modus (b) levert ook de state-opslag en het aanmaken van kamers.** Eén bron van waarheid per kamer. | `InMemoryRoomStore<TState>` met `CreateRoom`/`JoinRoom` in het package; de app levert alleen pure functies op de state. Zie §3.3. |
 | **B14** | **Deployen mag op elk moment, en de database mag leeg.** Geen compatibiliteitsperiode en geen datamigratie nodig bij de overstap. | Na stap 1.5 (wire-namen) wordt gewoon gedeployed; open TV's en telefoons moeten één keer verversen. Bestaande spellen en `PlayerSessionToken`-documenten hoeven niet mee. Dit is een toestemming voor de overstap in dit plan, geen standaardwerkwijze. |
 | **B15** | **De code is openbaar zodra er een package gepubliceerd is.** | De lekcheck gaat vóór de eerste publicatie (fase 3, stap 2). B11 (privé repo) beschermt daarna alleen nog historie en issues. |
+| **B16** | **Het package is Engels** (code, doc-comments, logberichten, tests, README); RiskOP blijft Nederlands. | Verplaatste bestanden worden bij de verhuizing vertaald; de Risk-specifieke uitleg die daarbij uit een package-bestand verdwijnt, komt bij de aanroeper in Risk te staan. |
+| **B17** | **Kamer- en koppelcodes uit een cryptografisch veilige bron** (`RandomNumberGenerator`) i.p.v. `Random.Shared`. | Meegenomen in stap 1.1 als aparte `fix:`-commit na de pure verplaatsing. |
 
 ## 3. Doelarchitectuur
 
@@ -133,7 +135,8 @@ Risk's `JoinGame` geeft hetzelfde type terug.
 
 **Foutformaat.** Fouten zijn codes + parameters, geserialiseerd in de `HubException`. Het
 package vertaalt nooit; elke app doet dat zelf (Risk: i18n). Het package heeft een **eigen
-fouttype** (B5): `PartyLinkError(string Code, IReadOnlyDictionary<string, string>? Parameters)`
+fouttype** (B5): `PartyLinkError(string Code, IReadOnlyDictionary<string, string>? Params)`
+(veldnaam `Params`, want op de draad staat `params`)
 met `PartyLinkErrorSerializer` en `RoomHubException.From(errors)`. Het geserialiseerde formaat
 is gelijk aan het huidige (`HubErrorSerializer`), zodat `parseHubError` in de frontend niet
 verandert. Risk mapt `ValidationError` → `PartyLinkError` op één plek (extension
@@ -395,11 +398,11 @@ bewust rebasen.
 
 | Stap | Inhoud | Klaar als |
 | --- | --- | --- |
-| 1.1 | Nieuw project `src/PartyLink.Server` (+ `PartyLink.Server.Tests`). Verplaatsen zonder gedragswijziging: pairing-registry, presence-registry (incl. `ConnectionsOf`, teruggegeven vorige koppeling), codegenerator, groepen, `HubErrorSerializer`, `NullArgumentFilter`, `HubExceptionLoggingFilter`. Nieuw: `PartyLinkError` + serializer (B5), en in Risk de mapping `ValidationError` → `PartyLinkError`. | registry- en filtertests draaien in `PartyLink.Server.Tests`; Risk gedraagt zich identiek |
+| 1.1 | Nieuw project `src/PartyLink.Server` (+ `PartyLink.Server.Tests`). Verplaatsen zonder gedragswijziging (in het Engels, B16): `TvPairingRegistry` → `DisplayPairingRegistry`, `PlayerPresenceRegistry` (met `roomId` als term), `GameIdGenerator` → `RoomCodeGenerator`, `HubExceptionLoggingFilter`. Nieuw: `PartyLinkError` + `PartyLinkErrorSerializer` (B5), en in Risk de mapping `ValidationError` → `PartyLinkError`. Daarna een aparte `fix:`-commit voor B17. **Niet in 1.1:** `NullArgumentFilter` (geeft een Risk-foutcode; gaat mee in 1.5) en de groepen (worden een instantie met prefix; gaan mee in 1.3). | golden-string-test op het foutformaat groen vóór en na; registry-tests draaien in `PartyLink.Server.Tests`; Risk gedraagt zich identiek |
 | 1.2 | Rate limit: miss-guard voor kamer- en koppelcodes (één venster per client), `[RateLimitedEntry]` voor joinen en overnemen, `IClientKeyResolver` (Risk: forwarded-for-variant). `WatchGame`, `RejoinGame`, `GetActionLog`, `SendGameToTv` en `GET /games/{gameId}/territories` via de guard. | `JoinGameRateLimitFilterTests` gemigreerd; nieuwe test dat raden via `WatchGame` begrensd is |
-| 1.3 | `IRoomStateShape<TState>` + extension methods (klasse- en delegate-variant), `IRoomStateSource<TState>`, `IStateRedactor<TState>`, generieke push. Alle push-plekken (`GameHub`, `TurnTimerBackgroundService`, `HostAbsenceMonitor`) via de generieke push. | `GameHubMissionPrivacyTests` groen, incl. de `Finished`-uitzondering; wire-payload byte-gelijk |
+| 1.3 | Groepen naar het package (`RoomGroups` met configureerbaar prefix, B12). `IRoomStateShape<TState>` + extension methods (klasse- en delegate-variant), `IRoomStateSource<TState>`, `IStateRedactor<TState>`, generieke push. Alle push-plekken (`GameHub`, `TurnTimerBackgroundService`, `HostAbsenceMonitor`) via de generieke push. | `GameHubMissionPrivacyTests` groen, incl. de `Finished`-uitzondering; wire-payload byte-gelijk |
 | 1.4 | **Sessies** (race-gevoelig, eigen stap): `ISeatAuthority`, `SeatResult`, `SessionTokens`, `MartenSeatAuthority` (Risk, onder `GameWriteLock`), `InMemoryRoomStore<TState>` met `CreateRoom`/`JoinRoom` (modus b, B13). De dubbele tokencheck en de eviction-volgorde naar het package. | `GameHubReclaimTests`, `GameHubPresenceTests` groen; nieuwe package-tests voor de race "rejoin met oud token tijdens overname" en "overname tijdens verwijderen", voor beide modi |
-| 1.5 | **Eerst het contract:** wire-namen, foutcodes en `SeatResponse` omzetten volgens §5 (B4), nog binnen `GameHub`. Frontend en backend in dezelfde commit; daarna deployen (B14). | alle hub- en frontend-tests groen met de nieuwe namen en codes |
+| 1.5 | **Eerst het contract:** wire-namen, foutcodes en `SeatResponse` omzetten volgens §5 (B4), nog binnen `GameHub`. `NullArgumentFilter` gaat dan mee naar het package (met `partylink.missingArgument`). Frontend en backend in dezelfde commit; daarna deployen (B14). | alle hub- en frontend-tests groen met de nieuwe namen en codes |
 | 1.6 | **Dan de structuur:** `RoomHub<TClient, TState>` met `RegisterDisplay`, `SendRoomToDisplay`, `WatchRoom`, `RejoinRoom`, `ReclaimSeat`, `AdmitPlayerAsync`, `ReleaseSeatAsync`, `BroadcastAsync`, `OnPlayerReturnedAsync`. `GameHub` erft ervan. Omdat de namen al generiek zijn, is dit een pure verplaatsing — een regressie is zo bisectbaar tussen contract en structuur. | `GameHub` bevat geen verbindings-/sessielogica meer; geen wire-wijziging |
 | 1.7 | `IPresenceListener` + generieke `AbsenceBackgroundService`; `HostAbsenceMonitor` wordt Risk's listener. | host-uitvaltests groen met eigen klok (`TimeProvider`) |
 | 1.8 | `AddPartyLink(...)` / `MapPartyLinkHub<T>(...)`; `Program.cs` opgeschoond. | `Program.cs` registreert PartyLink in één blok |

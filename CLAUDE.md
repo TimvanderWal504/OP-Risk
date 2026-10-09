@@ -37,6 +37,8 @@ zie frontend/CLAUDE.md voor hoe dat samenwerkt met de tokenbestanden.
 | [src/RiskGame.Rules.Tests/](src/RiskGame.Rules.Tests/) | Unit tests op de rules engine |
 | [src/RiskGame.Api/](src/RiskGame.Api/) | **Stap 2–3** — Minimal API + SignalR hub |
 | [src/RiskGame.Api.Tests/](src/RiskGame.Api.Tests/) | Integratietests op de API |
+| [src/PartyLink.Server/](src/PartyLink.Server/) | Generieke TV↔telefoon-laag (koppelen, aanwezigheid, foutformaat), in wording als eigen package — **Engels**, nooit een referentie naar `RiskGame.*`. Zie [docs/plan-partylink-extractie.md](docs/plan-partylink-extractie.md) |
+| [src/PartyLink.Server.Tests/](src/PartyLink.Server.Tests/) | Unit tests op PartyLink.Server |
 | [DESIGN.md](DESIGN.md) | Impeccable-gegenereerde visuele spec (kleuren, typografie, vorm, componenten) — bindend, evolueert met de codebase via `/impeccable document` |
 | [frontend/src/styles/](frontend/src/styles/) | Design-tokens (`design-tokens.ts`, `motion.ts`) en de daadwerkelijke runtime-CSS (`ds/colors_and_type.css`, `ds/twc-theme.css`) — geen ruwe export meer, gewoon broncode |
 | [frontend/src/components/](frontend/src/components/) | "Echte" componenten, opgebouwd volgens `DESIGN.md` en de tokens in `frontend/src/styles/` |

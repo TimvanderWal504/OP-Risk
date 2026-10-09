@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    PartyLink: the generic display/phone connection layer (pairing, presence, errors).
+    Must never reference RiskGame.* — see docs/plan-partylink-extractie.md.
+    Not packable until the split into its own repository (phase 3).
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

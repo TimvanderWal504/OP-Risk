@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using PartyLink.Server.Presence;
 using RiskGame.Api.Dtos;
 using RiskGame.Api.Hubs;
 using RiskGame.Api.Services;

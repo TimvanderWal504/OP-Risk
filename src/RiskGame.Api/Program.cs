@@ -1,6 +1,9 @@
 using Marten;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
+using PartyLink.Server.Hubs;
+using PartyLink.Server.Pairing;
+using PartyLink.Server.Presence;
 using RiskGame.Api;
 using RiskGame.Api.Commands;
 using RiskGame.Api.Endpoints;
@@ -29,7 +32,11 @@ builder.Services.AddSingleton<IDocumentStore>(sp =>
     return GameStoreFactory.Create(connectionString, sp.GetRequiredService<IMapDefinitionSource>());
 });
 builder.Services.AddSingleton<IRandomSource, SystemRandomSource>();
-builder.Services.AddSingleton<TvPairingRegistry>();
+// "TV koppelen" en spelersaanwezigheid komen uit PartyLink. Aanwezigheid (FO §11.1, TO §4.1):
+// GameHub registreert alleen bewezen spelers (JoinGame, of RejoinGame/RejoinAsPlayer met een geldig
+// sessietoken), nooit een TV of een meekijkende telefoon. HostAbsenceMonitor leest de afwezigen voor
+// de host-uitval en vergeet de spelers van afgelopen of verdwenen spellen.
+builder.Services.AddSingleton<DisplayPairingRegistry>();
 builder.Services.AddSingleton<PlayerPresenceRegistry>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<LobbyCommandHandler>();
