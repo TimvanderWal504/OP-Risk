@@ -18,7 +18,7 @@ public sealed class JoinGameRateLimitFilter(TimeProvider timeProvider) : IHubFil
 {
     // 7 spelers (FO: max lobbygrootte) die vlak na elkaar joinen vanaf hetzelfde gedeelde IP
     // (thuisnetwerk/Tailscale-uitgang) + een paar typefouten past hier ruim onder; een script
-    // dat de 32^6 = 1.073.741.824 mogelijke gamecodes (RoomCodeGenerator, 32 tekens)
+    // dat de 32^6 = 1.073.741.824 mogelijke gamecodes (RoomCodeGenerator.Alphabet, 32 tekens)
     // moet doorzoeken heeft aan 30 per 5 minuten nog altijd praktisch geen schijn van kans
     // binnen een redelijke tijd — bewust ruim, geen krappe drempel die echte spelers kan raken.
     private const int MaxAttemptsPerWindow = 30;
